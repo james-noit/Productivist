@@ -1,6 +1,6 @@
 {
   "app": {
-    "name": "OpenPomodoro"
+    "name": "Productivist"
   },
   "menu": {
     "open": "Open menu",
@@ -72,7 +72,7 @@
     "startFocusPrompt": "Start focusing now?",
     "startNow": "Start now",
     "later": "Later",
-    "notificationTitle": "OpenPomodoro",
+    "notificationTitle": "Productivist",
     "notificationBodyFocus": "Focus session complete. Time for a break!",
     "notificationBodyBreak": "Break complete. Time to focus!"
   },

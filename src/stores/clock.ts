@@ -88,7 +88,7 @@ export const useClockStore = defineStore('clock', () => {
 
   // Persisted so the timer survives a page refresh. Written only on
   // state transitions (start/pause/reset/switch), never on every tick.
-  const persist = useLocalStorage<ClockPersistShape>('openpomodoro.clock', {
+  const persist = useLocalStorage<ClockPersistShape>('productivist.clock', {
     mode: 'focus',
     running: false,
     endAt: null,

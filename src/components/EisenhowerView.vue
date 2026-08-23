@@ -14,7 +14,7 @@ const { t } = useI18n()
 const todos = useTodosStore()
 const projects = useProjectsStore()
 
-const viewMode = useLocalStorage<EisenhowerViewMode>('openpomodoro.eisenhowerViewMode', 'detailed')
+const viewMode = useLocalStorage<EisenhowerViewMode>('productivist.eisenhowerViewMode', 'detailed')
 
 const activeTodos = computed(() => todos.sortTasks(todos.todos.filter((todo) => !todo.done)))
 

@@ -50,7 +50,7 @@ function exportTodo() {
   const url = URL.createObjectURL(blob)
   const link = document.createElement('a')
   link.href = url
-  link.download = 'todo.openpomodoro.json'
+  link.download = 'todo.productivist.json'
   link.click()
   URL.revokeObjectURL(url)
   close()

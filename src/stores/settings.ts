@@ -22,14 +22,14 @@ function roundToStep(seconds: number, min: number, max: number): number {
 }
 
 export const useSettingsStore = defineStore('settings', () => {
-  const theme = useLocalStorage<Theme>('openpomodoro.theme', 'light')
-  const language = useLocalStorage<Language>('openpomodoro.language', 'en')
-  const focusSeconds = useLocalStorage<number>('openpomodoro.focusSeconds', DEFAULT_FOCUS_SECONDS)
-  const breakSeconds = useLocalStorage<number>('openpomodoro.breakSeconds', DEFAULT_BREAK_SECONDS)
-  const bellSound = useLocalStorage<boolean>('openpomodoro.bellSound', true)
-  const bellSoundId = useLocalStorage<BellSoundId>('openpomodoro.bellSoundId', DEFAULT_BELL_SOUND_ID)
-  const clockStyle = useLocalStorage<ClockStyle>('openpomodoro.clockStyle', DEFAULT_CLOCK_STYLE)
-  const boxClockOrder = useLocalStorage<BoxClockOrder>('openpomodoro.boxClockOrder', DEFAULT_BOX_CLOCK_ORDER)
+  const theme = useLocalStorage<Theme>('productivist.theme', 'light')
+  const language = useLocalStorage<Language>('productivist.language', 'en')
+  const focusSeconds = useLocalStorage<number>('productivist.focusSeconds', DEFAULT_FOCUS_SECONDS)
+  const breakSeconds = useLocalStorage<number>('productivist.breakSeconds', DEFAULT_BREAK_SECONDS)
+  const bellSound = useLocalStorage<boolean>('productivist.bellSound', true)
+  const bellSoundId = useLocalStorage<BellSoundId>('productivist.bellSoundId', DEFAULT_BELL_SOUND_ID)
+  const clockStyle = useLocalStorage<ClockStyle>('productivist.clockStyle', DEFAULT_CLOCK_STYLE)
+  const boxClockOrder = useLocalStorage<BoxClockOrder>('productivist.boxClockOrder', DEFAULT_BOX_CLOCK_ORDER)
 
   function setTheme(next: Theme) {
     theme.value = next

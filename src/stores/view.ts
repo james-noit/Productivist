@@ -4,7 +4,7 @@ import { useLocalStorage } from '../composables/useLocalStorage'
 export type AppView = 'pomodoro' | 'eisenhower'
 
 export const useViewStore = defineStore('view', () => {
-  const current = useLocalStorage<AppView>('openpomodoro.activeView', 'pomodoro')
+  const current = useLocalStorage<AppView>('productivist.activeView', 'pomodoro')
 
   function setView(view: AppView) {
     current.value = view

@@ -11,8 +11,8 @@ function createId(): string {
 export const useProjectsStore = defineStore('projects', () => {
   const todos = useTodosStore()
 
-  const projects = useLocalStorage<Project[]>('openpomodoro.projects', [])
-  const milestones = useLocalStorage<Milestone[]>('openpomodoro.milestones', [])
+  const projects = useLocalStorage<Project[]>('productivist.projects', [])
+  const milestones = useLocalStorage<Milestone[]>('productivist.milestones', [])
 
   const sortedProjects = computed(() => [...projects.value].sort((a, b) => a.order - b.order))
 

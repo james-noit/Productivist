@@ -13,9 +13,9 @@ const DISSOLVE_DELAY_MS = 5000
 export const useMultitaskStore = defineStore('multitask', () => {
   const todos = useTodosStore()
 
-  const enabled = useLocalStorage<boolean>('openpomodoro.multitaskEnabled', false)
-  const cards = useLocalStorage<MultitaskCard[]>('openpomodoro.multitaskCards', [])
-  const capacityTipDismissed = useLocalStorage<boolean>('openpomodoro.multitaskTipDismissed', false)
+  const enabled = useLocalStorage<boolean>('productivist.multitaskEnabled', false)
+  const cards = useLocalStorage<MultitaskCard[]>('productivist.multitaskCards', [])
+  const capacityTipDismissed = useLocalStorage<boolean>('productivist.multitaskTipDismissed', false)
 
   // Cards persisted before the accomplishments/lastAnsweredPhaseEndAt fields existed
   // are missing them entirely (useLocalStorage has no migration step) — backfill once

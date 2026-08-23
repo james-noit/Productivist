@@ -1,4 +1,4 @@
-# OpenPomodoro — Agent Instructions
+# Productivist — Agent Instructions
 
 ## Commands
 
@@ -15,7 +15,7 @@ No test framework, no linter, no formatter configured.
 
 - **Entry:** `src/main.ts` → `src/App.vue`
 - **Framework:** Vue 3 (composition API, `<script setup>`) + Vite + TypeScript + Pinia + vue-i18n
-- **Stores:** `settings.ts` (theme, language, durations), `todos.ts` (todo CRUD, filters, import/export), `clock.ts` (timer state), `view.ts` (active view), `projects.ts` (project tree), `multitask.ts` (task drawer/multitask). All use `useLocalStorage` composable (`src/composables/`) writing to `openpomodoro.*` keys.
+- **Stores:** `settings.ts` (theme, language, durations), `todos.ts` (todo CRUD, filters, import/export), `clock.ts` (timer state), `view.ts` (active view), `projects.ts` (project tree), `multitask.ts` (task drawer/multitask). All use `useLocalStorage` composable (`src/composables/`) writing to `productivist.*` keys.
 - **i18n:** Composition mode (`legacy: false`). Messages in `src/i18n/locales/{en,es}.json`. Default: `en`, fallback: `en`.
 - **Types:** `src/types/todo.ts`, `multitask.ts`, `eisenhower.ts`, `project.ts`
 

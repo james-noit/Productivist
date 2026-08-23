@@ -13,7 +13,7 @@ const view = useViewStore()
       <AppMenu />
     </div>
     <div class="app-header__title">
-      <span class="app-header__name">OpenPomodoro</span>
+      <span class="app-header__name">Productivist</span>
       <span class="app-header__version">v{{ appVersion }}</span>
     </div>
     <div class="app-header__end">

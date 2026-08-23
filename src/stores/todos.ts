@@ -18,14 +18,14 @@ export type TodoViewMode = 'all' | 'projects'
 const PRIORITY_RANK: Record<Priority, number> = { high: 0, medium: 1, low: 2 }
 
 export const useTodosStore = defineStore('todos', () => {
-  const todos = useLocalStorage<Todo[]>('openpomodoro.todos', [])
-  const filters = useLocalStorage<TodoFilters>('openpomodoro.todoFilters', {
+  const todos = useLocalStorage<Todo[]>('productivist.todos', [])
+  const filters = useLocalStorage<TodoFilters>('productivist.todoFilters', {
     importance: 'all',
     urgency: 'all',
     tag: 'all',
   })
-  const viewMode = useLocalStorage<TodoViewMode>('openpomodoro.todoViewMode', 'all')
-  const hasCustomOrder = useLocalStorage<boolean>('openpomodoro.todosCustomOrder', false)
+  const viewMode = useLocalStorage<TodoViewMode>('productivist.todoViewMode', 'all')
+  const hasCustomOrder = useLocalStorage<boolean>('productivist.todosCustomOrder', false)
 
   function sortTasks(list: Todo[]): Todo[] {
     const sorted = [...list]
@@ -70,7 +70,7 @@ export const useTodosStore = defineStore('todos', () => {
   })
 
   const draggedId = ref<string | null>(null)
-  const currentTaskId = useLocalStorage<string | null>('openpomodoro.currentTaskId', null)
+  const currentTaskId = useLocalStorage<string | null>('productivist.currentTaskId', null)
 
   const currentTask = computed(() => {
     if (!currentTaskId.value) return null
@@ -200,7 +200,7 @@ export const useTodosStore = defineStore('todos', () => {
 
   function importTodos(data: TodoExport) {
     if (!data || data.version !== 1 || !Array.isArray(data.todos)) {
-      throw new Error('Invalid OpenPomodoro to-do file')
+      throw new Error('Invalid Productivist to-do file')
     }
     todos.value = data.todos
   }
