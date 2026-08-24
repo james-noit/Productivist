@@ -8,6 +8,7 @@
     "exportTodo": "Exportar datos",
     "importTodo": "Importar datos",
     "views": "Vistas",
+    "planningLab": "Laboratorio de planificación",
     "pomodoro": "Pomodoro",
     "eisenhower": "Eisenhower",
     "reset": "Reiniciar",
@@ -85,6 +86,10 @@
     "urgency": "Urgencia",
     "tags": "Etiquetas",
     "tagsPlaceholder": "Etiquetas separadas por comas",
+    "description": "Descripción",
+    "descriptionPlaceholder": "Añade más detalles…",
+    "pomodorosForTermination": "Pomodoros para terminar",
+    "pomodorosForTerminationPlaceholder": "p. ej. 3",
     "filterAll": "Todas",
     "low": "Baja",
     "medium": "Media",
@@ -188,5 +193,14 @@
       "save": "Añadir",
       "cancel": "Cancelar"
     }
+  },
+  "planningLab": {
+    "title": "Laboratorio de planificación",
+    "dailyBacklog": "Backlog diario",
+    "dailyBacklogHint": "Decide en qué vas a trabajar hoy.",
+    "dailyBacklogEmpty": "Aún no hay nada programado para hoy.",
+    "generalBacklog": "Backlog general",
+    "generalBacklogHint": "Desglosa un objetivo en las tareas que te llevan hasta él.",
+    "generalBacklogEmpty": "Aún no hay nada en el backlog general."
   }
 }

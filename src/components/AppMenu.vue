@@ -127,6 +127,33 @@ async function seedMockData() {
           type="button"
           role="menuitem"
           class="app-menu__view"
+          :class="{ 'app-menu__view--active': view.current === 'planning-lab' }"
+          :aria-current="view.current === 'planning-lab'"
+          @click="goToView('planning-lab')"
+        >
+          <svg class="app-menu__view-icon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+            <path
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M9 2h6M10 2v6.2L4.7 17a2 2 0 0 0 1.7 3h11.2a2 2 0 0 0 1.7-3L14 8.2V2"
+            />
+            <path
+              fill="currentColor"
+              opacity="0.55"
+              d="M6.9 15h10.2l1.6 2.7a1 1 0 0 1-.86 1.3H6.16a1 1 0 0 1-.86-1.3z"
+            />
+            <circle cx="10" cy="12.5" r="0.8" fill="currentColor" />
+            <circle cx="13.5" cy="14" r="0.6" fill="currentColor" />
+          </svg>
+          {{ t('menu.planningLab') }}
+        </button>
+        <button
+          type="button"
+          role="menuitem"
+          class="app-menu__view"
           :class="{ 'app-menu__view--active': view.current === 'pomodoro' }"
           :aria-current="view.current === 'pomodoro'"
           @click="goToView('pomodoro')"

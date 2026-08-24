@@ -8,6 +8,7 @@
     "exportTodo": "Export data",
     "importTodo": "Import data",
     "views": "Views",
+    "planningLab": "Planning lab",
     "pomodoro": "Pomodoro",
     "eisenhower": "Eisenhower",
     "reset": "Reset",
@@ -85,6 +86,10 @@
     "urgency": "Urgency",
     "tags": "Tags",
     "tagsPlaceholder": "Comma-separated tags",
+    "description": "Description",
+    "descriptionPlaceholder": "Add more details…",
+    "pomodorosForTermination": "Pomodoros to finish",
+    "pomodorosForTerminationPlaceholder": "e.g. 3",
     "filterAll": "All",
     "low": "Low",
     "medium": "Medium",
@@ -188,5 +193,14 @@
       "save": "Add",
       "cancel": "Cancel"
     }
+  },
+  "planningLab": {
+    "title": "Planning lab",
+    "dailyBacklog": "Daily backlog",
+    "dailyBacklogHint": "Decide what to work on today.",
+    "dailyBacklogEmpty": "Nothing scheduled for today yet.",
+    "generalBacklog": "General backlog",
+    "generalBacklogHint": "Break an objective down into the tasks that get you there.",
+    "generalBacklogEmpty": "Nothing in the general backlog yet."
   }
 }

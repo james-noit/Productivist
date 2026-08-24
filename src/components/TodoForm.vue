@@ -9,9 +9,11 @@ const { t } = useI18n()
 const todos = useTodosStore()
 
 const title = ref('')
+const description = ref('')
 const importance = ref<Priority>('medium')
 const urgency = ref<Priority>('medium')
 const tagsInput = ref('')
+const pomodorosForTermination = ref('')
 const expanded = ref(false)
 const formEl = ref<HTMLFormElement | null>(null)
 const titleInputEl = ref<HTMLInputElement | null>(null)
@@ -23,16 +25,21 @@ async function submit() {
     .split(',')
     .map((tag) => tag.trim())
     .filter(Boolean)
+  const pomodoros = parseInt(pomodorosForTermination.value, 10)
   todos.addTodo({
     title: trimmed,
+    description: description.value.trim() || undefined,
     importance: importance.value,
     urgency: urgency.value,
     tags,
     projectId: props.projectId,
     milestoneId: props.milestoneId,
+    pomodorosForTermination: Number.isFinite(pomodoros) && pomodoros > 0 ? pomodoros : undefined,
   })
   title.value = ''
+  description.value = ''
   tagsInput.value = ''
+  pomodorosForTermination.value = ''
   expanded.value = false
   await nextTick()
   titleInputEl.value?.focus()
@@ -81,6 +88,16 @@ function onFocusOut(event: FocusEvent) {
         </label>
       </div>
       <input v-model="tagsInput" type="text" :placeholder="t('todo.tagsPlaceholder')" />
+      <textarea v-model="description" rows="2" :placeholder="t('todo.descriptionPlaceholder')" />
+      <label class="todo-form__pomodoros">
+        {{ t('todo.pomodorosForTermination') }}
+        <input
+          v-model="pomodorosForTermination"
+          type="number"
+          min="1"
+          :placeholder="t('todo.pomodorosForTerminationPlaceholder')"
+        />
+      </label>
       <button type="submit">{{ t('todo.add') }}</button>
     </div>
   </form>
@@ -98,12 +115,27 @@ function onFocusOut(event: FocusEvent) {
 }
 
 .todo-form input,
-.todo-form select {
+.todo-form select,
+.todo-form textarea {
   background-color: var(--color-surface);
   color: var(--color-text);
   border: 1px solid var(--color-border);
   border-radius: 4px;
   padding: 0.4rem 0.6rem;
+  font-family: inherit;
+}
+
+.todo-form textarea {
+  width: 100%;
+  resize: vertical;
+}
+
+.todo-form__pomodoros {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
 }
 
 .todo-form__title {

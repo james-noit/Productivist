@@ -15,10 +15,12 @@ const todos = useTodosStore()
 const ICONS = ['📁', '📌', '🚀', '🎯', '📚', '💼', '🛠️', '🎨', '🧪', '🏗️', '🌱', '🔥']
 
 const title = ref('')
+const description = ref('')
 const importance = ref<Priority>('medium')
 const urgency = ref<Priority>('medium')
 const projectRef = ref<string>('')
 const milestoneRef = ref<string>('')
+const pomodorosForTermination = ref('')
 
 const showNewProject = ref(false)
 const chosenIcon = ref(ICONS[0])
@@ -39,8 +41,10 @@ function init() {
   importance.value = target.importance
   urgency.value = target.urgency
   title.value = ''
+  description.value = ''
   projectRef.value = ''
   milestoneRef.value = ''
+  pomodorosForTermination.value = ''
   showNewProject.value = false
   chosenIcon.value = ICONS[0]
   projectName.value = ''
@@ -107,13 +111,17 @@ function handleSubmit(_e: Event) {
     return
   }
 
+  const pomodoros = parseInt(pomodorosForTermination.value, 10)
+
   todos.addTodo({
     title: trimmedTitle,
+    description: description.value.trim() || undefined,
     importance: target.importance,
     urgency: target.urgency,
     tags: [],
     projectId: finalProjectId,
     milestoneId: finalMilestoneId,
+    pomodorosForTermination: Number.isFinite(pomodoros) && pomodoros > 0 ? pomodoros : undefined,
   })
 
   emit('close')
@@ -150,6 +158,24 @@ const urgencyLabel = computed(() => t(`todo.${urgency.value}`))
           :placeholder="t('todo.addPlaceholder')"
           autofocus
           required
+        />
+      </label>
+
+      <label class="new-task__field">
+        <textarea
+          v-model="description"
+          rows="2"
+          :placeholder="t('todo.descriptionPlaceholder')"
+        />
+      </label>
+
+      <label class="new-task__field new-task__field--pomodoros">
+        {{ t('todo.pomodorosForTermination') }}
+        <input
+          v-model="pomodorosForTermination"
+          type="number"
+          min="1"
+          :placeholder="t('todo.pomodorosForTerminationPlaceholder')"
         />
       </label>
 
@@ -305,13 +331,27 @@ const urgencyLabel = computed(() => t(`todo.${urgency.value}`))
   outline-offset: 2px;
 }
 
-.new-task__field input {
+.new-task__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+
+.new-task__field input,
+.new-task__field textarea {
   background-color: var(--color-surface);
   color: var(--color-text);
   border: 1px solid var(--color-border);
   border-radius: 4px;
   padding: 0.4rem 0.6rem;
   font-family: inherit;
+}
+
+.new-task__field textarea {
+  width: 100%;
+  resize: vertical;
 }
 
 .new-task__field--title input {

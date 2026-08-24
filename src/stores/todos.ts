@@ -83,16 +83,19 @@ export const useTodosStore = defineStore('todos', () => {
 
   function addTodo(input: {
     title: string
+    description?: string
     importance: Priority
     urgency: Priority
     tags: string[]
     projectId?: string
     milestoneId?: string
+    pomodorosForTermination?: number
   }) {
     const maxOrder = todos.value.reduce((max, t) => Math.max(max, t.order), -1)
     todos.value.push({
       id: createId(),
       title: input.title,
+      description: input.description,
       importance: input.importance,
       urgency: input.urgency,
       tags: input.tags,
@@ -101,6 +104,7 @@ export const useTodosStore = defineStore('todos', () => {
       createdAt: Date.now(),
       projectId: input.projectId,
       milestoneId: input.milestoneId,
+      pomodorosForTermination: input.pomodorosForTermination,
     })
   }
 
@@ -146,7 +150,19 @@ export const useTodosStore = defineStore('todos', () => {
 
   function updateTodo(
     id: string,
-    patch: Partial<Pick<Todo, 'title' | 'importance' | 'urgency' | 'tags' | 'projectId' | 'milestoneId'>>,
+    patch: Partial<
+      Pick<
+        Todo,
+        | 'title'
+        | 'description'
+        | 'importance'
+        | 'urgency'
+        | 'tags'
+        | 'projectId'
+        | 'milestoneId'
+        | 'pomodorosForTermination'
+      >
+    >,
   ) {
     const todo = todos.value.find((t) => t.id === id)
     if (!todo) return

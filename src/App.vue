@@ -9,6 +9,7 @@ import PomodoroClock from './components/PomodoroClock.vue'
 import TodoList from './components/TodoList.vue'
 import MultitaskView from './components/MultitaskView.vue'
 import EisenhowerView from './components/EisenhowerView.vue'
+import PlanningLabView from './components/PlanningLabView.vue'
 
 const settings = useSettingsStore()
 const multitask = useMultitaskStore()
@@ -27,7 +28,8 @@ watchEffect(() => {
 
 <template>
   <AppHeader />
-  <EisenhowerView v-if="view.current === 'eisenhower'" />
+  <PlanningLabView v-if="view.current === 'planning-lab'" />
+  <EisenhowerView v-else-if="view.current === 'eisenhower'" />
   <MultitaskView v-else-if="multitask.enabled" />
   <main v-else class="main-view">
     <PomodoroClock class="main-view__clock" />

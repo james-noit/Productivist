@@ -1,0 +1,39 @@
+<script setup lang="ts">
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
+</script>
+
+<template>
+  <div class="daily-backlog">
+    <p class="daily-backlog__hint">{{ t('planningLab.dailyBacklogHint') }}</p>
+    <p class="daily-backlog__empty">{{ t('planningLab.dailyBacklogEmpty') }}</p>
+  </div>
+</template>
+
+<style scoped>
+.daily-backlog {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  flex: 1;
+  background-color: var(--color-surface-alt);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  border-top: 4px solid var(--color-primary);
+  padding: 1rem;
+  min-height: 220px;
+}
+
+.daily-backlog__hint {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+.daily-backlog__empty {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+</style>

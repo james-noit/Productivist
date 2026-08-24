@@ -14,9 +14,11 @@ const projects = useProjectsStore()
 const ICONS = ['📁', '📌', '🚀', '🎯', '📚', '💼', '🛠️', '🎨', '🧪', '🏗️', '🌱', '🔥']
 
 const title = ref(props.todo.title)
+const description = ref(props.todo.description ?? '')
 const importance = ref<Priority>(props.todo.importance)
 const urgency = ref<Priority>(props.todo.urgency)
 const tagsInput = ref(props.todo.tags.join(', '))
+const pomodorosForTermination = ref(props.todo.pomodorosForTermination?.toString() ?? '')
 
 const projectRef = ref<string>(props.todo.projectId ?? '')
 const milestoneRef = ref<string>(props.todo.milestoneId ?? '')
@@ -32,9 +34,11 @@ watch(
   () => props.todo.id,
   () => {
     title.value = props.todo.title
+    description.value = props.todo.description ?? ''
     importance.value = props.todo.importance
     urgency.value = props.todo.urgency
     tagsInput.value = props.todo.tags.join(', ')
+    pomodorosForTermination.value = props.todo.pomodorosForTermination?.toString() ?? ''
     projectRef.value = props.todo.projectId ?? ''
     milestoneRef.value = props.todo.milestoneId ?? ''
     showNewProject.value = false
@@ -95,6 +99,17 @@ function commitTags() {
     .map((tag) => tag.trim())
     .filter(Boolean)
   todos.updateTodo(props.todo.id, { tags })
+}
+
+function commitDescription() {
+  todos.updateTodo(props.todo.id, { description: description.value.trim() || undefined })
+}
+
+function commitPomodorosForTermination() {
+  const parsed = parseInt(pomodorosForTermination.value, 10)
+  todos.updateTodo(props.todo.id, {
+    pomodorosForTermination: Number.isFinite(parsed) && parsed > 0 ? parsed : undefined,
+  })
 }
 
 function onProjectSelect() {
@@ -170,6 +185,16 @@ function remove() {
         class="task-detail__title"
         @change="commitTitle"
       />
+
+      <label class="task-detail__description-label">
+        {{ t('todo.description') }}
+        <textarea
+          v-model="description"
+          rows="2"
+          :placeholder="t('todo.descriptionPlaceholder')"
+          @change="commitDescription"
+        />
+      </label>
 
       <div class="task-detail__select-group">
         <div class="task-detail__select-label">{{ t('eisenhower.createTask.project') }}</div>
@@ -248,6 +273,17 @@ function remove() {
         <input v-model="tagsInput" type="text" :placeholder="t('todo.tagsPlaceholder')" @change="commitTags" />
       </label>
 
+      <label class="task-detail__tags-label">
+        {{ t('todo.pomodorosForTermination') }}
+        <input
+          v-model="pomodorosForTermination"
+          type="number"
+          min="1"
+          :placeholder="t('todo.pomodorosForTerminationPlaceholder')"
+          @change="commitPomodorosForTermination"
+        />
+      </label>
+
       <button type="button" class="task-detail__delete" @click="remove">{{ t('todo.delete') }}</button>
     </div>
   </div>
@@ -314,6 +350,7 @@ function remove() {
 .task-detail__title,
 .task-detail__row select,
 .task-detail__tags-label input,
+.task-detail__description-label textarea,
 .task-detail__select-wrapper select,
 .task-detail__inline-create input {
   background-color: var(--color-surface);
@@ -322,6 +359,19 @@ function remove() {
   border-radius: 4px;
   padding: 0.4rem 0.6rem;
   font-family: inherit;
+}
+
+.task-detail__description-label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
+.task-detail__description-label textarea {
+  width: 100%;
+  resize: vertical;
 }
 
 .task-detail__title {

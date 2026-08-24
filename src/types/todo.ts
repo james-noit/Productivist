@@ -3,6 +3,7 @@ export type Priority = 'low' | 'medium' | 'high'
 export interface Todo {
   id: string
   title: string
+  description?: string
   importance: Priority
   urgency: Priority
   tags: string[]
@@ -12,6 +13,7 @@ export interface Todo {
   completedAt?: number
   projectId?: string
   milestoneId?: string
+  pomodorosForTermination?: number
 }
 
 export interface TodoExport {
