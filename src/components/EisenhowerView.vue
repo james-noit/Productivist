@@ -18,8 +18,8 @@ const viewMode = useLocalStorage<EisenhowerViewMode>('productivist.eisenhowerVie
 
 const activeTodos = computed(() => todos.sortTasks(todos.todos.filter((todo) => !todo.done)))
 
-const isImportant = (todo: Todo) => todo.importance !== 'low'
-const isUrgent = (todo: Todo) => todo.urgency !== 'low'
+const isImportant = (todo: Todo) => todo.importance === 'high'
+const isUrgent = (todo: Todo) => todo.urgency === 'high'
 
 const doFirst = computed(() => activeTodos.value.filter((todo) => isImportant(todo) && isUrgent(todo)))
 const schedule = computed(() => activeTodos.value.filter((todo) => isImportant(todo) && !isUrgent(todo)))
