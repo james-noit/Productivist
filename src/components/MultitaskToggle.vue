@@ -72,7 +72,7 @@ function onToggle() {
 }
 
 .multitask-toggle--on .multitask-toggle__track {
-  background-color: var(--color-primary);
+  background: var(--gradient-accent, var(--color-primary));
   border-color: var(--color-primary);
 }
 

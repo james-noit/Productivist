@@ -579,7 +579,7 @@ function openDetail(e: Event) {
 }
 
 .mt-row__btn--finish {
-  background-color: var(--color-primary);
+  background: var(--gradient-primary, var(--color-primary));
   color: var(--color-primary-contrast);
 }
 

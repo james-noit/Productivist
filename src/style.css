@@ -25,26 +25,29 @@
 }
 
 [data-theme='dark'] {
-  /* Solarized Dark - tema medianoche */
-  --color-bg: #002b36;
-  --color-surface: #073642;
-  --color-surface-alt: #586e75;
-  --color-text: #93a1a1;
-  --color-text-muted: #839496;
-  --color-border: #073642;
-  --color-primary: #dc322f;
-  --color-primary-contrast: #fdf6e3;
-  --color-low: #859900;
-  --color-medium: #b58900;
-  --color-high: #d30102;
-  --color-capacity-safe: #859900;
-  --color-capacity-elevated: #b58900;
-  --color-capacity-high: #cb8b1e;
-  --color-capacity-critical: #dc322f;
-  --color-quadrant-do-first: #dc322f;
-  --color-quadrant-schedule: #268bd2;
-  --color-quadrant-delegate: #b58900;
-  --color-quadrant-eliminate: #839496;
+  /* Dracula - tema medianoche */
+  --color-bg: #282a36;
+  --color-surface: #21222c;
+  --color-surface-alt: #44475a;
+  --color-text: #f8f8f2;
+  --color-text-muted: #6272a4;
+  --color-border: #44475a;
+  --color-primary: #bd93f9;
+  --color-primary-contrast: #282a36;
+  --color-low: #50fa7b;
+  --color-medium: #f1fa8c;
+  --color-high: #ff5555;
+  --color-capacity-safe: #50fa7b;
+  --color-capacity-elevated: #f1fa8c;
+  --color-capacity-high: #ffb86c;
+  --color-capacity-critical: #ff5555;
+  --color-quadrant-do-first: #ff5555;
+  --color-quadrant-schedule: #8be9fd;
+  --color-quadrant-delegate: #ffb86c;
+  --color-quadrant-eliminate: #6272a4;
+  /* Degraded accents used sparingly on a few focal elements (see components). */
+  --gradient-primary: linear-gradient(135deg, #bd93f9, #ff79c6);
+  --gradient-accent: linear-gradient(135deg, #8be9fd, #50fa7b);
   color-scheme: dark;
 }
 

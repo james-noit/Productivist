@@ -307,7 +307,7 @@ onMounted(() => {
 }
 
 .clock__modes button.active {
-  background-color: var(--color-primary);
+  background: var(--gradient-primary, var(--color-primary));
   color: var(--color-primary-contrast);
   border-color: var(--color-primary);
 }
@@ -465,7 +465,7 @@ onMounted(() => {
   justify-content: center;
   width: 2.75rem;
   height: 2.75rem;
-  background-color: var(--color-primary);
+  background: var(--gradient-primary, var(--color-primary));
   color: var(--color-primary-contrast);
   border: none;
   border-radius: 50%;
@@ -476,7 +476,7 @@ onMounted(() => {
 }
 
 .clock__icon-button--secondary {
-  background-color: var(--color-surface-alt);
+  background: var(--color-surface-alt);
   color: var(--color-text);
 }
 
