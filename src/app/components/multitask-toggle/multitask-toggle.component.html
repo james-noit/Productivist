@@ -1,0 +1,14 @@
+<button
+  type="button"
+  class="multitask-toggle"
+  role="switch"
+  [attr.aria-checked]="multitask.enabled()"
+  [attr.aria-label]="'multitask.toggleLabel' | translate"
+  [class.multitask-toggle--on]="multitask.enabled()"
+  (click)="onToggle()"
+>
+  <span class="multitask-toggle__label">{{ 'multitask.toggleLabel' | translate }}</span>
+  <span class="multitask-toggle__track">
+    <span class="multitask-toggle__thumb"></span>
+  </span>
+</button>

@@ -1,0 +1,121 @@
+.general-backlog {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  flex: 1;
+}
+
+.general-backlog__hint {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+.general-backlog__empty {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+.general-backlog__table-wrap {
+  overflow-x: auto;
+}
+
+.general-backlog__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.general-backlog__table th {
+  text-align: left;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--color-text-muted);
+  padding: 0.4rem 0.6rem;
+  border-bottom: 1px solid var(--color-border);
+  white-space: nowrap;
+}
+
+.general-backlog__col-total,
+.general-backlog__col-quadrant {
+  text-align: center;
+}
+
+.general-backlog__col-quadrant--do-first {
+  color: var(--color-quadrant-do-first);
+}
+
+.general-backlog__col-quadrant--schedule {
+  color: var(--color-quadrant-schedule);
+}
+
+.general-backlog__col-quadrant--delegate {
+  color: var(--color-quadrant-delegate);
+}
+
+.general-backlog__col-quadrant--eliminate {
+  color: var(--color-quadrant-eliminate);
+}
+
+.general-backlog__row td {
+  padding: 0.5rem 0.6rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.general-backlog__row--combined {
+  font-weight: 600;
+  background-color: var(--color-surface-alt);
+}
+
+.general-backlog__name {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  white-space: nowrap;
+}
+
+.general-backlog__total,
+.general-backlog__count-cell {
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.general-backlog__count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.6rem;
+  padding: 0.1rem 0.35rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  color: var(--color-text);
+  background-color: var(--color-surface-alt);
+}
+
+.general-backlog__count--do-first {
+  background-color: color-mix(in srgb, var(--color-quadrant-do-first) 22%, transparent);
+  color: var(--color-quadrant-do-first);
+}
+
+.general-backlog__count--schedule {
+  background-color: color-mix(in srgb, var(--color-quadrant-schedule) 22%, transparent);
+  color: var(--color-quadrant-schedule);
+}
+
+.general-backlog__count--delegate {
+  background-color: color-mix(in srgb, var(--color-quadrant-delegate) 22%, transparent);
+  color: var(--color-quadrant-delegate);
+}
+
+.general-backlog__count--eliminate {
+  background-color: color-mix(in srgb, var(--color-quadrant-eliminate) 22%, transparent);
+  color: var(--color-quadrant-eliminate);
+}
+
+.general-backlog__cards {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}

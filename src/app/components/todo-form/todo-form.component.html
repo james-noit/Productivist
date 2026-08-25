@@ -1,0 +1,72 @@
+<form
+  #formEl
+  class="todo-form"
+  [class.todo-form--expanded]="expanded()"
+  (submit)="$event.preventDefault(); submit()"
+  (focusin)="expanded.set(true)"
+  (focusout)="onFocusOut($event)"
+>
+  <input
+    #titleInputEl
+    [ngModel]="title()"
+    (ngModelChange)="title.set($event)"
+    name="title"
+    type="text"
+    class="todo-form__title"
+    [placeholder]="'todo.addPlaceholder' | translate"
+  />
+  @if (expanded()) {
+    <div class="todo-form__details">
+      <div class="todo-form__row">
+        <label>
+          {{ 'todo.importance' | translate }}
+          <select [ngModel]="importance()" (ngModelChange)="importance.set($event)" name="importance">
+            <option value="low">{{ 'todo.low' | translate }}</option>
+            <option value="medium">{{ 'todo.medium' | translate }}</option>
+            <option value="high">{{ 'todo.high' | translate }}</option>
+          </select>
+        </label>
+        <label>
+          {{ 'todo.urgency' | translate }}
+          <select [ngModel]="urgency()" (ngModelChange)="urgency.set($event)" name="urgency">
+            <option value="low">{{ 'todo.low' | translate }}</option>
+            <option value="medium">{{ 'todo.medium' | translate }}</option>
+            <option value="high">{{ 'todo.high' | translate }}</option>
+          </select>
+        </label>
+      </div>
+      <input
+        [ngModel]="tagsInput()"
+        (ngModelChange)="tagsInput.set($event)"
+        name="tags"
+        type="text"
+        [attr.list]="tagSuggestionsId"
+        [placeholder]="'todo.tagsPlaceholder' | translate"
+      />
+      <datalist [id]="tagSuggestionsId">
+        @for (tag of todos.allTags(); track tag) {
+          <option [value]="tag"></option>
+        }
+      </datalist>
+      <textarea
+        [ngModel]="description()"
+        (ngModelChange)="description.set($event)"
+        name="description"
+        rows="2"
+        [placeholder]="'todo.descriptionPlaceholder' | translate"
+      ></textarea>
+      <label class="todo-form__pomodoros">
+        {{ 'todo.pomodorosForTermination' | translate }}
+        <input
+          [ngModel]="pomodorosForTermination()"
+          (ngModelChange)="pomodorosForTermination.set($event)"
+          name="pomodorosForTermination"
+          type="number"
+          min="1"
+          [placeholder]="'todo.pomodorosForTerminationPlaceholder' | translate"
+        />
+      </label>
+      <button type="submit">{{ 'todo.add' | translate }}</button>
+    </div>
+  }
+</form>

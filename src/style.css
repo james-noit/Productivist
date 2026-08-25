@@ -115,7 +115,7 @@ body {
   transition: background-color 0.2s, color 0.2s;
 }
 
-#app {
+app-root {
   min-height: 100vh;
   display: flex;
   flex-direction: column;

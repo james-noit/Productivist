@@ -1,0 +1,200 @@
+<section class="clock">
+  <div class="clock__area clock__area--clock">
+    <div class="clock__modes">
+      <button type="button" [class.active]="clock.mode() === 'focus'" (click)="clock.setMode('focus')">
+        {{ 'clock.focus' | translate }}
+      </button>
+      <button type="button" [class.active]="clock.mode() === 'break'" (click)="clock.setMode('break')">
+        {{ 'clock.break' | translate }}
+      </button>
+      <app-clock-settings />
+    </div>
+
+    <div class="clock__main">
+      <div class="clock__dial" [class.clock__dial--boxes]="settings.clockStyle() === 'boxes'">
+        @if (settings.clockStyle() === 'boxes') {
+          <app-box-clock />
+        } @else {
+          <svg viewBox="0 0 200 200" width="240" height="240">
+            <circle cx="100" cy="100" [attr.r]="radius" class="clock__track" fill="none" stroke-width="10" />
+            <circle
+              cx="100"
+              cy="100"
+              [attr.r]="radius"
+              class="clock__progress"
+              fill="none"
+              stroke-width="10"
+              stroke-linecap="round"
+              [attr.stroke-dasharray]="circumference"
+              [attr.stroke-dashoffset]="dashOffset()"
+              transform="rotate(-90 100 100)"
+            />
+          </svg>
+        }
+      </div>
+
+      <div class="clock__time-row">
+        <div class="clock__stepper" role="group" [attr.aria-label]="'clock.adjustDuration' | translate">
+          <button
+            type="button"
+            class="clock__stepper-btn"
+            [disabled]="!canDecreaseDuration()"
+            [attr.aria-label]="'clock.decreaseLarge' | translate"
+            [title]="'clock.decreaseLarge' | translate"
+            (click)="clock.adjustDuration(-300)"
+          >
+            -5′
+          </button>
+          <button
+            type="button"
+            class="clock__stepper-btn"
+            [disabled]="!canDecreaseDuration()"
+            [attr.aria-label]="'clock.decreaseSmall' | translate"
+            [title]="'clock.decreaseSmall' | translate"
+            (click)="clock.adjustDuration(-30)"
+          >
+            -30″
+          </button>
+        </div>
+
+        <span class="clock__time">{{ formattedTime() }}</span>
+
+        <div class="clock__stepper" role="group" [attr.aria-label]="'clock.adjustDuration' | translate">
+          <button
+            type="button"
+            class="clock__stepper-btn"
+            [disabled]="!canIncreaseDuration()"
+            [attr.aria-label]="'clock.increaseSmall' | translate"
+            [title]="'clock.increaseSmall' | translate"
+            (click)="clock.adjustDuration(30)"
+          >
+            +30″
+          </button>
+          <button
+            type="button"
+            class="clock__stepper-btn"
+            [disabled]="!canIncreaseDuration()"
+            [attr.aria-label]="'clock.increaseLarge' | translate"
+            [title]="'clock.increaseLarge' | translate"
+            (click)="clock.adjustDuration(300)"
+          >
+            +5′
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="clock__controls">
+      @if (!clock.running()) {
+        <button
+          type="button"
+          class="clock__icon-button"
+          [attr.aria-label]="'clock.start' | translate"
+          [title]="'clock.start' | translate"
+          (click)="clock.start()"
+        >
+          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+            <path fill="currentColor" d="M8 5v14l11-7z" />
+          </svg>
+        </button>
+      } @else {
+        <button
+          type="button"
+          class="clock__icon-button"
+          [attr.aria-label]="'clock.pause' | translate"
+          [title]="'clock.pause' | translate"
+          (click)="clock.pause()"
+        >
+          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+            <path fill="currentColor" d="M6 5h4v14H6zM14 5h4v14h-4z" />
+          </svg>
+        </button>
+      }
+      <button
+        type="button"
+        class="clock__icon-button clock__icon-button--secondary"
+        [attr.aria-label]="'clock.reset' | translate"
+        [title]="'clock.reset' | translate"
+        (click)="clock.reset()"
+      >
+        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+          <path
+            fill="currentColor"
+            d="M12 5V2L7 7l5 5V8c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"
+          />
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="clock__area clock__area--task">
+    <div class="clock__task" [class.clock__task--empty]="!todos.currentTask()">
+      @if (todos.currentTask(); as currentTask) {
+        <div class="clock__task-info" (click)="openDetail()">
+          <span class="clock__task-label">{{ 'clock.currentTask' | translate }}</span>
+          @if (!titleEditing()) {
+            <span class="clock__task-title" (click)="$event.stopPropagation(); startTitleEdit()">{{ currentTask.title }}</span>
+          } @else {
+            <input
+              #titleInput
+              [ngModel]="editTitle()"
+              (ngModelChange)="editTitle.set($event)"
+              name="editTitle"
+              type="text"
+              class="clock__task-title-input"
+              (click)="$event.stopPropagation()"
+              (keyup.enter)="commitTitleEdit()"
+              (keyup.escape)="cancelTitleEdit()"
+              (blur)="commitTitleEdit()"
+            />
+          }
+        </div>
+        <div class="clock__task-actions" (click)="$event.stopPropagation()">
+          <button type="button" class="clock__task-finish" (click)="finishTask()">{{ 'clock.finished' | translate }}</button>
+          <button type="button" class="clock__task-change" (click)="openTaskModal()">{{ 'clock.changeTask' | translate }}</button>
+        </div>
+      } @else {
+        <button type="button" class="clock__task-select" (click)="openTaskModal()">{{ 'clock.selectTask' | translate }}</button>
+      }
+    </div>
+  </div>
+
+  @if (taskModalOpen()) {
+    <div class="clock__overlay" (click)="$event.target === $event.currentTarget && taskModalOpen.set(false)">
+      <div class="clock__modal" role="dialog" aria-modal="true" [attr.aria-label]="'clock.selectTask' | translate">
+        <div class="clock__modal-header">
+          <h3>{{ 'clock.selectTask' | translate }}</h3>
+          <button type="button" class="clock__modal-close" [attr.aria-label]="'todo.close' | translate" (click)="taskModalOpen.set(false)">✕</button>
+        </div>
+        @if (!todos.filteredTodos().length) {
+          <p class="clock__modal-empty">{{ 'todo.empty' | translate }}</p>
+        } @else {
+          <ul class="clock__task-list">
+            @for (todo of todos.filteredTodos(); track todo.id) {
+              <li>
+                <button type="button" class="clock__task-list-item" (click)="selectTask(todo.id)">{{ todo.title }}</button>
+              </li>
+            }
+          </ul>
+        }
+      </div>
+    </div>
+  }
+
+  @if (clock.sessionModalOpen()) {
+    <div class="clock__overlay">
+      <div class="clock__modal" role="dialog" aria-modal="true" [attr.aria-label]="'clock.timeUp' | translate">
+        <h3>{{ (clock.mode() === 'break' ? 'clock.timeUpFocusTitle' : 'clock.timeUpBreakTitle') | translate }}</h3>
+        <p>{{ (clock.mode() === 'break' ? 'clock.startBreakPrompt' : 'clock.startFocusPrompt') | translate }}</p>
+        <div class="clock__modal-actions">
+          <button type="button" (click)="clock.startNextSession()">{{ 'clock.startNow' | translate }}</button>
+          <button type="button" class="clock__modal-secondary" (click)="clock.dismissSessionModal()">{{ 'clock.later' | translate }}</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  @if (showDetail() && todos.currentTask(); as currentTask) {
+    <app-task-detail-modal [todo]="currentTask" (close)="showDetail.set(false)" />
+  }
+</section>

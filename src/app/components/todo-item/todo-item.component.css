@@ -1,0 +1,87 @@
+.todo-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 0.65rem;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background-color: var(--color-surface);
+  transition: opacity 0.15s, transform 0.15s;
+  overflow-x: auto;
+}
+
+.todo-item--done .todo-item__title {
+  text-decoration: line-through;
+  color: var(--color-text-muted);
+}
+
+.todo-item--dragging {
+  opacity: 0.4;
+}
+
+.todo-item__handle {
+  cursor: grab;
+  color: var(--color-text-muted);
+  line-height: 1.6;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.todo-item__title {
+  flex: 1 1 auto;
+  min-width: 4rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.todo-item__badges {
+  display: flex;
+  gap: 0.35rem;
+  flex-shrink: 0;
+}
+
+.badge {
+  font-size: 0.7rem;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  background-color: var(--color-surface-alt);
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.badge--low {
+  background-color: var(--color-low);
+  color: #fff;
+}
+
+.badge--medium {
+  background-color: var(--color-medium);
+  color: #fff;
+}
+
+.badge--high {
+  background-color: var(--color-high);
+  color: #fff;
+}
+
+.todo-item__delete {
+  flex-shrink: 0;
+  min-width: 2.25rem;
+  min-height: 2.25rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  color: var(--color-text);
+  padding: 0.2rem 0.5rem;
+}
+
+.todo-item input[type='checkbox'] {
+  width: 1.15rem;
+  height: 1.15rem;
+  flex-shrink: 0;
+}

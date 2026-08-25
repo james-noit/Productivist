@@ -1,0 +1,31 @@
+<main class="planning-lab">
+  <div class="planning-lab__header">
+    <h2>{{ 'planningLab.title' | translate }}</h2>
+    <div class="planning-lab__tabs" role="tablist">
+      <button
+        type="button"
+        role="tab"
+        [attr.aria-selected]="tab() === 'daily'"
+        [class.active]="tab() === 'daily'"
+        (click)="tab.set('daily')"
+      >
+        {{ 'planningLab.dailyBacklog' | translate }}
+      </button>
+      <button
+        type="button"
+        role="tab"
+        [attr.aria-selected]="tab() === 'general'"
+        [class.active]="tab() === 'general'"
+        (click)="tab.set('general')"
+      >
+        {{ 'planningLab.generalBacklog' | translate }}
+      </button>
+    </div>
+  </div>
+
+  @if (tab() === 'daily') {
+    <app-daily-backlog-view />
+  } @else {
+    <app-general-backlog-view />
+  }
+</main>

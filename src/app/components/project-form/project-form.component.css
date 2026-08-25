@@ -1,0 +1,71 @@
+.project-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.project-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
+.project-form input,
+.project-form textarea {
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  padding: 0.4rem 0.6rem;
+  font-family: inherit;
+  resize: vertical;
+}
+
+.project-form__icons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.project-form__icon {
+  width: 2.25rem;
+  height: 2.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--color-surface-alt);
+  border: 2px solid transparent;
+  border-radius: 6px;
+  font-size: 1.1rem;
+}
+
+.project-form__icon--selected {
+  border-color: var(--color-primary);
+}
+
+.project-form__actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.project-form__save {
+  background-color: var(--color-primary);
+  color: var(--color-primary-contrast);
+  border: none;
+  border-radius: 6px;
+  padding: 0.5rem 1.25rem;
+}
+
+.project-form__cancel {
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  color: var(--color-text);
+  padding: 0.5rem 1.25rem;
+}

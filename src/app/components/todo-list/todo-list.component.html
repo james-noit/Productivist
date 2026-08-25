@@ -1,0 +1,46 @@
+<section class="todo-list">
+  <h2>{{ 'todo.title' | translate }}</h2>
+  <div class="todo-list__tabs" role="tablist">
+    <button
+      type="button"
+      role="tab"
+      [attr.aria-selected]="todos.viewMode() === 'all'"
+      [class.active]="todos.viewMode() === 'all'"
+      (click)="todos.setViewMode('all')"
+    >
+      {{ 'todo.viewAll' | translate }}
+    </button>
+    <button
+      type="button"
+      role="tab"
+      [attr.aria-selected]="todos.viewMode() === 'projects'"
+      [class.active]="todos.viewMode() === 'projects'"
+      (click)="todos.setViewMode('projects')"
+    >
+      {{ 'todo.viewProjects' | translate }}
+    </button>
+  </div>
+
+  @if (todos.viewMode() === 'all') {
+    <app-todo-form />
+    @if (todos.todos().length) {
+      <div class="todo-list__toolbar">
+        <app-todo-filters />
+        @if (todos.completedTodos().length) {
+          <app-completed-tasks-stack />
+        }
+      </div>
+    }
+    @if (!todos.filteredTodos().length) {
+      <p class="todo-list__empty">{{ 'todo.empty' | translate }}</p>
+    } @else {
+      <ul class="todo-list__items">
+        @for (todo of todos.filteredTodos(); track todo.id) {
+          <app-todo-item [todo]="todo" />
+        }
+      </ul>
+    }
+  } @else {
+    <app-projects-panel />
+  }
+</section>

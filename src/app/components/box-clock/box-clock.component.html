@@ -1,0 +1,9 @@
+<div class="box-clock">
+  @for (boxIndex of boxIndices(); track boxIndex) {
+    <span
+      class="box-clock__box"
+      [class]="'box-clock__box--' + boxState(boxIndex)"
+      [style.--p]="boxProgress(boxIndex)"
+    ></span>
+  }
+</div>

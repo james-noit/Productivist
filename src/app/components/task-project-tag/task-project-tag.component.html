@@ -1,0 +1,17 @@
+@if (project(); as project) {
+  <div
+    class="task-project-tag"
+    [title]="milestone() ? project.name + ' · ' + milestone()!.name : project.name"
+  >
+    <span class="task-project-tag__project">
+      <span aria-hidden="true">{{ project.icon }}</span>
+      {{ project.name }}
+    </span>
+    @if (milestone(); as milestone) {
+      <span class="task-project-tag__milestone">
+        <span class="task-project-tag__arrow" aria-hidden="true">↳</span>
+        {{ milestone.name }}
+      </span>
+    }
+  </div>
+}

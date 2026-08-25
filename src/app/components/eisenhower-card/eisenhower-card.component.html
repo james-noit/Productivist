@@ -1,0 +1,19 @@
+<li
+  class="eisenhower-card"
+  [class]="'eisenhower-card--' + viewMode()"
+  [class.eisenhower-card--dragging]="todos.draggedId() === todo().id"
+  draggable="true"
+  (dragstart)="todos.startDrag(todo().id)"
+  (dragend)="todos.endDrag()"
+  (click)="open.emit(todo().id)"
+>
+  @if (viewMode() === 'detailed') {
+    <input type="checkbox" [checked]="todo().done" (click)="$event.stopPropagation()" (change)="todos.toggleDone(todo().id)" />
+  }
+  <div class="eisenhower-card__content">
+    <span class="eisenhower-card__title">{{ todo().title }}</span>
+    @if (viewMode() === 'detailed') {
+      <app-task-project-tag [todo]="todo()" />
+    }
+  </div>
+</li>

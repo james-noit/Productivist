@@ -1,0 +1,13 @@
+<app-app-header />
+@if (view.current() === 'planning-lab') {
+  <app-planning-lab-view />
+} @else if (view.current() === 'eisenhower') {
+  <app-eisenhower-view />
+} @else if (multitask.enabled()) {
+  <app-multitask-view />
+} @else {
+  <main class="main-view">
+    <app-pomodoro-clock class="main-view__clock" />
+    <app-todo-list class="main-view__todos" />
+  </main>
+}

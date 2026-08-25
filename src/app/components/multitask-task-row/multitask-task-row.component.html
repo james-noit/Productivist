@@ -1,0 +1,219 @@
+<div
+  class="mt-row"
+  [class.mt-row--dissolving]="isDissolving()"
+  [class.mt-row--finishing]="strikeActive()"
+  [style.borderLeftColor]="borderColor()"
+>
+  @if (task(); as task) {
+    <div class="mt-row__main" (click)="openDetail($event)">
+      <div class="mt-row__title-line">
+        <span class="mt-row__squares">
+          @for (mark of card().accomplishments; track $index) {
+            <button
+              type="button"
+              class="mt-row__square"
+              [class]="'mt-row__square--' + mark"
+              (click)="$event.stopPropagation(); multitask.removeAccomplishment(card().id, $index)"
+            ></button>
+          }
+        </span>
+        <div class="mt-row__add-group" (click)="$event.stopPropagation()">
+          <button
+            type="button"
+            class="mt-row__add mt-row__add--green"
+            [attr.aria-label]="'multitask.addAccomplishmentGreen' | translate"
+            [title]="'multitask.addAccomplishmentGreen' | translate"
+            (click)="multitask.addAccomplishment(card().id, 'green')"
+          >+</button>
+          <button
+            type="button"
+            class="mt-row__add mt-row__add--red"
+            [attr.aria-label]="'multitask.addAccomplishmentRed' | translate"
+            [title]="'multitask.addAccomplishmentRed' | translate"
+            (click)="multitask.addAccomplishment(card().id, 'red')"
+          >+</button>
+        </div>
+        <div class="mt-row__text">
+          @if (!titleEditing()) {
+            <span
+              class="mt-row__title"
+              [class.mt-row__title--struck]="strikeActive()"
+              (click)="startTitleEdit($event)"
+            >{{ task.title }}</span>
+          } @else {
+            <input
+              #titleInput
+              [ngModel]="editTitle()"
+              (ngModelChange)="editTitle.set($event)"
+              name="editTitle"
+              type="text"
+              class="mt-row__title-input"
+              (click)="$event.stopPropagation()"
+              (keyup.enter)="commitTitleEdit()"
+              (keyup.escape)="cancelTitleEdit()"
+              (blur)="commitTitleEdit()"
+            />
+          }
+          @if (project(); as project) {
+            <div
+              class="mt-row__project"
+              [title]="milestone() ? project.name + ' · ' + milestone()!.name : project.name"
+            >
+              <span aria-hidden="true">{{ project.icon }}</span>
+              {{ project.name }}@if (milestone(); as milestone) { · {{ milestone.name }} }
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-row__actions" (click)="$event.stopPropagation()">
+      @if (showIterationCheck()) {
+        <span class="mt-row__iteration-label">{{ 'multitask.iterationQuestionShort' | translate }}</span>
+        <button
+          type="button"
+          class="mt-row__iteration-btn mt-row__iteration-btn--miss"
+          [attr.aria-label]="'multitask.iterationMiss' | translate"
+          [title]="'multitask.iterationMiss' | translate"
+          (click)="answerIteration(['red', 'red'])"
+        >
+          ✕
+        </button>
+        <button
+          type="button"
+          class="mt-row__iteration-btn mt-row__iteration-btn--hit"
+          [attr.aria-label]="'multitask.iterationHit' | translate"
+          [title]="'multitask.iterationHit' | translate"
+          (click)="answerIteration(['green'])"
+        >
+          ✓
+        </button>
+        <button
+          type="button"
+          class="mt-row__iteration-btn mt-row__iteration-btn--double"
+          [attr.aria-label]="'multitask.iterationDoubleHit' | translate"
+          [title]="'multitask.iterationDoubleHit' | translate"
+          (click)="answerIteration(['green', 'green'])"
+        >
+          ✓✓
+        </button>
+      } @else {
+        <button
+          type="button"
+          class="mt-row__btn mt-row__btn--finish"
+          [disabled]="strikeActive()"
+          [attr.aria-label]="'multitask.finish' | translate"
+          [title]="'multitask.finish' | translate"
+          (click)="onFinish()"
+        >
+          ✓
+        </button>
+        <button
+          type="button"
+          class="mt-row__btn mt-row__btn--clear"
+          [attr.aria-label]="'multitask.clear' | translate"
+          [title]="'multitask.clear' | translate"
+          (click)="onClear()"
+        >
+          ✕
+        </button>
+      }
+    </div>
+  } @else {
+    <button type="button" class="mt-row__select" (click)="openTaskModal()">
+      <span aria-hidden="true">+</span>
+      {{ 'clock.selectTask' | translate }}
+    </button>
+  }
+
+  @if (taskModalOpen()) {
+    <div class="mt-row__overlay" (click)="$event.target === $event.currentTarget && closeTaskModal()">
+      <div class="mt-row__modal" role="dialog" aria-modal="true" [attr.aria-label]="'clock.selectTask' | translate">
+        <div class="mt-row__modal-header">
+          <h3>{{ 'clock.selectTask' | translate }}</h3>
+          <button type="button" class="mt-row__modal-close" [attr.aria-label]="'todo.close' | translate" (click)="closeTaskModal()">✕</button>
+        </div>
+        <div class="mt-row__modal-tabs" role="tablist">
+          <button
+            type="button"
+            role="tab"
+            [attr.aria-selected]="pickTab() === 'all'"
+            [class.active]="pickTab() === 'all'"
+            (click)="pickTab.set('all')"
+          >
+            {{ 'todo.viewAll' | translate }}
+          </button>
+          <button
+            type="button"
+            role="tab"
+            [attr.aria-selected]="pickTab() === 'projects'"
+            [class.active]="pickTab() === 'projects'"
+            (click)="pickTab.set('projects')"
+          >
+            {{ 'todo.viewProjects' | translate }}
+          </button>
+        </div>
+
+        @if (pickTab() === 'all') {
+          <div class="mt-row__modal-filters">
+            <label>
+              {{ 'todo.importance' | translate }}
+              <select [ngModel]="pickImportance()" (ngModelChange)="pickImportance.set($event)" name="pickImportance">
+                <option value="all">{{ 'todo.filterAll' | translate }}</option>
+                <option value="low">{{ 'todo.low' | translate }}</option>
+                <option value="medium">{{ 'todo.medium' | translate }}</option>
+                <option value="high">{{ 'todo.high' | translate }}</option>
+              </select>
+            </label>
+            <label>
+              {{ 'todo.urgency' | translate }}
+              <select [ngModel]="pickUrgency()" (ngModelChange)="pickUrgency.set($event)" name="pickUrgency">
+                <option value="all">{{ 'todo.filterAll' | translate }}</option>
+                <option value="low">{{ 'todo.low' | translate }}</option>
+                <option value="medium">{{ 'todo.medium' | translate }}</option>
+                <option value="high">{{ 'todo.high' | translate }}</option>
+              </select>
+            </label>
+            @if (todos.allTags().length) {
+              <label>
+                {{ 'todo.tags' | translate }}
+                <select [ngModel]="pickTag()" (ngModelChange)="pickTag.set($event)" name="pickTag">
+                  <option value="all">{{ 'todo.filterAll' | translate }}</option>
+                  @for (tag of todos.allTags(); track tag) {
+                    <option [value]="tag">{{ tag }}</option>
+                  }
+                </select>
+              </label>
+            }
+          </div>
+          @if (!pickableTasks().length) {
+            <p class="mt-row__modal-empty">{{ 'todo.empty' | translate }}</p>
+          } @else {
+            <ul class="mt-row__task-list">
+              @for (todo of pickableTasks(); track todo.id) {
+                <li>
+                  <button type="button" class="mt-row__task-list-item" (click)="selectTask(todo.id)">
+                    <span class="mt-row__task-list-title">{{ todo.title }}</span>
+                    <span class="mt-row__task-list-badges">
+                      <span class="badge" [class]="'badge--' + todo.importance">{{ ('todo.' + todo.importance) | translate }}</span>
+                      <span class="badge" [class]="'badge--' + todo.urgency">{{ ('todo.' + todo.urgency) | translate }}</span>
+                    </span>
+                    <app-task-project-tag [todo]="todo" />
+                  </button>
+                </li>
+              }
+            </ul>
+          }
+        } @else {
+          <div class="mt-row__modal-projects">
+            <app-projects-panel [multitaskMode]="true" [isTaskPickable]="isPickable" [onPickTask]="selectTask.bind(this)" />
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+  @if (showDetail() && task(); as task) {
+    <app-task-detail-modal [todo]="task" (close)="showDetail.set(false)" />
+  }
+</div>

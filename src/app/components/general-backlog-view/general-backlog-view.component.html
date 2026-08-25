@@ -1,0 +1,47 @@
+<div class="general-backlog">
+  <p class="general-backlog__hint">{{ 'planningLab.generalBacklogHint' | translate }}</p>
+
+  @if (isEmpty()) {
+    <p class="general-backlog__empty">{{ 'planningLab.generalBacklogEmpty' | translate }}</p>
+  } @else {
+    <div class="general-backlog__table-wrap">
+      <table class="general-backlog__table">
+        <thead>
+          <tr>
+            <th class="general-backlog__col-name">{{ 'planningLab.project' | translate }}</th>
+            <th class="general-backlog__col-total">{{ 'planningLab.totalTasks' | translate }}</th>
+            @for (q of quadrants; track q.key) {
+              <th class="general-backlog__col-quadrant" [class]="'general-backlog__col-quadrant--' + q.cssKey">
+                {{ q.labelKey | translate }}
+              </th>
+            }
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="general-backlog__row general-backlog__row--combined">
+            <td class="general-backlog__name">{{ 'planningLab.allProjectsCombined' | translate }}</td>
+            <td class="general-backlog__total">{{ combinedTotal() }}</td>
+            @for (q of quadrants; track q.key) {
+              <td class="general-backlog__count-cell">
+                <span
+                  class="general-backlog__count"
+                  [class]="'general-backlog__count--' + q.cssKey"
+                  [title]="q.labelKey | translate"
+                >
+                  {{ combinedCounts()[q.key] }}
+                </span>
+              </td>
+            }
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="general-backlog__cards">
+      <app-free-tasks-card />
+      @for (row of projectRows(); track row.project.id) {
+        <app-project-tree-item [project]="row.project" [quadrantCounts]="row.counts" />
+      }
+    </div>
+  }
+</div>

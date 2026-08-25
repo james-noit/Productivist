@@ -1,0 +1,104 @@
+<main class="eisenhower-view">
+  <div class="eisenhower-view__header">
+    <h2>{{ 'eisenhower.title' | translate }}</h2>
+    <div class="eisenhower-view__modes" role="tablist">
+      <button
+        type="button"
+        role="tab"
+        [attr.aria-selected]="viewMode() === 'detailed'"
+        [class.active]="viewMode() === 'detailed'"
+        [title]="'eisenhower.viewDetailed' | translate"
+        [attr.aria-label]="'eisenhower.viewDetailed' | translate"
+        (click)="viewMode.set('detailed')"
+      >
+        ⊞
+      </button>
+      <button
+        type="button"
+        role="tab"
+        [attr.aria-selected]="viewMode() === 'compact'"
+        [class.active]="viewMode() === 'compact'"
+        [title]="'eisenhower.viewCompact' | translate"
+        [attr.aria-label]="'eisenhower.viewCompact' | translate"
+        (click)="viewMode.set('compact')"
+      >
+        ☰
+      </button>
+      <button
+        type="button"
+        role="tab"
+        [attr.aria-selected]="viewMode() === 'minimal'"
+        [class.active]="viewMode() === 'minimal'"
+        [title]="'eisenhower.viewMinimal' | translate"
+        [attr.aria-label]="'eisenhower.viewMinimal' | translate"
+        (click)="viewMode.set('minimal')"
+      >
+        ≡
+      </button>
+    </div>
+  </div>
+
+  @if (!activeTodos().length) {
+    <p class="eisenhower-view__empty">{{ 'todo.empty' | translate }}</p>
+  } @else {
+    <div class="eisenhower-view__grid" [class]="'eisenhower-view__grid--' + viewMode()">
+      @for (q of quadrantDefs; track q.key) {
+        <section
+          class="eisenhower-quadrant"
+          [class]="'eisenhower-quadrant--' + q.cssKey"
+          (dragover)="$event.preventDefault()"
+          (drop)="onDrop(q.key)"
+        >
+          <header class="eisenhower-quadrant__header">
+            <h3>{{ ('eisenhower.' + q.key) | translate }}</h3>
+            <span class="eisenhower-quadrant__hint">{{ ('eisenhower.' + q.key + 'Hint') | translate }}</span>
+            <button type="button" class="eisenhower-quadrant__add" [attr.aria-label]="'eisenhower.addTaskToQuadrant' | translate" (click)="openNewTask(q.key)">+</button>
+          </header>
+          @if (viewMode() === 'detailed') {
+            <ul class="eisenhower-quadrant__list">
+              @for (todo of listFor(q.key); track todo.id) {
+                <app-eisenhower-card [todo]="todo" [viewMode]="viewMode()" (open)="openDetail($event)" />
+              }
+              @if (!listFor(q.key).length) {
+                <li class="eisenhower-quadrant__empty">{{ 'eisenhower.empty' | translate }}</li>
+              }
+            </ul>
+          } @else {
+            <div class="eisenhower-quadrant__groups">
+              @for (group of groupByProject(listFor(q.key)); track group.key) {
+                <div class="eisenhower-quadrant__group">
+                  <span class="eisenhower-quadrant__group-name">
+                    @if (group.icon) {
+                      <span aria-hidden="true">{{ group.icon }}</span>
+                    }
+                    {{ group.name }}
+                  </span>
+                  <ul class="eisenhower-quadrant__list">
+                    @for (todo of group.todos; track todo.id) {
+                      <app-eisenhower-card [todo]="todo" [viewMode]="viewMode()" (open)="openDetail($event)" />
+                    }
+                  </ul>
+                </div>
+              }
+              @if (!listFor(q.key).length) {
+                <p class="eisenhower-quadrant__empty">{{ 'eisenhower.empty' | translate }}</p>
+              }
+            </div>
+          }
+        </section>
+      }
+
+      <span class="eisenhower-view__axis eisenhower-view__axis--urgent-top">{{ 'eisenhower.axisUrgent' | translate }}</span>
+      <span class="eisenhower-view__axis eisenhower-view__axis--urgent-bottom">{{ 'eisenhower.axisNotUrgent' | translate }}</span>
+      <span class="eisenhower-view__axis eisenhower-view__axis--important-left">{{ 'eisenhower.axisImportant' | translate }}</span>
+    </div>
+  }
+
+  @if (selectedTodo(); as todo) {
+    <app-task-detail-modal [todo]="todo" (close)="closeDetail()" />
+  }
+
+  @if (activeQuadrant(); as quadrant) {
+    <app-new-task-modal [quadrant]="quadrant" (close)="closeNewTask()" />
+  }
+</main>

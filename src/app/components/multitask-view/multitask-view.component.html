@@ -1,0 +1,143 @@
+<main class="multitask-view">
+  <div class="multitask-view__clock-strip">
+    <div class="multitask-view__mode">
+      <button type="button" [class.active]="clock.mode() === 'focus'" (click)="clock.setMode('focus')">
+        {{ 'clock.focus' | translate }}
+      </button>
+      <button type="button" [class.active]="clock.mode() === 'break'" (click)="clock.setMode('break')">
+        {{ 'clock.break' | translate }}
+      </button>
+      <app-clock-settings />
+    </div>
+
+    <div class="multitask-view__time-group">
+      <div class="multitask-view__stepper" role="group" [attr.aria-label]="'clock.adjustDuration' | translate">
+        <button
+          type="button"
+          [disabled]="!canDecreaseDuration()"
+          [attr.aria-label]="'clock.decreaseLarge' | translate"
+          [title]="'clock.decreaseLarge' | translate"
+          (click)="clock.adjustDuration(-300)"
+        >
+          -5′
+        </button>
+        <button
+          type="button"
+          [disabled]="!canDecreaseDuration()"
+          [attr.aria-label]="'clock.decreaseSmall' | translate"
+          [title]="'clock.decreaseSmall' | translate"
+          (click)="clock.adjustDuration(-30)"
+        >
+          -30″
+        </button>
+      </div>
+      <span class="multitask-view__time">{{ formattedTime() }}</span>
+      <div class="multitask-view__stepper" role="group" [attr.aria-label]="'clock.adjustDuration' | translate">
+        <button
+          type="button"
+          [disabled]="!canIncreaseDuration()"
+          [attr.aria-label]="'clock.increaseSmall' | translate"
+          [title]="'clock.increaseSmall' | translate"
+          (click)="clock.adjustDuration(30)"
+        >
+          +30″
+        </button>
+        <button
+          type="button"
+          [disabled]="!canIncreaseDuration()"
+          [attr.aria-label]="'clock.increaseLarge' | translate"
+          [title]="'clock.increaseLarge' | translate"
+          (click)="clock.adjustDuration(300)"
+        >
+          +5′
+        </button>
+      </div>
+    </div>
+
+    <div class="multitask-view__controls">
+      @if (!clock.running()) {
+        <button
+          type="button"
+          class="multitask-view__icon-button"
+          [attr.aria-label]="'clock.start' | translate"
+          [title]="'clock.start' | translate"
+          (click)="clock.start()"
+        >
+          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+            <path fill="currentColor" d="M8 5v14l11-7z" />
+          </svg>
+        </button>
+      } @else {
+        <button
+          type="button"
+          class="multitask-view__icon-button"
+          [attr.aria-label]="'clock.pause' | translate"
+          [title]="'clock.pause' | translate"
+          (click)="clock.pause()"
+        >
+          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+            <path fill="currentColor" d="M6 5h4v14H6zM14 5h4v14h-4z" />
+          </svg>
+        </button>
+      }
+      <button
+        type="button"
+        class="multitask-view__icon-button multitask-view__icon-button--secondary"
+        [attr.aria-label]="'clock.reset' | translate"
+        [title]="'clock.reset' | translate"
+        (click)="clock.reset()"
+      >
+        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+          <path
+            fill="currentColor"
+            d="M12 5V2L7 7l5 5V8c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"
+          />
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="multitask-view__toolbar">
+    <app-effectivity-card />
+    <div class="multitask-view__toolbar-actions">
+      <app-multitask-task-drawer />
+    </div>
+  </div>
+
+  @if (!multitask.capacityTipDismissed()) {
+    <div class="multitask-view__tip">
+      <p><em>{{ 'multitask.capacityTip' | translate }}</em></p>
+      <button
+        type="button"
+        class="multitask-view__tip-close"
+        [attr.aria-label]="'todo.close' | translate"
+        (click)="multitask.dismissCapacityTip()"
+      >
+        ✕
+      </button>
+    </div>
+  }
+
+  <div class="multitask-view__list-wrap">
+    @if (showIterationBanner()) {
+      <div class="multitask-view__banner">
+        {{ 'multitask.iterationQuestion' | translate }}
+      </div>
+    }
+
+    <div class="multitask-view__list">
+      @for (card of multitask.cards(); track card.id) {
+        <app-multitask-task-row [card]="card" [borderColor]="borderColor()" />
+      }
+    </div>
+
+    @if (!multitask.cards().length) {
+      <p class="multitask-view__empty">{{ 'multitask.emptyGrid' | translate }}</p>
+    }
+
+    <button type="button" class="multitask-view__add-row" (click)="multitask.addCard()">
+      <span aria-hidden="true">+</span>
+      {{ 'multitask.addCard' | translate }}
+    </button>
+  </div>
+</main>

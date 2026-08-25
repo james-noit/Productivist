@@ -1,0 +1,60 @@
+<div class="completed-stack">
+  <button type="button" class="completed-stack__trigger" (click)="show()">
+    <span class="completed-stack__cards" aria-hidden="true">
+      <span class="completed-stack__card"></span>
+      <span class="completed-stack__card"></span>
+      <span class="completed-stack__card"></span>
+    </span>
+    <span class="completed-stack__label">
+      {{ 'todo.completedTasks' | translate }} ({{ todos.completedTodos().length }})
+    </span>
+  </button>
+
+  @if (open()) {
+    <div class="completed-stack__overlay" (click)="$event.target === $event.currentTarget && close()">
+      <div class="completed-stack__modal" role="dialog" aria-modal="true" [attr.aria-label]="'todo.completedTasks' | translate">
+        <div class="completed-stack__header">
+          <h3>{{ 'todo.completedTasks' | translate }}</h3>
+          <button type="button" class="completed-stack__close" [attr.aria-label]="'todo.close' | translate" (click)="close()">✕</button>
+        </div>
+        @if (!todos.completedTodos().length) {
+          <p class="completed-stack__empty">{{ 'todo.noCompleted' | translate }}</p>
+        } @else {
+          <ul class="completed-stack__list">
+            @for (todo of todos.completedTodos(); track todo.id) {
+              <li class="completed-item">
+                <div class="completed-item__content">
+                  <span class="completed-item__title">{{ todo.title }}</span>
+                  <div class="completed-item__badges">
+                    <span class="badge" [class]="'badge--' + todo.importance">{{ ('todo.' + todo.importance) | translate }}</span>
+                    <span class="badge" [class]="'badge--' + todo.urgency">{{ ('todo.' + todo.urgency) | translate }}</span>
+                    @for (tag of todo.tags; track tag) {
+                      <span class="badge badge--tag">{{ tag }}</span>
+                    }
+                  </div>
+                </div>
+                <div class="completed-item__actions">
+                  <button
+                    type="button"
+                    class="completed-item__restore"
+                    [attr.aria-label]="'todo.restore' | translate"
+                    [title]="'todo.restore' | translate"
+                    (click)="todos.toggleDone(todo.id)"
+                  >
+                    <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+                      <path
+                        fill="currentColor"
+                        d="M12 5V2L7 7l5 5V8c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"
+                      />
+                    </svg>
+                  </button>
+                  <button type="button" [attr.aria-label]="'todo.delete' | translate" (click)="todos.removeTodo(todo.id)">✕</button>
+                </div>
+              </li>
+            }
+          </ul>
+        }
+      </div>
+    </div>
+  }
+</div>

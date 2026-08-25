@@ -1,0 +1,40 @@
+<header class="app-header">
+  <div class="app-header__brand">
+    <app-app-menu />
+    <div class="app-header__title">
+      <span class="app-header__name">Productivist</span>
+      <span class="app-header__version">v{{ appVersion }}</span>
+    </div>
+  </div>
+  @if (!coffeeDismissed()) {
+    <div class="app-header__support">
+      <span class="app-header__support-text">Enjoying it?</span>
+      <a
+        href="https://www.buymeacoffee.com/jamesnoitt"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="app-header__coffee-link"
+      >
+        <img
+          src="https://img.buymeacoffee.com/button-api/?text=Buy me a coffee&emoji=&slug=jamesnoitt&button_colour=FFDD00&font_colour=000000&font_family=Cookie&outline_colour=000000&coffee_colour=ffffff"
+          alt="Buy me a coffee"
+          class="app-header__coffee-img"
+        />
+      </a>
+      <button
+        type="button"
+        class="app-header__support-close"
+        aria-label="Dismiss"
+        title="Dismiss"
+        (click)="coffeeDismissed.set(true)"
+      >
+        ✕
+      </button>
+    </div>
+  }
+  <div class="app-header__end">
+    @if (view.current() === 'pomodoro') {
+      <app-multitask-toggle />
+    }
+  </div>
+</header>
