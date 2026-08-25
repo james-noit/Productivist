@@ -201,6 +201,10 @@
     "dailyBacklogEmpty": "Aún no hay nada programado para hoy.",
     "generalBacklog": "Backlog general",
     "generalBacklogHint": "Desglosa un objetivo en las tareas que te llevan hasta él.",
-    "generalBacklogEmpty": "Aún no hay nada en el backlog general."
+    "generalBacklogEmpty": "Aún no hay nada en el backlog general.",
+    "freeTasks": "Tareas libres sin proyecto",
+    "allProjectsCombined": "Todos los proyectos combinados",
+    "project": "Proyecto",
+    "totalTasks": "Total"
   }
 }

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { nextTick, ref } from 'vue'
+import { nextTick, ref, useId } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useTodosStore } from '../stores/todos'
 import type { Priority } from '../types/todo'
@@ -17,6 +17,7 @@ const pomodorosForTermination = ref('')
 const expanded = ref(false)
 const formEl = ref<HTMLFormElement | null>(null)
 const titleInputEl = ref<HTMLInputElement | null>(null)
+const tagSuggestionsId = useId()
 
 async function submit() {
   const trimmed = title.value.trim()
@@ -87,7 +88,10 @@ function onFocusOut(event: FocusEvent) {
           </select>
         </label>
       </div>
-      <input v-model="tagsInput" type="text" :placeholder="t('todo.tagsPlaceholder')" />
+      <input v-model="tagsInput" type="text" :list="tagSuggestionsId" :placeholder="t('todo.tagsPlaceholder')" />
+      <datalist :id="tagSuggestionsId">
+        <option v-for="tag in todos.allTags" :key="tag" :value="tag" />
+      </datalist>
       <textarea v-model="description" rows="2" :placeholder="t('todo.descriptionPlaceholder')" />
       <label class="todo-form__pomodoros">
         {{ t('todo.pomodorosForTermination') }}

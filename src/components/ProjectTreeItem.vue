@@ -1,19 +1,22 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, useId } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useProjectsStore } from '../stores/projects'
 import { useTodosStore } from '../stores/todos'
 import { useMultitaskStore } from '../stores/multitask'
 import ProjectForm from './ProjectForm.vue'
 import TodoForm from './TodoForm.vue'
+import QuadrantCountBadges from './QuadrantCountBadges.vue'
 import type { Project } from '../types/project'
 import type { Priority, Todo } from '../types/todo'
+import type { QuadrantCounts } from '../lib/eisenhower'
 
 const props = defineProps<{
   project: Project
   multitaskMode?: boolean
   isTaskPickable?: (todoId: string) => boolean
   onPickTask?: (todoId: string) => void
+  quadrantCounts?: QuadrantCounts
 }>()
 
 const { t } = useI18n()
@@ -31,6 +34,8 @@ const editingTaskId = ref<string | null>(null)
 const editTitle = ref('')
 const editImportance = ref<Priority>('medium')
 const editUrgency = ref<Priority>('medium')
+const editTags = ref('')
+const tagSuggestionsId = useId()
 
 const milestones = computed(() => projects.milestonesForProject(props.project.id))
 
@@ -47,6 +52,7 @@ function startTaskEdit(todo: Todo) {
   editTitle.value = todo.title
   editImportance.value = todo.importance
   editUrgency.value = todo.urgency
+  editTags.value = todo.tags.join(', ')
 }
 
 function cancelTaskEdit() {
@@ -56,7 +62,11 @@ function cancelTaskEdit() {
 function saveTaskEdit(id: string) {
   const trimmed = editTitle.value.trim()
   if (!trimmed) return
-  todos.updateTodo(id, { title: trimmed, importance: editImportance.value, urgency: editUrgency.value })
+  const tags = editTags.value
+    .split(',')
+    .map((tag) => tag.trim())
+    .filter(Boolean)
+  todos.updateTodo(id, { title: trimmed, importance: editImportance.value, urgency: editUrgency.value, tags })
   editingTaskId.value = null
 }
 
@@ -111,8 +121,9 @@ function pickTask(todoId: string) {
         <span class="project-tree__chevron" :class="{ 'project-tree__chevron--open': expanded }" aria-hidden="true">▸</span>
         <span class="project-tree__icon" aria-hidden="true">{{ project.icon }}</span>
         <span class="project-tree__name">{{ project.name }}</span>
-        <span class="project-tree__count">{{ taskCount }}</span>
       </button>
+      <QuadrantCountBadges v-if="quadrantCounts" class="project-tree__badges" :counts="quadrantCounts" />
+      <span v-else class="project-tree__count">{{ taskCount }}</span>
       <div class="project-tree__actions">
         <button type="button" :aria-label="t('projects.edit')" :title="t('projects.edit')" @click="editing = !editing">✎</button>
         <button type="button" class="project-tree__delete" :aria-label="t('projects.delete')" :title="t('projects.delete')" @click="deleteProject">✕</button>
@@ -167,6 +178,16 @@ function pickTask(todoId: string) {
                     <option value="high">{{ t('todo.high') }}</option>
                   </select>
                 </div>
+                <input
+                  v-model="editTags"
+                  type="text"
+                  class="milestone-task__edit-title"
+                  :list="tagSuggestionsId"
+                  :placeholder="t('todo.tagsPlaceholder')"
+                />
+                <datalist :id="tagSuggestionsId">
+                  <option v-for="tag in todos.allTags" :key="tag" :value="tag" />
+                </datalist>
                 <div class="milestone-task__edit-actions">
                   <button type="submit">{{ t('projects.save') }}</button>
                   <button type="button" @click="cancelTaskEdit">{{ t('projects.cancel') }}</button>
@@ -199,6 +220,7 @@ function pickTask(todoId: string) {
                   <div class="milestone-task__badges">
                     <span class="badge" :class="`badge--${todo.importance}`">{{ t(`todo.${todo.importance}`) }}</span>
                     <span class="badge" :class="`badge--${todo.urgency}`">{{ t(`todo.${todo.urgency}`) }}</span>
+                    <span v-for="tag in todo.tags" :key="tag" class="badge badge--tag">{{ tag }}</span>
                   </div>
                   <button
                     v-if="multitaskMode && isPickable(todo.id)"
@@ -311,10 +333,16 @@ function pickTask(todoId: string) {
   padding: 0.05rem 0.45rem;
 }
 
+.project-tree__badges {
+  flex-shrink: 0;
+}
+
 .project-tree__actions {
   display: flex;
+  justify-content: flex-end;
   gap: 0.3rem;
   flex-shrink: 0;
+  min-width: 4.8rem;
 }
 
 .project-tree__actions button {
