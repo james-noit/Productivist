@@ -12,6 +12,8 @@ import { ClockService } from '../../../services/clock.service';
 import { ClockSettingsComponent } from '../clock-settings/clock-settings.component';
 import { BoxClockComponent } from '../box-clock/box-clock.component';
 import { TaskDetailModalComponent } from '../task-detail-modal/task-detail-modal.component';
+import { TaskProjectTagComponent } from '../task-project-tag/task-project-tag.component';
+import { TaskPickerComponent } from '../task-picker/task-picker.component';
 
 const RADIUS = 90;
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
@@ -19,7 +21,15 @@ const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 @Component({
   selector: 'app-pomodoro-clock',
   standalone: true,
-  imports: [FormsModule, TranslatePipe, ClockSettingsComponent, BoxClockComponent, TaskDetailModalComponent],
+  imports: [
+    FormsModule,
+    TranslatePipe,
+    ClockSettingsComponent,
+    BoxClockComponent,
+    TaskDetailModalComponent,
+    TaskProjectTagComponent,
+    TaskPickerComponent,
+  ],
   templateUrl: './pomodoro-clock.component.html',
   styleUrl: './pomodoro-clock.component.css',
 })

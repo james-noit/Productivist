@@ -1,4 +1,64 @@
 <div class="daily-backlog">
   <p class="daily-backlog__hint">{{ 'planningLab.dailyBacklogHint' | translate }}</p>
-  <p class="daily-backlog__empty">{{ 'planningLab.dailyBacklogEmpty' | translate }}</p>
+
+  <div class="daily-backlog__columns">
+    <div class="daily-backlog__groups">
+      <button
+        type="button"
+        class="daily-backlog__group"
+        [class.daily-backlog__group--active]="isSelected({ kind: 'unassigned' })"
+        (click)="selectGroup({ kind: 'unassigned' })"
+      >
+        <span class="daily-backlog__group-icon" aria-hidden="true">📥</span>
+        <span class="daily-backlog__group-name">{{ 'planningLab.freeTasks' | translate }}</span>
+        <span class="daily-backlog__group-count">{{ unassignedCount() }}</span>
+      </button>
+
+      @for (row of projectGroups(); track row.project.id) {
+        <button
+          type="button"
+          class="daily-backlog__group"
+          [class.daily-backlog__group--active]="isSelected({ kind: 'project', project: row.project })"
+          (click)="selectGroup({ kind: 'project', project: row.project })"
+        >
+          <span class="daily-backlog__group-icon" aria-hidden="true">{{ row.project.icon }}</span>
+          <span class="daily-backlog__group-name">{{ row.project.name }}</span>
+          <span class="daily-backlog__group-count">{{ row.count }}</span>
+        </button>
+      }
+    </div>
+
+    <div class="daily-backlog__tasks">
+      @if (!selectedGroup()) {
+        <p class="daily-backlog__empty">{{ 'planningLab.dailyBacklogSelectPrompt' | translate }}</p>
+      } @else {
+        <div class="daily-backlog__tasks-header">
+          <span class="daily-backlog__tasks-icon" aria-hidden="true">{{ selectedProject()?.icon ?? '📥' }}</span>
+          <span class="daily-backlog__tasks-title">
+            {{ selectedProject()?.name ?? ('planningLab.freeTasks' | translate) }}
+          </span>
+          <button type="button" (click)="addingTask.set(!addingTask())">{{ 'projects.addTask' | translate }}</button>
+        </div>
+
+        @if (addingTask()) {
+          <app-todo-form [projectId]="selectedProject()?.id" />
+        }
+
+        @if (!selectedTasks().length) {
+          <p class="daily-backlog__empty">{{ 'planningLab.dailyBacklogEmpty' | translate }}</p>
+        } @else {
+          <ul class="daily-backlog__task-list">
+            @for (todo of selectedTasks(); track todo.id) {
+              <li class="daily-backlog__task">
+                <input type="checkbox" [checked]="todo.done" (change)="todos.toggleDone(todo.id)" />
+                <span class="daily-backlog__task-title">{{ todo.title }}</span>
+                <span class="badge" [class]="'badge--' + todo.importance">{{ ('todo.' + todo.importance) | translate }}</span>
+                <span class="badge" [class]="'badge--' + todo.urgency">{{ ('todo.' + todo.urgency) | translate }}</span>
+              </li>
+            }
+          </ul>
+        }
+      }
+    </div>
+  </div>
 </div>

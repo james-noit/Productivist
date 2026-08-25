@@ -148,6 +148,7 @@
               (blur)="commitTitleEdit()"
             />
           }
+          <app-task-project-tag [todo]="currentTask" />
         </div>
         <div class="clock__task-actions" (click)="$event.stopPropagation()">
           <button type="button" class="clock__task-finish" (click)="finishTask()">{{ 'clock.finished' | translate }}</button>
@@ -160,25 +161,7 @@
   </div>
 
   @if (taskModalOpen()) {
-    <div class="clock__overlay" (click)="$event.target === $event.currentTarget && taskModalOpen.set(false)">
-      <div class="clock__modal" role="dialog" aria-modal="true" [attr.aria-label]="'clock.selectTask' | translate">
-        <div class="clock__modal-header">
-          <h3>{{ 'clock.selectTask' | translate }}</h3>
-          <button type="button" class="clock__modal-close" [attr.aria-label]="'todo.close' | translate" (click)="taskModalOpen.set(false)">✕</button>
-        </div>
-        @if (!todos.filteredTodos().length) {
-          <p class="clock__modal-empty">{{ 'todo.empty' | translate }}</p>
-        } @else {
-          <ul class="clock__task-list">
-            @for (todo of todos.filteredTodos(); track todo.id) {
-              <li>
-                <button type="button" class="clock__task-list-item" (click)="selectTask(todo.id)">{{ todo.title }}</button>
-              </li>
-            }
-          </ul>
-        }
-      </div>
-    </div>
+    <app-task-picker (select)="selectTask($event)" (close)="taskModalOpen.set(false)" />
   }
 
   @if (clock.sessionModalOpen()) {

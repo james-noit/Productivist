@@ -198,6 +198,7 @@
     "title": "Planning lab",
     "dailyBacklog": "Daily backlog",
     "dailyBacklogHint": "Decide what to work on today.",
+    "dailyBacklogSelectPrompt": "Select a project or group to see its tasks.",
     "dailyBacklogEmpty": "Nothing scheduled for today yet.",
     "generalBacklog": "General backlog",
     "generalBacklogHint": "Break an objective down into the tasks that get you there.",

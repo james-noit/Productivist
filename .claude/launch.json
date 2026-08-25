@@ -4,8 +4,8 @@
     {
       "name": "openpomodoro-dev",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev"],
-      "port": 4200,
+      "runtimeArgs": ["run", "dev", "--", "--port", "4201"],
+      "port": 4201,
       "autoPort": true
     }
   ]

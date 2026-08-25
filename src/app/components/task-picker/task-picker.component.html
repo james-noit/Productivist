@@ -1,0 +1,85 @@
+<div class="task-picker__overlay" (click)="$event.target === $event.currentTarget && close.emit()">
+  <div class="task-picker__modal" role="dialog" aria-modal="true" [attr.aria-label]="'clock.selectTask' | translate">
+    <div class="task-picker__header">
+      <h3>{{ 'clock.selectTask' | translate }}</h3>
+      <button type="button" class="task-picker__close" [attr.aria-label]="'todo.close' | translate" (click)="close.emit()">✕</button>
+    </div>
+
+    <div class="task-picker__tabs" role="tablist">
+      <button
+        type="button"
+        role="tab"
+        [attr.aria-selected]="tab() === 'all'"
+        [class.active]="tab() === 'all'"
+        (click)="tab.set('all')"
+      >
+        {{ 'todo.viewAll' | translate }}
+      </button>
+      <button
+        type="button"
+        role="tab"
+        [attr.aria-selected]="tab() === 'projects'"
+        [class.active]="tab() === 'projects'"
+        (click)="tab.set('projects')"
+      >
+        {{ 'todo.viewProjects' | translate }}
+      </button>
+    </div>
+
+    @if (tab() === 'all') {
+      <div class="task-picker__filters">
+        <label>
+          {{ 'todo.importance' | translate }}
+          <select [ngModel]="importance()" (ngModelChange)="importance.set($event)" name="pickImportance">
+            <option value="all">{{ 'todo.filterAll' | translate }}</option>
+            <option value="low">{{ 'todo.low' | translate }}</option>
+            <option value="medium">{{ 'todo.medium' | translate }}</option>
+            <option value="high">{{ 'todo.high' | translate }}</option>
+          </select>
+        </label>
+        <label>
+          {{ 'todo.urgency' | translate }}
+          <select [ngModel]="urgency()" (ngModelChange)="urgency.set($event)" name="pickUrgency">
+            <option value="all">{{ 'todo.filterAll' | translate }}</option>
+            <option value="low">{{ 'todo.low' | translate }}</option>
+            <option value="medium">{{ 'todo.medium' | translate }}</option>
+            <option value="high">{{ 'todo.high' | translate }}</option>
+          </select>
+        </label>
+        @if (todos.allTags().length) {
+          <label>
+            {{ 'todo.tags' | translate }}
+            <select [ngModel]="tag()" (ngModelChange)="tag.set($event)" name="pickTag">
+              <option value="all">{{ 'todo.filterAll' | translate }}</option>
+              @for (t of todos.allTags(); track t) {
+                <option [value]="t">{{ t }}</option>
+              }
+            </select>
+          </label>
+        }
+      </div>
+      @if (!pickableTasks().length) {
+        <p class="task-picker__empty">{{ 'todo.empty' | translate }}</p>
+      } @else {
+        <ul class="task-picker__list">
+          @for (todo of pickableTasks(); track todo.id) {
+            <li>
+              <button type="button" class="task-picker__list-item" (click)="select.emit(todo.id)">
+                <span class="task-picker__list-title">{{ todo.title }}</span>
+                <span class="task-picker__list-badges">
+                  <span class="badge" [class]="'badge--' + todo.importance">{{ ('todo.' + todo.importance) | translate }}</span>
+                  <span class="badge" [class]="'badge--' + todo.urgency">{{ ('todo.' + todo.urgency) | translate }}</span>
+                </span>
+                <app-task-project-tag [todo]="todo" />
+              </button>
+            </li>
+          }
+        </ul>
+      }
+    } @else {
+      <div class="task-picker__projects">
+        <app-projects-panel [multitaskMode]="true" [isTaskPickable]="isPickable()" [onPickTask]="onPickTask" />
+      </div>
+    }
+  </div>
+</div>

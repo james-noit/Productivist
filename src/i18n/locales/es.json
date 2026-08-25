@@ -198,6 +198,7 @@
     "title": "Laboratorio de planificación",
     "dailyBacklog": "Backlog diario",
     "dailyBacklogHint": "Decide en qué vas a trabajar hoy.",
+    "dailyBacklogSelectPrompt": "Selecciona un proyecto o grupo para ver sus tareas.",
     "dailyBacklogEmpty": "Aún no hay nada programado para hoy.",
     "generalBacklog": "Backlog general",
     "generalBacklogHint": "Desglosa un objetivo en las tareas que te llevan hasta él.",

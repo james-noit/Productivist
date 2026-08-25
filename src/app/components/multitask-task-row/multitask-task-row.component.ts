@@ -1,22 +1,20 @@
-import { Component, ElementRef, OnInit, computed, effect, inject, input, signal, viewChild } from '@angular/core';
+import { Component, ElementRef, OnInit, computed, effect, inject, input, signal, untracked, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '@ngx-translate/core';
 import { TodosService } from '../../../services/todos.service';
 import { MultitaskService } from '../../../services/multitask.service';
 import { ClockService } from '../../../services/clock.service';
 import { ProjectsService } from '../../../services/projects.service';
-import { ProjectsPanelComponent } from '../projects-panel/projects-panel.component';
-import { TaskProjectTagComponent } from '../task-project-tag/task-project-tag.component';
 import { TaskDetailModalComponent } from '../task-detail-modal/task-detail-modal.component';
+import { TaskPickerComponent } from '../task-picker/task-picker.component';
 import type { AccomplishmentMark, MultitaskCard } from '../../../types/multitask';
-import type { Priority } from '../../../types/todo';
 
 const FINISH_STRIKE_MS = 450;
 
 @Component({
   selector: 'app-multitask-task-row',
   standalone: true,
-  imports: [FormsModule, TranslatePipe, ProjectsPanelComponent, TaskProjectTagComponent, TaskDetailModalComponent],
+  imports: [FormsModule, TranslatePipe, TaskDetailModalComponent, TaskPickerComponent],
   templateUrl: './multitask-task-row.component.html',
   styleUrl: './multitask-task-row.component.css',
 })
@@ -43,26 +41,11 @@ export class MultitaskTaskRowComponent implements OnInit {
   readonly showDetail = signal(false);
   readonly titleEditing = signal(false);
   readonly editTitle = signal('');
-  readonly pickTab = signal<'all' | 'projects'>('all');
-  readonly pickImportance = signal<Priority | 'all'>('all');
-  readonly pickUrgency = signal<Priority | 'all'>('all');
-  readonly pickTag = signal<string>('all');
 
   private readonly titleInput = viewChild<ElementRef<HTMLInputElement>>('titleInput');
 
   readonly isPickable = (todoId: string): boolean =>
     !this.multitask.assignedTaskIds().has(todoId) || todoId === this.card().taskId;
-
-  readonly pickableTasks = computed(() =>
-    this.todos.sortTasks(
-      this.todos
-        .todos()
-        .filter((todo) => !todo.done && this.isPickable(todo.id))
-        .filter((todo) => this.pickImportance() === 'all' || todo.importance === this.pickImportance())
-        .filter((todo) => this.pickUrgency() === 'all' || todo.urgency === this.pickUrgency())
-        .filter((todo) => this.pickTag() === 'all' || todo.tags.includes(this.pickTag())),
-    ),
-  );
 
   readonly isDissolving = computed(() => this.card().taskId === null && !this.taskModalOpen());
 
@@ -92,7 +75,7 @@ export class MultitaskTaskRowComponent implements OnInit {
   constructor() {
     effect(() => {
       this.clock.lastFocusEndAt();
-      if (this.taskModalOpen()) this.closeTaskModal();
+      if (untracked(this.taskModalOpen)) this.closeTaskModal();
     });
   }
 
@@ -109,10 +92,6 @@ export class MultitaskTaskRowComponent implements OnInit {
   }
 
   openTaskModal(): void {
-    this.pickTab.set('all');
-    this.pickImportance.set('all');
-    this.pickUrgency.set('all');
-    this.pickTag.set('all');
     this.taskModalOpen.set(true);
     this.multitask.cancelDissolve(this.card().id);
   }
