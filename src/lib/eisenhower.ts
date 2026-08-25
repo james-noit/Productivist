@@ -1,5 +1,15 @@
-import type { Todo } from '../types/todo'
+import type { Priority, Todo } from '../types/todo'
 import type { EisenhowerQuadrant } from '../types/eisenhower'
+
+const PRIORITY_RANK: Record<Priority, number> = { high: 0, medium: 1, low: 2 }
+
+export function sortByPriority(list: Todo[]): Todo[] {
+  return [...list].sort((a, b) => {
+    const importanceDiff = PRIORITY_RANK[a.importance] - PRIORITY_RANK[b.importance]
+    if (importanceDiff !== 0) return importanceDiff
+    return PRIORITY_RANK[a.urgency] - PRIORITY_RANK[b.urgency]
+  })
+}
 
 export type QuadrantCounts = Record<EisenhowerQuadrant, number>
 

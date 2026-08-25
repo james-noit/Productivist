@@ -9,6 +9,8 @@ import {
 } from '../../../services/settings.service';
 import { TodosService } from '../../../services/todos.service';
 import { ClockService } from '../../../services/clock.service';
+import { DailyPlanService } from '../../../services/daily-plan.service';
+import { ViewService } from '../../../services/view.service';
 import { ClockSettingsComponent } from '../clock-settings/clock-settings.component';
 import { BoxClockComponent } from '../box-clock/box-clock.component';
 import { TaskDetailModalComponent } from '../task-detail-modal/task-detail-modal.component';
@@ -37,6 +39,13 @@ export class PomodoroClockComponent {
   readonly settings = inject(SettingsService);
   readonly todos = inject(TodosService);
   readonly clock = inject(ClockService);
+  readonly dailyPlan = inject(DailyPlanService);
+  private readonly view = inject(ViewService);
+
+  readonly plannedTasks = computed(() => {
+    const ids = new Set(this.dailyPlan.committedPlannedTaskIds());
+    return this.todos.todos().filter((t) => !t.done && ids.has(t.id));
+  });
 
   readonly radius = RADIUS;
   readonly circumference = CIRCUMFERENCE;
@@ -116,5 +125,14 @@ export class PomodoroClockComponent {
     if (!currentTask) return;
     this.todos.toggleDone(currentTask.id);
     this.taskModalOpen.set(true);
+  }
+
+  selectPlannedTask(id: string): void {
+    this.todos.setCurrentTask(id);
+  }
+
+  goToPlanningLab(): void {
+    localStorage.setItem('productivist.planningLabTab', JSON.stringify('daily'));
+    this.view.setView('planning-lab');
   }
 }

@@ -160,6 +160,32 @@
     </div>
   </div>
 
+  <div class="clock__area clock__area--planned">
+    <span class="clock__planned-label">{{ 'planningLab.plannedTasks' | translate }}</span>
+    @if (!dailyPlan.committedPlannedTaskIds().length) {
+      <p class="clock__planned-empty">{{ 'planningLab.plannedTasksEmptyTitle' | translate }}</p>
+      <button type="button" class="clock__planned-link" (click)="goToPlanningLab()">
+        {{ 'planningLab.plannedTasksEmptyLink' | translate }}
+      </button>
+    } @else if (!plannedTasks().length) {
+      <p class="clock__planned-empty">{{ 'planningLab.plannedTasksEmptyTitle' | translate }}</p>
+    } @else {
+      <ul class="clock__planned-list">
+        @for (task of plannedTasks(); track task.id) {
+          <li
+            class="clock__planned-task"
+            [class.clock__planned-task--active]="todos.currentTask()?.id === task.id"
+            (click)="selectPlannedTask(task.id)"
+          >
+            <span class="clock__planned-task-title">{{ task.title }}</span>
+            <span class="badge" [class]="'badge--' + task.importance">{{ ('todo.' + task.importance) | translate }}</span>
+            <span class="badge" [class]="'badge--' + task.urgency">{{ ('todo.' + task.urgency) | translate }}</span>
+          </li>
+        }
+      </ul>
+    }
+  </div>
+
   @if (taskModalOpen()) {
     <app-task-picker (select)="selectTask($event)" (close)="taskModalOpen.set(false)" />
   }

@@ -1,64 +1,378 @@
-<div class="daily-backlog">
-  <p class="daily-backlog__hint">{{ 'planningLab.dailyBacklogHint' | translate }}</p>
-
-  <div class="daily-backlog__columns">
-    <div class="daily-backlog__groups">
-      <button
-        type="button"
-        class="daily-backlog__group"
-        [class.daily-backlog__group--active]="isSelected({ kind: 'unassigned' })"
-        (click)="selectGroup({ kind: 'unassigned' })"
-      >
-        <span class="daily-backlog__group-icon" aria-hidden="true">📥</span>
-        <span class="daily-backlog__group-name">{{ 'planningLab.freeTasks' | translate }}</span>
-        <span class="daily-backlog__group-count">{{ unassignedCount() }}</span>
-      </button>
-
-      @for (row of projectGroups(); track row.project.id) {
-        <button
-          type="button"
-          class="daily-backlog__group"
-          [class.daily-backlog__group--active]="isSelected({ kind: 'project', project: row.project })"
-          (click)="selectGroup({ kind: 'project', project: row.project })"
-        >
-          <span class="daily-backlog__group-icon" aria-hidden="true">{{ row.project.icon }}</span>
-          <span class="daily-backlog__group-name">{{ row.project.name }}</span>
-          <span class="daily-backlog__group-count">{{ row.count }}</span>
-        </button>
-      }
-    </div>
-
-    <div class="daily-backlog__tasks">
-      @if (!selectedGroup()) {
-        <p class="daily-backlog__empty">{{ 'planningLab.dailyBacklogSelectPrompt' | translate }}</p>
-      } @else {
-        <div class="daily-backlog__tasks-header">
-          <span class="daily-backlog__tasks-icon" aria-hidden="true">{{ selectedProject()?.icon ?? '📥' }}</span>
-          <span class="daily-backlog__tasks-title">
-            {{ selectedProject()?.name ?? ('planningLab.freeTasks' | translate) }}
-          </span>
-          <button type="button" (click)="addingTask.set(!addingTask())">{{ 'projects.addTask' | translate }}</button>
+@switch (dailyPlan.stage()) {
+  @case ('prompt') {
+    <div class="daily-backlog-prompt stage-enter" [class.daily-backlog-prompt--dreaming]="suggestionMode() === 'dreaming'">
+      @if (suggestionMode() === 'dreaming') {
+        <div class="star-field" aria-hidden="true">
+          @for (star of stars; track $index) {
+            <span
+              class="star"
+              [style.left.%]="star.left"
+              [style.top.%]="star.top"
+              [style.width.px]="star.size"
+              [style.height.px]="star.size"
+              [style.animation-delay.s]="star.delay"
+              [style.animation-duration.s]="star.duration"
+            ></span>
+          }
         </div>
+      }
 
-        @if (addingTask()) {
-          <app-todo-form [projectId]="selectedProject()?.id" />
-        }
+      <div class="daily-backlog-prompt__intro">
+        <h3 class="daily-backlog-prompt__title">{{ 'planningLab.objectivePromptTitle' | translate }}</h3>
+        <p class="daily-backlog-prompt__subtitle">{{ 'planningLab.objectivePromptSubtitle' | translate }}</p>
+      </div>
 
-        @if (!selectedTasks().length) {
-          <p class="daily-backlog__empty">{{ 'planningLab.dailyBacklogEmpty' | translate }}</p>
-        } @else {
-          <ul class="daily-backlog__task-list">
-            @for (todo of selectedTasks(); track todo.id) {
-              <li class="daily-backlog__task">
-                <input type="checkbox" [checked]="todo.done" (change)="todos.toggleDone(todo.id)" />
-                <span class="daily-backlog__task-title">{{ todo.title }}</span>
-                <span class="badge" [class]="'badge--' + todo.importance">{{ ('todo.' + todo.importance) | translate }}</span>
-                <span class="badge" [class]="'badge--' + todo.urgency">{{ ('todo.' + todo.urgency) | translate }}</span>
+      <div class="daily-backlog-prompt__form">
+        @if (objectivesList().length) {
+          <ul class="daily-backlog-prompt__objective-list">
+            @for (objective of objectivesList(); track $index) {
+              <li class="daily-backlog-prompt__objective-chip">
+                <span class="daily-backlog-prompt__objective-index">{{ $index + 1 }}</span>
+                <span class="daily-backlog-prompt__objective-text">{{ objective }}</span>
+                <button
+                  type="button"
+                  class="daily-backlog-prompt__objective-remove"
+                  [attr.aria-label]="'projects.delete' | translate"
+                  (click)="removeObjective($index)"
+                >
+                  ✕
+                </button>
               </li>
             }
           </ul>
         }
-      }
+        <div class="daily-backlog-prompt__input-row">
+          <input
+            type="text"
+            class="daily-backlog-prompt__input"
+            [ngModel]="objectiveDraft()"
+            (ngModelChange)="objectiveDraft.set($event)"
+            (keydown.enter)="$event.preventDefault(); addObjective()"
+            [placeholder]="'planningLab.objectivePlaceholder' | translate"
+          />
+          <button
+            type="button"
+            class="daily-backlog-prompt__add"
+            [disabled]="!objectiveDraft().trim()"
+            (click)="addObjective()"
+          >
+            {{ 'todo.add' | translate }}
+          </button>
+        </div>
+        <p class="daily-backlog-prompt__hint">{{ 'planningLab.objectiveInputHint' | translate }}</p>
+      </div>
+
+      <div class="daily-backlog-prompt__suggestions">
+        <div class="daily-backlog-prompt__suggestion-toggle" role="group">
+          <button
+            type="button"
+            [class.active]="suggestionMode() === 'productive'"
+            (click)="suggestionMode.set('productive')"
+          >
+            {{ 'planningLab.productiveMode' | translate }}
+          </button>
+          <button
+            type="button"
+            [class.active]="suggestionMode() === 'dreaming'"
+            (click)="suggestionMode.set('dreaming')"
+          >
+            {{ 'planningLab.dreamingMode' | translate }}
+          </button>
+        </div>
+
+        @if (suggestionMode() === 'productive') {
+          @if (productiveSuggestions().length) {
+            <ul class="suggestion-list">
+              @for (suggestion of productiveSuggestions(); track suggestion.todo.id) {
+                <li>
+                  <button type="button" class="suggestion-row" (click)="addSuggestionAsObjective(suggestion.todo.title)">
+                    <span class="suggestion-row__title">{{ suggestion.todo.title }}</span>
+                    @if (suggestion.project) {
+                      <span class="suggestion-row__path">
+                        {{ suggestion.project.icon }} {{ suggestion.project.name }}
+                        @if (suggestion.milestoneName) {
+                          <span> · {{ suggestion.milestoneName }}</span>
+                        }
+                      </span>
+                    }
+                  </button>
+                </li>
+              }
+            </ul>
+            <p class="daily-backlog-prompt__hint">{{ 'planningLab.suggestionsHint' | translate }}</p>
+          } @else {
+            <p class="daily-backlog-prompt__hint">{{ 'planningLab.noSuggestions' | translate }}</p>
+          }
+        } @else {
+          @if (dreamingSuggestions().length) {
+            <div class="dream-space">
+              @for (suggestion of dreamingSuggestions(); track suggestion.todo.id; let i = $index) {
+                <button
+                  type="button"
+                  class="dream-chip"
+                  [style.animation-delay.s]="dreamChipStyle(i).delay"
+                  [style.animation-duration.s]="dreamChipStyle(i).duration"
+                  (click)="addSuggestionAsObjective(suggestion.todo.title)"
+                >
+                  {{ suggestion.todo.title }}
+                </button>
+              }
+            </div>
+            <p class="daily-backlog-prompt__hint">{{ 'planningLab.suggestionsHint' | translate }}</p>
+          } @else {
+            <p class="daily-backlog-prompt__hint">{{ 'planningLab.noSuggestions' | translate }}</p>
+          }
+        }
+      </div>
+
+      <div class="daily-backlog-prompt__actions">
+        <button
+          type="button"
+          class="daily-backlog-prompt__choose"
+          [disabled]="!hasAnyObjective()"
+          (click)="chooseFromProjects()"
+        >
+          <span aria-hidden="true">→</span> {{ 'planningLab.chooseFromProjects' | translate }}
+        </button>
+        <button
+          type="button"
+          class="daily-backlog-prompt__freestyle"
+          disabled
+          [title]="'planningLab.freestyleComingSoon' | translate"
+        >
+          {{ 'planningLab.freestyle' | translate }}
+        </button>
+      </div>
+    </div>
+  }
+
+  @case ('chooseProjects') {
+    <div class="daily-backlog stage-enter">
+      <div class="daily-backlog__objectives-recap">
+        <span class="daily-backlog__objectives-label">{{ 'planningLab.todaysObjectives' | translate }}</span>
+        <ul class="daily-backlog__objectives-list">
+          @for (objective of dailyPlan.objectives(); track objective.id) {
+            <li>{{ objective.text }}</li>
+          }
+        </ul>
+      </div>
+
+      <p class="daily-backlog__prompt">{{ 'planningLab.chooseProjectsPrompt' | translate }}</p>
+
+      <input
+        type="text"
+        class="daily-backlog__search"
+        [ngModel]="projectSearch()"
+        (ngModelChange)="projectSearch.set($event)"
+        [placeholder]="'planningLab.searchProjectsPlaceholder' | translate"
+      />
+
+      <div class="daily-backlog__project-grid">
+        <button
+          type="button"
+          class="daily-backlog__project-card"
+          [class.daily-backlog__project-card--selected]="isProjectSelected(unassignedGroupId)"
+          (click)="dailyPlan.toggleProject(unassignedGroupId)"
+        >
+          @if (isProjectSelected(unassignedGroupId)) {
+            <span class="daily-backlog__project-check" aria-hidden="true">✓</span>
+          }
+          <span class="daily-backlog__project-icon" aria-hidden="true">📥</span>
+          <span class="daily-backlog__project-name">{{ 'planningLab.freeTasks' | translate }}</span>
+        </button>
+
+        @for (project of filteredProjects(); track project.id) {
+          <button
+            type="button"
+            class="daily-backlog__project-card"
+            [class.daily-backlog__project-card--selected]="isProjectSelected(project.id)"
+            (click)="dailyPlan.toggleProject(project.id)"
+          >
+            @if (isProjectSelected(project.id)) {
+              <span class="daily-backlog__project-check" aria-hidden="true">✓</span>
+            }
+            <span class="daily-backlog__project-icon" aria-hidden="true">{{ project.icon }}</span>
+            <span class="daily-backlog__project-name">{{ project.name }}</span>
+          </button>
+        }
+        @if (!filteredProjects().length) {
+          <p class="daily-backlog__empty">{{ 'planningLab.noProjectsMatch' | translate }}</p>
+        }
+      </div>
+
+      <div class="daily-backlog__choose-actions">
+        <button type="button" class="daily-backlog__start-over" (click)="confirmStartOver()">
+          {{ 'planningLab.startOver' | translate }}
+        </button>
+        <button
+          type="button"
+          class="daily-backlog__confirm"
+          [disabled]="!dailyPlan.selectedProjectIds().length"
+          (click)="dailyPlan.confirmProjects()"
+        >
+          {{ 'planningLab.projectsChosen' | translate }}
+        </button>
+      </div>
+    </div>
+  }
+
+  @case ('planning') {
+    <div class="daily-backlog stage-enter">
+      <div class="daily-backlog__columns">
+        <div class="daily-backlog__groups">
+          @if (isUnassignedChosen()) {
+            <app-daily-plan-project-item [project]="null" />
+          }
+          @for (project of chosenProjects(); track project.id) {
+            <app-daily-plan-project-item [project]="project" />
+          }
+        </div>
+
+        <div class="daily-backlog__objectives">
+          <p class="daily-backlog__prompt">{{ 'planningLab.planningPrompt' | translate }}</p>
+
+          @for (objective of dailyPlan.objectives(); track objective.id) {
+            <div
+              class="objective-bucket"
+              [class.objective-bucket--target]="dailyPlan.draggedTaskId()"
+              (dragover)="$event.preventDefault()"
+              (drop)="placeArmedTask(objective.id)"
+              (click)="placeArmedTask(objective.id)"
+            >
+              <div class="objective-bucket__header">{{ objective.text }}</div>
+              @if (!tasksFor(objective.id).length) {
+                <p class="objective-bucket__empty">{{ 'planningLab.dropHere' | translate }}</p>
+              } @else {
+                <ul class="objective-bucket__list">
+                  @for (todo of tasksFor(objective.id); track todo.id) {
+                    <li class="objective-task">
+                      <span class="objective-task__title">{{ todo.title }}</span>
+                      <span class="badge" [class]="'badge--' + todo.importance">{{ ('todo.' + todo.importance) | translate }}</span>
+                      <span class="badge" [class]="'badge--' + todo.urgency">{{ ('todo.' + todo.urgency) | translate }}</span>
+                      <button
+                        type="button"
+                        class="objective-task__remove"
+                        [attr.aria-label]="'planningLab.removeFromObjective' | translate"
+                        [title]="'planningLab.removeFromObjective' | translate"
+                        (click)="$event.stopPropagation(); dailyPlan.unassignTask(todo.id)"
+                      >
+                        ✕
+                      </button>
+                    </li>
+                  }
+                </ul>
+              }
+            </div>
+          }
+
+          <div class="daily-backlog__next-actions">
+            <button
+              type="button"
+              class="daily-backlog__next-primary"
+              [disabled]="!dailyPlan.plannedTaskIds().length"
+              (click)="requestMoveToPomodoro()"
+            >
+              {{ 'planningLab.moveToPomodoro' | translate }}
+            </button>
+            <button
+              type="button"
+              class="daily-backlog__next-secondary"
+              [disabled]="!dailyPlan.plannedTaskIds().length"
+              (click)="startGroupingParallel()"
+            >
+              {{ 'planningLab.moveToPomodoroMultitask' | translate }}
+            </button>
+          </div>
+
+          <button type="button" class="daily-backlog__start-over" (click)="confirmStartOver()">
+            {{ 'planningLab.startOver' | translate }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  @case ('groupingParallel') {
+    <div class="daily-backlog stage-enter">
+      <h3 class="daily-backlog__grouping-title">{{ 'planningLab.groupingTitle' | translate }}</h3>
+      <p class="daily-backlog__prompt">{{ 'planningLab.groupingHint' | translate }}</p>
+
+      <div class="lot-list">
+        @for (lot of dailyPlan.executionLots(); track lot.id; let i = $index; let last = $last) {
+          <div
+            class="lot"
+            [class.lot--target]="dailyPlan.draggedTaskId()"
+            (dragover)="$event.preventDefault()"
+            (drop)="placeArmedInLot(lot.id)"
+            (click)="placeArmedInLot(lot.id)"
+          >
+            <div class="lot__header">
+              <span class="lot__index">{{ 'planningLab.lotLabel' | translate: { n: i + 1 } }}</span>
+              <div class="lot__order-buttons">
+                <button
+                  type="button"
+                  [attr.aria-label]="'planningLab.moveLotUp' | translate"
+                  [title]="'planningLab.moveLotUp' | translate"
+                  [disabled]="i === 0"
+                  (click)="$event.stopPropagation(); moveLot(lot.id, -1)"
+                >
+                  ↑
+                </button>
+                <button
+                  type="button"
+                  [attr.aria-label]="'planningLab.moveLotDown' | translate"
+                  [title]="'planningLab.moveLotDown' | translate"
+                  [disabled]="last"
+                  (click)="$event.stopPropagation(); moveLot(lot.id, 1)"
+                >
+                  ↓
+                </button>
+              </div>
+            </div>
+            <ul class="lot__tasks">
+              @for (taskId of lot.taskIds; track taskId) {
+                @if (taskById(taskId); as todo) {
+                  <li
+                    class="lot-task"
+                    [class.lot-task--armed]="isArmed(todo.id)"
+                    (click)="$event.stopPropagation(); toggleArmed(todo.id)"
+                  >
+                    {{ todo.title }}
+                  </li>
+                }
+              }
+            </ul>
+          </div>
+        }
+
+        <button type="button" class="lot lot--new" (click)="addNewLotWithArmed()">
+          <span aria-hidden="true">+</span> {{ 'planningLab.newLot' | translate }}
+        </button>
+      </div>
+
+      <div class="daily-backlog__next-actions">
+        <button type="button" class="daily-backlog__next-primary" (click)="launchMultitask()">
+          {{ 'planningLab.letsGo' | translate }}
+        </button>
+        <button type="button" class="daily-backlog__start-over" (click)="dailyPlan.backToPlanning()">
+          {{ 'planningLab.backToPlanning' | translate }}
+        </button>
+      </div>
+    </div>
+  }
+}
+
+@if (showOverwriteConfirm()) {
+  <div class="daily-backlog-modal-overlay">
+    <div class="daily-backlog-modal" role="dialog" aria-modal="true">
+      <h3>{{ 'planningLab.overwritePlanTitle' | translate }}</h3>
+      <p>{{ 'planningLab.overwritePlanBody' | translate }}</p>
+      <div class="daily-backlog-modal__actions">
+        <button type="button" (click)="confirmOverwriteAndGo()">{{ 'planningLab.replaceAndContinue' | translate }}</button>
+        <button type="button" class="daily-backlog-modal__cancel" (click)="cancelOverwrite()">
+          {{ 'projects.cancel' | translate }}
+        </button>
+      </div>
     </div>
   </div>
-</div>
+}

@@ -6,6 +6,7 @@ import { SettingsService } from '../../../services/settings.service';
 import { MultitaskService } from '../../../services/multitask.service';
 import { ViewService, type AppView } from '../../../services/view.service';
 import { ProjectsService } from '../../../services/projects.service';
+import { DailyPlanService } from '../../../services/daily-plan.service';
 import { LanguageSelectorComponent } from '../language-selector/language-selector.component';
 import { ThemeToggleComponent } from '../theme-toggle/theme-toggle.component';
 
@@ -24,6 +25,7 @@ export class AppMenuComponent {
   private readonly multitask = inject(MultitaskService);
   readonly view = inject(ViewService);
   private readonly projects = inject(ProjectsService);
+  private readonly dailyPlan = inject(DailyPlanService);
 
   readonly resetPhrase = RESET_PHRASE;
   readonly isDev = isDevMode();
@@ -103,6 +105,7 @@ export class AppMenuComponent {
     this.multitask.reset();
     this.view.reset();
     this.projects.reset();
+    this.dailyPlan.reset();
     this.resetModalOpen.set(false);
     this.resetConfirmText.set('');
   }

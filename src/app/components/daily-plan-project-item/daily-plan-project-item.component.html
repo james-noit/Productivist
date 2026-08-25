@@ -1,0 +1,82 @@
+<div class="plan-project">
+  <button type="button" class="plan-project__header" (click)="expanded.set(!expanded())">
+    <span class="plan-project__chevron" [class.plan-project__chevron--open]="expanded()" aria-hidden="true">▸</span>
+    <span class="plan-project__icon" aria-hidden="true">{{ project()?.icon ?? '📥' }}</span>
+    <span class="plan-project__name">{{ project()?.name ?? ('planningLab.freeTasks' | translate) }}</span>
+    <span class="plan-project__count">{{ taskCount() }}</span>
+  </button>
+
+  @if (expanded()) {
+    <div class="plan-project__body">
+      @if (!directTasks().length && !milestones().length) {
+        <p class="plan-project__empty">{{ 'planningLab.dailyPlanProjectEmpty' | translate }}</p>
+      }
+
+      @if (directTasks().length) {
+        <ul class="plan-task-list">
+          @for (todo of directTasks(); track todo.id) {
+            <li
+              class="plan-task"
+              [class.plan-task--assigned]="objectiveLabel(todo.id)"
+              [class.plan-task--armed]="isArmed(todo.id)"
+              draggable="true"
+              (click)="onTaskClick(todo.id)"
+              (dragstart)="onDragStart(todo.id)"
+              (dragend)="onDragEnd()"
+            >
+              <span class="plan-task__title">{{ todo.title }}</span>
+              <span class="badge" [class]="'badge--' + todo.importance">{{ ('todo.' + todo.importance) | translate }}</span>
+              <span class="badge" [class]="'badge--' + todo.urgency">{{ ('todo.' + todo.urgency) | translate }}</span>
+              @if (objectiveLabel(todo.id); as label) {
+                <span class="plan-task__objective" [title]="label">↳ {{ label }}</span>
+              }
+            </li>
+          }
+        </ul>
+      }
+
+      @for (milestone of milestones(); track milestone.id) {
+        <div class="plan-milestone">
+          <button type="button" class="plan-milestone__header" (click)="toggleMilestone(milestone.id)">
+            <span
+              class="plan-milestone__chevron"
+              [class.plan-milestone__chevron--open]="expandedMilestones().has(milestone.id)"
+              aria-hidden="true"
+            >
+              ▸
+            </span>
+            <span class="plan-milestone__name">{{ milestone.name }}</span>
+            <span class="plan-milestone__count">{{ milestoneTasks(milestone.id).length }}</span>
+          </button>
+
+          @if (expandedMilestones().has(milestone.id)) {
+            @if (!milestoneTasks(milestone.id).length) {
+              <p class="plan-project__empty">{{ 'projects.noMilestoneTasks' | translate }}</p>
+            } @else {
+              <ul class="plan-task-list plan-task-list--nested">
+                @for (todo of milestoneTasks(milestone.id); track todo.id) {
+                  <li
+                    class="plan-task"
+                    [class.plan-task--assigned]="objectiveLabel(todo.id)"
+                    [class.plan-task--armed]="isArmed(todo.id)"
+                    draggable="true"
+                    (click)="onTaskClick(todo.id)"
+                    (dragstart)="onDragStart(todo.id)"
+                    (dragend)="onDragEnd()"
+                  >
+                    <span class="plan-task__title">{{ todo.title }}</span>
+                    <span class="badge" [class]="'badge--' + todo.importance">{{ ('todo.' + todo.importance) | translate }}</span>
+                    <span class="badge" [class]="'badge--' + todo.urgency">{{ ('todo.' + todo.urgency) | translate }}</span>
+                    @if (objectiveLabel(todo.id); as label) {
+                      <span class="plan-task__objective" [title]="label">↳ {{ label }}</span>
+                    }
+                  </li>
+                }
+              </ul>
+            }
+          }
+        </div>
+      }
+    </div>
+  }
+</div>

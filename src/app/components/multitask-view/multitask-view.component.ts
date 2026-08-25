@@ -2,6 +2,8 @@ import { Component, computed, inject } from '@angular/core';
 import { TranslatePipe } from '@ngx-translate/core';
 import { MultitaskService } from '../../../services/multitask.service';
 import { ClockService } from '../../../services/clock.service';
+import { DailyPlanService } from '../../../services/daily-plan.service';
+import { TodosService } from '../../../services/todos.service';
 import {
   SettingsService,
   MIN_DURATION_SECONDS,
@@ -36,7 +38,34 @@ function capacityColorVar(count: number): string {
 export class MultitaskViewComponent {
   readonly multitask = inject(MultitaskService);
   readonly clock = inject(ClockService);
+  readonly dailyPlan = inject(DailyPlanService);
   private readonly settings = inject(SettingsService);
+  private readonly todos = inject(TodosService);
+
+  readonly hasNextLot = computed(
+    () => this.dailyPlan.activeLotIndex() + 1 < this.dailyPlan.executionLots().length,
+  );
+
+  readonly canAdvanceLot = computed(() => {
+    const lots = this.dailyPlan.executionLots();
+    const lot = lots[this.dailyPlan.activeLotIndex()];
+    if (!lot) return false;
+    const assigned = this.multitask.assignedTaskIds();
+    return !lot.taskIds.some((id) => assigned.has(id));
+  });
+
+  taskTitle(id: string): string {
+    return this.todos.todos().find((t) => t.id === id)?.title ?? '';
+  }
+
+  advanceLot(): void {
+    const lots = this.dailyPlan.executionLots();
+    const nextIndex = this.dailyPlan.activeLotIndex() + 1;
+    const nextLot = lots[nextIndex];
+    if (!nextLot) return;
+    for (const taskId of nextLot.taskIds) this.multitask.addCard(taskId);
+    this.dailyPlan.setActiveLotIndex(nextIndex);
+  }
 
   readonly formattedTime = computed(() => {
     const minutes = Math.floor(this.clock.remainingSeconds() / 60);

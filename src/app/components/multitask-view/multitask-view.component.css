@@ -119,6 +119,94 @@
   color: var(--color-text);
 }
 
+.multitask-view__lots {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  background-color: var(--color-surface-alt);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+}
+
+.multitask-view__lots-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted);
+}
+
+.multitask-view__lots-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.multitask-view__lot {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  padding: 0.35rem 0.6rem;
+  opacity: 0.6;
+}
+
+.multitask-view__lot--active {
+  opacity: 1;
+  border-color: var(--color-primary);
+  background-color: color-mix(in srgb, var(--color-primary) 10%, transparent);
+}
+
+.multitask-view__lot--done {
+  opacity: 0.4;
+  text-decoration: line-through;
+}
+
+.multitask-view__lot-index {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.4rem;
+  height: 1.4rem;
+  border-radius: 999px;
+  background-color: var(--color-surface);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.multitask-view__lot-tasks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+}
+
+.multitask-view__lot-task::after {
+  content: '•';
+  margin-left: 0.4rem;
+  color: var(--color-text-muted);
+}
+
+.multitask-view__lot-task:last-child::after {
+  content: '';
+  margin: 0;
+}
+
+.multitask-view__lot-advance {
+  align-self: flex-start;
+  background-color: var(--color-primary);
+  color: var(--color-primary-contrast);
+  border: none;
+  border-radius: 6px;
+  padding: 0.4rem 0.9rem;
+  font-weight: 600;
+}
+
 .multitask-view__toolbar {
   display: flex;
   align-items: center;

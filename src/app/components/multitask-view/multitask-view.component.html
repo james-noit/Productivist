@@ -97,6 +97,33 @@
     </div>
   </div>
 
+  @if (dailyPlan.executionLots().length) {
+    <div class="multitask-view__lots">
+      <span class="multitask-view__lots-label">{{ 'planningLab.executionLots' | translate }}</span>
+      <ol class="multitask-view__lots-list">
+        @for (lot of dailyPlan.executionLots(); track lot.id; let i = $index) {
+          <li
+            class="multitask-view__lot"
+            [class.multitask-view__lot--active]="i === dailyPlan.activeLotIndex()"
+            [class.multitask-view__lot--done]="i < dailyPlan.activeLotIndex()"
+          >
+            <span class="multitask-view__lot-index">{{ i + 1 }}</span>
+            <span class="multitask-view__lot-tasks">
+              @for (taskId of lot.taskIds; track taskId) {
+                <span class="multitask-view__lot-task">{{ taskTitle(taskId) }}</span>
+              }
+            </span>
+          </li>
+        }
+      </ol>
+      @if (canAdvanceLot() && hasNextLot()) {
+        <button type="button" class="multitask-view__lot-advance" (click)="advanceLot()">
+          {{ 'planningLab.startNextLot' | translate }}
+        </button>
+      }
+    </div>
+  }
+
   <div class="multitask-view__toolbar">
     <app-effectivity-card />
     <div class="multitask-view__toolbar-actions">
