@@ -1,0 +1,135 @@
+<div class="app-menu">
+  <button
+    class="app-menu__trigger"
+    type="button"
+    [attr.aria-label]="'menu.open' | translate"
+    aria-haspopup="true"
+    [attr.aria-expanded]="open()"
+    (click)="toggle()"
+  >
+    <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
+      <path fill="currentColor" d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z" />
+    </svg>
+  </button>
+  @if (open()) {
+    <div class="app-menu__panel" role="menu">
+      <div class="app-menu__group">
+        <span class="app-menu__group-label">{{ 'menu.views' | translate }}</span>
+        <button
+          type="button"
+          role="menuitem"
+          class="app-menu__view"
+          [class.app-menu__view--active]="view.current() === 'planning-lab'"
+          [attr.aria-current]="view.current() === 'planning-lab'"
+          (click)="goToView('planning-lab')"
+        >
+          <svg class="app-menu__view-icon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+            <path
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M9 2h6M10 2v6.2L4.7 17a2 2 0 0 0 1.7 3h11.2a2 2 0 0 0 1.7-3L14 8.2V2"
+            />
+            <path
+              fill="currentColor"
+              opacity="0.55"
+              d="M6.9 15h10.2l1.6 2.7a1 1 0 0 1-.86 1.3H6.16a1 1 0 0 1-.86-1.3z"
+            />
+            <circle cx="10" cy="12.5" r="0.8" fill="currentColor" />
+            <circle cx="13.5" cy="14" r="0.6" fill="currentColor" />
+          </svg>
+          {{ 'menu.planningLab' | translate }}
+        </button>
+        <button
+          type="button"
+          role="menuitem"
+          class="app-menu__view"
+          [class.app-menu__view--active]="view.current() === 'pomodoro'"
+          [attr.aria-current]="view.current() === 'pomodoro'"
+          (click)="goToView('pomodoro')"
+        >
+          <svg class="app-menu__view-icon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+            <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2" />
+            <path d="M12 7v5l3.5 2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+          {{ 'menu.pomodoro' | translate }}
+        </button>
+        <button
+          type="button"
+          role="menuitem"
+          class="app-menu__view"
+          [class.app-menu__view--active]="view.current() === 'eisenhower'"
+          [attr.aria-current]="view.current() === 'eisenhower'"
+          (click)="goToView('eisenhower')"
+        >
+          <svg class="app-menu__view-icon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+            <rect x="3" y="3" width="8" height="8" rx="1.5" fill="currentColor" />
+            <rect x="13" y="3" width="8" height="8" rx="1.5" fill="currentColor" opacity="0.55" />
+            <rect x="3" y="13" width="8" height="8" rx="1.5" fill="currentColor" opacity="0.55" />
+            <rect x="13" y="13" width="8" height="8" rx="1.5" fill="currentColor" opacity="0.3" />
+          </svg>
+          {{ 'menu.eisenhower' | translate }}
+        </button>
+      </div>
+      <div class="app-menu__group">
+        <span class="app-menu__group-label">{{ 'menu.file' | translate }}</span>
+        <button type="button" role="menuitem" (click)="exportTodo()">{{ 'menu.exportTodo' | translate }}</button>
+        <button type="button" role="menuitem" (click)="importTodo()">{{ 'menu.importTodo' | translate }}</button>
+      </div>
+      <div class="app-menu__group">
+        <span class="app-menu__group-label">{{ 'menu.preferences' | translate }}</span>
+        <div class="app-menu__preference">
+          <span>{{ 'language.label' | translate }}</span>
+          <app-language-selector />
+        </div>
+        <div class="app-menu__preference">
+          <span>{{ 'theme.label' | translate }}</span>
+          <app-theme-toggle />
+        </div>
+        <button type="button" role="menuitem" class="app-menu__danger" (click)="openResetModal()">
+          {{ 'menu.reset' | translate }}
+        </button>
+      </div>
+      @if (isDev) {
+        <div class="app-menu__group">
+          <span class="app-menu__group-label">{{ 'menu.developer' | translate }}</span>
+          <button type="button" role="menuitem" (click)="seedMockData()">{{ 'menu.seedMockData' | translate }}</button>
+        </div>
+      }
+    </div>
+  }
+  <input #fileInput type="file" accept=".json,application/json" class="visually-hidden" (change)="onFileSelected($event)" />
+
+  @if (resetModalOpen()) {
+    <div class="app-menu__reset-overlay" (click)="$event.target === $event.currentTarget && cancelReset()">
+      <div class="app-menu__reset-modal" role="dialog" aria-modal="true" [attr.aria-label]="'menu.reset' | translate">
+        <h3 class="app-menu__reset-title">{{ 'menu.reset' | translate }}</h3>
+        <p>{{ 'menu.resetWarning' | translate }}</p>
+        <p class="app-menu__reset-instruction">{{ 'menu.resetInstruction' | translate: { phrase: resetPhrase } }}</p>
+        <input
+          [ngModel]="resetConfirmText()"
+          (ngModelChange)="resetConfirmText.set($event)"
+          name="resetConfirmText"
+          type="text"
+          class="app-menu__reset-input"
+          [placeholder]="resetPhrase"
+          autocomplete="off"
+          (keydown.enter)="confirmReset()"
+        />
+        <div class="app-menu__reset-actions">
+          <button type="button" class="app-menu__reset-cancel" (click)="cancelReset()">{{ 'menu.cancel' | translate }}</button>
+          <button
+            type="button"
+            class="app-menu__reset-confirm"
+            [disabled]="!resetConfirmValid()"
+            (click)="confirmReset()"
+          >
+            {{ 'menu.reset' | translate }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

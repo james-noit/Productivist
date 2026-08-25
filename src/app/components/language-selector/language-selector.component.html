@@ -1,0 +1,7 @@
+<label class="language-selector">
+  <span class="visually-hidden">{{ 'language.label' | translate }}</span>
+  <select [value]="settings.language()" (change)="onChange($event)">
+    <option value="en">{{ 'language.en' | translate }}</option>
+    <option value="es">{{ 'language.es' | translate }}</option>
+  </select>
+</label>

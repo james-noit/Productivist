@@ -1,0 +1,28 @@
+<div class="projects-panel">
+  <div class="projects-panel__toolbar">
+    <button type="button" class="projects-panel__new" (click)="creating.set(!creating())">
+      {{ 'projects.newProject' | translate }}
+    </button>
+  </div>
+
+  @if (creating()) {
+    <app-project-form (save)="createProject($event)" (cancel)="creating.set(false)" />
+  }
+
+  @if (!projects.sortedProjects().length && !creating()) {
+    <p class="projects-panel__empty">
+      {{ 'projects.noProjects' | translate }}
+    </p>
+  } @else {
+    <div class="projects-panel__list">
+      @for (project of projects.sortedProjects(); track project.id) {
+        <app-project-tree-item
+          [project]="project"
+          [multitaskMode]="multitaskMode()"
+          [isTaskPickable]="isTaskPickable()"
+          [onPickTask]="onPickTask()"
+        />
+      }
+    </div>
+  }
+</div>

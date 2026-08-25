@@ -1,0 +1,171 @@
+.app-menu {
+  position: relative;
+}
+
+.app-menu__trigger {
+  background: none;
+  border: none;
+  color: var(--color-text);
+  padding: 0.4rem;
+  display: flex;
+  align-items: center;
+  border-radius: 4px;
+}
+
+.app-menu__trigger:hover {
+  background-color: var(--color-surface-alt);
+}
+
+.app-menu__panel {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 0.25rem;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  min-width: 200px;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  padding: 0.5rem 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.app-menu__group {
+  display: flex;
+  flex-direction: column;
+  padding: 0.25rem 0;
+}
+
+.app-menu__group + .app-menu__group {
+  border-top: 1px solid var(--color-border);
+}
+
+.app-menu__group-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  padding: 0.25rem 1rem;
+}
+
+.app-menu__panel button {
+  background: none;
+  border: none;
+  text-align: left;
+  padding: 0.5rem 1rem;
+  color: var(--color-text);
+}
+
+.app-menu__panel button:hover {
+  background-color: var(--color-surface-alt);
+}
+
+.app-menu__view {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.app-menu__view-icon {
+  flex-shrink: 0;
+  color: var(--color-text-muted);
+}
+
+.app-menu__view--active {
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.app-menu__view--active .app-menu__view-icon {
+  color: var(--color-primary);
+}
+
+.app-menu__danger {
+  color: var(--color-high);
+}
+
+.app-menu__preference {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.4rem 1rem;
+  font-size: 0.85rem;
+  color: var(--color-text);
+}
+
+.app-menu__reset-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 30;
+  padding: 1rem;
+}
+
+.app-menu__reset-modal {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  width: 100%;
+  max-width: 380px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 1.25rem;
+}
+
+.app-menu__reset-title {
+  margin: 0;
+  color: var(--color-high);
+}
+
+.app-menu__reset-modal p {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--color-text);
+}
+
+.app-menu__reset-instruction {
+  color: var(--color-text-muted) !important;
+}
+
+.app-menu__reset-input {
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  padding: 0.5rem 0.6rem;
+}
+
+.app-menu__reset-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.app-menu__reset-actions button {
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+}
+
+.app-menu__reset-cancel {
+  background: none;
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+}
+
+.app-menu__reset-confirm {
+  background-color: var(--color-high);
+  border: none;
+  color: #fff;
+}
+
+.app-menu__reset-confirm:disabled {
+  opacity: 0.4;
+  cursor: default;
+}

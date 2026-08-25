@@ -1,0 +1,213 @@
+.multitask-view {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding: 1rem;
+  max-width: 1100px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.multitask-view__clock-strip {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+}
+
+.multitask-view__mode {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.multitask-view__mode button {
+  background: none;
+  border: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  border-radius: 999px;
+  padding: 0.3rem 1rem;
+}
+
+.multitask-view__mode button.active {
+  background-color: var(--color-primary);
+  color: var(--color-primary-contrast);
+  border-color: var(--color-primary);
+}
+
+.multitask-view__time-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 auto;
+}
+
+.multitask-view__time {
+  font-size: 1.5rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  min-width: 3.6rem;
+  text-align: center;
+}
+
+.multitask-view__stepper {
+  display: flex;
+  gap: 0.3rem;
+  flex-shrink: 0;
+}
+
+.multitask-view__stepper button {
+  min-width: 2.3rem;
+  height: 2.3rem;
+  padding: 0 0.35rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  color: var(--color-text-muted);
+  font-size: 0.65rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  white-space: nowrap;
+  transition: background-color 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.multitask-view__stepper button:hover:not(:disabled) {
+  background-color: var(--color-surface-alt);
+  border-color: var(--color-primary);
+  color: var(--color-text);
+}
+
+.multitask-view__stepper button:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.multitask-view__controls {
+  display: flex;
+  gap: 0.5rem;
+  margin-left: auto;
+}
+
+.multitask-view__icon-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  background-color: var(--color-primary);
+  color: var(--color-primary-contrast);
+  border: none;
+  border-radius: 50%;
+}
+
+.multitask-view__icon-button:hover {
+  filter: brightness(0.95);
+}
+
+.multitask-view__icon-button--secondary {
+  background-color: var(--color-surface-alt);
+  color: var(--color-text);
+}
+
+.multitask-view__toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.multitask-view__toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-left: auto;
+}
+
+.multitask-view__tip {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  background-color: var(--color-surface-alt);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  font-size: 0.85rem;
+  color: var(--color-text);
+}
+
+.multitask-view__tip p {
+  margin: 0;
+  flex: 1;
+}
+
+.multitask-view__tip-close {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  color: var(--color-text-muted);
+  min-width: 1.75rem;
+  min-height: 1.75rem;
+}
+
+.multitask-view__list-wrap {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.multitask-view__banner {
+  position: absolute;
+  top: -0.6rem;
+  left: 50%;
+  transform: translate(-50%, -100%);
+  background-color: var(--color-primary);
+  color: var(--color-primary-contrast);
+  border-radius: 999px;
+  padding: 0.55rem 1.1rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  white-space: nowrap;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+  z-index: 15;
+}
+
+.multitask-view__list {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.multitask-view__empty {
+  color: var(--color-text-muted);
+  text-align: center;
+  padding: 1.5rem 0;
+}
+
+.multitask-view__add-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  background: none;
+  border: 1px dashed var(--color-border);
+  border-radius: 8px;
+  padding: 0.6rem;
+  color: var(--color-text-muted);
+}
+
+.multitask-view__add-row:hover {
+  background-color: var(--color-surface-alt);
+  color: var(--color-text);
+}

@@ -1,0 +1,67 @@
+.todo-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.todo-form input,
+.todo-form select,
+.todo-form textarea {
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  padding: 0.4rem 0.6rem;
+  font-family: inherit;
+}
+
+.todo-form textarea {
+  width: 100%;
+  resize: vertical;
+}
+
+.todo-form__pomodoros {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
+.todo-form__title {
+  width: 100%;
+}
+
+.todo-form__details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.todo-form__row {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.todo-form__row label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  flex: 1 1 120px;
+}
+
+.todo-form button {
+  align-self: flex-start;
+  background-color: var(--color-primary);
+  color: var(--color-primary-contrast);
+  border: none;
+  border-radius: 6px;
+  padding: 0.5rem 1.25rem;
+}

@@ -1,0 +1,89 @@
+<div class="free-tasks">
+  <div class="free-tasks__header">
+    <button type="button" class="free-tasks__toggle" (click)="expanded.set(!expanded())">
+      <span class="free-tasks__chevron" [class.free-tasks__chevron--open]="expanded()" aria-hidden="true">▸</span>
+      <span class="free-tasks__icon" aria-hidden="true">📥</span>
+      <span class="free-tasks__name">{{ 'planningLab.freeTasks' | translate }}</span>
+    </button>
+    <app-quadrant-count-badges class="free-tasks__badges" [counts]="counts()" />
+    <div class="free-tasks__actions-spacer" aria-hidden="true"></div>
+  </div>
+
+  @if (expanded()) {
+    <div class="free-tasks__body">
+      @if (!tasks().length) {
+        <p class="free-tasks__empty">{{ 'projects.noUnassigned' | translate }}</p>
+      } @else {
+        <ul class="free-tasks__list">
+          @for (todo of tasks(); track todo.id) {
+            <li class="free-task">
+              @if (editingTaskId() === todo.id) {
+                <form class="free-task__edit-form" (submit)="$event.preventDefault(); saveTaskEdit(todo.id)">
+                  <input [ngModel]="editTitle()" (ngModelChange)="editTitle.set($event)" name="editTitle" type="text" class="free-task__edit-title" />
+                  <div class="free-task__edit-row">
+                    <select [ngModel]="editImportance()" (ngModelChange)="editImportance.set($event)" name="editImportance">
+                      <option value="low">{{ 'todo.low' | translate }}</option>
+                      <option value="medium">{{ 'todo.medium' | translate }}</option>
+                      <option value="high">{{ 'todo.high' | translate }}</option>
+                    </select>
+                    <select [ngModel]="editUrgency()" (ngModelChange)="editUrgency.set($event)" name="editUrgency">
+                      <option value="low">{{ 'todo.low' | translate }}</option>
+                      <option value="medium">{{ 'todo.medium' | translate }}</option>
+                      <option value="high">{{ 'todo.high' | translate }}</option>
+                    </select>
+                  </div>
+                  <input
+                    [ngModel]="editTags()"
+                    (ngModelChange)="editTags.set($event)"
+                    name="editTags"
+                    type="text"
+                    class="free-task__edit-title"
+                    [attr.list]="tagSuggestionsId"
+                    [placeholder]="'todo.tagsPlaceholder' | translate"
+                  />
+                  <datalist [id]="tagSuggestionsId">
+                    @for (tag of todos.allTags(); track tag) {
+                      <option [value]="tag"></option>
+                    }
+                  </datalist>
+                  <div class="free-task__edit-actions">
+                    <button type="submit">{{ 'projects.save' | translate }}</button>
+                    <button type="button" (click)="cancelTaskEdit()">{{ 'projects.cancel' | translate }}</button>
+                  </div>
+                </form>
+              } @else {
+                <div class="free-task__main">
+                  <input type="checkbox" [checked]="todo.done" (change)="todos.toggleDone(todo.id)" />
+                  <span class="free-task__title">{{ todo.title }}</span>
+                  <button
+                    type="button"
+                    class="free-task__edit"
+                    [attr.aria-label]="'projects.edit' | translate"
+                    [title]="'projects.edit' | translate"
+                    (click)="startTaskEdit(todo)"
+                  >
+                    ✎
+                  </button>
+                </div>
+                <div class="free-task__meta">
+                  <span class="badge" [class]="'badge--' + todo.importance">{{ ('todo.' + todo.importance) | translate }}</span>
+                  <span class="badge" [class]="'badge--' + todo.urgency">{{ ('todo.' + todo.urgency) | translate }}</span>
+                  @for (tag of todo.tags; track tag) {
+                    <span class="badge badge--tag">{{ tag }}</span>
+                  }
+                </div>
+              }
+            </li>
+          }
+        </ul>
+      }
+
+      <div class="free-tasks__footer">
+        <button type="button" (click)="addingTask.set(!addingTask())">{{ 'projects.addTask' | translate }}</button>
+      </div>
+      @if (addingTask()) {
+        <app-todo-form />
+      }
+    </div>
+  }
+</div>

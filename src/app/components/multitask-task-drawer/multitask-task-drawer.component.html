@@ -1,0 +1,117 @@
+<div class="task-drawer">
+  <button
+    type="button"
+    class="task-drawer__trigger"
+    aria-haspopup="dialog"
+    [attr.aria-expanded]="open()"
+    (click)="toggle()"
+  >
+    <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+      <path fill="currentColor" d="M4 4h16v2H4zm0 7h16v2H4zm0 7h10v2H4z" />
+    </svg>
+    <span>{{ 'multitask.manageTasks' | translate }}</span>
+    @if (todos.todos().length) {
+      <span class="task-drawer__badge">{{ todos.filteredTodos().length }}</span>
+    }
+  </button>
+
+  @if (open()) {
+    <div class="task-drawer__overlay" (click)="close()"></div>
+    <aside class="task-drawer__panel" role="dialog" [attr.aria-label]="'multitask.manageTasks' | translate">
+      <div class="task-drawer__header">
+        <h3>{{ 'multitask.manageTasks' | translate }}</h3>
+        <button type="button" class="task-drawer__close" [attr.aria-label]="'todo.close' | translate" (click)="close()">✕</button>
+      </div>
+
+      <div class="task-drawer__tabs" role="tablist">
+        <button
+          type="button"
+          role="tab"
+          [attr.aria-selected]="todos.viewMode() === 'all'"
+          [class.active]="todos.viewMode() === 'all'"
+          (click)="todos.setViewMode('all')"
+        >
+          {{ 'todo.viewAll' | translate }}
+        </button>
+        <button
+          type="button"
+          role="tab"
+          [attr.aria-selected]="todos.viewMode() === 'projects'"
+          [class.active]="todos.viewMode() === 'projects'"
+          (click)="todos.setViewMode('projects')"
+        >
+          {{ 'todo.viewProjects' | translate }}
+        </button>
+      </div>
+
+      @if (todos.viewMode() === 'all') {
+        <app-todo-form />
+
+        @if (todos.todos().length) {
+          <div class="task-drawer__toolbar">
+            <app-todo-filters />
+            @if (todos.completedTodos().length) {
+              <app-completed-tasks-stack />
+            }
+          </div>
+        }
+
+        <div class="task-drawer__heading-row">
+          <h4 class="task-drawer__heading">{{ 'multitask.taskPool' | translate }}</h4>
+          <span class="task-drawer__count">{{ displayedTodos().length }} / {{ todos.filteredTodos().length }}</span>
+        </div>
+
+        @if (todos.todos().length) {
+          <input
+            #searchInputEl
+            [ngModel]="searchQuery()"
+            (ngModelChange)="searchQuery.set($event)"
+            name="searchQuery"
+            type="search"
+            class="task-drawer__search"
+            [placeholder]="'todo.searchPlaceholder' | translate"
+            autocomplete="off"
+          >
+        }
+
+        @if (!todos.filteredTodos().length) {
+          <p class="task-drawer__empty">{{ 'todo.empty' | translate }}</p>
+        } @else if (searchQuery().trim() && !displayedTodos().length) {
+          <p class="task-drawer__no-results">No matches</p>
+        } @else {
+          <ul class="task-drawer__pool">
+            @for (todo of displayedTodos(); track todo.id) {
+              <li class="task-drawer__pool-item">
+                <div class="task-drawer__pool-content">
+                  <span class="task-drawer__pool-title">{{ todo.title }}</span>
+                  <div class="task-drawer__pool-badges">
+                    <span class="badge" [class]="'badge--' + todo.importance">{{ ('todo.' + todo.importance) | translate }}</span>
+                    <span class="badge" [class]="'badge--' + todo.urgency">{{ ('todo.' + todo.urgency) | translate }}</span>
+                  </div>
+                  <app-task-project-tag [todo]="todo" />
+                </div>
+                @if (multitask.assignedTaskIds().has(todo.id)) {
+                  <span class="task-drawer__pool-status">
+                    {{ 'multitask.inGrid' | translate }}
+                  </span>
+                } @else {
+                  <button
+                    type="button"
+                    class="task-drawer__pool-assign"
+                    [attr.aria-label]="'multitask.assignToCard' | translate"
+                    [title]="'multitask.assignToCard' | translate"
+                    (click)="assignToNewCard(todo.id)"
+                  >
+                    +
+                  </button>
+                }
+              </li>
+            }
+          </ul>
+        }
+      } @else {
+        <app-projects-panel [multitaskMode]="true" />
+      }
+    </aside>
+  }
+</div>

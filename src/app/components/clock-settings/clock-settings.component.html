@@ -1,0 +1,80 @@
+<div class="clock-settings">
+  <button
+    type="button"
+    class="clock-settings__trigger"
+    [attr.aria-label]="settingsLabel"
+    aria-haspopup="true"
+    [attr.aria-expanded]="open()"
+    (click)="toggle()"
+  >
+    <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+      <path
+        fill="currentColor"
+        d="M19.14 12.94a7.14 7.14 0 0 0 .06-.94 7.14 7.14 0 0 0-.06-.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.6-.22l-2.39.96a7.03 7.03 0 0 0-1.62-.94l-.36-2.54a.5.5 0 0 0-.5-.42h-3.84a.5.5 0 0 0-.5.42l-.36 2.54c-.59.24-1.13.56-1.62.94l-2.39-.96a.5.5 0 0 0-.6.22L2.66 8.84a.5.5 0 0 0 .12.64l2.03 1.58a7.15 7.15 0 0 0-.07.94 7.15 7.15 0 0 0 .07.94L2.78 14.5a.5.5 0 0 0-.12.64l1.92 3.32c.14.24.42.32.66.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.29.28.42.5.42h3.84c.22 0 .45-.13.5-.42l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.24.1.52.02.66-.22l1.92-3.32a.5.5 0 0 0-.12-.64ZM12 15.5A3.5 3.5 0 1 1 12 8.5a3.5 3.5 0 0 1 0 7Z"
+      />
+    </svg>
+  </button>
+  @if (open()) {
+    <div class="clock-settings__overlay" (click)="close()"></div>
+    <div class="clock-settings__panel" role="dialog" [attr.aria-label]="settingsLabel">
+      <div class="clock-settings__section">
+        <span class="clock-settings__section-label">{{ 'clock.clockStyle' | translate }}</span>
+        <div class="clock-settings__pills">
+          @for (style of clockStyles; track style.id) {
+            <button
+              type="button"
+              [class.active]="settings.clockStyle() === style.id"
+              (click)="settings.setClockStyle(style.id)"
+            >
+              {{ 'clock.clockStyles.' + style.id | translate }}
+            </button>
+          }
+        </div>
+        @if (settings.clockStyle() === 'boxes') {
+          <div class="clock-settings__pills">
+            @for (order of boxOrders; track order.id) {
+              <button
+                type="button"
+                [class.active]="settings.boxClockOrder() === order.id"
+                (click)="settings.setBoxClockOrder(order.id)"
+              >
+                {{ 'clock.boxOrders.' + order.id | translate }}
+              </button>
+            }
+          </div>
+        }
+      </div>
+      <div class="clock-settings__section">
+        <span class="clock-settings__section-label">{{ 'clock.soundSettings' | translate }}</span>
+        <label class="clock-settings__toggle">
+          <input type="checkbox" [checked]="settings.bellSound()" (change)="onBellSoundChange($event)" />
+          {{ (settings.bellSound() ? 'clock.bellOff' : 'clock.bellOn') | translate }}
+        </label>
+        <ul class="clock-settings__list">
+          @for (sound of bellSounds; track sound.id) {
+            <li class="clock-settings__item">
+              <label>
+                <input
+                  type="radio"
+                  name="bellSoundId"
+                  [value]="sound.id"
+                  [checked]="settings.bellSoundId() === sound.id"
+                  (change)="settings.setBellSoundId(sound.id)"
+                />
+                {{ 'clock.sounds.' + sound.id | translate }}
+              </label>
+              <button
+                type="button"
+                class="clock-settings__preview"
+                [attr.aria-label]="'clock.preview' | translate"
+                (click)="playSound(sound.id)"
+              >
+                ▶
+              </button>
+            </li>
+          }
+        </ul>
+      </div>
+    </div>
+  }
+</div>

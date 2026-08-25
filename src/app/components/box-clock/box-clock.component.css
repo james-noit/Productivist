@@ -1,0 +1,45 @@
+.box-clock {
+  --box-size: 1.15rem;
+  --box-gap: 0.35rem;
+  display: flex;
+  flex-direction: column;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  gap: var(--box-gap);
+  height: calc(5 * var(--box-size) + 4 * var(--box-gap));
+}
+
+.box-clock__box {
+  width: var(--box-size);
+  height: var(--box-size);
+  border-radius: 5px;
+  background-color: var(--color-surface-alt);
+  transform-origin: center;
+  transition: transform 1s linear, opacity 1s linear, background-color 1s linear;
+}
+
+.box-clock__box--remaining {
+  background-color: var(--color-primary);
+}
+
+.box-clock__box--active {
+  background-color: color-mix(in srgb, var(--color-high) calc(var(--p) * 100%), var(--color-primary));
+  transform: scale(calc(1 - var(--p) * 0.65));
+  opacity: calc(1 - var(--p) * 0.85);
+}
+
+.box-clock__box--gone {
+  transform: scale(0);
+  opacity: 0;
+}
+
+@media (max-width: 799px) {
+  .box-clock {
+    --box-size: 0.7rem;
+    --box-gap: 0.2rem;
+  }
+
+  .box-clock__box {
+    border-radius: 3px;
+  }
+}

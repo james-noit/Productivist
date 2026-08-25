@@ -1,0 +1,146 @@
+<div class="task-detail__overlay" (click)="$event.target === $event.currentTarget && close.emit()">
+  <div class="task-detail__modal" role="dialog" aria-modal="true" [attr.aria-label]="'eisenhower.taskDetail' | translate">
+    <div class="task-detail__header">
+      <h3>{{ 'eisenhower.taskDetail' | translate }}</h3>
+      <button type="button" class="task-detail__close" [attr.aria-label]="'todo.close' | translate" (click)="close.emit()">✕</button>
+    </div>
+
+    <label class="task-detail__done">
+      <input type="checkbox" [checked]="todo().done" (change)="todos.toggleDone(todo().id)" />
+      {{ 'eisenhower.markDone' | translate }}
+    </label>
+
+    <input
+      [ngModel]="title()"
+      (ngModelChange)="title.set($event)"
+      name="title"
+      type="text"
+      class="task-detail__title"
+      (change)="commitTitle()"
+    />
+
+    <label class="task-detail__description-label">
+      {{ 'todo.description' | translate }}
+      <textarea
+        [ngModel]="description()"
+        (ngModelChange)="description.set($event)"
+        name="description"
+        rows="2"
+        [placeholder]="'todo.descriptionPlaceholder' | translate"
+        (change)="commitDescription()"
+      ></textarea>
+    </label>
+
+    <div class="task-detail__select-group">
+      <div class="task-detail__select-label">{{ 'eisenhower.createTask.project' | translate }}</div>
+      <div class="task-detail__select-wrapper">
+        <select [ngModel]="projectRef()" (ngModelChange)="projectRef.set($event)" name="projectRef" (change)="onProjectSelect()">
+          @for (opt of projectSelectOptions(); track opt.value || 'none') {
+            <option [value]="opt.value">{{ opt.label }}</option>
+          }
+        </select>
+      </div>
+      @if (projectRef() === '__new__') {
+        <div class="task-detail__inline-create">
+          <div class="task-detail__icons">
+            @for (icon of icons; track icon) {
+              <button
+                type="button"
+                class="task-detail__icon"
+                [class.task-detail__icon--selected]="chosenIcon() === icon"
+                (click)="chosenIcon.set(icon)"
+              >{{ icon }}</button>
+            }
+          </div>
+          <input
+            [ngModel]="projectName()"
+            (ngModelChange)="projectName.set($event)"
+            name="projectName"
+            type="text"
+            [placeholder]="'eisenhower.createTask.projectName' | translate"
+            (keydown.enter)="$event.preventDefault(); submitNewProject()"
+          />
+          <button type="button" class="task-detail__inline-create-submit" (click)="submitNewProject()">
+            {{ 'eisenhower.createTask.save' | translate }}
+          </button>
+        </div>
+      }
+    </div>
+
+    <div class="task-detail__select-group">
+      <div class="task-detail__select-label">{{ 'eisenhower.createTask.milestone' | translate }}</div>
+      @if (showMilestones()) {
+        <div class="task-detail__select-wrapper">
+          <select [ngModel]="milestoneRef()" (ngModelChange)="milestoneRef.set($event)" name="milestoneRef" (change)="onMilestoneSelect()">
+            @for (opt of milestoneOptions(); track opt.value || 'none') {
+              <option [value]="opt.value">{{ opt.label }}</option>
+            }
+          </select>
+        </div>
+        @if (milestoneRef() === '__new__') {
+          <div class="task-detail__inline-create">
+            <input
+              [ngModel]="milestoneName()"
+              (ngModelChange)="milestoneName.set($event)"
+              name="milestoneName"
+              type="text"
+              [placeholder]="'eisenhower.createTask.milestoneName' | translate"
+              (keydown.enter)="$event.preventDefault(); submitNewMilestone()"
+            />
+            <button type="button" class="task-detail__inline-create-submit" (click)="submitNewMilestone()">
+              {{ 'eisenhower.createTask.save' | translate }}
+            </button>
+          </div>
+        }
+      } @else {
+        <p class="task-detail__hint">{{ 'eisenhower.createTask.pickerProjectHint' | translate }}</p>
+      }
+    </div>
+
+    <div class="task-detail__row">
+      <label>
+        {{ 'todo.importance' | translate }}
+        <select [ngModel]="importance()" (ngModelChange)="importance.set($event)" name="importance" (change)="commitImportance()">
+          <option value="low">{{ 'todo.low' | translate }}</option>
+          <option value="medium">{{ 'todo.medium' | translate }}</option>
+          <option value="high">{{ 'todo.high' | translate }}</option>
+        </select>
+      </label>
+      <label>
+        {{ 'todo.urgency' | translate }}
+        <select [ngModel]="urgency()" (ngModelChange)="urgency.set($event)" name="urgency" (change)="commitUrgency()">
+          <option value="low">{{ 'todo.low' | translate }}</option>
+          <option value="medium">{{ 'todo.medium' | translate }}</option>
+          <option value="high">{{ 'todo.high' | translate }}</option>
+        </select>
+      </label>
+    </div>
+
+    <label class="task-detail__tags-label">
+      {{ 'todo.tags' | translate }}
+      <input
+        [ngModel]="tagsInput()"
+        (ngModelChange)="tagsInput.set($event)"
+        name="tagsInput"
+        type="text"
+        [placeholder]="'todo.tagsPlaceholder' | translate"
+        (change)="commitTags()"
+      />
+    </label>
+
+    <label class="task-detail__tags-label">
+      {{ 'todo.pomodorosForTermination' | translate }}
+      <input
+        [ngModel]="pomodorosForTermination()"
+        (ngModelChange)="pomodorosForTermination.set($event)"
+        name="pomodorosForTermination"
+        type="number"
+        min="1"
+        [placeholder]="'todo.pomodorosForTerminationPlaceholder' | translate"
+        (change)="commitPomodorosForTermination()"
+      />
+    </label>
+
+    <button type="button" class="task-detail__delete" (click)="remove()">{{ 'todo.delete' | translate }}</button>
+  </div>
+</div>

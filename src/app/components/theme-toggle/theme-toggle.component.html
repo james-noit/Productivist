@@ -1,0 +1,9 @@
+<label class="theme-selector">
+  <span class="visually-hidden">{{ 'theme.label' | translate }}</span>
+  <select [value]="settings.theme()" (change)="onChange($event)">
+    <option value="light">{{ 'theme.light' | translate }}</option>
+    <option value="dark">{{ 'theme.dark' | translate }}</option>
+    <option value="japanese">{{ 'theme.japanese' | translate }}</option>
+    <option value="nordic">{{ 'theme.nordic' | translate }}</option>
+  </select>
+</label>

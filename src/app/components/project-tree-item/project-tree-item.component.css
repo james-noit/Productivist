@@ -1,0 +1,414 @@
+.project-tree {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 0.6rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.project-tree__header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.project-tree__toggle {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: none;
+  border: none;
+  color: var(--color-text);
+  padding: 0.2rem 0;
+  text-align: left;
+}
+
+.project-tree__chevron {
+  display: inline-block;
+  transition: transform 0.15s;
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+}
+
+.project-tree__chevron--open {
+  transform: rotate(90deg);
+}
+
+.project-tree__icon {
+  flex-shrink: 0;
+}
+
+.project-tree__name {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.project-tree__count {
+  flex-shrink: 0;
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
+  background-color: var(--color-surface-alt);
+  border-radius: 999px;
+  padding: 0.05rem 0.45rem;
+}
+
+.project-tree__badges {
+  flex-shrink: 0;
+}
+
+.project-tree__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.3rem;
+  flex-shrink: 0;
+  min-width: 4.8rem;
+}
+
+.project-tree__actions button {
+  min-width: 2.25rem;
+  min-height: 2.25rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  color: var(--color-text);
+  padding: 0.2rem 0.5rem;
+}
+
+.project-tree__delete {
+  color: var(--color-high);
+}
+
+.project-tree__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding-left: 0.75rem;
+}
+
+@media (min-width: 480px) {
+  .project-tree__body {
+    padding-left: 1.6rem;
+  }
+}
+
+.project-tree__description {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+}
+
+.project-tree__notes {
+  margin: 0;
+  background-color: var(--color-surface-alt);
+  border-radius: 6px;
+  padding: 0.6rem 0.75rem;
+  white-space: pre-wrap;
+  font-size: 0.85rem;
+  color: var(--color-text);
+}
+
+.project-tree__empty {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+}
+
+.milestone-tree {
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  padding: 0.4rem 0.6rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.milestone-tree__header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.milestone-tree__toggle {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: none;
+  border: none;
+  color: var(--color-text);
+  padding: 0.15rem 0;
+  text-align: left;
+}
+
+.milestone-tree__chevron {
+  display: inline-block;
+  transition: transform 0.15s;
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+}
+
+.milestone-tree__chevron--open {
+  transform: rotate(90deg);
+}
+
+.milestone-tree__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.milestone-tree__count {
+  flex-shrink: 0;
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
+}
+
+.milestone-tree__delete {
+  flex-shrink: 0;
+  min-width: 2.25rem;
+  min-height: 2.25rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: var(--color-text-muted);
+}
+
+.milestone-tree__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding-left: 0.6rem;
+}
+
+@media (min-width: 480px) {
+  .milestone-tree__body {
+    padding-left: 1.4rem;
+  }
+}
+
+.milestone-tree__tasks {
+  position: relative;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.milestone-task {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  padding: 0.4rem 0.6rem;
+}
+
+.milestone-task__main {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.milestone-task__meta {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  padding-left: 1.65rem;
+}
+
+.milestone-task__title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.milestone-task__edit {
+  flex-shrink: 0;
+  min-width: 2rem;
+  min-height: 2rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: var(--color-text-muted);
+}
+
+.milestone-task__badges {
+  display: flex;
+  gap: 0.3rem;
+  flex-shrink: 0;
+}
+
+.milestone-task__assign {
+  flex-shrink: 0;
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--color-primary);
+  color: var(--color-primary-contrast);
+  border: none;
+  border-radius: 50%;
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.milestone-task__in-grid {
+  flex-shrink: 0;
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.milestone-task__unassign {
+  flex-shrink: 0;
+  min-width: 2rem;
+  min-height: 2rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: var(--color-text-muted);
+}
+
+.milestone-task__edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.milestone-task__edit-title {
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  padding: 0.35rem 0.5rem;
+}
+
+.milestone-task__edit-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.milestone-task__edit-row select {
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  padding: 0.3rem 0.5rem;
+}
+
+.milestone-task__edit-actions {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.milestone-task__edit-actions button {
+  border-radius: 4px;
+  padding: 0.3rem 0.7rem;
+  font-size: 0.8rem;
+}
+
+.milestone-task__edit-actions button[type='submit'] {
+  background-color: var(--color-primary);
+  color: var(--color-primary-contrast);
+  border: none;
+}
+
+.milestone-task__edit-actions button[type='button'] {
+  background: none;
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+}
+
+.milestone-tree__footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.milestone-tree__footer button {
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  color: var(--color-text);
+  padding: 0.3rem 0.7rem;
+  font-size: 0.8rem;
+}
+
+.milestone-tree__pool {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.project-tree__add-milestone {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.project-tree__add-milestone input {
+  flex: 1 1 8rem;
+  min-width: 0;
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  padding: 0.4rem 0.6rem;
+}
+
+.project-tree__add-milestone button {
+  background-color: var(--color-primary);
+  color: var(--color-primary-contrast);
+  border: none;
+  border-radius: 6px;
+  padding: 0.4rem 1rem;
+}
+
+.badge {
+  font-size: 0.7rem;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  background-color: var(--color-surface-alt);
+  color: var(--color-text-muted);
+}
+
+.badge--low {
+  background-color: var(--color-low);
+  color: #fff;
+}
+
+.badge--medium {
+  background-color: var(--color-medium);
+  color: #fff;
+}
+
+.badge--high {
+  background-color: var(--color-high);
+  color: #fff;
+}

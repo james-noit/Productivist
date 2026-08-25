@@ -1,0 +1,52 @@
+<form class="project-form" (submit)="$event.preventDefault(); submit()">
+  <div class="project-form__icons">
+    @for (option of icons; track option) {
+      <button
+        type="button"
+        class="project-form__icon"
+        [class.project-form__icon--selected]="icon() === option"
+        [attr.aria-label]="option"
+        (click)="icon.set(option)"
+      >
+        {{ option }}
+      </button>
+    }
+  </div>
+  <label>
+    {{ 'projects.name' | translate }}
+    <input
+      [ngModel]="name()"
+      (ngModelChange)="name.set($event)"
+      name="name"
+      type="text"
+      [placeholder]="'projects.namePlaceholder' | translate"
+      required
+    />
+  </label>
+  <label>
+    {{ 'projects.description' | translate }}
+    <input
+      [ngModel]="description()"
+      (ngModelChange)="description.set($event)"
+      name="description"
+      type="text"
+      [placeholder]="'projects.descriptionPlaceholder' | translate"
+    />
+  </label>
+  <label>
+    {{ 'projects.notes' | translate }}
+    <textarea
+      [ngModel]="notes()"
+      (ngModelChange)="notes.set($event)"
+      name="notes"
+      rows="3"
+      [placeholder]="'projects.notesPlaceholder' | translate"
+    ></textarea>
+  </label>
+  <div class="project-form__actions">
+    <button type="submit" class="project-form__save">{{ 'projects.save' | translate }}</button>
+    <button type="button" class="project-form__cancel" (click)="cancel.emit()">
+      {{ 'projects.cancel' | translate }}
+    </button>
+  </div>
+</form>

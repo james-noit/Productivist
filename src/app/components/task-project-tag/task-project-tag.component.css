@@ -1,0 +1,33 @@
+.task-project-tag {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 0.05rem;
+  font-size: 0.65rem;
+  line-height: 1.25;
+  color: var(--color-text-muted);
+}
+
+.task-project-tag__project,
+.task-project-tag__milestone {
+  display: block;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.task-project-tag__project {
+  font-weight: 600;
+}
+
+.task-project-tag__milestone {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.task-project-tag__arrow {
+  flex-shrink: 0;
+}

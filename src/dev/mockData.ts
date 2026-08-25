@@ -1,40 +1,37 @@
-import { useTodosStore } from '../stores/todos'
-import { useProjectsStore } from '../stores/projects'
-import type { Priority } from '../types/todo'
+import type { TodosService } from '../services/todos.service';
+import type { ProjectsService } from '../services/projects.service';
+import type { Priority } from '../types/todo';
 
 interface MockTodo {
-  title: string
-  importance: Priority
-  urgency: Priority
-  tags?: string[]
-  projectId?: string
-  milestoneId?: string
-  done?: boolean
+  title: string;
+  importance: Priority;
+  urgency: Priority;
+  tags?: string[];
+  projectId?: string;
+  milestoneId?: string;
+  done?: boolean;
 }
 
-export function seedMockData() {
-  const todos = useTodosStore()
-  const projects = useProjectsStore()
-
-  todos.reset()
-  projects.reset()
+export function seedMockData(todos: TodosService, projects: ProjectsService): void {
+  todos.reset();
+  projects.reset();
 
   const website = projects.addProject({
     icon: '🌐',
     name: 'Website Relaunch',
     description: 'Refresh the marketing site',
     notes: '',
-  })
-  const design = projects.addMilestone(website.id, 'Design')
-  const development = projects.addMilestone(website.id, 'Development')
+  });
+  const design = projects.addMilestone(website.id, 'Design');
+  const development = projects.addMilestone(website.id, 'Development');
 
   const personal = projects.addProject({
     icon: '🧘',
     name: 'Personal',
     description: 'Life admin',
     notes: '',
-  })
-  const health = projects.addMilestone(personal.id, 'Health')
+  });
+  const health = projects.addMilestone(personal.id, 'Health');
 
   const seed: MockTodo[] = [
     { title: 'Fix checkout bug', importance: 'high', urgency: 'high', tags: ['bug'], projectId: website.id, milestoneId: development.id },
@@ -48,7 +45,7 @@ export function seedMockData() {
     { title: 'New homepage mockups', importance: 'medium', urgency: 'medium', projectId: website.id, milestoneId: design.id },
     { title: 'Book dentist appointment', importance: 'medium', urgency: 'medium', projectId: personal.id, milestoneId: health.id },
     { title: 'Renew gym membership', importance: 'medium', urgency: 'high', projectId: personal.id, milestoneId: health.id, done: true },
-  ]
+  ];
 
   for (const item of seed) {
     todos.addTodo({
@@ -58,10 +55,11 @@ export function seedMockData() {
       tags: item.tags ?? [],
       projectId: item.projectId,
       milestoneId: item.milestoneId,
-    })
+    });
     if (item.done) {
-      const added = todos.todos[todos.todos.length - 1]
-      todos.toggleDone(added.id)
+      const list = todos.todos();
+      const added = list[list.length - 1];
+      todos.toggleDone(added.id);
     }
   }
 }

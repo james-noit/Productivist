@@ -1,0 +1,11 @@
+<span class="quadrant-badges">
+  @for (q of quadrants; track q.key) {
+    <span
+      class="quadrant-badges__circle"
+      [class]="'quadrant-badges__circle--' + q.cssKey"
+      [title]="q.labelKey | translate"
+    >
+      {{ counts()[q.key] }}
+    </span>
+  }
+</span>

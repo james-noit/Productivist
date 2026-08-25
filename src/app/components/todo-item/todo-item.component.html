@@ -1,0 +1,23 @@
+<li
+  class="todo-item"
+  [class.todo-item--done]="todo().done"
+  [class.todo-item--dragging]="todos.draggedId() === todo().id"
+  draggable="true"
+  (dragstart)="todos.startDrag(todo().id)"
+  (dragover)="onDragOver($event)"
+  (drop)="$event.preventDefault(); todos.endDrag()"
+  (dragend)="todos.endDrag()"
+>
+  <span class="todo-item__handle" [attr.aria-label]="'todo.dragHandle' | translate" aria-hidden="true">⠿</span>
+  <input type="checkbox" [checked]="todo().done" (change)="todos.toggleDone(todo().id)" />
+  <span class="todo-item__title">{{ todo().title }}</span>
+  <div class="todo-item__badges">
+    <span class="badge" [class]="'badge--' + todo().importance">{{ ('todo.' + todo().importance) | translate }}</span>
+    <span class="badge" [class]="'badge--' + todo().urgency">{{ ('todo.' + todo().urgency) | translate }}</span>
+    @for (tag of todo().tags; track tag) {
+      <span class="badge badge--tag">{{ tag }}</span>
+    }
+  </div>
+  <app-task-project-tag [todo]="todo()" />
+  <button type="button" class="todo-item__delete" [attr.aria-label]="'todo.delete' | translate" (click)="todos.removeTodo(todo().id)">✕</button>
+</li>
