@@ -393,8 +393,8 @@
 }
 
 @if (showOverwriteConfirm()) {
-  <div class="daily-backlog-modal-overlay">
-    <div class="daily-backlog-modal" role="dialog" aria-modal="true">
+  <div class="modal-overlay daily-backlog-modal-overlay">
+    <div class="modal-panel daily-backlog-modal" role="dialog" aria-modal="true">
       <h3>{{ 'planningLab.overwritePlanTitle' | translate }}</h3>
       <p>{{ 'planningLab.overwritePlanBody' | translate }}</p>
       <div class="daily-backlog-modal__actions">
@@ -408,8 +408,8 @@
 }
 
 @if (tasksModalOpen()) {
-  <div class="tasks-overlay" (click)="closeTasksModalOnBackdrop($event)">
-    <div class="tasks-modal" role="dialog" aria-modal="true" [attr.aria-label]="'planningLab.tasksButton' | translate">
+  <div class="modal-overlay tasks-overlay" (click)="closeTasksModalOnBackdrop($event)">
+    <div class="modal-panel tasks-modal" role="dialog" aria-modal="true" [attr.aria-label]="'planningLab.tasksButton' | translate">
       <div class="tasks-modal__header">
         <h3>{{ 'planningLab.tasksButton' | translate }}</h3>
         <button

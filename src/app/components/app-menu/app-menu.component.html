@@ -103,8 +103,8 @@
   <input #fileInput type="file" accept=".json,application/json" class="visually-hidden" (change)="onFileSelected($event)" />
 
   @if (resetModalOpen()) {
-    <div class="app-menu__reset-overlay" (click)="$event.target === $event.currentTarget && cancelReset()">
-      <div class="app-menu__reset-modal" role="dialog" aria-modal="true" [attr.aria-label]="'menu.reset' | translate">
+    <div class="modal-overlay app-menu__reset-overlay" (click)="$event.target === $event.currentTarget && cancelReset()">
+      <div class="modal-panel app-menu__reset-modal" role="dialog" aria-modal="true" [attr.aria-label]="'menu.reset' | translate">
         <h3 class="app-menu__reset-title">{{ 'menu.reset' | translate }}</h3>
         <p>{{ 'menu.resetWarning' | translate }}</p>
         <p class="app-menu__reset-instruction">{{ 'menu.resetInstruction' | translate: { phrase: resetPhrase } }}</p>

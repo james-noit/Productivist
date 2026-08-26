@@ -1,27 +1,10 @@
+/* Sits above the task-detail modal it can be opened from. */
 .new-task__overlay {
-  position: fixed;
-  inset: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 40;
-  padding: 1rem;
+  --modal-z: 40;
 }
 
 .new-task__modal {
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
-  width: 100%;
-  max-width: 420px;
-  max-height: 85vh;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  padding: 1rem;
-  gap: 0.75rem;
-  text-align: left;
+  --modal-max-height: 85vh;
 }
 
 .new-task__header {

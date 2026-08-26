@@ -221,25 +221,8 @@
   line-height: 1;
 }
 
-.badge {
+/* The drawer's pool rows are denser than the badge's global default. */
+.task-drawer__pool-badges .badge {
   font-size: 0.65rem;
   padding: 0.1rem 0.45rem;
-  border-radius: 999px;
-  background-color: var(--color-surface-alt);
-  color: var(--color-text-muted);
-}
-
-.badge--low {
-  background-color: var(--color-low);
-  color: #fff;
-}
-
-.badge--medium {
-  background-color: var(--color-medium);
-  color: #fff;
-}
-
-.badge--high {
-  background-color: var(--color-high);
-  color: #fff;
 }

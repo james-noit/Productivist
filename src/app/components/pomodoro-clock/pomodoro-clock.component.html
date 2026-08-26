@@ -191,8 +191,8 @@
   }
 
   @if (clock.sessionModalOpen()) {
-    <div class="clock__overlay">
-      <div class="clock__modal" role="dialog" aria-modal="true" [attr.aria-label]="'clock.timeUp' | translate">
+    <div class="modal-overlay clock__overlay">
+      <div class="modal-panel clock__modal" role="dialog" aria-modal="true" [attr.aria-label]="'clock.timeUp' | translate">
         <h3>{{ (clock.mode() === 'break' ? 'clock.timeUpFocusTitle' : 'clock.timeUpBreakTitle') | translate }}</h3>
         <p>{{ (clock.mode() === 'break' ? 'clock.startBreakPrompt' : 'clock.startFocusPrompt') | translate }}</p>
         <div class="clock__modal-actions">

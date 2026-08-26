@@ -1,11 +1,11 @@
 <div
-  class="new-task__overlay"
+  class="modal-overlay new-task__overlay"
   (click)="$event.target === $event.currentTarget && close.emit()"
   (keydown)="handleKeydown($event)"
   role="dialog"
   aria-modal="true"
 >
-  <form class="new-task__modal" (submit)="$event.preventDefault(); handleSubmit()">
+  <form class="modal-panel new-task__modal" (submit)="$event.preventDefault(); handleSubmit()">
     <div class="new-task__header">
       <h3>{{ modalTitle }}</h3>
       <button type="button" class="new-task__close" aria-label="Close" (click)="close.emit()">✕</button>

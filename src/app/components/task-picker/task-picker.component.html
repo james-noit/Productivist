@@ -1,5 +1,5 @@
-<div class="task-picker__overlay" (click)="closeOnBackdrop($event)">
-  <div class="task-picker__modal" role="dialog" aria-modal="true" [attr.aria-label]="'clock.selectTask' | translate">
+<div class="modal-overlay task-picker__overlay" (click)="closeOnBackdrop($event)">
+  <div class="modal-panel task-picker__modal" role="dialog" aria-modal="true" [attr.aria-label]="'clock.selectTask' | translate">
     <div class="task-picker__header">
       <h3>{{ 'clock.selectTask' | translate }}</h3>
       <button type="button" class="task-picker__close" [attr.aria-label]="'todo.close' | translate" (click)="close.emit()">✕</button>

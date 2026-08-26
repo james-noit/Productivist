@@ -95,27 +95,12 @@
   color: var(--color-text);
 }
 
-.app-menu__reset-overlay {
-  position: fixed;
-  inset: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 30;
-  padding: 1rem;
-}
 
 .app-menu__reset-modal {
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
-  width: 100%;
-  max-width: 380px;
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
-  padding: 1.25rem;
+  --modal-max-width: 380px;
+  --modal-max-height: none;
+  --modal-padding: 1.25rem;
+  --modal-gap: 0.6rem;
 }
 
 .app-menu__reset-title {

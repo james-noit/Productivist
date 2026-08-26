@@ -196,29 +196,6 @@
   font-variant-numeric: tabular-nums;
 }
 
-.badge {
-  font-size: 0.7rem;
-  padding: 0.1rem 0.5rem;
-  border-radius: 999px;
-  background-color: var(--color-surface-alt);
-  color: var(--color-text-muted);
-  white-space: nowrap;
-}
-
-.badge--low {
-  background-color: var(--color-low);
-  color: #fff;
-}
-
-.badge--medium {
-  background-color: var(--color-medium);
-  color: #fff;
-}
-
-.badge--high {
-  background-color: var(--color-high);
-  color: #fff;
-}
 
 .badge--tag {
   background-color: var(--color-surface);

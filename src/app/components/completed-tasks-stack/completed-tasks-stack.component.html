@@ -11,8 +11,8 @@
   </button>
 
   @if (open()) {
-    <div class="completed-stack__overlay" (click)="$event.target === $event.currentTarget && close()">
-      <div class="completed-stack__modal" role="dialog" aria-modal="true" [attr.aria-label]="'todo.completedTasks' | translate">
+    <div class="modal-overlay completed-stack__overlay" (click)="$event.target === $event.currentTarget && close()">
+      <div class="modal-panel completed-stack__modal" role="dialog" aria-modal="true" [attr.aria-label]="'todo.completedTasks' | translate">
         <div class="completed-stack__header">
           <h3>{{ 'todo.completedTasks' | translate }}</h3>
           <button type="button" class="completed-stack__close" [attr.aria-label]="'todo.close' | translate" (click)="close()">✕</button>

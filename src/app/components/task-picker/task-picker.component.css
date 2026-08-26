@@ -1,27 +1,6 @@
-.task-picker__overlay {
-  position: fixed;
-  inset: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 30;
-  padding: 1rem;
-}
 
 .task-picker__modal {
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
-  width: 100%;
-  max-width: 560px;
-  max-height: 80vh;
-  display: flex;
-  flex-direction: column;
-  padding: 1rem;
-  gap: 0.75rem;
-  text-align: left;
-  overflow-y: auto;
+  --modal-max-width: 560px;
 }
 
 .task-picker__header {

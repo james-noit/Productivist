@@ -1,5 +1,5 @@
-<div class="task-detail__overlay" (click)="$event.target === $event.currentTarget && close.emit()">
-  <div class="task-detail__modal" role="dialog" aria-modal="true" [attr.aria-label]="'eisenhower.taskDetail' | translate">
+<div class="modal-overlay task-detail__overlay" (click)="$event.target === $event.currentTarget && close.emit()">
+  <div class="modal-panel task-detail__modal" role="dialog" aria-modal="true" [attr.aria-label]="'eisenhower.taskDetail' | translate">
     <div class="task-detail__header">
       <h3>{{ 'eisenhower.taskDetail' | translate }}</h3>
       <button type="button" class="task-detail__close" [attr.aria-label]="'todo.close' | translate" (click)="close.emit()">✕</button>
