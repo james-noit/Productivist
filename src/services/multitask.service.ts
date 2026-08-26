@@ -1,12 +1,10 @@
 import { Injectable, computed, inject } from '@angular/core';
 import { localStorageSignal } from '../core/local-storage-signal';
+import { createId } from '../core/create-id';
 import { TodosService } from './todos.service';
 import { ClockService } from './clock.service';
 import type { AccomplishmentMark, MultitaskCard } from '../types/multitask';
 
-function createId(): string {
-  return crypto.randomUUID();
-}
 
 const DISSOLVE_DELAY_MS = 5000;
 

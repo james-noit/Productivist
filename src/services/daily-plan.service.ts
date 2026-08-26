@@ -1,5 +1,6 @@
 import { Injectable, computed, signal } from '@angular/core';
 import { localStorageSignal } from '../core/local-storage-signal';
+import { createId } from '../core/create-id';
 
 export type DailyPlanStage = 'prompt' | 'chooseProjects' | 'planning' | 'groupingParallel';
 
@@ -15,9 +16,6 @@ export interface ExecutionLot {
   taskIds: string[];
 }
 
-function createId(): string {
-  return crypto.randomUUID();
-}
 
 @Injectable({ providedIn: 'root' })
 export class DailyPlanService {

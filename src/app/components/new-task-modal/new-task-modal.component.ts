@@ -3,17 +3,10 @@ import { FormsModule } from '@angular/forms';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { ProjectsService } from '../../../services/projects.service';
 import { TodosService } from '../../../services/todos.service';
+import { QUADRANT_BY_KEY } from '../../../lib/eisenhower';
 import type { EisenhowerQuadrant } from '../../../types/eisenhower';
-import type { Priority } from '../../../types/todo';
 
 const ICONS = ['📁', '📌', '🚀', '🎯', '📚', '💼', '🛠️', '🎨', '🧪', '🏗️', '🌱', '🔥'];
-
-const QUADRANT_TARGETS: Record<EisenhowerQuadrant, { importance: Priority; urgency: Priority }> = {
-  doFirst: { importance: 'high', urgency: 'high' },
-  schedule: { importance: 'high', urgency: 'low' },
-  delegate: { importance: 'low', urgency: 'high' },
-  eliminate: { importance: 'low', urgency: 'low' },
-};
 
 @Component({
   selector: 'app-new-task-modal',
@@ -91,10 +84,10 @@ export class NewTaskModalComponent {
   });
 
   readonly importanceLabel = computed(() =>
-    this.translate.instant(`todo.${QUADRANT_TARGETS[this.quadrant()].importance}`),
+    this.translate.instant(`todo.${QUADRANT_BY_KEY[this.quadrant()].importance}`),
   );
   readonly urgencyLabel = computed(() =>
-    this.translate.instant(`todo.${QUADRANT_TARGETS[this.quadrant()].urgency}`),
+    this.translate.instant(`todo.${QUADRANT_BY_KEY[this.quadrant()].urgency}`),
   );
 
   get modalTitle(): string {
@@ -104,7 +97,7 @@ export class NewTaskModalComponent {
   }
 
   handleSubmit(): void {
-    const target = QUADRANT_TARGETS[this.quadrant()];
+    const target = QUADRANT_BY_KEY[this.quadrant()];
     const trimmedTitle = this.title().trim();
     if (!trimmedTitle) return;
 

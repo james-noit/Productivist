@@ -14,7 +14,7 @@
       <div class="multitask-view__stepper" role="group" [attr.aria-label]="'clock.adjustDuration' | translate">
         <button
           type="button"
-          [disabled]="!canDecreaseDuration()"
+          [disabled]="!clock.canDecreaseDuration()"
           [attr.aria-label]="'clock.decreaseLarge' | translate"
           [title]="'clock.decreaseLarge' | translate"
           (click)="clock.adjustDuration(-300)"
@@ -23,7 +23,7 @@
         </button>
         <button
           type="button"
-          [disabled]="!canDecreaseDuration()"
+          [disabled]="!clock.canDecreaseDuration()"
           [attr.aria-label]="'clock.decreaseSmall' | translate"
           [title]="'clock.decreaseSmall' | translate"
           (click)="clock.adjustDuration(-30)"
@@ -31,11 +31,11 @@
           -30″
         </button>
       </div>
-      <span class="multitask-view__time">{{ formattedTime() }}</span>
+      <span class="multitask-view__time">{{ clock.formattedTime() }}</span>
       <div class="multitask-view__stepper" role="group" [attr.aria-label]="'clock.adjustDuration' | translate">
         <button
           type="button"
-          [disabled]="!canIncreaseDuration()"
+          [disabled]="!clock.canIncreaseDuration()"
           [attr.aria-label]="'clock.increaseSmall' | translate"
           [title]="'clock.increaseSmall' | translate"
           (click)="clock.adjustDuration(30)"
@@ -44,7 +44,7 @@
         </button>
         <button
           type="button"
-          [disabled]="!canIncreaseDuration()"
+          [disabled]="!clock.canIncreaseDuration()"
           [attr.aria-label]="'clock.increaseLarge' | translate"
           [title]="'clock.increaseLarge' | translate"
           (click)="clock.adjustDuration(300)"

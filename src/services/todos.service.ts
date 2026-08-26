@@ -1,5 +1,7 @@
 import { Injectable, computed, signal } from '@angular/core';
 import { localStorageSignal } from '../core/local-storage-signal';
+import { createId } from '../core/create-id';
+import { comparePriority } from '../lib/eisenhower';
 import type { Priority, Todo, TodoExport } from '../types/todo';
 
 export interface TodoFilters {
@@ -10,11 +12,7 @@ export interface TodoFilters {
 
 export type TodoViewMode = 'all' | 'projects';
 
-function createId(): string {
-  return crypto.randomUUID();
-}
 
-const PRIORITY_RANK: Record<Priority, number> = { high: 0, medium: 1, low: 2 };
 
 @Injectable({ providedIn: 'root' })
 export class TodosService {
@@ -69,13 +67,9 @@ export class TodosService {
     if (this.hasCustomOrder()) {
       return sorted.sort((a, b) => a.order - b.order);
     }
-    return sorted.sort((a, b) => {
-      const importanceDiff = PRIORITY_RANK[a.importance] - PRIORITY_RANK[b.importance];
-      if (importanceDiff !== 0) return importanceDiff;
-      const urgencyDiff = PRIORITY_RANK[a.urgency] - PRIORITY_RANK[b.urgency];
-      if (urgencyDiff !== 0) return urgencyDiff;
-      return a.order - b.order;
-    });
+    // Same importance-then-urgency ordering as lib/eisenhower's sortByPriority, with the
+    // stored order as the final tiebreak so equal-priority tasks keep a stable position.
+    return sorted.sort((a, b) => comparePriority(a, b) || a.order - b.order);
   }
 
   setCurrentTask(id: string | null): void {

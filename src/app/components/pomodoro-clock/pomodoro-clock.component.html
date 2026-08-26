@@ -38,7 +38,7 @@
           <button
             type="button"
             class="clock__stepper-btn"
-            [disabled]="!canDecreaseDuration()"
+            [disabled]="!clock.canDecreaseDuration()"
             [attr.aria-label]="'clock.decreaseLarge' | translate"
             [title]="'clock.decreaseLarge' | translate"
             (click)="clock.adjustDuration(-300)"
@@ -48,7 +48,7 @@
           <button
             type="button"
             class="clock__stepper-btn"
-            [disabled]="!canDecreaseDuration()"
+            [disabled]="!clock.canDecreaseDuration()"
             [attr.aria-label]="'clock.decreaseSmall' | translate"
             [title]="'clock.decreaseSmall' | translate"
             (click)="clock.adjustDuration(-30)"
@@ -57,13 +57,13 @@
           </button>
         </div>
 
-        <span class="clock__time">{{ formattedTime() }}</span>
+        <span class="clock__time">{{ clock.formattedTime() }}</span>
 
         <div class="clock__stepper" role="group" [attr.aria-label]="'clock.adjustDuration' | translate">
           <button
             type="button"
             class="clock__stepper-btn"
-            [disabled]="!canIncreaseDuration()"
+            [disabled]="!clock.canIncreaseDuration()"
             [attr.aria-label]="'clock.increaseSmall' | translate"
             [title]="'clock.increaseSmall' | translate"
             (click)="clock.adjustDuration(30)"
@@ -73,7 +73,7 @@
           <button
             type="button"
             class="clock__stepper-btn"
-            [disabled]="!canIncreaseDuration()"
+            [disabled]="!clock.canIncreaseDuration()"
             [attr.aria-label]="'clock.increaseLarge' | translate"
             [title]="'clock.increaseLarge' | translate"
             (click)="clock.adjustDuration(300)"

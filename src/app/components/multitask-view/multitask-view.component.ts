@@ -4,12 +4,6 @@ import { MultitaskService } from '../../../services/multitask.service';
 import { ClockService } from '../../../services/clock.service';
 import { DailyPlanService } from '../../../services/daily-plan.service';
 import { TodosService } from '../../../services/todos.service';
-import {
-  SettingsService,
-  MIN_DURATION_SECONDS,
-  MAX_FOCUS_SECONDS,
-  MAX_BREAK_SECONDS,
-} from '../../../services/settings.service';
 import { MultitaskTaskRowComponent } from '../multitask-task-row/multitask-task-row.component';
 import { MultitaskTaskDrawerComponent } from '../multitask-task-drawer/multitask-task-drawer.component';
 import { ClockSettingsComponent } from '../clock-settings/clock-settings.component';
@@ -40,7 +34,6 @@ export class MultitaskViewComponent {
   readonly multitask = inject(MultitaskService);
   readonly clock = inject(ClockService);
   readonly dailyPlan = inject(DailyPlanService);
-  private readonly settings = inject(SettingsService);
   private readonly todos = inject(TodosService);
 
   readonly hasNextLot = computed(
@@ -68,20 +61,6 @@ export class MultitaskViewComponent {
     this.dailyPlan.setActiveLotIndex(nextIndex);
   }
 
-  readonly formattedTime = computed(() => {
-    const minutes = Math.floor(this.clock.remainingSeconds() / 60);
-    const seconds = this.clock.remainingSeconds() % 60;
-    return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-  });
-
-  readonly currentDurationSeconds = computed(() =>
-    this.clock.mode() === 'focus' ? this.settings.focusSeconds() : this.settings.breakSeconds(),
-  );
-  readonly maxDurationSeconds = computed(() => (this.clock.mode() === 'focus' ? MAX_FOCUS_SECONDS : MAX_BREAK_SECONDS));
-  readonly canDecreaseDuration = computed(() => !this.clock.running() && this.currentDurationSeconds() > MIN_DURATION_SECONDS);
-  readonly canIncreaseDuration = computed(
-    () => !this.clock.running() && this.currentDurationSeconds() < this.maxDurationSeconds(),
-  );
 
   readonly borderColor = computed(() => capacityColorVar(this.multitask.cards().length));
 

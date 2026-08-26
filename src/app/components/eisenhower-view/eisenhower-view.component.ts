@@ -6,13 +6,11 @@ import { ProjectsService } from '../../../services/projects.service';
 import { EisenhowerCardComponent } from '../eisenhower-card/eisenhower-card.component';
 import { TaskDetailModalComponent } from '../task-detail-modal/task-detail-modal.component';
 import { NewTaskModalComponent } from '../new-task-modal/new-task-modal.component';
-import { classify } from '../../../lib/eisenhower';
-import type { Todo, Priority } from '../../../types/todo';
+import { QUADRANTS, QUADRANT_BY_KEY, classify, type QuadrantDef } from '../../../lib/eisenhower';
+import type { Todo } from '../../../types/todo';
 import type { EisenhowerQuadrant, EisenhowerViewMode } from '../../../types/eisenhower';
 
-interface QuadrantSection {
-  key: EisenhowerQuadrant;
-  cssKey: string;
+interface QuadrantSection extends QuadrantDef {
   todos: Todo[];
   groups: ProjectGroup[];
 }
@@ -23,20 +21,6 @@ interface ProjectGroup {
   icon?: string;
   todos: Todo[];
 }
-
-const QUADRANT_TARGETS: Record<EisenhowerQuadrant, { importance: Priority; urgency: Priority }> = {
-  doFirst: { importance: 'high', urgency: 'high' },
-  schedule: { importance: 'high', urgency: 'low' },
-  delegate: { importance: 'low', urgency: 'high' },
-  eliminate: { importance: 'low', urgency: 'low' },
-};
-
-const QUADRANT_DEFS: { key: EisenhowerQuadrant; cssKey: string }[] = [
-  { key: 'doFirst', cssKey: 'do-first' },
-  { key: 'schedule', cssKey: 'schedule' },
-  { key: 'delegate', cssKey: 'delegate' },
-  { key: 'eliminate', cssKey: 'eliminate' },
-];
 
 @Component({
   selector: 'app-eisenhower-view',
@@ -63,7 +47,7 @@ export class EisenhowerViewComponent {
   readonly quadrants = computed<QuadrantSection[]>(() => {
     const byQuadrant: Record<EisenhowerQuadrant, Todo[]> = { doFirst: [], schedule: [], delegate: [], eliminate: [] };
     for (const todo of this.activeTodos()) byQuadrant[classify(todo)].push(todo);
-    return QUADRANT_DEFS.map((def) => ({
+    return QUADRANTS.map((def) => ({
       ...def,
       todos: byQuadrant[def.key],
       groups: this.groupByProject(byQuadrant[def.key]),
@@ -91,7 +75,8 @@ export class EisenhowerViewComponent {
   onDrop(quadrant: EisenhowerQuadrant): void {
     const id = this.todos.draggedId();
     if (!id) return;
-    this.todos.updateTodo(id, QUADRANT_TARGETS[quadrant]);
+    const { importance, urgency } = QUADRANT_BY_KEY[quadrant];
+    this.todos.updateTodo(id, { importance, urgency });
     this.todos.endDrag();
   }
 

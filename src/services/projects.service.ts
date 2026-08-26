@@ -1,11 +1,9 @@
 import { Injectable, computed, inject } from '@angular/core';
 import { localStorageSignal } from '../core/local-storage-signal';
+import { createId } from '../core/create-id';
 import { TodosService } from './todos.service';
 import type { Milestone, Project, ProjectExport } from '../types/project';
 
-function createId(): string {
-  return crypto.randomUUID();
-}
 
 @Injectable({ providedIn: 'root' })
 export class ProjectsService {

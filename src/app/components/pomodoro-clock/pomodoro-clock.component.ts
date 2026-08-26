@@ -1,12 +1,7 @@
 import { afterNextRender, ChangeDetectionStrategy, Component, computed, ElementRef, inject, Injector, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '@ngx-translate/core';
-import {
-  SettingsService,
-  MIN_DURATION_SECONDS,
-  MAX_FOCUS_SECONDS,
-  MAX_BREAK_SECONDS,
-} from '../../../services/settings.service';
+import { SettingsService } from '../../../services/settings.service';
 import { TodosService } from '../../../services/todos.service';
 import { ClockService } from '../../../services/clock.service';
 import { DailyPlanService } from '../../../services/daily-plan.service';
@@ -57,20 +52,6 @@ export class PomodoroClockComponent {
 
   readonly dashOffset = computed(() => this.circumference * (1 - this.progress()));
 
-  readonly formattedTime = computed(() => {
-    const minutes = Math.floor(this.clock.remainingSeconds() / 60);
-    const seconds = this.clock.remainingSeconds() % 60;
-    return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-  });
-
-  readonly currentDurationSeconds = computed(() =>
-    this.clock.mode() === 'focus' ? this.settings.focusSeconds() : this.settings.breakSeconds(),
-  );
-  readonly maxDurationSeconds = computed(() => (this.clock.mode() === 'focus' ? MAX_FOCUS_SECONDS : MAX_BREAK_SECONDS));
-  readonly canDecreaseDuration = computed(() => !this.clock.running() && this.currentDurationSeconds() > MIN_DURATION_SECONDS);
-  readonly canIncreaseDuration = computed(
-    () => !this.clock.running() && this.currentDurationSeconds() < this.maxDurationSeconds(),
-  );
 
   readonly taskModalOpen = signal(false);
   readonly showDetail = signal(false);
@@ -145,7 +126,6 @@ export class PomodoroClockComponent {
   }
 
   goToPlanningLab(): void {
-    localStorage.setItem('productivist.planningLabTab', JSON.stringify('daily'));
-    this.view.setView('planning-lab');
+    this.view.openPlanningLab('daily');
   }
 }

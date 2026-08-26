@@ -1,7 +1,13 @@
 import { Injectable, computed, effect, inject, signal } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
 import { localStorageSignal } from '../core/local-storage-signal';
-import { SettingsService, type BellSoundId } from './settings.service';
+import {
+  SettingsService,
+  MIN_DURATION_SECONDS,
+  MAX_FOCUS_SECONDS,
+  MAX_BREAK_SECONDS,
+  type BellSoundId,
+} from './settings.service';
 
 export type ClockMode = 'focus' | 'break';
 
@@ -90,6 +96,27 @@ export class ClockService {
   // tab can never make the clock run slow.
   private endAt: number | null = null;
   private restoring = true;
+
+  /**
+   * Display and stepper state, shared by every view that renders the clock. These were
+   * previously duplicated verbatim in pomodoro-clock and multitask-view.
+   */
+  readonly formattedTime = computed(() => {
+    const remaining = this.remainingSeconds();
+    const minutes = Math.floor(remaining / 60);
+    const seconds = remaining % 60;
+    return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+  });
+
+  readonly maxDurationSeconds = computed(() =>
+    this.mode() === 'focus' ? MAX_FOCUS_SECONDS : MAX_BREAK_SECONDS,
+  );
+  readonly canDecreaseDuration = computed(
+    () => !this.running() && this.durationSeconds() > MIN_DURATION_SECONDS,
+  );
+  readonly canIncreaseDuration = computed(
+    () => !this.running() && this.durationSeconds() < this.maxDurationSeconds(),
+  );
 
   readonly durationSeconds = computed(() =>
     this.mode() === 'focus' ? this.settings.focusSeconds() : this.settings.breakSeconds(),

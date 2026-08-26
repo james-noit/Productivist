@@ -1,10 +1,8 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { TranslatePipe } from '@ngx-translate/core';
-import { localStorageSignal } from '../../../core/local-storage-signal';
+import { ViewService } from '../../../services/view.service';
 import { DailyBacklogViewComponent } from '../daily-backlog-view/daily-backlog-view.component';
 import { GeneralBacklogViewComponent } from '../general-backlog-view/general-backlog-view.component';
-
-type PlanningLabTab = 'daily' | 'general';
 
 @Component({
   selector: 'app-planning-lab-view',
@@ -15,5 +13,7 @@ type PlanningLabTab = 'daily' | 'general';
   styleUrl: './planning-lab-view.component.css',
 })
 export class PlanningLabViewComponent {
-  readonly tab = localStorageSignal<PlanningLabTab>('productivist.planningLabTab', 'daily');
+  private readonly view = inject(ViewService);
+
+  readonly tab = this.view.planningLabTab;
 }
