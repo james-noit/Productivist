@@ -18,6 +18,10 @@ interface Suggestion {
   milestoneName?: string;
 }
 
+// Shared empty arrays, so an objective with nothing in it doesn't allocate per read.
+const EMPTY_TASKS: readonly Todo[] = [];
+const EMPTY_PROJECTS: readonly { id: string; icon: string; name: string }[] = [];
+
 interface PlanStep {
   key: string;
   labelKey: string;
@@ -167,9 +171,21 @@ export class DailyBacklogViewComponent {
     this.dailyPlan.endDragProject();
   }
 
-  projectsInObjective(objectiveId: string): { id: string; icon: string; name: string }[] {
-    const ids = this.dailyPlan.projectAssignments()[objectiveId] ?? [];
-    return ids.map((id) => this.projectDisplay(id));
+  /**
+   * objectiveId -> the projects assigned to it, resolved for display. The template reads
+   * this twice per objective (emptiness check + the loop); building it inline meant
+   * re-resolving every project name on every change detection pass.
+   */
+  private readonly projectsByObjective = computed(() => {
+    const byObjective = new Map<string, { id: string; icon: string; name: string }[]>();
+    for (const [objectiveId, ids] of Object.entries(this.dailyPlan.projectAssignments())) {
+      byObjective.set(objectiveId, ids.map((id) => this.projectDisplay(id)));
+    }
+    return byObjective;
+  });
+
+  projectsInObjective(objectiveId: string): readonly { id: string; icon: string; name: string }[] {
+    return this.projectsByObjective().get(objectiveId) ?? EMPTY_PROJECTS;
   }
 
   private projectDisplay(id: string): { id: string; icon: string; name: string } {
@@ -186,9 +202,23 @@ export class DailyBacklogViewComponent {
     return this.dailyPlan.assignedProjectIds().has(id);
   }
 
-  tasksFor(objectiveId: string): Todo[] {
+  /** Same shape as projectsByObjective: one pass over the todos rather than one per read. */
+  private readonly tasksByObjective = computed(() => {
     const assignments = this.dailyPlan.assignments();
-    return this.todos.todos().filter((t) => !t.done && assignments[t.id] === objectiveId);
+    const byObjective = new Map<string, Todo[]>();
+    for (const todo of this.todos.todos()) {
+      if (todo.done) continue;
+      const objectiveId = assignments[todo.id];
+      if (!objectiveId) continue;
+      const bucket = byObjective.get(objectiveId);
+      if (bucket) bucket.push(todo);
+      else byObjective.set(objectiveId, [todo]);
+    }
+    return byObjective;
+  });
+
+  tasksFor(objectiveId: string): readonly Todo[] {
+    return this.tasksByObjective().get(objectiveId) ?? EMPTY_TASKS;
   }
 
   placeArmedTask(objectiveId: string): void {

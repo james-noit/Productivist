@@ -8,6 +8,9 @@ import { ProjectFormComponent } from '../project-form/project-form.component';
 import type { Project } from '../../../types/project';
 import type { Todo } from '../../../types/todo';
 
+// Shared empty array so an empty milestone doesn't allocate a fresh one per read.
+const EMPTY_TASKS: readonly Todo[] = [];
+
 @Component({
   selector: 'app-daily-plan-project-item',
   standalone: true,
@@ -48,8 +51,21 @@ export class DailyPlanProjectItemComponent {
       .length;
   });
 
-  milestoneTasks(milestoneId: string): Todo[] {
-    return sortByPriority(this.todos.todos().filter((t) => !t.done && t.milestoneId === milestoneId));
+  /** See project-tree-item: one pass over the todos instead of one per template read. */
+  private readonly tasksByMilestone = computed(() => {
+    const byMilestone = new Map<string, Todo[]>();
+    for (const todo of this.todos.todos()) {
+      if (todo.done || !todo.milestoneId) continue;
+      const bucket = byMilestone.get(todo.milestoneId);
+      if (bucket) bucket.push(todo);
+      else byMilestone.set(todo.milestoneId, [todo]);
+    }
+    for (const [id, list] of byMilestone) byMilestone.set(id, sortByPriority(list));
+    return byMilestone;
+  });
+
+  milestoneTasks(milestoneId: string): readonly Todo[] {
+    return this.tasksByMilestone().get(milestoneId) ?? EMPTY_TASKS;
   }
 
   toggleMilestone(id: string): void {
@@ -59,10 +75,23 @@ export class DailyPlanProjectItemComponent {
     this.expandedMilestones.set(next);
   }
 
+  /**
+   * taskId -> the text of the objective it is assigned to. Built once per data change; the
+   * template reads it once per task per render and previously did a linear scan of the
+   * objectives for each of those reads.
+   */
+  private readonly objectiveLabels = computed(() => {
+    const textById = new Map(this.dailyPlan.objectives().map((o) => [o.id, o.text]));
+    const labels = new Map<string, string>();
+    for (const [taskId, objectiveId] of Object.entries(this.dailyPlan.assignments())) {
+      const text = textById.get(objectiveId);
+      if (text !== undefined) labels.set(taskId, text);
+    }
+    return labels;
+  });
+
   objectiveLabel(taskId: string): string | undefined {
-    const objectiveId = this.dailyPlan.assignments()[taskId];
-    if (!objectiveId) return undefined;
-    return this.dailyPlan.objectives().find((o) => o.id === objectiveId)?.text;
+    return this.objectiveLabels().get(taskId);
   }
 
   isArmed(taskId: string): boolean {

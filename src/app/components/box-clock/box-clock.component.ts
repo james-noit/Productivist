@@ -2,6 +2,8 @@ import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } 
 import { ClockService } from '../../../services/clock.service';
 import { SettingsService } from '../../../services/settings.service';
 
+type BoxState = 'remaining' | 'active' | 'gone';
+
 function shuffledOrder(length: number): number[] {
   const indices = Array.from({ length }, (_, i) => i);
   for (let i = indices.length - 1; i > 0; i -= 1) {
@@ -23,7 +25,6 @@ export class BoxClockComponent {
   private readonly settings = inject(SettingsService);
 
   readonly boxCount = computed(() => Math.max(1, Math.ceil(this.clock.durationSeconds() / 60)));
-  readonly boxIndices = computed(() => Array.from({ length: this.boxCount() }, (_, i) => i));
 
   private freshOrder(): number[] {
     const count = this.boxCount();
@@ -34,17 +35,36 @@ export class BoxClockComponent {
 
   readonly order = signal<number[]>([]);
 
-  readonly consumeOrder = computed(() => {
-    const map = new Map<number, number>();
-    this.order().forEach((boxIndex, position) => map.set(boxIndex, position));
-    return map;
-  });
-
-  readonly elapsedSeconds = computed(() =>
+  private readonly elapsedSeconds = computed(() =>
     Math.max(0, this.clock.totalSeconds() - this.clock.remainingSeconds()),
   );
-  readonly minutesElapsed = computed(() => Math.floor(this.elapsedSeconds() / 60));
-  readonly currentMinuteProgress = computed(() => (this.elapsedSeconds() % 60) / 60);
+  private readonly minutesElapsed = computed(() => Math.floor(this.elapsedSeconds() / 60));
+  private readonly currentMinuteProgress = computed(() => (this.elapsedSeconds() % 60) / 60);
+
+  /**
+   * The whole grid in one array. The template used to call `boxState(i)` and
+   * `boxProgress(i)` per box, which meant two Map lookups per box on every change
+   * detection pass — up to 360 of them for a three-hour session, every second.
+   */
+  readonly boxes = computed<{ index: number; state: BoxState; progress: number }[]>(() => {
+    const minutesElapsed = this.minutesElapsed();
+    const progress = this.currentMinuteProgress();
+    // order[position] = which box is consumed at that position, so the array index is
+    // the position and the value is the box — exactly what we need to walk it once.
+    const count = this.boxCount();
+    // Until the effect below has produced an order for the current count, fall back to
+    // the identity order rather than a partially-stale one, which could map two positions
+    // onto the same box and leave a hole in the array.
+    const stored = this.order();
+    const order = stored.length === count ? stored : null;
+    const boxes = new Array<{ index: number; state: BoxState; progress: number }>(count);
+    for (let position = 0; position < count; position += 1) {
+      const index = order === null ? position : order[position];
+      const state: BoxState = position < minutesElapsed ? 'gone' : position === minutesElapsed ? 'active' : 'remaining';
+      boxes[index] = { index, state, progress: state === 'active' ? progress : 0 };
+    }
+    return boxes;
+  });
 
   constructor() {
     effect(() => {
@@ -53,18 +73,5 @@ export class BoxClockComponent {
       this.clock.mode();
       this.order.set(this.freshOrder());
     });
-  }
-
-  boxState(boxIndex: number): 'remaining' | 'active' | 'gone' {
-    const position = this.consumeOrder().get(boxIndex) ?? 0;
-    const minutesElapsed = this.minutesElapsed();
-    if (position < minutesElapsed) return 'gone';
-    if (position === minutesElapsed) return 'active';
-    return 'remaining';
-  }
-
-  boxProgress(boxIndex: number): number {
-    const position = this.consumeOrder().get(boxIndex) ?? 0;
-    return position === this.minutesElapsed() ? this.currentMinuteProgress() : 0;
   }
 }

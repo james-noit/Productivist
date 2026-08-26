@@ -11,6 +11,9 @@ import type { Project } from '../../../types/project';
 import type { Priority, Todo } from '../../../types/todo';
 import type { QuadrantCounts } from '../../../lib/eisenhower';
 
+// Shared empty array so an empty milestone doesn't allocate a fresh one per read.
+const EMPTY_TASKS: readonly Todo[] = [];
+
 let nextId = 0;
 
 @Component({
@@ -53,8 +56,26 @@ export class ProjectTreeItemComponent {
     () => this.todos.todos().filter((todo) => !todo.done && todo.projectId === this.project().id).length,
   );
 
-  milestoneTasks(milestoneId: string): Todo[] {
-    return this.todos.sortTasks(this.todos.todos().filter((todo) => !todo.done && todo.milestoneId === milestoneId));
+  /**
+   * All of this project's milestones' open tasks, bucketed by milestone id. The template
+   * asked for `milestoneTasks(id)` up to four times per milestone (count, emptiness check,
+   * the loop itself), each of which re-filtered and re-sorted the entire todo list on every
+   * change detection pass.
+   */
+  private readonly tasksByMilestone = computed(() => {
+    const byMilestone = new Map<string, Todo[]>();
+    for (const todo of this.todos.todos()) {
+      if (todo.done || !todo.milestoneId) continue;
+      const bucket = byMilestone.get(todo.milestoneId);
+      if (bucket) bucket.push(todo);
+      else byMilestone.set(todo.milestoneId, [todo]);
+    }
+    for (const [id, list] of byMilestone) byMilestone.set(id, this.todos.sortTasks(list));
+    return byMilestone;
+  });
+
+  milestoneTasks(milestoneId: string): readonly Todo[] {
+    return this.tasksByMilestone().get(milestoneId) ?? EMPTY_TASKS;
   }
 
   startTaskEdit(todo: Todo): void {

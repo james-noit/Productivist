@@ -42,7 +42,7 @@
     <p class="eisenhower-view__empty">{{ 'todo.empty' | translate }}</p>
   } @else {
     <div class="eisenhower-view__grid" [class]="'eisenhower-view__grid--' + viewMode()">
-      @for (q of quadrantDefs; track q.key) {
+      @for (q of quadrants(); track q.key) {
         <section
           class="eisenhower-quadrant"
           [class]="'eisenhower-quadrant--' + q.cssKey"
@@ -56,16 +56,16 @@
           </header>
           @if (viewMode() === 'detailed') {
             <ul class="eisenhower-quadrant__list">
-              @for (todo of listFor(q.key); track todo.id) {
+              @for (todo of q.todos; track todo.id) {
                 <app-eisenhower-card [todo]="todo" [viewMode]="viewMode()" (open)="openDetail($event)" />
               }
-              @if (!listFor(q.key).length) {
+              @if (!q.todos.length) {
                 <li class="eisenhower-quadrant__empty">{{ 'eisenhower.empty' | translate }}</li>
               }
             </ul>
           } @else {
             <div class="eisenhower-quadrant__groups">
-              @for (group of groupByProject(listFor(q.key)); track group.key) {
+              @for (group of q.groups; track group.key) {
                 <div class="eisenhower-quadrant__group">
                   <span class="eisenhower-quadrant__group-name">
                     @if (group.icon) {
@@ -80,7 +80,7 @@
                   </ul>
                 </div>
               }
-              @if (!listFor(q.key).length) {
+              @if (!q.todos.length) {
                 <p class="eisenhower-quadrant__empty">{{ 'eisenhower.empty' | translate }}</p>
               }
             </div>

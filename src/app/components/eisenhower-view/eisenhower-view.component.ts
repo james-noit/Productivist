@@ -6,8 +6,16 @@ import { ProjectsService } from '../../../services/projects.service';
 import { EisenhowerCardComponent } from '../eisenhower-card/eisenhower-card.component';
 import { TaskDetailModalComponent } from '../task-detail-modal/task-detail-modal.component';
 import { NewTaskModalComponent } from '../new-task-modal/new-task-modal.component';
+import { classify } from '../../../lib/eisenhower';
 import type { Todo, Priority } from '../../../types/todo';
 import type { EisenhowerQuadrant, EisenhowerViewMode } from '../../../types/eisenhower';
+
+interface QuadrantSection {
+  key: EisenhowerQuadrant;
+  cssKey: string;
+  todos: Todo[];
+  groups: ProjectGroup[];
+}
 
 interface ProjectGroup {
   key: string;
@@ -43,33 +51,26 @@ export class EisenhowerViewComponent {
   private readonly projects = inject(ProjectsService);
   private readonly translate = inject(TranslateService);
 
-  readonly quadrantDefs = QUADRANT_DEFS;
   readonly viewMode = localStorageSignal<EisenhowerViewMode>('productivist.eisenhowerViewMode', 'detailed');
 
   readonly activeTodos = computed(() => this.todos.sortTasks(this.todos.todos().filter((todo) => !todo.done)));
 
-  private readonly isImportant = (todo: Todo) => todo.importance === 'high';
-  private readonly isUrgent = (todo: Todo) => todo.urgency === 'high';
+  /**
+   * Every quadrant with its tasks already split and grouped by project. The template used
+   * to call `groupByProject(listFor(q.key))` inline, which rebuilt a Map and one array per
+   * project for all four quadrants on every change detection pass.
+   */
+  readonly quadrants = computed<QuadrantSection[]>(() => {
+    const byQuadrant: Record<EisenhowerQuadrant, Todo[]> = { doFirst: [], schedule: [], delegate: [], eliminate: [] };
+    for (const todo of this.activeTodos()) byQuadrant[classify(todo)].push(todo);
+    return QUADRANT_DEFS.map((def) => ({
+      ...def,
+      todos: byQuadrant[def.key],
+      groups: this.groupByProject(byQuadrant[def.key]),
+    }));
+  });
 
-  readonly doFirst = computed(() => this.activeTodos().filter((t) => this.isImportant(t) && this.isUrgent(t)));
-  readonly schedule = computed(() => this.activeTodos().filter((t) => this.isImportant(t) && !this.isUrgent(t)));
-  readonly delegate = computed(() => this.activeTodos().filter((t) => !this.isImportant(t) && this.isUrgent(t)));
-  readonly eliminate = computed(() => this.activeTodos().filter((t) => !this.isImportant(t) && !this.isUrgent(t)));
-
-  listFor(quadrant: EisenhowerQuadrant): Todo[] {
-    switch (quadrant) {
-      case 'doFirst':
-        return this.doFirst();
-      case 'schedule':
-        return this.schedule();
-      case 'delegate':
-        return this.delegate();
-      case 'eliminate':
-        return this.eliminate();
-    }
-  }
-
-  groupByProject(list: Todo[]): ProjectGroup[] {
+  private groupByProject(list: Todo[]): ProjectGroup[] {
     const groups = new Map<string, ProjectGroup>();
     for (const todo of list) {
       const key = todo.projectId ?? '__none__';
