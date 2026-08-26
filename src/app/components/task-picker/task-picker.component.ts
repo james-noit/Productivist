@@ -4,12 +4,13 @@ import { TranslatePipe } from '@ngx-translate/core';
 import { TodosService } from '../../../services/todos.service';
 import { ProjectsPanelComponent } from '../projects-panel/projects-panel.component';
 import { TaskProjectTagComponent } from '../task-project-tag/task-project-tag.component';
+import { TaskBadgesComponent } from '../task-badges/task-badges.component';
 import type { Priority } from '../../../types/todo';
 
 @Component({
   selector: 'app-task-picker',
   standalone: true,
-  imports: [FormsModule, TranslatePipe, ProjectsPanelComponent, TaskProjectTagComponent],
+  imports: [FormsModule, TranslatePipe, ProjectsPanelComponent, TaskProjectTagComponent, TaskBadgesComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './task-picker.component.html',
   styleUrl: './task-picker.component.css',

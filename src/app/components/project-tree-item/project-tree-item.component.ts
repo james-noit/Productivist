@@ -7,19 +7,20 @@ import { MultitaskService } from '../../../services/multitask.service';
 import { ProjectFormComponent } from '../project-form/project-form.component';
 import { TodoFormComponent } from '../todo-form/todo-form.component';
 import { QuadrantCountBadgesComponent } from '../quadrant-count-badges/quadrant-count-badges.component';
+import { TaskBadgesComponent } from '../task-badges/task-badges.component';
+import { InlineTaskEditorComponent } from '../inline-task-editor/inline-task-editor.component';
 import type { Project } from '../../../types/project';
-import type { Priority, Todo } from '../../../types/todo';
+import type { Todo } from '../../../types/todo';
 import type { QuadrantCounts } from '../../../lib/eisenhower';
 
 // Shared empty array so an empty milestone doesn't allocate a fresh one per read.
 const EMPTY_TASKS: readonly Todo[] = [];
 
-let nextId = 0;
 
 @Component({
   selector: 'app-project-tree-item',
   standalone: true,
-  imports: [FormsModule, TranslatePipe, ProjectFormComponent, TodoFormComponent, QuadrantCountBadgesComponent],
+  imports: [FormsModule, TranslatePipe, ProjectFormComponent, TodoFormComponent, QuadrantCountBadgesComponent, TaskBadgesComponent, InlineTaskEditorComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './project-tree-item.component.html',
   styleUrl: './project-tree-item.component.css',
@@ -36,7 +37,6 @@ export class ProjectTreeItemComponent {
   readonly onPickTask = input<(todoId: string) => void>();
   readonly quadrantCounts = input<QuadrantCounts>();
 
-  readonly tagSuggestionsId = `project-tree-tags-${nextId++}`;
 
   readonly expanded = signal(false);
   readonly editing = signal(false);
@@ -45,10 +45,6 @@ export class ProjectTreeItemComponent {
   readonly addingTaskMilestoneId = signal<string | null>(null);
   readonly pickingMilestoneId = signal<string | null>(null);
   readonly editingTaskId = signal<string | null>(null);
-  readonly editTitle = signal('');
-  readonly editImportance = signal<Priority>('medium');
-  readonly editUrgency = signal<Priority>('medium');
-  readonly editTags = signal('');
 
   readonly milestones = computed(() => this.projects.milestonesForProject(this.project().id));
 
@@ -80,26 +76,12 @@ export class ProjectTreeItemComponent {
 
   startTaskEdit(todo: Todo): void {
     this.editingTaskId.set(todo.id);
-    this.editTitle.set(todo.title);
-    this.editImportance.set(todo.importance);
-    this.editUrgency.set(todo.urgency);
-    this.editTags.set(todo.tags.join(', '));
   }
 
   cancelTaskEdit(): void {
     this.editingTaskId.set(null);
   }
 
-  saveTaskEdit(id: string): void {
-    const trimmed = this.editTitle().trim();
-    if (!trimmed) return;
-    const tags = this.editTags()
-      .split(',')
-      .map((tag) => tag.trim())
-      .filter(Boolean);
-    this.todos.updateTodo(id, { title: trimmed, importance: this.editImportance(), urgency: this.editUrgency(), tags });
-    this.editingTaskId.set(null);
-  }
 
   toggleMilestone(id: string): void {
     const next = new Set(this.expandedMilestones());

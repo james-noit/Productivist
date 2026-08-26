@@ -9,6 +9,7 @@ import { DailyPlanService, UNASSIGNED_GROUP_ID } from '../../../services/daily-p
 import { DailyPlanProjectItemComponent } from '../daily-plan-project-item/daily-plan-project-item.component';
 import { ProjectFormComponent } from '../project-form/project-form.component';
 import { ProjectsPanelComponent } from '../projects-panel/projects-panel.component';
+import { TaskBadgesComponent } from '../task-badges/task-badges.component';
 import type { Todo } from '../../../types/todo';
 import type { Project } from '../../../types/project';
 
@@ -42,6 +43,8 @@ const STEPS: PlanStep[] = [
     DailyPlanProjectItemComponent,
     ProjectFormComponent,
     ProjectsPanelComponent,
+  
+    TaskBadgesComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './daily-backlog-view.component.html',

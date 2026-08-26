@@ -1,0 +1,42 @@
+.inline-task-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.inline-task-editor__field {
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  padding: 0.35rem 0.5rem;
+}
+
+.inline-task-editor__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.inline-task-editor__actions {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.inline-task-editor__actions button {
+  border-radius: 4px;
+  padding: 0.3rem 0.7rem;
+  font-size: 0.8rem;
+}
+
+.inline-task-editor__actions button[type='submit'] {
+  background-color: var(--color-primary);
+  color: var(--color-primary-contrast);
+  border: none;
+}
+
+.inline-task-editor__actions button[type='button'] {
+  background: none;
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+}

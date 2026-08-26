@@ -11,6 +11,7 @@ import { BoxClockComponent } from '../box-clock/box-clock.component';
 import { TaskDetailModalComponent } from '../task-detail-modal/task-detail-modal.component';
 import { TaskProjectTagComponent } from '../task-project-tag/task-project-tag.component';
 import { TaskPickerComponent } from '../task-picker/task-picker.component';
+import { TaskBadgesComponent } from '../task-badges/task-badges.component';
 
 const RADIUS = 90;
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
@@ -26,6 +27,8 @@ const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
     TaskDetailModalComponent,
     TaskProjectTagComponent,
     TaskPickerComponent,
+  
+    TaskBadgesComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './pomodoro-clock.component.html',

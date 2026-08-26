@@ -59,39 +59,7 @@
                   @for (todo of milestoneTasks(milestone.id); track todo.id) {
                     <li class="milestone-task">
                       @if (editingTaskId() === todo.id) {
-                        <form class="milestone-task__edit-form" (submit)="$event.preventDefault(); saveTaskEdit(todo.id)">
-                          <input [ngModel]="editTitle()" (ngModelChange)="editTitle.set($event)" name="editTitle" type="text" class="milestone-task__edit-title" />
-                          <div class="milestone-task__edit-row">
-                            <select [ngModel]="editImportance()" (ngModelChange)="editImportance.set($event)" name="editImportance">
-                              <option value="low">{{ 'todo.low' | translate }}</option>
-                              <option value="medium">{{ 'todo.medium' | translate }}</option>
-                              <option value="high">{{ 'todo.high' | translate }}</option>
-                            </select>
-                            <select [ngModel]="editUrgency()" (ngModelChange)="editUrgency.set($event)" name="editUrgency">
-                              <option value="low">{{ 'todo.low' | translate }}</option>
-                              <option value="medium">{{ 'todo.medium' | translate }}</option>
-                              <option value="high">{{ 'todo.high' | translate }}</option>
-                            </select>
-                          </div>
-                          <input
-                            [ngModel]="editTags()"
-                            (ngModelChange)="editTags.set($event)"
-                            name="editTags"
-                            type="text"
-                            class="milestone-task__edit-title"
-                            [attr.list]="tagSuggestionsId"
-                            [placeholder]="'todo.tagsPlaceholder' | translate"
-                          />
-                          <datalist [id]="tagSuggestionsId">
-                            @for (tag of todos.allTags(); track tag) {
-                              <option [value]="tag"></option>
-                            }
-                          </datalist>
-                          <div class="milestone-task__edit-actions">
-                            <button type="submit">{{ 'projects.save' | translate }}</button>
-                            <button type="button" (click)="cancelTaskEdit()">{{ 'projects.cancel' | translate }}</button>
-                          </div>
-                        </form>
+                      <app-inline-task-editor [todo]="todo" (done)="cancelTaskEdit()" />
                       } @else {
                         <div class="milestone-task__main">
                           <input type="checkbox" [checked]="todo.done" (change)="todos.toggleDone(todo.id)" />
@@ -117,11 +85,7 @@
                         </div>
                         <div class="milestone-task__meta">
                           <div class="milestone-task__badges">
-                            <span class="badge" [class]="'badge--' + todo.importance">{{ ('todo.' + todo.importance) | translate }}</span>
-                            <span class="badge" [class]="'badge--' + todo.urgency">{{ ('todo.' + todo.urgency) | translate }}</span>
-                            @for (tag of todo.tags; track tag) {
-                              <span class="badge badge--tag">{{ tag }}</span>
-                            }
+                            <app-task-badges [todo]="todo" [showTags]="true" />
                           </div>
                           @if (multitaskMode() && isPickable(todo.id)) {
                             <button

@@ -1,0 +1,15 @@
+/* The host has no box of its own, so the select participates in the caller's flex row. */
+:host {
+  display: contents;
+}
+
+/* Styled here rather than by the caller: the select belongs to this component's
+   template, so a `.caller__row select` rule would not reach it through Angular's
+   style encapsulation. */
+select {
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  padding: 0.3rem 0.5rem;
+}

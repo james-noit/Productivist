@@ -1,0 +1,7 @@
+<span class="badge" [class]="'badge--' + todo().importance">{{ ('todo.' + todo().importance) | translate }}</span>
+<span class="badge" [class]="'badge--' + todo().urgency">{{ ('todo.' + todo().urgency) | translate }}</span>
+@if (showTags()) {
+  @for (tag of todo().tags; track tag) {
+    <span class="badge badge--tag">{{ tag }}</span>
+  }
+}

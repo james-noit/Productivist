@@ -5,6 +5,7 @@ import { TodosService } from '../../../services/todos.service';
 import { DailyPlanService } from '../../../services/daily-plan.service';
 import { sortByPriority } from '../../../lib/eisenhower';
 import { ProjectFormComponent } from '../project-form/project-form.component';
+import { TaskBadgesComponent } from '../task-badges/task-badges.component';
 import type { Project } from '../../../types/project';
 import type { Todo } from '../../../types/todo';
 
@@ -14,7 +15,7 @@ const EMPTY_TASKS: readonly Todo[] = [];
 @Component({
   selector: 'app-daily-plan-project-item',
   standalone: true,
-  imports: [TranslatePipe, ProjectFormComponent],
+  imports: [TranslatePipe, ProjectFormComponent, TaskBadgesComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './daily-plan-project-item.component.html',
   styleUrl: './daily-plan-project-item.component.css',

@@ -26,11 +26,7 @@
                 <div class="completed-item__content">
                   <span class="completed-item__title">{{ todo.title }}</span>
                   <div class="completed-item__badges">
-                    <span class="badge" [class]="'badge--' + todo.importance">{{ ('todo.' + todo.importance) | translate }}</span>
-                    <span class="badge" [class]="'badge--' + todo.urgency">{{ ('todo.' + todo.urgency) | translate }}</span>
-                    @for (tag of todo.tags; track tag) {
-                      <span class="badge badge--tag">{{ tag }}</span>
-                    }
+                    <app-task-badges [todo]="todo" [showTags]="true" />
                   </div>
                 </div>
                 <div class="completed-item__actions">

@@ -85,8 +85,7 @@
                 <div class="task-drawer__pool-content">
                   <span class="task-drawer__pool-title">{{ todo.title }}</span>
                   <div class="task-drawer__pool-badges">
-                    <span class="badge" [class]="'badge--' + todo.importance">{{ ('todo.' + todo.importance) | translate }}</span>
-                    <span class="badge" [class]="'badge--' + todo.urgency">{{ ('todo.' + todo.urgency) | translate }}</span>
+                    <app-task-badges [todo]="todo" />
                   </div>
                   <app-task-project-tag [todo]="todo" />
                 </div>

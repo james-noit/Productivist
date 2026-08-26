@@ -1,0 +1,34 @@
+<form class="inline-task-editor" (submit)="$event.preventDefault(); save()">
+  <input
+    [ngModel]="title()"
+    (ngModelChange)="title.set($event)"
+    name="editTitle"
+    type="text"
+    class="inline-task-editor__field"
+  />
+
+  <div class="inline-task-editor__row">
+    <app-priority-select [(value)]="importance" />
+    <app-priority-select [(value)]="urgency" />
+  </div>
+
+  <input
+    [ngModel]="tags()"
+    (ngModelChange)="tags.set($event)"
+    name="editTags"
+    type="text"
+    class="inline-task-editor__field"
+    [attr.list]="tagSuggestionsId"
+    [placeholder]="'todo.tagsPlaceholder' | translate"
+  />
+  <datalist [id]="tagSuggestionsId">
+    @for (tag of todos.allTags(); track tag) {
+      <option [value]="tag"></option>
+    }
+  </datalist>
+
+  <div class="inline-task-editor__actions">
+    <button type="submit">{{ 'projects.save' | translate }}</button>
+    <button type="button" (click)="cancel()">{{ 'projects.cancel' | translate }}</button>
+  </div>
+</form>

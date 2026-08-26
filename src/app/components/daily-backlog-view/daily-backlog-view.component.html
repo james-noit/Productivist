@@ -81,8 +81,7 @@
                     </span>
                   }
                   <span class="suggestion-row__badges">
-                    <span class="badge" [class]="'badge--' + suggestion.todo.importance">{{ ('todo.' + suggestion.todo.importance) | translate }}</span>
-                    <span class="badge" [class]="'badge--' + suggestion.todo.urgency">{{ ('todo.' + suggestion.todo.urgency) | translate }}</span>
+                    <app-task-badges [todo]="suggestion.todo" />
                   </span>
                 </button>
               </li>
@@ -272,8 +271,7 @@
                   @for (todo of tasksFor(objective.id); track todo.id) {
                     <li class="objective-task">
                       <span class="objective-task__title">{{ todo.title }}</span>
-                      <span class="badge" [class]="'badge--' + todo.importance">{{ ('todo.' + todo.importance) | translate }}</span>
-                      <span class="badge" [class]="'badge--' + todo.urgency">{{ ('todo.' + todo.urgency) | translate }}</span>
+                      <app-task-badges [todo]="todo" />
                       <button
                         type="button"
                         class="objective-task__remove"

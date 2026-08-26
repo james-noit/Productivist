@@ -8,6 +8,7 @@ import { TodoFiltersComponent } from '../todo-filters/todo-filters.component';
 import { CompletedTasksStackComponent } from '../completed-tasks-stack/completed-tasks-stack.component';
 import { ProjectsPanelComponent } from '../projects-panel/projects-panel.component';
 import { TaskProjectTagComponent } from '../task-project-tag/task-project-tag.component';
+import { TaskBadgesComponent } from '../task-badges/task-badges.component';
 
 @Component({
   selector: 'app-multitask-task-drawer',
@@ -20,6 +21,8 @@ import { TaskProjectTagComponent } from '../task-project-tag/task-project-tag.co
     CompletedTasksStackComponent,
     ProjectsPanelComponent,
     TaskProjectTagComponent,
+  
+    TaskBadgesComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './multitask-task-drawer.component.html',

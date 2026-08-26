@@ -178,8 +178,7 @@
             (click)="selectPlannedTask(task.id)"
           >
             <span class="clock__planned-task-title">{{ task.title }}</span>
-            <span class="badge" [class]="'badge--' + task.importance">{{ ('todo.' + task.importance) | translate }}</span>
-            <span class="badge" [class]="'badge--' + task.urgency">{{ ('todo.' + task.urgency) | translate }}</span>
+            <app-task-badges [todo]="task" />
           </li>
         }
       </ul>
