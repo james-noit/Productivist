@@ -48,33 +48,6 @@
   padding: 0.2rem 0;
 }
 
-.new-task__select-group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
-}
-
-.new-task__select-label {
-  font-size: 0.75rem;
-  color: var(--color-text-muted);
-}
-
-.new-task__select-wrapper select {
-  background-color: var(--color-surface);
-  color: var(--color-text);
-  border: 1px solid var(--color-border);
-  border-radius: 4px;
-  padding: 0.4rem 0.6rem;
-  font-family: inherit;
-  font-size: 0.9rem;
-  cursor: pointer;
-}
-
-.new-task__select-wrapper select:focus {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 2px;
-}
-
 .new-task__field {
   display: flex;
   flex-direction: column;
@@ -105,48 +78,6 @@
 }
 
 .new-task__field--title input:focus,
-.new-task__select-wrapper select:focus {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 2px;
-}
-
-.new-task__inline-create {
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-  padding-left: 0.5rem;
-}
-
-.new-task__icons {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.25rem;
-}
-
-.new-task__icon {
-  width: 2rem;
-  height: 2rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: var(--color-surface-alt);
-  border: 2px solid transparent;
-  border-radius: 6px;
-  font-size: 1rem;
-  cursor: pointer;
-}
-
-.new-task__icon--selected {
-  border-color: var(--color-primary);
-}
-
-.new-task__hint {
-  margin: 0;
-  font-size: 0.8rem;
-  color: var(--color-text-muted);
-  padding-left: 0.5rem;
-}
-
 .new-task__actions {
   display: flex;
   gap: 0.5rem;
@@ -177,4 +108,9 @@
   background-color: var(--color-primary);
   color: var(--color-primary-contrast);
   border: none;
+}
+
+/* The picker's selects are a touch smaller here than in task-detail-modal. */
+.new-task__picker {
+  --picker-select-font-size: 0.9rem;
 }

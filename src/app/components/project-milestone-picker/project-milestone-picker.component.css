@@ -1,0 +1,85 @@
+/* The two groups are direct children of the modal's own column flex layout. */
+:host {
+  display: contents;
+}
+
+.picker__group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.picker__label {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+
+.picker__wrapper select,
+.picker__inline-create input {
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  padding: 0.4rem 0.6rem;
+  font-family: inherit;
+}
+
+.picker__wrapper select {
+  width: 100%;
+  cursor: pointer;
+  /* new-task-modal renders these a touch smaller than task-detail-modal does. */
+  font-size: var(--picker-select-font-size, inherit);
+}
+
+.picker__wrapper select:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.picker__inline-create {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding-left: 0.5rem;
+}
+
+.picker__icons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.picker__icon {
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--color-surface-alt);
+  border: 2px solid transparent;
+  border-radius: 6px;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.picker__icon--selected {
+  border-color: var(--color-primary);
+}
+
+.picker__inline-create-submit {
+  align-self: flex-end;
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  color: var(--color-text);
+  padding: 0.35rem 0.9rem;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.picker__hint {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  padding-left: 0.5rem;
+}

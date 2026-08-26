@@ -51,67 +51,12 @@
       />
     </label>
 
-    <div class="new-task__select-group">
-      <div class="new-task__select-label">{{ 'eisenhower.createTask.project' | translate }}</div>
-
-      <div class="new-task__select-wrapper">
-        <select [ngModel]="projectRef()" (ngModelChange)="projectRef.set($event)" name="projectRef">
-          @for (opt of projectSelectOptions(); track opt.value || 'none') {
-            <option [value]="opt.value">{{ opt.label }}</option>
-          }
-        </select>
-      </div>
-
-      @if (projectRef() === '__new__') {
-        <div class="new-task__inline-create">
-          <div class="new-task__icons">
-            @for (icon of icons; track icon) {
-              <button
-                type="button"
-                class="new-task__icon"
-                [class.new-task__icon--selected]="chosenIcon() === icon"
-                (click)="chosenIcon.set(icon)"
-              >{{ icon }}</button>
-            }
-          </div>
-          <input
-            [ngModel]="projectName()"
-            (ngModelChange)="projectName.set($event)"
-            name="projectName"
-            type="text"
-            [placeholder]="'eisenhower.createTask.projectName' | translate"
-          />
-        </div>
-      }
-    </div>
-
-    <div class="new-task__select-group">
-      <div class="new-task__select-label">{{ 'eisenhower.createTask.milestone' | translate }}</div>
-
-      @if (showMilestones()) {
-        <div class="new-task__select-wrapper">
-          <select [ngModel]="milestoneRef()" (ngModelChange)="milestoneRef.set($event)" name="milestoneRef">
-            @for (opt of milestoneOptions(); track opt.value || 'none') {
-              <option [value]="opt.value">{{ opt.label }}</option>
-            }
-          </select>
-        </div>
-
-        @if (milestoneRef() === '__new__') {
-          <div class="new-task__inline-create">
-            <input
-              [ngModel]="milestoneName()"
-              (ngModelChange)="milestoneName.set($event)"
-              name="milestoneName"
-              type="text"
-              [placeholder]="'eisenhower.createTask.milestoneName' | translate"
-            />
-          </div>
-        }
-      } @else {
-        <p class="new-task__hint">{{ 'eisenhower.createTask.pickerProjectHint' | translate }}</p>
-      }
-    </div>
+    <app-project-milestone-picker
+      class="new-task__picker"
+      [(projectRef)]="projectRef"
+      [(milestoneRef)]="milestoneRef"
+      [showInlineCreateButtons]="false"
+    />
 
     <div class="new-task__actions">
       <button type="button" (click)="close.emit()">{{ 'projects.cancel' | translate }}</button>

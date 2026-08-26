@@ -38,16 +38,6 @@
 .task-detail__row select,
 .task-detail__tags-label input,
 .task-detail__description-label textarea,
-.task-detail__select-wrapper select,
-.task-detail__inline-create input {
-  background-color: var(--color-surface);
-  color: var(--color-text);
-  border: 1px solid var(--color-border);
-  border-radius: 4px;
-  padding: 0.4rem 0.6rem;
-  font-family: inherit;
-}
-
 .task-detail__description-label {
   display: flex;
   flex-direction: column;
@@ -65,70 +55,6 @@
   width: 100%;
   font-size: 1rem;
   font-weight: 600;
-}
-
-.task-detail__select-group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
-}
-
-.task-detail__select-label {
-  font-size: 0.75rem;
-  color: var(--color-text-muted);
-}
-
-.task-detail__select-wrapper select {
-  width: 100%;
-  cursor: pointer;
-}
-
-.task-detail__inline-create {
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-  padding-left: 0.5rem;
-}
-
-.task-detail__icons {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.25rem;
-}
-
-.task-detail__icon {
-  width: 2rem;
-  height: 2rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: var(--color-surface-alt);
-  border: 2px solid transparent;
-  border-radius: 6px;
-  font-size: 1rem;
-  cursor: pointer;
-}
-
-.task-detail__icon--selected {
-  border-color: var(--color-primary);
-}
-
-.task-detail__inline-create-submit {
-  align-self: flex-end;
-  background: none;
-  border: 1px solid var(--color-border);
-  border-radius: 6px;
-  color: var(--color-text);
-  padding: 0.35rem 0.9rem;
-  font-family: inherit;
-  cursor: pointer;
-}
-
-.task-detail__hint {
-  margin: 0;
-  font-size: 0.8rem;
-  color: var(--color-text-muted);
-  padding-left: 0.5rem;
 }
 
 .task-detail__row {

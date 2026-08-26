@@ -1,16 +1,20 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject, input, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, input, output, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { TranslatePipe } from '@ngx-translate/core';
 import { TodosService } from '../../../services/todos.service';
 import { ProjectsService } from '../../../services/projects.service';
+import {
+  ProjectMilestonePickerComponent,
+  NEW_REF,
+  type NewProjectInput,
+} from '../project-milestone-picker/project-milestone-picker.component';
 import type { Priority, Todo } from '../../../types/todo';
 
-const ICONS = ['📁', '📌', '🚀', '🎯', '📚', '💼', '🛠️', '🎨', '🧪', '🏗️', '🌱', '🔥'];
 
 @Component({
   selector: 'app-task-detail-modal',
   standalone: true,
-  imports: [FormsModule, TranslatePipe],
+  imports: [FormsModule, TranslatePipe, ProjectMilestonePickerComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './task-detail-modal.component.html',
   styleUrl: './task-detail-modal.component.css',
@@ -18,12 +22,12 @@ const ICONS = ['📁', '📌', '🚀', '🎯', '📚', '💼', '🛠️', '🎨'
 export class TaskDetailModalComponent {
   readonly todos = inject(TodosService);
   private readonly projects = inject(ProjectsService);
-  private readonly translate = inject(TranslateService);
 
   readonly todo = input.required<Todo>();
   readonly close = output<void>();
 
-  readonly icons = ICONS;
+  private readonly picker = viewChild(ProjectMilestonePickerComponent);
+
 
   readonly title = signal('');
   readonly description = signal('');
@@ -33,11 +37,14 @@ export class TaskDetailModalComponent {
   readonly pomodorosForTermination = signal('');
 
   readonly projectRef = signal('');
+
+  /** Mirrors the picker's own derivation; used by the commit handlers below. */
+  private readonly selectedProjectId = computed(() => {
+    const ref = this.projectRef();
+    return ref === NEW_REF ? undefined : ref || undefined;
+  });
   readonly milestoneRef = signal('');
 
-  readonly chosenIcon = signal(ICONS[0]);
-  readonly projectName = signal('');
-  readonly milestoneName = signal('');
 
   constructor() {
     effect(() => {
@@ -50,40 +57,13 @@ export class TaskDetailModalComponent {
       this.pomodorosForTermination.set(todo.pomodorosForTermination?.toString() ?? '');
       this.projectRef.set(todo.projectId ?? '');
       this.milestoneRef.set(todo.milestoneId ?? '');
-      this.chosenIcon.set(ICONS[0]);
-      this.projectName.set('');
-      this.milestoneName.set('');
+      this.picker()?.resetDrafts();
     });
   }
 
-  readonly selectedProjectId = computed<string | undefined>(() => {
-    const ref = this.projectRef();
-    if (ref === '__new__') return undefined;
-    return ref || undefined;
-  });
 
-  readonly showMilestones = computed(() => !!this.selectedProjectId());
 
-  readonly projectSelectOptions = computed(() => {
-    const opts: Array<{ value: string; label: string }> = [
-      { value: '', label: this.translate.instant('eisenhower.createTask.noProject') },
-      ...this.projects.sortedProjects().map((p) => ({ value: p.id, label: `${p.icon} ${p.name}` })),
-    ];
-    opts.push({ value: '__new__', label: this.translate.instant('eisenhower.createTask.newProject') });
-    return opts;
-  });
 
-  readonly milestoneOptions = computed(() => {
-    const projectId = this.selectedProjectId();
-    if (!projectId) return [];
-    const projectMilestones = this.projects.milestonesForProject(projectId);
-    const opts: Array<{ value: string; label: string }> = [
-      { value: '', label: this.translate.instant('eisenhower.createTask.noMilestone') },
-      ...projectMilestones.map((m) => ({ value: m.id, label: m.name })),
-    ];
-    opts.push({ value: '__new__', label: this.translate.instant('eisenhower.createTask.newMilestone') });
-    return opts;
-  });
 
   commitTitle(): void {
     const trimmed = this.title().trim();
@@ -142,22 +122,17 @@ export class TaskDetailModalComponent {
     this.todos.updateTodo(this.todo().id, { projectId, milestoneId });
   }
 
-  submitNewProject(): void {
-    const name = this.projectName().trim();
-    if (!name) return;
-    const created = this.projects.addProject({ icon: this.chosenIcon(), name, description: '', notes: '' });
-    this.projectName.set('');
+  submitNewProject(input: NewProjectInput): void {
+    const created = this.projects.addProject({ ...input, description: '', notes: '' });
     this.projectRef.set(created.id);
     this.milestoneRef.set('');
     this.todos.updateTodo(this.todo().id, { projectId: created.id, milestoneId: undefined });
   }
 
-  submitNewMilestone(): void {
-    const name = this.milestoneName().trim();
+  submitNewMilestone(name: string): void {
     const projectId = this.selectedProjectId();
-    if (!name || !projectId) return;
+    if (!projectId) return;
     const created = this.projects.addMilestone(projectId, name);
-    this.milestoneName.set('');
     this.milestoneRef.set(created.id);
     this.todos.updateTodo(this.todo().id, { projectId, milestoneId: created.id });
   }

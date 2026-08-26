@@ -1,17 +1,17 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject, input, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, input, output, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { ProjectsService } from '../../../services/projects.service';
 import { TodosService } from '../../../services/todos.service';
 import { QUADRANT_BY_KEY } from '../../../lib/eisenhower';
+import { ProjectMilestonePickerComponent, NEW_REF } from '../project-milestone-picker/project-milestone-picker.component';
 import type { EisenhowerQuadrant } from '../../../types/eisenhower';
 
-const ICONS = ['📁', '📌', '🚀', '🎯', '📚', '💼', '🛠️', '🎨', '🧪', '🏗️', '🌱', '🔥'];
 
 @Component({
   selector: 'app-new-task-modal',
   standalone: true,
-  imports: [FormsModule, TranslatePipe],
+  imports: [FormsModule, TranslatePipe, ProjectMilestonePickerComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './new-task-modal.component.html',
   styleUrl: './new-task-modal.component.css',
@@ -24,7 +24,8 @@ export class NewTaskModalComponent {
   readonly quadrant = input.required<EisenhowerQuadrant>();
   readonly close = output<void>();
 
-  readonly icons = ICONS;
+  private readonly picker = viewChild(ProjectMilestonePickerComponent);
+
 
   readonly title = signal('');
   readonly description = signal('');
@@ -32,9 +33,6 @@ export class NewTaskModalComponent {
   readonly milestoneRef = signal('');
   readonly pomodorosForTermination = signal('');
 
-  readonly chosenIcon = signal(ICONS[0]);
-  readonly projectName = signal('');
-  readonly milestoneName = signal('');
 
   constructor() {
     effect(() => {
@@ -49,39 +47,12 @@ export class NewTaskModalComponent {
     this.projectRef.set('');
     this.milestoneRef.set('');
     this.pomodorosForTermination.set('');
-    this.chosenIcon.set(ICONS[0]);
-    this.projectName.set('');
-    this.milestoneName.set('');
+    this.picker()?.resetDrafts();
   }
 
-  readonly selectedProjectId = computed<string | undefined>(() => {
-    const ref = this.projectRef();
-    if (ref === '__new__') return undefined;
-    return ref || undefined;
-  });
 
-  readonly showMilestones = computed(() => !!this.selectedProjectId());
 
-  readonly projectSelectOptions = computed(() => {
-    const opts: Array<{ value: string; label: string }> = [
-      { value: '', label: this.translate.instant('eisenhower.createTask.noProject') },
-      ...this.projects.sortedProjects().map((p) => ({ value: p.id, label: `${p.icon} ${p.name}` })),
-    ];
-    opts.push({ value: '__new__', label: this.translate.instant('eisenhower.createTask.newProject') });
-    return opts;
-  });
 
-  readonly milestoneOptions = computed(() => {
-    const projectId = this.selectedProjectId();
-    if (!projectId) return [];
-    const projectMilestones = this.projects.milestonesForProject(projectId);
-    const opts: Array<{ value: string; label: string }> = [
-      { value: '', label: this.translate.instant('eisenhower.createTask.noMilestone') },
-      ...projectMilestones.map((m) => ({ value: m.id, label: m.name })),
-    ];
-    opts.push({ value: '__new__', label: this.translate.instant('eisenhower.createTask.newMilestone') });
-    return opts;
-  });
 
   readonly importanceLabel = computed(() =>
     this.translate.instant(`todo.${QUADRANT_BY_KEY[this.quadrant()].importance}`),
@@ -101,26 +72,29 @@ export class NewTaskModalComponent {
     const trimmedTitle = this.title().trim();
     if (!trimmedTitle) return;
 
-    let finalProjectId: string | undefined = this.selectedProjectId();
+    // Unlike task-detail-modal, nothing here is committed until submit, so any project or
+    // milestone the user typed into the picker's inline forms is created now.
+    const picker = this.picker();
+    if (!picker) return;
+
+    let finalProjectId: string | undefined = picker.selectedProjectId();
     let finalMilestoneId: string | undefined = this.milestoneRef() || undefined;
 
-    if (this.projectRef() === '__new__' && this.projectName().trim()) {
-      const createdProject = this.projects.addProject({
-        icon: this.chosenIcon(),
-        name: this.projectName().trim(),
+    if (this.projectRef() === NEW_REF) {
+      const name = picker.projectName().trim();
+      if (!name) return;
+      finalProjectId = this.projects.addProject({
+        icon: picker.chosenIcon(),
+        name,
         description: '',
         notes: '',
-      });
-      finalProjectId = createdProject.id;
-    } else if (this.projectRef() === '__new__') {
-      return;
+      }).id;
     }
 
-    if (this.showMilestones() && this.milestoneRef() === '__new__' && this.milestoneName().trim()) {
-      const createdMilestone = this.projects.addMilestone(finalProjectId!, this.milestoneName().trim());
-      finalMilestoneId = createdMilestone.id;
-    } else if (this.showMilestones() && this.milestoneRef() === '__new__') {
-      return;
+    if (picker.showMilestones() && this.milestoneRef() === NEW_REF) {
+      const name = picker.milestoneName().trim();
+      if (!name) return;
+      finalMilestoneId = this.projects.addMilestone(finalProjectId!, name).id;
     }
 
     const pomodoros = parseInt(this.pomodorosForTermination(), 10);

@@ -31,71 +31,14 @@
       ></textarea>
     </label>
 
-    <div class="task-detail__select-group">
-      <div class="task-detail__select-label">{{ 'eisenhower.createTask.project' | translate }}</div>
-      <div class="task-detail__select-wrapper">
-        <select [ngModel]="projectRef()" (ngModelChange)="projectRef.set($event)" name="projectRef" (change)="onProjectSelect()">
-          @for (opt of projectSelectOptions(); track opt.value || 'none') {
-            <option [value]="opt.value">{{ opt.label }}</option>
-          }
-        </select>
-      </div>
-      @if (projectRef() === '__new__') {
-        <div class="task-detail__inline-create">
-          <div class="task-detail__icons">
-            @for (icon of icons; track icon) {
-              <button
-                type="button"
-                class="task-detail__icon"
-                [class.task-detail__icon--selected]="chosenIcon() === icon"
-                (click)="chosenIcon.set(icon)"
-              >{{ icon }}</button>
-            }
-          </div>
-          <input
-            [ngModel]="projectName()"
-            (ngModelChange)="projectName.set($event)"
-            name="projectName"
-            type="text"
-            [placeholder]="'eisenhower.createTask.projectName' | translate"
-            (keydown.enter)="$event.preventDefault(); submitNewProject()"
-          />
-          <button type="button" class="task-detail__inline-create-submit" (click)="submitNewProject()">
-            {{ 'eisenhower.createTask.save' | translate }}
-          </button>
-        </div>
-      }
-    </div>
-
-    <div class="task-detail__select-group">
-      <div class="task-detail__select-label">{{ 'eisenhower.createTask.milestone' | translate }}</div>
-      @if (showMilestones()) {
-        <div class="task-detail__select-wrapper">
-          <select [ngModel]="milestoneRef()" (ngModelChange)="milestoneRef.set($event)" name="milestoneRef" (change)="onMilestoneSelect()">
-            @for (opt of milestoneOptions(); track opt.value || 'none') {
-              <option [value]="opt.value">{{ opt.label }}</option>
-            }
-          </select>
-        </div>
-        @if (milestoneRef() === '__new__') {
-          <div class="task-detail__inline-create">
-            <input
-              [ngModel]="milestoneName()"
-              (ngModelChange)="milestoneName.set($event)"
-              name="milestoneName"
-              type="text"
-              [placeholder]="'eisenhower.createTask.milestoneName' | translate"
-              (keydown.enter)="$event.preventDefault(); submitNewMilestone()"
-            />
-            <button type="button" class="task-detail__inline-create-submit" (click)="submitNewMilestone()">
-              {{ 'eisenhower.createTask.save' | translate }}
-            </button>
-          </div>
-        }
-      } @else {
-        <p class="task-detail__hint">{{ 'eisenhower.createTask.pickerProjectHint' | translate }}</p>
-      }
-    </div>
+    <app-project-milestone-picker
+      [(projectRef)]="projectRef"
+      [(milestoneRef)]="milestoneRef"
+      (projectPicked)="onProjectSelect()"
+      (milestonePicked)="onMilestoneSelect()"
+      (createProject)="submitNewProject($event)"
+      (createMilestone)="submitNewMilestone($event)"
+    />
 
     <div class="task-detail__row">
       <label>
