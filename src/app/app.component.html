@@ -1,13 +1,39 @@
 <app-app-header />
+
+<!--
+  Each view is its own lazy chunk: only one is ever on screen, and the Planning Lab alone
+  is roughly 1,900 lines of component. `on immediate` starts fetching the moment the
+  branch renders, so the first switch to a view costs one small chunk and every switch
+  after that is served from cache.
+
+  There is deliberately no `prefetch` trigger: a defer block inside an unrendered @if
+  branch does not exist yet, so a prefetch declared there would never fire.
+-->
 @if (view.current() === 'planning-lab') {
-  <app-planning-lab-view />
+  @defer (on immediate) {
+    <app-planning-lab-view />
+  } @placeholder {
+    <div class="view-loading" aria-hidden="true"></div>
+  }
 } @else if (view.current() === 'eisenhower') {
-  <app-eisenhower-view />
+  @defer (on immediate) {
+    <app-eisenhower-view />
+  } @placeholder {
+    <div class="view-loading" aria-hidden="true"></div>
+  }
 } @else if (multitask.enabled()) {
-  <app-multitask-view />
+  @defer (on immediate) {
+    <app-multitask-view />
+  } @placeholder {
+    <div class="view-loading" aria-hidden="true"></div>
+  }
 } @else {
-  <main class="main-view">
-    <app-pomodoro-clock class="main-view__clock" />
-    <app-todo-list class="main-view__todos" />
-  </main>
+  @defer (on immediate) {
+    <main class="main-view">
+      <app-pomodoro-clock class="main-view__clock" />
+      <app-todo-list class="main-view__todos" />
+    </main>
+  } @placeholder {
+    <div class="view-loading" aria-hidden="true"></div>
+  }
 }

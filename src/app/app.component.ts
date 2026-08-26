@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, effect, inject } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
-import { SettingsService } from '../services/settings.service';
+import { SettingsService, type Language } from '../services/settings.service';
 import { MultitaskService } from '../services/multitask.service';
 import { ViewService } from '../services/view.service';
 import { AppHeaderComponent } from './components/app-header/app-header.component';
@@ -10,11 +10,12 @@ import { MultitaskViewComponent } from './components/multitask-view/multitask-vi
 import { EisenhowerViewComponent } from './components/eisenhower-view/eisenhower-view.component';
 import { PlanningLabViewComponent } from './components/planning-lab-view/planning-lab-view.component';
 import en from '../i18n/locales/en.json';
-import es from '../i18n/locales/es.json';
 
 @Component({
   selector: 'app-root',
   standalone: true,
+  // Everything but the header is used only inside a @defer block, so the compiler turns
+  // these into dynamic imports and gives each view its own chunk.
   imports: [
     AppHeaderComponent,
     PomodoroClockComponent,
@@ -33,9 +34,13 @@ export class AppComponent {
   readonly view = inject(ViewService);
   private readonly translate = inject(TranslateService);
 
+  private readonly loaded = new Set<Language>(['en']);
+
   constructor() {
+    // English is the default and the fallback, so it is bundled. Every other locale is
+    // fetched on demand — shipping them all eagerly cost ~11 kB for a language most
+    // users never switch to.
     this.translate.setTranslation('en', en);
-    this.translate.setTranslation('es', es);
 
     effect(() => {
       document.documentElement.setAttribute('data-theme', this.settings.theme());
@@ -43,8 +48,17 @@ export class AppComponent {
 
     effect(() => {
       const language = this.settings.language();
-      this.translate.use(language);
       document.documentElement.setAttribute('lang', language);
+      void this.useLanguage(language);
     });
+  }
+
+  private async useLanguage(language: Language): Promise<void> {
+    if (!this.loaded.has(language)) {
+      const { default: messages } = await import(`../i18n/locales/${language}.json`);
+      this.translate.setTranslation(language, messages);
+      this.loaded.add(language);
+    }
+    this.translate.use(language);
   }
 }

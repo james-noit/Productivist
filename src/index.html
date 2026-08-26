@@ -4,10 +4,27 @@
   <meta charset="UTF-8">
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Productivist</title>
+  <script>
+    // Apply the saved theme before the first paint. Angular's own theme effect only runs
+    // after bootstrap, which showed every non-light user a flash of the light palette.
+    try {
+      var t = JSON.parse(localStorage.getItem('productivist.theme'));
+      if (t) document.documentElement.setAttribute('data-theme', t);
+    } catch (e) {}
+  </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cookie&display=swap" rel="stylesheet">
-  <title>Productivist</title>
+  <!-- Used by a single heading. Loaded without blocking the first paint. -->
+  <link
+    href="https://fonts.googleapis.com/css2?family=Cookie&display=swap"
+    rel="stylesheet"
+    media="print"
+    onload="this.media='all'"
+  >
+  <noscript>
+    <link href="https://fonts.googleapis.com/css2?family=Cookie&display=swap" rel="stylesheet">
+  </noscript>
 </head>
 <body>
   <app-root></app-root>

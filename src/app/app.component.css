@@ -23,3 +23,8 @@
     flex: 1 1 60%;
   }
 }
+
+/* Holds the view's space while its chunk loads, so the header does not jump. */
+.view-loading {
+  flex: 1;
+}
