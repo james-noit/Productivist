@@ -1,27 +1,30 @@
 import { Component, computed, inject, input, signal } from '@angular/core';
-import { TranslatePipe } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { ProjectsService } from '../../../services/projects.service';
 import { TodosService } from '../../../services/todos.service';
 import { DailyPlanService } from '../../../services/daily-plan.service';
 import { sortByPriority } from '../../../lib/eisenhower';
+import { ProjectFormComponent } from '../project-form/project-form.component';
 import type { Project } from '../../../types/project';
 import type { Todo } from '../../../types/todo';
 
 @Component({
   selector: 'app-daily-plan-project-item',
   standalone: true,
-  imports: [TranslatePipe],
+  imports: [TranslatePipe, ProjectFormComponent],
   templateUrl: './daily-plan-project-item.component.html',
   styleUrl: './daily-plan-project-item.component.css',
 })
 export class DailyPlanProjectItemComponent {
   private readonly projects = inject(ProjectsService);
   private readonly todos = inject(TodosService);
+  private readonly translate = inject(TranslateService);
   readonly dailyPlan = inject(DailyPlanService);
 
   readonly project = input.required<Project | null>();
 
   readonly expanded = signal(false);
+  readonly editing = signal(false);
   readonly expandedMilestones = signal<Set<string>>(new Set());
 
   readonly milestones = computed(() => {
@@ -75,5 +78,19 @@ export class DailyPlanProjectItemComponent {
 
   onDragEnd(): void {
     this.dailyPlan.endDrag();
+  }
+
+  saveEdit(data: { icon: string; name: string; description: string; notes: string }): void {
+    const project = this.project();
+    if (!project) return;
+    this.projects.updateProject(project.id, data);
+    this.editing.set(false);
+  }
+
+  deleteProject(): void {
+    const project = this.project();
+    if (!project) return;
+    if (!window.confirm(this.translate.instant('projects.deleteConfirm'))) return;
+    this.projects.removeProject(project.id);
   }
 }

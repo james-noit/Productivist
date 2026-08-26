@@ -7,10 +7,10 @@ import { MultitaskService } from '../../../services/multitask.service';
 import { ViewService } from '../../../services/view.service';
 import { DailyPlanService, UNASSIGNED_GROUP_ID } from '../../../services/daily-plan.service';
 import { DailyPlanProjectItemComponent } from '../daily-plan-project-item/daily-plan-project-item.component';
+import { ProjectFormComponent } from '../project-form/project-form.component';
+import { ProjectsPanelComponent } from '../projects-panel/projects-panel.component';
 import type { Todo } from '../../../types/todo';
 import type { Project } from '../../../types/project';
-
-type SuggestionMode = 'productive' | 'dreaming';
 
 interface Suggestion {
   todo: Todo;
@@ -18,25 +18,27 @@ interface Suggestion {
   milestoneName?: string;
 }
 
-interface Star {
-  left: number;
-  top: number;
-  delay: number;
-  duration: number;
-  size: number;
+interface PlanStep {
+  key: string;
+  labelKey: string;
 }
 
-const STAR_COUNT = 26;
-
-function pseudoRandom(seed: number): number {
-  const x = Math.sin(seed * 999) * 10000;
-  return x - Math.floor(x);
-}
+const STEPS: PlanStep[] = [
+  { key: 'objectives', labelKey: 'planningLab.stepObjectives' },
+  { key: 'projects', labelKey: 'planningLab.stepProjects' },
+  { key: 'tasks', labelKey: 'planningLab.stepTasks' },
+];
 
 @Component({
   selector: 'app-daily-backlog-view',
   standalone: true,
-  imports: [FormsModule, TranslatePipe, DailyPlanProjectItemComponent],
+  imports: [
+    FormsModule,
+    TranslatePipe,
+    DailyPlanProjectItemComponent,
+    ProjectFormComponent,
+    ProjectsPanelComponent,
+  ],
   templateUrl: './daily-backlog-view.component.html',
   styleUrl: './daily-backlog-view.component.css',
 })
@@ -50,20 +52,23 @@ export class DailyBacklogViewComponent {
 
   readonly unassignedGroupId = UNASSIGNED_GROUP_ID;
 
+  readonly steps = STEPS;
+  readonly stepIndex = computed(() => {
+    switch (this.dailyPlan.stage()) {
+      case 'prompt':
+        return 0;
+      case 'chooseProjects':
+        return 1;
+      default:
+        return 2;
+    }
+  });
+
   readonly objectiveDraft = signal('');
   readonly objectivesList = signal<string[]>([]);
   readonly hasAnyObjective = computed(
     () => this.objectivesList().length > 0 || this.objectiveDraft().trim().length > 0,
   );
-
-  readonly suggestionMode = signal<SuggestionMode>('productive');
-  readonly stars: Star[] = Array.from({ length: STAR_COUNT }, (_, i) => ({
-    left: pseudoRandom(i * 3.1) * 100,
-    top: pseudoRandom(i * 7.7) * 100,
-    delay: pseudoRandom(i * 13.3) * 4,
-    duration: 2.2 + pseudoRandom(i * 5.5) * 3,
-    size: 1 + pseudoRandom(i * 11.1) * 2,
-  }));
 
   private readonly activeTodos = computed(() => this.todos.todos().filter((t) => !t.done));
 
@@ -84,19 +89,21 @@ export class DailyBacklogViewComponent {
     return pool.slice(0, 6).map((t) => this.toSuggestion(t));
   });
 
-  readonly dreamingSuggestions = computed<Suggestion[]>(() => {
-    const active = this.activeTodos();
-    const aspirational = active.filter((t) => t.importance === 'high' && t.urgency !== 'high');
-    const pool = aspirational.length ? aspirational : active;
-    return pool.slice(0, 8).map((t) => this.toSuggestion(t));
-  });
-
-  dreamChipStyle(index: number): { delay: number; duration: number } {
-    return { delay: pseudoRandom(index * 17.3) * 3, duration: 3.2 + pseudoRandom(index * 23.9) * 2.4 };
-  }
-
   addSuggestionAsObjective(text: string): void {
     this.objectivesList.update((list) => [...list, text]);
+  }
+
+  readonly tasksModalOpen = signal(false);
+
+  closeTasksModalOnBackdrop(event: MouseEvent): void {
+    if (event.target === event.currentTarget) this.tasksModalOpen.set(false);
+  }
+
+  readonly showNewProjectForm = signal(false);
+
+  createProject(data: { icon: string; name: string; description: string; notes: string }): void {
+    this.projects.addProject(data);
+    this.showNewProjectForm.set(false);
   }
 
   readonly projectSearch = signal('');
@@ -107,13 +114,11 @@ export class DailyBacklogViewComponent {
   });
 
   readonly chosenProjects = computed(() => {
-    const ids = new Set(this.dailyPlan.selectedProjectIds());
+    const ids = this.dailyPlan.assignedProjectIds();
     return this.projects.sortedProjects().filter((p) => ids.has(p.id));
   });
 
-  readonly isUnassignedChosen = computed(() =>
-    this.dailyPlan.selectedProjectIds().includes(UNASSIGNED_GROUP_ID),
-  );
+  readonly isUnassignedChosen = computed(() => this.dailyPlan.assignedProjectIds().has(UNASSIGNED_GROUP_ID));
 
   addObjective(): void {
     const trimmed = this.objectiveDraft().trim();
@@ -134,8 +139,50 @@ export class DailyBacklogViewComponent {
     this.objectiveDraft.set('');
   }
 
+  goBackToObjectives(): void {
+    this.objectivesList.set(this.dailyPlan.objectives().map((o) => o.text));
+    this.objectiveDraft.set('');
+    this.dailyPlan.backToPrompt();
+  }
+
+  // --- Projects step: arm a project, then place it into one or more objective baskets ---
+
+  isProjectArmed(projectId: string): boolean {
+    return this.dailyPlan.draggedProjectId() === projectId;
+  }
+
+  toggleArmedProject(projectId: string): void {
+    this.dailyPlan.toggleArmedProject(projectId);
+  }
+
+  projectObjectiveCount(projectId: string): number {
+    return Object.values(this.dailyPlan.projectAssignments()).filter((ids) => ids.includes(projectId)).length;
+  }
+
+  placeArmedProject(objectiveId: string): void {
+    const projectId = this.dailyPlan.draggedProjectId();
+    if (!projectId) return;
+    this.dailyPlan.assignProjectToObjective(projectId, objectiveId);
+    this.dailyPlan.endDragProject();
+  }
+
+  projectsInObjective(objectiveId: string): { id: string; icon: string; name: string }[] {
+    const ids = this.dailyPlan.projectAssignments()[objectiveId] ?? [];
+    return ids.map((id) => this.projectDisplay(id));
+  }
+
+  private projectDisplay(id: string): { id: string; icon: string; name: string } {
+    if (id === UNASSIGNED_GROUP_ID) {
+      return { id, icon: '📥', name: this.translate.instant('planningLab.freeTasks') };
+    }
+    const project = this.projects.projects().find((p) => p.id === id);
+    return { id, icon: project?.icon ?? '📁', name: project?.name ?? '' };
+  }
+
+  // --- Tasks step ---
+
   isProjectSelected(id: string): boolean {
-    return this.dailyPlan.selectedProjectIds().includes(id);
+    return this.dailyPlan.assignedProjectIds().has(id);
   }
 
   tasksFor(objectiveId: string): Todo[] {

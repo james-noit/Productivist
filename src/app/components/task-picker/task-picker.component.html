@@ -1,4 +1,4 @@
-<div class="task-picker__overlay" (click)="$event.target === $event.currentTarget && close.emit()">
+<div class="task-picker__overlay" (click)="closeOnBackdrop($event)">
   <div class="task-picker__modal" role="dialog" aria-modal="true" [attr.aria-label]="'clock.selectTask' | translate">
     <div class="task-picker__header">
       <h3>{{ 'clock.selectTask' | translate }}</h3>

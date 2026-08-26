@@ -38,4 +38,8 @@ export class TaskPickerComponent {
   );
 
   readonly onPickTask = (todoId: string): void => this.select.emit(todoId);
+
+  closeOnBackdrop(event: MouseEvent): void {
+    if (event.target === event.currentTarget) this.close.emit();
+  }
 }

@@ -8,6 +8,13 @@
   gap: 0.5rem;
 }
 
+.plan-project__row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
 .plan-project__header {
   display: flex;
   align-items: center;
@@ -19,6 +26,26 @@
   min-height: 2.6rem;
   text-align: left;
   width: 100%;
+  min-width: 0;
+}
+
+.plan-project__actions {
+  flex-shrink: 0;
+  display: flex;
+  gap: 0.2rem;
+}
+
+.plan-project__actions button {
+  min-width: 1.8rem;
+  min-height: 1.8rem;
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  color: var(--color-text);
+}
+
+.plan-project__delete {
+  color: var(--color-text-muted);
 }
 
 .plan-project__chevron {
@@ -79,6 +106,7 @@
 }
 
 .plan-task {
+  position: relative;
   display: flex;
   align-items: center;
   flex-wrap: wrap;
@@ -125,6 +153,10 @@
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
+}
+
+.plan-milestone__row {
+  position: relative;
 }
 
 .plan-milestone__header {
@@ -186,4 +218,64 @@
 .badge--high {
   background-color: var(--color-high);
   color: #fff;
+}
+
+.badge--tag {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+}
+
+.plan-popover {
+  display: flex;
+  position: absolute;
+  z-index: 20;
+  top: 0;
+  left: calc(100% + 0.5rem);
+  min-width: 14rem;
+  max-width: 20rem;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  box-shadow: 0 6px 20px color-mix(in srgb, black 20%, transparent);
+  padding: 0.6rem 0.75rem;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.8rem;
+  font-weight: 400;
+  white-space: normal;
+  color: var(--color-text);
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.15s ease, visibility 0s linear 0.15s;
+}
+
+.plan-popover strong {
+  font-size: 0.85rem;
+}
+
+.plan-popover p {
+  margin: 0;
+  color: var(--color-text-muted);
+}
+
+.plan-popover__meta {
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+}
+
+.plan-popover__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+@media (hover: hover) {
+  .plan-project__row:hover .plan-popover,
+  .plan-milestone__row:hover .plan-popover,
+  .plan-task:hover .plan-popover {
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 0.15s ease 0.5s, visibility 0s linear 0.5s;
+  }
 }
