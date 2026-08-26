@@ -221,8 +221,9 @@
   line-height: 1;
 }
 
-/* The drawer's pool rows are denser than the badge's global default. */
-.task-drawer__pool-badges .badge {
-  font-size: 0.65rem;
-  padding: 0.1rem 0.45rem;
+/* The drawer's pool rows are denser than the badge's global default. Set as inherited
+   custom properties, which cross into task-badges where a descendant selector cannot. */
+.task-drawer__pool-badges {
+  --badge-font-size: 0.65rem;
+  --badge-padding: 0.1rem 0.45rem;
 }

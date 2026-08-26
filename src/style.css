@@ -151,8 +151,11 @@ button {
    --------------------------------------------------------------------------- */
 
 .badge {
-  font-size: 0.7rem;
-  padding: 0.1rem 0.5rem;
+  /* Custom properties rather than fixed values so a caller can make a row denser: a
+     descendant selector cannot reach these, since the badges belong to task-badges'
+     own template and are outside the caller's style encapsulation. */
+  font-size: var(--badge-font-size, 0.7rem);
+  padding: var(--badge-padding, 0.1rem 0.5rem);
   border-radius: 999px;
   background-color: var(--color-surface-alt);
   color: var(--color-text-muted);
