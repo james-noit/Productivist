@@ -40,9 +40,15 @@
                   "maximumError": "450kB"
                 },
                 {
+                  // Raised from Angular's 8 kB default for daily-backlog-view, which is
+                  // a four-stage wizard (@switch over prompt / chooseProjects / planning
+                  // / groupingParallel) at ~13 kB. Its styles ship inside the lazy
+                  // planning-lab-view chunk, so that size costs nothing at first load.
+                  // If a component genuinely outgrows this, split it rather than raising
+                  // the number again.
                   "type": "anyComponentStyle",
-                  "maximumWarning": "8kB",
-                  "maximumError": "16kB"
+                  "maximumWarning": "16kB",
+                  "maximumError": "24kB"
                 }
               ],
               "outputHashing": "all"
