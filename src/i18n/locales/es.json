@@ -13,7 +13,7 @@
     "eisenhower": "Eisenhower",
     "reset": "Reiniciar",
     "resetWarning": "Esto borrará tu lista de tareas, proyectos y ajustes, y reiniciará el reloj pomodoro.",
-    "resetInstruction": "Escribe \"{phrase}\" abajo para confirmar.",
+    "resetInstruction": "Escribe \"{{phrase}}\" abajo para confirmar.",
     "cancel": "Cancelar",
     "preferences": "Preferencias",
     "developer": "Desarrollo",
@@ -177,7 +177,7 @@
     "noProject": "Sin proyecto",
     "taskDetail": "Detalles de la tarea",
     "markDone": "Marcar como hecha",
-    "newTaskIn": "Nueva tarea en {quadrant}",
+    "newTaskIn": "Nueva tarea en {{quadrant}}",
     "addTaskToQuadrant": "Añadir tarea a esta tarjeta",
     "createTask": {
       "title": "Nueva tarea",

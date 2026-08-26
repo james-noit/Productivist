@@ -13,7 +13,7 @@
     "eisenhower": "Eisenhower",
     "reset": "Reset",
     "resetWarning": "This will erase your to-do list, projects, and settings, and reset the pomodoro clock.",
-    "resetInstruction": "Type \"{phrase}\" below to confirm.",
+    "resetInstruction": "Type \"{{phrase}}\" below to confirm.",
     "cancel": "Cancel",
     "preferences": "Preferences",
     "developer": "Developer",
@@ -177,7 +177,7 @@
     "noProject": "No project",
     "taskDetail": "Task details",
     "markDone": "Mark done",
-    "newTaskIn": "New task in {quadrant}",
+    "newTaskIn": "New task in {{quadrant}}",
     "addTaskToQuadrant": "Add task to this card",
     "createTask": {
       "title": "New task",
