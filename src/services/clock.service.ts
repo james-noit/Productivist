@@ -12,6 +12,12 @@ interface ClockPersistShape {
   remainingSeconds: number;
 }
 
+// Remaining time is always derived from `endAt` against the wall clock, so the interval
+// only has to be fine enough for the display to look smooth — it is not what keeps time.
+// A whole second is enough, and re-aligning each tick to the deadline stops the visible
+// digit from drifting relative to the second it represents.
+const TICK_MS = 1000;
+
 let audioCtx: AudioContext | null = null;
 
 function getAudioCtx(): AudioContext {
@@ -75,7 +81,9 @@ export class ClockService {
   readonly sessionModalOpen = signal(false);
   readonly lastFocusEndAt = signal<number | null>(null);
 
-  private intervalId: ReturnType<typeof setInterval> | undefined;
+  // Holds either the boundary-alignment timeout or the per-second interval; browsers
+  // share one id space between the two, so a single clearTimeout cancels either.
+  private tickTimer: ReturnType<typeof setTimeout> | undefined;
   private hasTicked = false;
   // Wall-clock deadline for the current session (ms since epoch). Remaining time
   // is always derived from this against Date.now(), so a throttled or hidden
@@ -158,6 +166,22 @@ export class ClockService {
     return Math.max(0, Math.ceil((this.endAt - Date.now()) / 1000));
   }
 
+  private startTicking(): void {
+    this.stopTicking();
+    // Fire on the boundary of the next whole second remaining, then every second after,
+    // so the displayed digit changes at the moment it actually changes.
+    const msIntoSecond = this.endAt === null ? 0 : (this.endAt - Date.now()) % TICK_MS;
+    this.tickTimer = setTimeout(() => {
+      this.tick();
+      this.tickTimer = setInterval(() => this.tick(), TICK_MS);
+    }, msIntoSecond);
+  }
+
+  private stopTicking(): void {
+    if (this.tickTimer !== undefined) clearTimeout(this.tickTimer);
+    this.tickTimer = undefined;
+  }
+
   private tick(): void {
     if (this.endAt === null) return;
     const remaining = Math.max(0, Math.ceil((this.endAt - Date.now()) / 1000));
@@ -189,15 +213,14 @@ export class ClockService {
     this.ensureNotificationPermission();
     this.endAt = Date.now() + this.remainingSeconds() * 1000;
     this.running.set(true);
-    this.intervalId = setInterval(() => this.tick(), 250);
+    this.startTicking();
     this.persistState();
   }
 
   pause(): void {
     if (this.running() && this.endAt !== null) this.remainingSeconds.set(this.computedRemaining());
     this.running.set(false);
-    if (this.intervalId) clearInterval(this.intervalId);
-    this.intervalId = undefined;
+    this.stopTicking();
     this.endAt = null;
     this.persistState();
   }
@@ -225,7 +248,7 @@ export class ClockService {
         this.endAt = stored.endAt;
         this.remainingSeconds.set(Math.max(0, Math.ceil((this.endAt - Date.now()) / 1000)));
         this.running.set(true);
-        this.intervalId = setInterval(() => this.tick(), 250);
+        this.startTicking();
       } else {
         // Session finished while the app was closed: prompt the next phase.
         this.switchToNextMode();
