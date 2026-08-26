@@ -1,4 +1,4 @@
-import { Component, ElementRef, computed, inject, isDevMode, signal, viewChild } from '@angular/core';
+import { Component, ElementRef, HostListener, computed, inject, isDevMode, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '@ngx-translate/core';
 import { TodosService } from '../../../services/todos.service';
@@ -32,6 +32,7 @@ export class AppMenuComponent {
 
   readonly open = signal(false);
   private readonly fileInput = viewChild<ElementRef<HTMLInputElement>>('fileInput');
+  private readonly host = inject(ElementRef<HTMLElement>);
 
   readonly resetModalOpen = signal(false);
   readonly resetConfirmText = signal('');
@@ -43,6 +44,12 @@ export class AppMenuComponent {
 
   close(): void {
     this.open.set(false);
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    if (!this.open()) return;
+    if (!this.host.nativeElement.contains(event.target as Node)) this.close();
   }
 
   goToView(next: AppView): void {
