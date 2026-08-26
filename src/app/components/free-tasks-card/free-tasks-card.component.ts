@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '@ngx-translate/core';
 import { TodosService } from '../../../services/todos.service';
@@ -13,6 +13,7 @@ let nextId = 0;
   selector: 'app-free-tasks-card',
   standalone: true,
   imports: [FormsModule, TranslatePipe, QuadrantCountBadgesComponent, TodoFormComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './free-tasks-card.component.html',
   styleUrl: './free-tasks-card.component.css',
 })

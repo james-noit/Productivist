@@ -1,4 +1,4 @@
-import { Component, inject, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
 import { TranslatePipe } from '@ngx-translate/core';
 import { TodosService } from '../../../services/todos.service';
 import { TaskProjectTagComponent } from '../task-project-tag/task-project-tag.component';
@@ -8,6 +8,7 @@ import type { Todo } from '../../../types/todo';
   selector: 'app-todo-item',
   standalone: true,
   imports: [TaskProjectTagComponent, TranslatePipe],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './todo-item.component.html',
   styleUrl: './todo-item.component.css',
 })

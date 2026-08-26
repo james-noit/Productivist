@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { ClockService } from '../../../services/clock.service';
 import { SettingsService } from '../../../services/settings.service';
 
@@ -14,6 +14,7 @@ function shuffledOrder(length: number): number[] {
 @Component({
   selector: 'app-box-clock',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './box-clock.component.html',
   styleUrl: './box-clock.component.css',
 })

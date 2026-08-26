@@ -1,4 +1,4 @@
-import { Component, input, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '@ngx-translate/core';
 import type { Project } from '../../../types/project';
@@ -9,6 +9,7 @@ const ICONS = ['📁', '📌', '🚀', '🎯', '📚', '💼', '🛠️', '🎨'
   selector: 'app-project-form',
   standalone: true,
   imports: [FormsModule, TranslatePipe],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './project-form.component.html',
   styleUrl: './project-form.component.css',
 })

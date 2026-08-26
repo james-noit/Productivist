@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { ProjectsService } from '../../../services/projects.service';
@@ -39,6 +39,7 @@ const STEPS: PlanStep[] = [
     ProjectFormComponent,
     ProjectsPanelComponent,
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './daily-backlog-view.component.html',
   styleUrl: './daily-backlog-view.component.css',
 })

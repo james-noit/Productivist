@@ -1,4 +1,4 @@
-import { Component, computed, inject, input, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '@ngx-translate/core';
 import { TodosService } from '../../../services/todos.service';
@@ -10,6 +10,7 @@ import type { Priority } from '../../../types/todo';
   selector: 'app-task-picker',
   standalone: true,
   imports: [FormsModule, TranslatePipe, ProjectsPanelComponent, TaskProjectTagComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './task-picker.component.html',
   styleUrl: './task-picker.component.css',
 })

@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { TranslatePipe } from '@ngx-translate/core';
 import { SettingsService, type Language } from '../../../services/settings.service';
 
@@ -6,6 +6,7 @@ import { SettingsService, type Language } from '../../../services/settings.servi
   selector: 'app-language-selector',
   standalone: true,
   imports: [TranslatePipe],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './language-selector.component.html',
   styleUrl: './language-selector.component.css',
 })

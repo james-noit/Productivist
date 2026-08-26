@@ -1,4 +1,4 @@
-import { Component, ElementRef, computed, effect, inject, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, ElementRef, inject, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '@ngx-translate/core';
 import { TodosService } from '../../../services/todos.service';
@@ -21,6 +21,7 @@ import { TaskProjectTagComponent } from '../task-project-tag/task-project-tag.co
     ProjectsPanelComponent,
     TaskProjectTagComponent,
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './multitask-task-drawer.component.html',
   styleUrl: './multitask-task-drawer.component.css',
 })

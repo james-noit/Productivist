@@ -1,4 +1,4 @@
-import { Component, ElementRef, OnInit, computed, effect, inject, input, signal, untracked, viewChild } from '@angular/core';
+import { afterNextRender, ChangeDetectionStrategy, Component, computed, effect, ElementRef, inject, Injector, input, OnInit, signal, untracked, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '@ngx-translate/core';
 import { TodosService } from '../../../services/todos.service';
@@ -15,6 +15,7 @@ const FINISH_STRIKE_MS = 450;
   selector: 'app-multitask-task-row',
   standalone: true,
   imports: [FormsModule, TranslatePipe, TaskDetailModalComponent, TaskPickerComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './multitask-task-row.component.html',
   styleUrl: './multitask-task-row.component.css',
 })
@@ -41,6 +42,8 @@ export class MultitaskTaskRowComponent implements OnInit {
   readonly showDetail = signal(false);
   readonly titleEditing = signal(false);
   readonly editTitle = signal('');
+
+  private readonly injector = inject(Injector);
 
   private readonly titleInput = viewChild<ElementRef<HTMLInputElement>>('titleInput');
 
@@ -73,8 +76,18 @@ export class MultitaskTaskRowComponent implements OnInit {
   });
 
   constructor() {
+    // Close an open picker whenever a focus phase *ends*, so its full-viewport overlay
+    // can't swallow clicks meant for the iteration check that just appeared. The effect's
+    // own first run is not a phase ending — skipping it matters because it would
+    // otherwise fire right after ngOnInit and immediately close the picker this row just
+    // auto-opened for itself.
+    let seenFirstRun = false;
     effect(() => {
       this.clock.lastFocusEndAt();
+      if (!seenFirstRun) {
+        seenFirstRun = true;
+        return;
+      }
       if (untracked(this.taskModalOpen)) this.closeTaskModal();
     });
   }
@@ -130,9 +143,19 @@ export class MultitaskTaskRowComponent implements OnInit {
     if (!task || this.strikeActive()) return;
     this.editTitle.set(task.title);
     this.titleEditing.set(true);
-    setTimeout(() => {
-      this.titleInput()?.nativeElement.select();
-    }, 0);
+    this.selectTitleInput();
+  }
+
+  /**
+   * Selects the title input once it exists in the DOM *and* ngModel has written the
+   * current value into it — ngModel does that in a microtask, and assigning
+   * `input.value` collapses any selection, so selecting any earlier is a no-op.
+   */
+  private selectTitleInput(): void {
+    afterNextRender(
+      () => queueMicrotask(() => this.titleInput()?.nativeElement.select()),
+      { injector: this.injector },
+    );
   }
 
   cancelTitleEdit(): void {

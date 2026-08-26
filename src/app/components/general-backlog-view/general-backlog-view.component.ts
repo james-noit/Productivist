@@ -1,4 +1,4 @@
-import { Component, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { TranslatePipe } from '@ngx-translate/core';
 import { TodosService } from '../../../services/todos.service';
 import { ProjectsService } from '../../../services/projects.service';
@@ -16,6 +16,7 @@ interface ProjectRow {
   selector: 'app-general-backlog-view',
   standalone: true,
   imports: [TranslatePipe, FreeTasksCardComponent, ProjectTreeItemComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './general-backlog-view.component.html',
   styleUrl: './general-backlog-view.component.css',
 })

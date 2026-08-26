@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { TranslatePipe } from '@ngx-translate/core';
 import { TodosService } from '../../../services/todos.service';
 import { TodoFormComponent } from '../todo-form/todo-form.component';
@@ -18,6 +18,7 @@ import { ProjectsPanelComponent } from '../projects-panel/projects-panel.compone
     CompletedTasksStackComponent,
     ProjectsPanelComponent,
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './todo-list.component.html',
   styleUrl: './todo-list.component.css',
 })

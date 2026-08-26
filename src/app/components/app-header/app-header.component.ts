@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { ViewService } from '../../../services/view.service';
 import { localStorageSignal } from '../../../core/local-storage-signal';
 import { AppMenuComponent } from '../app-menu/app-menu.component';
@@ -9,6 +9,7 @@ import { APP_VERSION } from '../../version';
   selector: 'app-app-header',
   standalone: true,
   imports: [AppMenuComponent, MultitaskToggleComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './app-header.component.html',
   styleUrl: './app-header.component.css',
 })

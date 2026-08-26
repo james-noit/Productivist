@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { TodosService } from '../../../services/todos.service';
 import type { Priority } from '../../../types/todo';
@@ -7,6 +7,7 @@ import type { Priority } from '../../../types/todo';
   selector: 'app-todo-filters',
   standalone: true,
   imports: [TranslatePipe],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './todo-filters.component.html',
   styleUrl: './todo-filters.component.css',
 })

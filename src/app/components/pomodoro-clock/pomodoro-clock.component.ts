@@ -1,4 +1,4 @@
-import { Component, ElementRef, computed, inject, signal, viewChild } from '@angular/core';
+import { afterNextRender, ChangeDetectionStrategy, Component, computed, ElementRef, inject, Injector, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '@ngx-translate/core';
 import {
@@ -32,6 +32,7 @@ const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
     TaskProjectTagComponent,
     TaskPickerComponent,
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './pomodoro-clock.component.html',
   styleUrl: './pomodoro-clock.component.css',
 })
@@ -76,6 +77,8 @@ export class PomodoroClockComponent {
   readonly titleEditing = signal(false);
   readonly editTitle = signal('');
 
+  private readonly injector = inject(Injector);
+
   private readonly titleInput = viewChild<ElementRef<HTMLInputElement>>('titleInput');
 
   constructor() {
@@ -87,9 +90,19 @@ export class PomodoroClockComponent {
     if (!currentTask) return;
     this.editTitle.set(currentTask.title);
     this.titleEditing.set(true);
-    setTimeout(() => {
-      this.titleInput()?.nativeElement.select();
-    }, 0);
+    this.selectTitleInput();
+  }
+
+  /**
+   * Selects the title input once it exists in the DOM *and* ngModel has written the
+   * current value into it — ngModel does that in a microtask, and assigning
+   * `input.value` collapses any selection, so selecting any earlier is a no-op.
+   */
+  private selectTitleInput(): void {
+    afterNextRender(
+      () => queueMicrotask(() => this.titleInput()?.nativeElement.select()),
+      { injector: this.injector },
+    );
   }
 
   cancelTitleEdit(): void {

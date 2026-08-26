@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { TranslatePipe } from '@ngx-translate/core';
 import { SettingsService, type Theme } from '../../../services/settings.service';
 
@@ -6,6 +6,7 @@ import { SettingsService, type Theme } from '../../../services/settings.service'
   selector: 'app-theme-toggle',
   standalone: true,
   imports: [TranslatePipe],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './theme-toggle.component.html',
   styleUrl: './theme-toggle.component.css',
 })

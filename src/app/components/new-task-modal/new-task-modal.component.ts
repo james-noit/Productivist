@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject, input, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, input, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { ProjectsService } from '../../../services/projects.service';
@@ -19,6 +19,7 @@ const QUADRANT_TARGETS: Record<EisenhowerQuadrant, { importance: Priority; urgen
   selector: 'app-new-task-modal',
   standalone: true,
   imports: [FormsModule, TranslatePipe],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './new-task-modal.component.html',
   styleUrl: './new-task-modal.component.css',
 })

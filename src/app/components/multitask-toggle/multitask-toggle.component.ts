@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { TranslatePipe } from '@ngx-translate/core';
 import { MultitaskService } from '../../../services/multitask.service';
 
@@ -6,6 +6,7 @@ import { MultitaskService } from '../../../services/multitask.service';
   selector: 'app-multitask-toggle',
   standalone: true,
   imports: [TranslatePipe],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './multitask-toggle.component.html',
   styleUrl: './multitask-toggle.component.css',
 })

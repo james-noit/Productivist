@@ -1,4 +1,4 @@
-import { Component, computed, inject, input, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { ProjectsService } from '../../../services/projects.service';
@@ -17,6 +17,7 @@ let nextId = 0;
   selector: 'app-project-tree-item',
   standalone: true,
   imports: [FormsModule, TranslatePipe, ProjectFormComponent, TodoFormComponent, QuadrantCountBadgesComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './project-tree-item.component.html',
   styleUrl: './project-tree-item.component.css',
 })

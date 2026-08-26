@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { TranslatePipe } from '@ngx-translate/core';
 import { localStorageSignal } from '../../../core/local-storage-signal';
 import { DailyBacklogViewComponent } from '../daily-backlog-view/daily-backlog-view.component';
@@ -10,6 +10,7 @@ type PlanningLabTab = 'daily' | 'general';
   selector: 'app-planning-lab-view',
   standalone: true,
   imports: [TranslatePipe, DailyBacklogViewComponent, GeneralBacklogViewComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './planning-lab-view.component.html',
   styleUrl: './planning-lab-view.component.css',
 })

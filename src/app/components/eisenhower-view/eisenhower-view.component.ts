@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { localStorageSignal } from '../../../core/local-storage-signal';
 import { TodosService } from '../../../services/todos.service';
@@ -34,6 +34,7 @@ const QUADRANT_DEFS: { key: EisenhowerQuadrant; cssKey: string }[] = [
   selector: 'app-eisenhower-view',
   standalone: true,
   imports: [TranslatePipe, EisenhowerCardComponent, TaskDetailModalComponent, NewTaskModalComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './eisenhower-view.component.html',
   styleUrl: './eisenhower-view.component.css',
 })

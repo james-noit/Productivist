@@ -1,4 +1,4 @@
-import { Component, effect, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, effect, inject } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
 import { SettingsService } from '../services/settings.service';
 import { MultitaskService } from '../services/multitask.service';
@@ -23,6 +23,7 @@ import es from '../i18n/locales/es.json';
     EisenhowerViewComponent,
     PlanningLabViewComponent,
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './app.component.html',
   styleUrl: './app.component.css',
 })

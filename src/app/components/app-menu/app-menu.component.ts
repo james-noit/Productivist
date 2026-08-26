@@ -1,4 +1,4 @@
-import { Component, ElementRef, HostListener, computed, inject, isDevMode, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, ElementRef, HostListener, inject, isDevMode, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '@ngx-translate/core';
 import { TodosService } from '../../../services/todos.service';
@@ -16,6 +16,7 @@ const RESET_PHRASE = 'confirm reset';
   selector: 'app-app-menu',
   standalone: true,
   imports: [FormsModule, TranslatePipe, LanguageSelectorComponent, ThemeToggleComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './app-menu.component.html',
   styleUrl: './app-menu.component.css',
 })

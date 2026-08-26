@@ -1,4 +1,4 @@
-import { Component, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { MultitaskService } from '../../../services/multitask.service';
 
@@ -6,6 +6,7 @@ import { MultitaskService } from '../../../services/multitask.service';
   selector: 'app-effectivity-card',
   standalone: true,
   imports: [TranslatePipe],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './effectivity-card.component.html',
   styleUrl: './effectivity-card.component.css',
 })

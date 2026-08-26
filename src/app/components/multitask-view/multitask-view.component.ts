@@ -1,4 +1,4 @@
-import { Component, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { TranslatePipe } from '@ngx-translate/core';
 import { MultitaskService } from '../../../services/multitask.service';
 import { ClockService } from '../../../services/clock.service';
@@ -32,6 +32,7 @@ function capacityColorVar(count: number): string {
     ClockSettingsComponent,
     EffectivityCardComponent,
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './multitask-view.component.html',
   styleUrl: './multitask-view.component.css',
 })

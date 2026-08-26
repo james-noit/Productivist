@@ -1,4 +1,4 @@
-import { Component, inject, input, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, input, signal } from '@angular/core';
 import { TranslatePipe } from '@ngx-translate/core';
 import { ProjectsService } from '../../../services/projects.service';
 import { ProjectFormComponent } from '../project-form/project-form.component';
@@ -8,6 +8,7 @@ import { ProjectTreeItemComponent } from '../project-tree-item/project-tree-item
   selector: 'app-projects-panel',
   standalone: true,
   imports: [TranslatePipe, ProjectFormComponent, ProjectTreeItemComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './projects-panel.component.html',
   styleUrl: './projects-panel.component.css',
 })

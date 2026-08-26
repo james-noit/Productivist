@@ -1,4 +1,4 @@
-import { Component, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { TranslatePipe } from '@ngx-translate/core';
 import { QUADRANTS, type QuadrantCounts } from '../../../lib/eisenhower';
 
@@ -6,6 +6,7 @@ import { QUADRANTS, type QuadrantCounts } from '../../../lib/eisenhower';
   selector: 'app-quadrant-count-badges',
   standalone: true,
   imports: [TranslatePipe],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './quadrant-count-badges.component.html',
   styleUrl: './quadrant-count-badges.component.css',
 })

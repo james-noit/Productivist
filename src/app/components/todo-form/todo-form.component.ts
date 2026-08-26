@@ -1,4 +1,4 @@
-import { Component, ElementRef, inject, input, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, inject, input, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '@ngx-translate/core';
 import { TodosService } from '../../../services/todos.service';
@@ -10,6 +10,7 @@ let nextId = 0;
   selector: 'app-todo-form',
   standalone: true,
   imports: [FormsModule, TranslatePipe],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './todo-form.component.html',
   styleUrl: './todo-form.component.css',
 })

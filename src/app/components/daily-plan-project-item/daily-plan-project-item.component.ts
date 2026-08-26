@@ -1,4 +1,4 @@
-import { Component, computed, inject, input, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { ProjectsService } from '../../../services/projects.service';
 import { TodosService } from '../../../services/todos.service';
@@ -12,6 +12,7 @@ import type { Todo } from '../../../types/todo';
   selector: 'app-daily-plan-project-item',
   standalone: true,
   imports: [TranslatePipe, ProjectFormComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './daily-plan-project-item.component.html',
   styleUrl: './daily-plan-project-item.component.css',
 })
