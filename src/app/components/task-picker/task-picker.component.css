@@ -105,29 +105,6 @@
   flex-wrap: wrap;
 }
 
-.task-picker__list-item .badge {
-  font-size: 0.7rem;
-  padding: 0.1rem 0.5rem;
-  border-radius: 999px;
-  background-color: var(--color-surface-alt);
-  color: var(--color-text-muted);
-}
-
-.task-picker__list-item .badge--low {
-  background-color: var(--color-low);
-  color: #fff;
-}
-
-.task-picker__list-item .badge--medium {
-  background-color: var(--color-medium);
-  color: #fff;
-}
-
-.task-picker__list-item .badge--high {
-  background-color: var(--color-high);
-  color: #fff;
-}
-
 .task-picker__list-item:hover {
   background-color: var(--color-surface-alt);
 }
