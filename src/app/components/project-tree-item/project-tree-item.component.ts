@@ -4,7 +4,7 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { ProjectsService } from '../../../services/projects.service';
 import { TodosService } from '../../../services/todos.service';
 import { MultitaskService } from '../../../services/multitask.service';
-import { ProjectFormComponent } from '../project-form/project-form.component';
+import { EditProjectModalComponent } from '../edit-project-modal/edit-project-modal.component';
 import { TodoFormComponent } from '../todo-form/todo-form.component';
 import { QuadrantCountBadgesComponent } from '../quadrant-count-badges/quadrant-count-badges.component';
 import { TaskBadgesComponent } from '../task-badges/task-badges.component';
@@ -20,7 +20,7 @@ const EMPTY_TASKS: readonly Todo[] = [];
 @Component({
   selector: 'app-project-tree-item',
   standalone: true,
-  imports: [FormsModule, TranslatePipe, ProjectFormComponent, TodoFormComponent, QuadrantCountBadgesComponent, TaskBadgesComponent, InlineTaskEditorComponent],
+  imports: [FormsModule, TranslatePipe, EditProjectModalComponent, TodoFormComponent, QuadrantCountBadgesComponent, TaskBadgesComponent, InlineTaskEditorComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './project-tree-item.component.html',
   styleUrl: './project-tree-item.component.css',

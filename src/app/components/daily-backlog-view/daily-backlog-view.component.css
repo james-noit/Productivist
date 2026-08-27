@@ -253,6 +253,28 @@
   align-items: center;
   justify-content: space-between;
   gap: 0.6rem;
+  cursor: pointer;
+  list-style: none;
+  padding: 0.15rem 0;
+}
+
+.daily-backlog-prompt__suggestions-header::-webkit-details-marker {
+  display: none;
+}
+
+.daily-backlog-prompt__suggestions-header::before {
+  content: '\25B8';
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
+  transition: transform 0.15s ease;
+}
+
+.daily-backlog-prompt__suggestions[open] > .daily-backlog-prompt__suggestions-header::before {
+  transform: rotate(90deg);
+}
+
+.daily-backlog-prompt__suggestions-header .daily-backlog-prompt__suggestions-label {
+  margin-right: auto;
 }
 
 .daily-backlog-prompt__suggestions-label {
@@ -272,6 +294,9 @@
   color: var(--color-text);
   padding: 0.3rem 0.75rem;
   font-size: 0.8rem;
+  font-family: inherit;
+  cursor: pointer;
+  user-select: none;
 }
 
 .suggestion-list {

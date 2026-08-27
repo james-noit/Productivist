@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, input, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input, linkedSignal, output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '@ngx-translate/core';
 import type { Project } from '../../../types/project';
@@ -20,10 +20,10 @@ export class ProjectFormComponent {
 
   readonly icons = ICONS;
 
-  readonly icon = signal(this.initial((p) => p.icon) ?? ICONS[0]);
-  readonly name = signal(this.initial((p) => p.name) ?? '');
-  readonly description = signal(this.initial((p) => p.description) ?? '');
-  readonly notes = signal(this.initial((p) => p.notes) ?? '');
+  readonly icon = linkedSignal(() => this.initial((p) => p.icon) ?? ICONS[0]);
+  readonly name = linkedSignal(() => this.initial((p) => p.name) ?? '');
+  readonly description = linkedSignal(() => this.initial((p) => p.description) ?? '');
+  readonly notes = linkedSignal(() => this.initial((p) => p.notes) ?? '');
 
   private initial<T>(pick: (p: Project) => T): T | undefined {
     const project = this.project();

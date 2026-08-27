@@ -42,7 +42,7 @@
   </div>
 
   @if (editing() && project(); as p) {
-    <app-project-form [project]="p" (save)="saveEdit($event)" (cancel)="editing.set(false)" />
+    <app-edit-project-modal [project]="p" (save)="saveEdit($event)" (close)="editing.set(false)" />
   }
 
   @if (expanded()) {

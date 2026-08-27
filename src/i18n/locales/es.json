@@ -108,6 +108,7 @@
   "projects": {
     "title": "Proyectos",
     "newProject": "Nuevo proyecto",
+    "editProject": "Editar proyecto",
     "edit": "Editar",
     "delete": "Eliminar",
     "deleteConfirm": "¿Eliminar este proyecto? Sus hitos se eliminarán y sus tareas volverán al banco de tareas sin asignar.",

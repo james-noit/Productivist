@@ -1,0 +1,9 @@
+<div class="modal-overlay" (click)="closeOnBackdrop($event)">
+  <div class="modal-panel edit-project-modal" role="dialog" aria-modal="true" [attr.aria-label]="'projects.editProject' | translate">
+    <div class="edit-project-modal__header">
+      <h3>{{ 'projects.editProject' | translate }}</h3>
+      <button type="button" class="edit-project-modal__close" [attr.aria-label]="'todo.close' | translate" (click)="close.emit()">✕</button>
+    </div>
+    <app-project-form [project]="project()" (save)="save.emit($event)" (cancel)="close.emit()" />
+  </div>
+</div>

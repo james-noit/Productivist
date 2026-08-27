@@ -58,13 +58,20 @@
         <p class="daily-backlog-prompt__hint">{{ 'planningLab.objectiveInputHint' | translate }}</p>
       </div>
 
-      <div class="daily-backlog-prompt__suggestions">
-        <div class="daily-backlog-prompt__suggestions-header">
+      <details class="daily-backlog-prompt__suggestions" open>
+        <summary class="daily-backlog-prompt__suggestions-header">
           <span class="daily-backlog-prompt__suggestions-label">{{ 'planningLab.suggestionsLabel' | translate }}</span>
-          <button type="button" class="daily-backlog-prompt__tasks-button" (click)="tasksModalOpen.set(true)">
+          <span
+            class="daily-backlog-prompt__tasks-button"
+            role="button"
+            tabindex="0"
+            (click)="$event.preventDefault(); $event.stopPropagation(); tasksModalOpen.set(true)"
+            (keydown.enter)="$event.preventDefault(); tasksModalOpen.set(true)"
+            (keydown.space)="$event.preventDefault(); tasksModalOpen.set(true)"
+          >
             <span aria-hidden="true">🗂️</span> {{ 'planningLab.tasksButton' | translate }}
-          </button>
-        </div>
+          </span>
+        </summary>
 
         @if (productiveSuggestions().length) {
           <ul class="suggestion-list">
@@ -91,7 +98,7 @@
         } @else {
           <p class="daily-backlog-prompt__hint">{{ 'planningLab.noSuggestions' | translate }}</p>
         }
-      </div>
+      </details>
 
       <div class="daily-backlog-prompt__actions">
         <button

@@ -108,6 +108,7 @@
   "projects": {
     "title": "Projects",
     "newProject": "New project",
+    "editProject": "Edit project",
     "edit": "Edit",
     "delete": "Delete",
     "deleteConfirm": "Delete this project? Its milestones will be removed and its tasks will return to the unassigned pool.",

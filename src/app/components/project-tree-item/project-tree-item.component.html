@@ -17,7 +17,7 @@
   </div>
 
   @if (editing()) {
-    <app-project-form [project]="project()" (save)="saveEdit($event)" (cancel)="editing.set(false)" />
+    <app-edit-project-modal [project]="project()" (save)="saveEdit($event)" (close)="editing.set(false)" />
   }
 
   @if (expanded()) {
