@@ -240,9 +240,11 @@ export class DailyBacklogViewComponent {
   // --- Move to pomodoro ---
 
   readonly showOverwriteConfirm = signal(false);
+  private pendingLaunch: 'pomodoro' | 'multitask' | null = null;
 
   requestMoveToPomodoro(): void {
     if (this.dailyPlan.committedPlannedTaskIds().length > 0) {
+      this.pendingLaunch = 'pomodoro';
       this.showOverwriteConfirm.set(true);
       return;
     }
@@ -251,11 +253,14 @@ export class DailyBacklogViewComponent {
 
   confirmOverwriteAndGo(): void {
     this.showOverwriteConfirm.set(false);
-    this.goToPomodoro();
+    if (this.pendingLaunch === 'multitask') this.doLaunchMultitask();
+    else this.goToPomodoro();
+    this.pendingLaunch = null;
   }
 
   cancelOverwrite(): void {
     this.showOverwriteConfirm.set(false);
+    this.pendingLaunch = null;
   }
 
   private goToPomodoro(): void {
@@ -301,8 +306,19 @@ export class DailyBacklogViewComponent {
   }
 
   launchMultitask(): void {
+    if (!this.dailyPlan.executionLots().length) return;
+    if (this.dailyPlan.committedPlannedTaskIds().length > 0) {
+      this.pendingLaunch = 'multitask';
+      this.showOverwriteConfirm.set(true);
+      return;
+    }
+    this.doLaunchMultitask();
+  }
+
+  private doLaunchMultitask(): void {
     const lots = this.dailyPlan.executionLots();
     if (!lots.length) return;
+    this.dailyPlan.commitPlannedTasks();
     for (const taskId of lots[0].taskIds) this.multitask.addCard(taskId);
     this.dailyPlan.setActiveLotIndex(0);
     this.multitask.setEnabled(true);
