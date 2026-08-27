@@ -10,10 +10,14 @@
 >
   <span class="todo-item__handle" [attr.aria-label]="'todo.dragHandle' | translate" aria-hidden="true">⠿</span>
   <input type="checkbox" [checked]="todo().done" (change)="todos.toggleDone(todo().id)" />
-  <span class="todo-item__title">{{ todo().title }}</span>
+  <span class="todo-item__title" (click)="openDetail()">{{ todo().title }}</span>
   <div class="todo-item__badges">
     <app-task-badges [todo]="todo()" [showTags]="true" />
   </div>
   <app-task-project-tag [todo]="todo()" />
   <button type="button" class="todo-item__delete" [attr.aria-label]="'todo.delete' | translate" (click)="todos.removeTodo(todo().id)">✕</button>
+
+  @if (showDetail()) {
+    <app-task-detail-modal [todo]="todo()" (close)="showDetail.set(false)" />
+  }
 </li>

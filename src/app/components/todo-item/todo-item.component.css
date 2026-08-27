@@ -34,6 +34,11 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  cursor: pointer;
+}
+
+.todo-item__title:hover {
+  text-decoration: underline;
 }
 
 .todo-item__badges {

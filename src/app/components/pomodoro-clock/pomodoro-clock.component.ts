@@ -4,14 +4,11 @@ import { TranslatePipe } from '@ngx-translate/core';
 import { SettingsService } from '../../../services/settings.service';
 import { TodosService } from '../../../services/todos.service';
 import { ClockService } from '../../../services/clock.service';
-import { DailyPlanService } from '../../../services/daily-plan.service';
-import { ViewService } from '../../../services/view.service';
 import { ClockSettingsComponent } from '../clock-settings/clock-settings.component';
 import { BoxClockComponent } from '../box-clock/box-clock.component';
 import { TaskDetailModalComponent } from '../task-detail-modal/task-detail-modal.component';
 import { TaskProjectTagComponent } from '../task-project-tag/task-project-tag.component';
 import { TaskPickerComponent } from '../task-picker/task-picker.component';
-import { TaskBadgesComponent } from '../task-badges/task-badges.component';
 
 const RADIUS = 90;
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
@@ -27,8 +24,6 @@ const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
     TaskDetailModalComponent,
     TaskProjectTagComponent,
     TaskPickerComponent,
-  
-    TaskBadgesComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './pomodoro-clock.component.html',
@@ -38,13 +33,6 @@ export class PomodoroClockComponent {
   readonly settings = inject(SettingsService);
   readonly todos = inject(TodosService);
   readonly clock = inject(ClockService);
-  readonly dailyPlan = inject(DailyPlanService);
-  private readonly view = inject(ViewService);
-
-  readonly plannedTasks = computed(() => {
-    const ids = new Set(this.dailyPlan.committedPlannedTaskIds());
-    return this.todos.todos().filter((t) => !t.done && ids.has(t.id));
-  });
 
   readonly radius = RADIUS;
   readonly circumference = CIRCUMFERENCE;
@@ -122,13 +110,5 @@ export class PomodoroClockComponent {
     if (!currentTask) return;
     this.todos.toggleDone(currentTask.id);
     this.taskModalOpen.set(true);
-  }
-
-  selectPlannedTask(id: string): void {
-    this.todos.setCurrentTask(id);
-  }
-
-  goToPlanningLab(): void {
-    this.view.openPlanningLab('daily');
   }
 }

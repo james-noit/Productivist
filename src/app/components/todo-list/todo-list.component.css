@@ -47,3 +47,14 @@
 .todo-list__empty {
   color: var(--color-text-muted);
 }
+
+.todo-list__daily-link {
+  align-self: flex-start;
+  background: none;
+  border: 1px solid var(--color-border);
+  color: var(--color-primary);
+  border-radius: 6px;
+  padding: 0.4rem 0.7rem;
+  font-size: 0.85rem;
+  text-align: left;
+}

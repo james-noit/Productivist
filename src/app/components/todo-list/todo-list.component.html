@@ -4,24 +4,48 @@
     <button
       type="button"
       role="tab"
-      [attr.aria-selected]="todos.viewMode() === 'all'"
-      [class.active]="todos.viewMode() === 'all'"
-      (click)="todos.setViewMode('all')"
+      [attr.aria-selected]="!showDailyBacklog() && todos.viewMode() === 'all'"
+      [class.active]="!showDailyBacklog() && todos.viewMode() === 'all'"
+      (click)="selectTodoViewMode('all')"
     >
       {{ 'todo.viewAll' | translate }}
     </button>
     <button
       type="button"
       role="tab"
-      [attr.aria-selected]="todos.viewMode() === 'projects'"
-      [class.active]="todos.viewMode() === 'projects'"
-      (click)="todos.setViewMode('projects')"
+      [attr.aria-selected]="!showDailyBacklog() && todos.viewMode() === 'projects'"
+      [class.active]="!showDailyBacklog() && todos.viewMode() === 'projects'"
+      (click)="selectTodoViewMode('projects')"
     >
       {{ 'todo.viewProjects' | translate }}
     </button>
+    <button
+      type="button"
+      role="tab"
+      [attr.aria-selected]="showDailyBacklog()"
+      [class.active]="showDailyBacklog()"
+      (click)="showDailyBacklog.set(true)"
+    >
+      {{ 'planningLab.dailyBacklog' | translate }}
+    </button>
   </div>
 
-  @if (todos.viewMode() === 'all') {
+  @if (showDailyBacklog()) {
+    @if (!dailyPlan.committedPlannedTaskIds().length) {
+      <p class="todo-list__empty">{{ 'planningLab.plannedTasksEmptyTitle' | translate }}</p>
+      <button type="button" class="todo-list__daily-link" (click)="goToPlanningLab()">
+        {{ 'planningLab.plannedTasksEmptyLink' | translate }}
+      </button>
+    } @else if (!plannedTasks().length) {
+      <p class="todo-list__empty">{{ 'planningLab.plannedTasksEmptyTitle' | translate }}</p>
+    } @else {
+      <ul class="todo-list__items">
+        @for (todo of plannedTasks(); track todo.id) {
+          <app-todo-item [todo]="todo" />
+        }
+      </ul>
+    }
+  } @else if (todos.viewMode() === 'all') {
     <app-todo-form />
     @if (todos.todos().length) {
       <div class="todo-list__toolbar">
