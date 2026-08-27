@@ -58,23 +58,12 @@
           </label>
         }
       </div>
-      @if (!pickableTasks().length) {
-        <p class="task-picker__empty">{{ 'todo.empty' | translate }}</p>
-      } @else {
-        <ul class="task-picker__list">
-          @for (todo of pickableTasks(); track todo.id) {
-            <li>
-              <button type="button" class="task-picker__list-item" (click)="select.emit(todo.id)">
-                <span class="task-picker__list-title">{{ todo.title }}</span>
-                <span class="task-picker__list-badges">
-                  <app-task-badges [todo]="todo" />
-                </span>
-                <app-task-project-tag [todo]="todo" />
-              </button>
-            </li>
-          }
-        </ul>
-      }
+      <app-task-pool-list
+        [tasks]="baseTasks()"
+        [isPickable]="isPickable()"
+        [hideUnpickable]="true"
+        (pick)="select.emit($event)"
+      />
     } @else {
       <div class="task-picker__projects">
         <app-projects-panel [multitaskMode]="true" [isTaskPickable]="isPickable()" [onPickTask]="onPickTask" />

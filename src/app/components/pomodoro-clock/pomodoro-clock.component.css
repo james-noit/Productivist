@@ -113,11 +113,16 @@
 
 .clock__task {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
-  gap: 0.5rem;
-  text-align: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  text-align: left;
   width: 100%;
+}
+
+.clock__task--empty {
+  justify-content: center;
 }
 
 .clock__task-info {
@@ -137,6 +142,9 @@
 .clock__task-title {
   font-size: 1rem;
   font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .clock__task-title-input {
@@ -156,15 +164,31 @@
   flex-shrink: 0;
 }
 
-.clock__task-finish {
-  background-color: var(--color-primary);
-  color: var(--color-primary-contrast);
+.clock__task-icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  flex-shrink: 0;
   border: none;
-  border-radius: 6px;
-  padding: 0.4rem 1rem;
+  border-radius: 50%;
 }
 
-.clock__task-change,
+.clock__task-icon-btn--finish {
+  background: var(--gradient-primary, var(--color-primary));
+  color: var(--color-primary-contrast);
+}
+
+.clock__task-icon-btn--change {
+  background-color: var(--color-surface-alt);
+  color: var(--color-text);
+}
+
+.clock__task-icon-btn:hover {
+  filter: brightness(0.95);
+}
+
 .clock__task-select {
   background: none;
   border: 1px solid var(--color-border);
@@ -243,28 +267,6 @@
   .clock__dial--boxes {
     max-width: 80vw;
     overflow-x: auto;
-  }
-
-  .clock__task {
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    text-align: left;
-    gap: 0.75rem;
-  }
-
-  .clock__task--empty {
-    justify-content: center;
-  }
-
-  .clock__task-info {
-    text-align: left;
-  }
-
-  .clock__task-title {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
   }
 }
 

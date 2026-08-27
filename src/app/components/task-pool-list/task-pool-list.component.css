@@ -1,0 +1,86 @@
+.task-pool-list__search {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.45rem 0.7rem;
+  border: none;
+  border-bottom: 1.5px solid var(--color-border);
+  background-color: transparent;
+  color: var(--color-text);
+  font-size: 0.9rem;
+  font-family: inherit;
+}
+
+.task-pool-list__search::placeholder {
+  color: var(--color-text-muted);
+  opacity: 0.6;
+}
+
+.task-pool-list__search:focus {
+  outline: none;
+  border-bottom-color: var(--color-primary);
+}
+
+.task-pool-list__empty,
+.task-pool-list__no-results {
+  margin: 0;
+  color: var(--color-text-muted);
+}
+
+.task-pool-list__no-results {
+  font-style: italic;
+}
+
+.task-pool-list__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  overflow-y: auto;
+}
+
+.task-pool-list__row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-align: left;
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  color: var(--color-text);
+  padding: 0.5rem 0.7rem;
+}
+
+.task-pool-list__row--pickable {
+  cursor: grab;
+}
+
+.task-pool-list__row--pickable:hover {
+  background-color: var(--color-surface-alt);
+}
+
+.task-pool-list__title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.task-pool-list__badges {
+  display: flex;
+  gap: 0.3rem;
+  flex-wrap: wrap;
+  flex-shrink: 0;
+  --badge-font-size: 0.65rem;
+  --badge-padding: 0.1rem 0.45rem;
+}
+
+.task-pool-list__status {
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+  flex-shrink: 0;
+}

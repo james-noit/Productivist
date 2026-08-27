@@ -103,7 +103,8 @@
     "close": "Close",
     "viewAll": "All tasks",
     "viewProjects": "Projects",
-    "searchPlaceholder": "Search by name…"
+    "searchPlaceholder": "Search by name…",
+    "noResults": "No matches"
   },
   "projects": {
     "title": "Projects",

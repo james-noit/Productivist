@@ -103,7 +103,8 @@
     "close": "Cerrar",
     "viewAll": "Todas las tareas",
     "viewProjects": "Proyectos",
-    "searchPlaceholder": "Buscar por nombre…"
+    "searchPlaceholder": "Buscar por nombre…",
+    "noResults": "Sin coincidencias"
   },
   "projects": {
     "title": "Proyectos",

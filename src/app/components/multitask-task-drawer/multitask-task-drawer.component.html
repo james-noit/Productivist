@@ -58,56 +58,16 @@
 
         <div class="task-drawer__heading-row">
           <h4 class="task-drawer__heading">{{ 'multitask.taskPool' | translate }}</h4>
-          <span class="task-drawer__count">{{ displayedTodos().length }} / {{ todos.filteredTodos().length }}</span>
+          <span class="task-drawer__count">{{ todos.filteredTodos().length }}</span>
         </div>
 
-        @if (todos.todos().length) {
-          <input
-            #searchInputEl
-            [ngModel]="searchQuery()"
-            (ngModelChange)="searchQuery.set($event)"
-            name="searchQuery"
-            type="search"
-            class="task-drawer__search"
-            [placeholder]="'todo.searchPlaceholder' | translate"
-            autocomplete="off"
-          >
-        }
-
-        @if (!todos.filteredTodos().length) {
-          <p class="task-drawer__empty">{{ 'todo.empty' | translate }}</p>
-        } @else if (searchQuery().trim() && !displayedTodos().length) {
-          <p class="task-drawer__no-results">No matches</p>
-        } @else {
-          <ul class="task-drawer__pool">
-            @for (todo of displayedTodos(); track todo.id) {
-              <li class="task-drawer__pool-item">
-                <div class="task-drawer__pool-content">
-                  <span class="task-drawer__pool-title">{{ todo.title }}</span>
-                  <div class="task-drawer__pool-badges">
-                    <app-task-badges [todo]="todo" />
-                  </div>
-                  <app-task-project-tag [todo]="todo" />
-                </div>
-                @if (multitask.assignedTaskIds().has(todo.id)) {
-                  <span class="task-drawer__pool-status">
-                    {{ 'multitask.inGrid' | translate }}
-                  </span>
-                } @else {
-                  <button
-                    type="button"
-                    class="task-drawer__pool-assign"
-                    [attr.aria-label]="'multitask.assignToCard' | translate"
-                    [title]="'multitask.assignToCard' | translate"
-                    (click)="assignToNewCard(todo.id)"
-                  >
-                    +
-                  </button>
-                }
-              </li>
-            }
-          </ul>
-        }
+        <app-task-pool-list
+          [tasks]="todos.filteredTodos()"
+          [isPickable]="isPickable"
+          [hideUnpickable]="false"
+          [unpickableStatus]="'multitask.inGrid' | translate"
+          (pick)="assignToNewCard($event)"
+        />
       } @else {
         <app-projects-panel [multitaskMode]="true" />
       }

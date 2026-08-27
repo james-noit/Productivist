@@ -105,6 +105,12 @@ export class PomodoroClockComponent {
     this.taskModalOpen.set(false);
   }
 
+  onDropSelectTask(event: DragEvent): void {
+    event.preventDefault();
+    const id = this.todos.draggedId();
+    if (id) this.todos.setCurrentTask(id);
+  }
+
   finishTask(): void {
     const currentTask = this.todos.currentTask();
     if (!currentTask) return;

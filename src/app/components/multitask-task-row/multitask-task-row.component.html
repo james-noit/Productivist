@@ -120,7 +120,13 @@
       }
     </div>
   } @else {
-    <button type="button" class="mt-row__select" (click)="openTaskModal()">
+    <button
+      type="button"
+      class="mt-row__select"
+      (click)="openTaskModal()"
+      (dragover)="$event.preventDefault()"
+      (drop)="onDropSelectTask($event)"
+    >
       <span aria-hidden="true">+</span>
       {{ 'clock.selectTask' | translate }}
     </button>

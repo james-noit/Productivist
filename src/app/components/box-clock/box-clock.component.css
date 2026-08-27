@@ -5,6 +5,7 @@
   flex-direction: column;
   flex-wrap: wrap;
   align-content: flex-start;
+  justify-content: center;
   gap: var(--box-gap);
   height: calc(5 * var(--box-size) + 4 * var(--box-gap));
 }

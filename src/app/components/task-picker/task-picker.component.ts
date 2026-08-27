@@ -3,14 +3,13 @@ import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '@ngx-translate/core';
 import { TodosService } from '../../../services/todos.service';
 import { ProjectsPanelComponent } from '../projects-panel/projects-panel.component';
-import { TaskProjectTagComponent } from '../task-project-tag/task-project-tag.component';
-import { TaskBadgesComponent } from '../task-badges/task-badges.component';
+import { TaskPoolListComponent } from '../task-pool-list/task-pool-list.component';
 import type { Priority } from '../../../types/todo';
 
 @Component({
   selector: 'app-task-picker',
   standalone: true,
-  imports: [FormsModule, TranslatePipe, ProjectsPanelComponent, TaskProjectTagComponent, TaskBadgesComponent],
+  imports: [FormsModule, TranslatePipe, ProjectsPanelComponent, TaskPoolListComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './task-picker.component.html',
   styleUrl: './task-picker.component.css',
@@ -28,11 +27,11 @@ export class TaskPickerComponent {
   readonly urgency = signal<Priority | 'all'>('all');
   readonly tag = signal<string>('all');
 
-  readonly pickableTasks = computed(() =>
+  readonly baseTasks = computed(() =>
     this.todos.sortTasks(
       this.todos
         .todos()
-        .filter((todo) => !todo.done && this.isPickable()(todo.id))
+        .filter((todo) => !todo.done)
         .filter((todo) => this.importance() === 'all' || todo.importance === this.importance())
         .filter((todo) => this.urgency() === 'all' || todo.urgency === this.urgency())
         .filter((todo) => this.tag() === 'all' || todo.tags.includes(this.tag())),

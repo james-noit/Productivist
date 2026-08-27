@@ -1,0 +1,52 @@
+@if (tasks().length) {
+  <input
+    #searchInputEl
+    [ngModel]="searchQuery()"
+    (ngModelChange)="searchQuery.set($event)"
+    name="taskPoolSearch"
+    type="search"
+    class="task-pool-list__search"
+    [placeholder]="'todo.searchPlaceholder' | translate"
+    autocomplete="off"
+  />
+}
+
+@if (!tasks().length) {
+  <p class="task-pool-list__empty">{{ 'todo.empty' | translate }}</p>
+} @else if (searchQuery().trim() && !displayedTasks().length) {
+  <p class="task-pool-list__no-results">{{ 'todo.noResults' | translate }}</p>
+} @else {
+  <ul class="task-pool-list__list">
+    @for (todo of displayedTasks(); track todo.id) {
+      <li class="task-pool-list__item">
+        @if (isPickable()(todo.id)) {
+          <button
+            type="button"
+            class="task-pool-list__row task-pool-list__row--pickable"
+            [attr.draggable]="rowsDraggable()"
+            (dragstart)="rowsDraggable() && todos.startDrag(todo.id)"
+            (dragend)="rowsDraggable() && todos.endDrag()"
+            (click)="pick.emit(todo.id)"
+          >
+            <span class="task-pool-list__title">{{ todo.title }}</span>
+            <span class="task-pool-list__badges">
+              <app-task-badges [todo]="todo" />
+            </span>
+            <app-task-project-tag [todo]="todo" />
+          </button>
+        } @else {
+          <div class="task-pool-list__row">
+            <span class="task-pool-list__title">{{ todo.title }}</span>
+            <span class="task-pool-list__badges">
+              <app-task-badges [todo]="todo" />
+            </span>
+            <app-task-project-tag [todo]="todo" />
+            @if (unpickableStatus()) {
+              <span class="task-pool-list__status">{{ unpickableStatus() }}</span>
+            }
+          </div>
+        }
+      </li>
+    }
+  </ul>
+}

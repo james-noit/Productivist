@@ -119,6 +119,12 @@ export class MultitaskTaskRowComponent implements OnInit {
     this.taskModalOpen.set(false);
   }
 
+  onDropSelectTask(event: DragEvent): void {
+    event.preventDefault();
+    const id = this.todos.draggedId();
+    if (id && this.isPickable(id)) this.selectTask(id);
+  }
+
   onFinish(): void {
     if (!this.task() || this.strikeActive()) return;
     this.strikeActive.set(true);
