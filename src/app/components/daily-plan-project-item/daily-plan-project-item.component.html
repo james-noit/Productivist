@@ -96,6 +96,16 @@
         </ul>
       }
 
+      @if (!project()) {
+        @if (!addingTask()) {
+          <button type="button" class="plan-project__add-task" (click)="addingTask.set(true)">
+            <span aria-hidden="true">+</span> {{ 'planningLab.newUnclassifiedTask' | translate }}
+          </button>
+        } @else {
+          <app-todo-form />
+        }
+      }
+
       @for (milestone of milestones(); track milestone.id) {
         <div class="plan-milestone">
           <div class="plan-milestone__row">

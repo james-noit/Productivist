@@ -202,6 +202,7 @@
     "generalBacklogHint": "Desglosa un objetivo en las tareas que te llevan hasta él.",
     "generalBacklogEmpty": "Aún no hay nada en el backlog general.",
     "freeTasks": "Tareas libres sin proyecto",
+    "newUnclassifiedTask": "Nueva tarea sin clasificar",
     "allProjectsCombined": "Todos los proyectos combinados",
     "project": "Proyecto",
     "totalTasks": "Total",

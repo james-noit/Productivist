@@ -202,6 +202,7 @@
     "generalBacklogHint": "Break an objective down into the tasks that get you there.",
     "generalBacklogEmpty": "Nothing in the general backlog yet.",
     "freeTasks": "Free tasks without project",
+    "newUnclassifiedTask": "New unclassified task",
     "allProjectsCombined": "All projects combined",
     "project": "Project",
     "totalTasks": "Total",

@@ -92,6 +92,19 @@
   font-size: 0.85rem;
 }
 
+.plan-project__add-task {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: none;
+  border: 1px dashed var(--color-border);
+  border-radius: 6px;
+  color: var(--color-text-muted);
+  padding: 0.35rem 0.7rem;
+  font-size: 0.85rem;
+}
+
 .plan-task-list {
   list-style: none;
   margin: 0;
