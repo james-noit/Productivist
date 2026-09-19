@@ -206,6 +206,7 @@
     "generalBacklogEmpty": "Nothing in the general backlog yet.",
     "freeTasks": "Free tasks without project",
     "newUnclassifiedTask": "New unclassified task",
+    "noMilestoneGroup": "No milestone",
     "allProjectsCombined": "All projects combined",
     "project": "Project",
     "totalTasks": "Total",

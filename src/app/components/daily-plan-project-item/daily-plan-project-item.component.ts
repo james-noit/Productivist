@@ -33,6 +33,7 @@ export class DailyPlanProjectItemComponent {
   readonly expanded = signal(false);
   readonly editing = signal(false);
   readonly addingTask = signal(false);
+  readonly addingTaskMilestoneId = signal<string | null>(null);
   readonly expandedMilestones = signal<Set<string>>(new Set());
 
   readonly milestones = computed(() => {

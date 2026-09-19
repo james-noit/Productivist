@@ -51,52 +51,194 @@
         <p class="plan-project__empty">{{ 'planningLab.dailyPlanProjectEmpty' | translate }}</p>
       }
 
-      @if (directTasks().length) {
-        <ul class="plan-task-list">
-          @for (todo of directTasks(); track todo.id) {
-            <li
-              class="plan-task"
-              [class.plan-task--assigned]="objectiveLabel(todo.id)"
-              [class.plan-task--armed]="isArmed(todo.id)"
-              draggable="true"
-              (click)="onTaskClick(todo.id)"
-              (dragstart)="onDragStart(todo.id)"
-              (dragend)="onDragEnd()"
-            >
-              <span class="plan-task__title">{{ todo.title }}</span>
-              <app-task-badges [todo]="todo" />
-              @if (objectiveLabel(todo.id); as label) {
-                <span class="plan-task__objective" [title]="label">↳ {{ label }}</span>
-              }
+      @if (project(); as p) {
+        <div class="plan-milestone plan-milestone--none">
+          <div class="plan-milestone__row">
+            <div class="plan-milestone__header">
+              <span class="plan-milestone__name">{{ 'planningLab.noMilestoneGroup' | translate }}</span>
+              <span class="plan-milestone__count">{{ directTasks().length }}</span>
+            </div>
+          </div>
 
-              <div class="plan-popover" role="tooltip">
-                <strong>{{ todo.title }}</strong>
-                @if (todo.description) {
-                  <p>{{ todo.description }}</p>
-                }
-                <span class="plan-popover__meta">
-                  {{ 'todo.importance' | translate }}: {{ ('todo.' + todo.importance) | translate }}
-                </span>
-                <span class="plan-popover__meta">
-                  {{ 'todo.urgency' | translate }}: {{ ('todo.' + todo.urgency) | translate }}
-                </span>
-                @if (todo.tags.length) {
-                  <span class="plan-popover__tags">
-                    @for (tag of todo.tags; track tag) {
-                      <span class="badge badge--tag">{{ tag }}</span>
+          @if (directTasks().length) {
+            <ul class="plan-task-list">
+              @for (todo of directTasks(); track todo.id) {
+                <li
+                  class="plan-task"
+                  [class.plan-task--assigned]="objectiveLabel(todo.id)"
+                  [class.plan-task--armed]="isArmed(todo.id)"
+                  draggable="true"
+                  (click)="onTaskClick(todo.id)"
+                  (dragstart)="onDragStart(todo.id)"
+                  (dragend)="onDragEnd()"
+                >
+                  <span class="plan-task__title">{{ todo.title }}</span>
+                  <app-task-badges [todo]="todo" />
+                  @if (objectiveLabel(todo.id); as label) {
+                    <span class="plan-task__objective" [title]="label">↳ {{ label }}</span>
+                  }
+
+                  <div class="plan-popover" role="tooltip">
+                    <strong>{{ todo.title }}</strong>
+                    @if (todo.description) {
+                      <p>{{ todo.description }}</p>
                     }
-                  </span>
-                }
-                @if (objectiveLabel(todo.id); as label) {
-                  <span class="plan-popover__meta">{{ 'planningLab.popoverAssignedTo' | translate: { objective: label } }}</span>
-                }
-              </div>
-            </li>
+                    <span class="plan-popover__meta">
+                      {{ 'todo.importance' | translate }}: {{ ('todo.' + todo.importance) | translate }}
+                    </span>
+                    <span class="plan-popover__meta">
+                      {{ 'todo.urgency' | translate }}: {{ ('todo.' + todo.urgency) | translate }}
+                    </span>
+                    @if (todo.tags.length) {
+                      <span class="plan-popover__tags">
+                        @for (tag of todo.tags; track tag) {
+                          <span class="badge badge--tag">{{ tag }}</span>
+                        }
+                      </span>
+                    }
+                    @if (objectiveLabel(todo.id); as label) {
+                      <span class="plan-popover__meta">{{ 'planningLab.popoverAssignedTo' | translate: { objective: label } }}</span>
+                    }
+                  </div>
+                </li>
+              }
+            </ul>
           }
-        </ul>
-      }
 
-      @if (!project()) {
+          @if (!addingTask()) {
+            <button type="button" class="plan-project__add-task" (click)="addingTask.set(true)">
+              <span aria-hidden="true">+</span> {{ 'projects.addTask' | translate }}
+            </button>
+          } @else {
+            <app-todo-form [projectId]="p.id" />
+          }
+        </div>
+
+          @for (milestone of milestones(); track milestone.id) {
+            <div class="plan-milestone">
+              <div class="plan-milestone__row">
+                <button type="button" class="plan-milestone__header" (click)="toggleMilestone(milestone.id)">
+                  <span
+                    class="plan-milestone__chevron"
+                    [class.plan-milestone__chevron--open]="expandedMilestones().has(milestone.id)"
+                    aria-hidden="true"
+                  >
+                    ▸
+                  </span>
+                  <span class="plan-milestone__name">{{ milestone.name }}</span>
+                  <span class="plan-milestone__count">{{ milestoneTasks(milestone.id).length }}</span>
+                </button>
+
+                <div class="plan-popover" role="tooltip">
+                  <strong>{{ milestone.name }}</strong>
+                  <span class="plan-popover__meta">{{ 'planningLab.popoverTaskCount' | translate: { n: milestoneTasks(milestone.id).length } }}</span>
+                </div>
+              </div>
+
+              @if (expandedMilestones().has(milestone.id)) {
+                @if (!milestoneTasks(milestone.id).length) {
+                  <p class="plan-project__empty">{{ 'projects.noMilestoneTasks' | translate }}</p>
+                } @else {
+                  <ul class="plan-task-list plan-task-list--nested">
+                    @for (todo of milestoneTasks(milestone.id); track todo.id) {
+                      <li
+                        class="plan-task"
+                        [class.plan-task--assigned]="objectiveLabel(todo.id)"
+                        [class.plan-task--armed]="isArmed(todo.id)"
+                        draggable="true"
+                        (click)="onTaskClick(todo.id)"
+                        (dragstart)="onDragStart(todo.id)"
+                        (dragend)="onDragEnd()"
+                      >
+                        <span class="plan-task__title">{{ todo.title }}</span>
+                        <app-task-badges [todo]="todo" />
+                        @if (objectiveLabel(todo.id); as label) {
+                          <span class="plan-task__objective" [title]="label">↳ {{ label }}</span>
+                        }
+
+                        <div class="plan-popover" role="tooltip">
+                          <strong>{{ todo.title }}</strong>
+                          @if (todo.description) {
+                            <p>{{ todo.description }}</p>
+                          }
+                          <span class="plan-popover__meta">
+                            {{ 'todo.importance' | translate }}: {{ ('todo.' + todo.importance) | translate }}
+                          </span>
+                          <span class="plan-popover__meta">
+                            {{ 'todo.urgency' | translate }}: {{ ('todo.' + todo.urgency) | translate }}
+                          </span>
+                          @if (todo.tags.length) {
+                            <span class="plan-popover__tags">
+                              @for (tag of todo.tags; track tag) {
+                                <span class="badge badge--tag">{{ tag }}</span>
+                              }
+                            </span>
+                          }
+                          @if (objectiveLabel(todo.id); as label) {
+                            <span class="plan-popover__meta">{{ 'planningLab.popoverAssignedTo' | translate: { objective: label } }}</span>
+                          }
+                        </div>
+                      </li>
+                    }
+                  </ul>
+                }
+
+                @if (addingTaskMilestoneId() === milestone.id) {
+                  <app-todo-form [projectId]="p.id" [milestoneId]="milestone.id" />
+                } @else {
+                  <button type="button" class="plan-project__add-task" (click)="addingTaskMilestoneId.set(milestone.id)">
+                    <span aria-hidden="true">+</span> {{ 'projects.addTask' | translate }}
+                  </button>
+                }
+              }
+            </div>
+          }
+      } @else {
+        @if (directTasks().length) {
+          <ul class="plan-task-list">
+            @for (todo of directTasks(); track todo.id) {
+              <li
+                class="plan-task"
+                [class.plan-task--assigned]="objectiveLabel(todo.id)"
+                [class.plan-task--armed]="isArmed(todo.id)"
+                draggable="true"
+                (click)="onTaskClick(todo.id)"
+                (dragstart)="onDragStart(todo.id)"
+                (dragend)="onDragEnd()"
+              >
+                <span class="plan-task__title">{{ todo.title }}</span>
+                <app-task-badges [todo]="todo" />
+                @if (objectiveLabel(todo.id); as label) {
+                  <span class="plan-task__objective" [title]="label">↳ {{ label }}</span>
+                }
+
+                <div class="plan-popover" role="tooltip">
+                  <strong>{{ todo.title }}</strong>
+                  @if (todo.description) {
+                    <p>{{ todo.description }}</p>
+                  }
+                  <span class="plan-popover__meta">
+                    {{ 'todo.importance' | translate }}: {{ ('todo.' + todo.importance) | translate }}
+                  </span>
+                  <span class="plan-popover__meta">
+                    {{ 'todo.urgency' | translate }}: {{ ('todo.' + todo.urgency) | translate }}
+                  </span>
+                  @if (todo.tags.length) {
+                    <span class="plan-popover__tags">
+                      @for (tag of todo.tags; track tag) {
+                        <span class="badge badge--tag">{{ tag }}</span>
+                      }
+                    </span>
+                  }
+                  @if (objectiveLabel(todo.id); as label) {
+                    <span class="plan-popover__meta">{{ 'planningLab.popoverAssignedTo' | translate: { objective: label } }}</span>
+                  }
+                </div>
+              </li>
+            }
+          </ul>
+        }
+
         @if (!addingTask()) {
           <button type="button" class="plan-project__add-task" (click)="addingTask.set(true)">
             <span aria-hidden="true">+</span> {{ 'planningLab.newUnclassifiedTask' | translate }}
@@ -104,78 +246,6 @@
         } @else {
           <app-todo-form />
         }
-      }
-
-      @for (milestone of milestones(); track milestone.id) {
-        <div class="plan-milestone">
-          <div class="plan-milestone__row">
-            <button type="button" class="plan-milestone__header" (click)="toggleMilestone(milestone.id)">
-              <span
-                class="plan-milestone__chevron"
-                [class.plan-milestone__chevron--open]="expandedMilestones().has(milestone.id)"
-                aria-hidden="true"
-              >
-                ▸
-              </span>
-              <span class="plan-milestone__name">{{ milestone.name }}</span>
-              <span class="plan-milestone__count">{{ milestoneTasks(milestone.id).length }}</span>
-            </button>
-
-            <div class="plan-popover" role="tooltip">
-              <strong>{{ milestone.name }}</strong>
-              <span class="plan-popover__meta">{{ 'planningLab.popoverTaskCount' | translate: { n: milestoneTasks(milestone.id).length } }}</span>
-            </div>
-          </div>
-
-          @if (expandedMilestones().has(milestone.id)) {
-            @if (!milestoneTasks(milestone.id).length) {
-              <p class="plan-project__empty">{{ 'projects.noMilestoneTasks' | translate }}</p>
-            } @else {
-              <ul class="plan-task-list plan-task-list--nested">
-                @for (todo of milestoneTasks(milestone.id); track todo.id) {
-                  <li
-                    class="plan-task"
-                    [class.plan-task--assigned]="objectiveLabel(todo.id)"
-                    [class.plan-task--armed]="isArmed(todo.id)"
-                    draggable="true"
-                    (click)="onTaskClick(todo.id)"
-                    (dragstart)="onDragStart(todo.id)"
-                    (dragend)="onDragEnd()"
-                  >
-                    <span class="plan-task__title">{{ todo.title }}</span>
-                    <app-task-badges [todo]="todo" />
-                    @if (objectiveLabel(todo.id); as label) {
-                      <span class="plan-task__objective" [title]="label">↳ {{ label }}</span>
-                    }
-
-                    <div class="plan-popover" role="tooltip">
-                      <strong>{{ todo.title }}</strong>
-                      @if (todo.description) {
-                        <p>{{ todo.description }}</p>
-                      }
-                      <span class="plan-popover__meta">
-                        {{ 'todo.importance' | translate }}: {{ ('todo.' + todo.importance) | translate }}
-                      </span>
-                      <span class="plan-popover__meta">
-                        {{ 'todo.urgency' | translate }}: {{ ('todo.' + todo.urgency) | translate }}
-                      </span>
-                      @if (todo.tags.length) {
-                        <span class="plan-popover__tags">
-                          @for (tag of todo.tags; track tag) {
-                            <span class="badge badge--tag">{{ tag }}</span>
-                          }
-                        </span>
-                      }
-                      @if (objectiveLabel(todo.id); as label) {
-                        <span class="plan-popover__meta">{{ 'planningLab.popoverAssignedTo' | translate: { objective: label } }}</span>
-                      }
-                    </div>
-                  </li>
-                }
-              </ul>
-            }
-          }
-        </div>
       }
     </div>
   }
