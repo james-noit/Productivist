@@ -6,6 +6,7 @@ import { ProjectsService } from '../../../services/projects.service';
 import { EisenhowerCardComponent } from '../eisenhower-card/eisenhower-card.component';
 import { TaskDetailModalComponent } from '../task-detail-modal/task-detail-modal.component';
 import { NewTaskModalComponent } from '../new-task-modal/new-task-modal.component';
+import { IconComponent } from '../icon/icon.component';
 import { QUADRANTS, QUADRANT_BY_KEY, classify, type QuadrantDef } from '../../../lib/eisenhower';
 import type { Todo } from '../../../types/todo';
 import type { EisenhowerQuadrant, EisenhowerViewMode } from '../../../types/eisenhower';
@@ -25,7 +26,7 @@ interface ProjectGroup {
 @Component({
   selector: 'app-eisenhower-view',
   standalone: true,
-  imports: [TranslatePipe, EisenhowerCardComponent, TaskDetailModalComponent, NewTaskModalComponent],
+  imports: [TranslatePipe, EisenhowerCardComponent, TaskDetailModalComponent, NewTaskModalComponent, IconComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './eisenhower-view.component.html',
   styleUrl: './eisenhower-view.component.css',

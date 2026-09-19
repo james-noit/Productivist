@@ -2,7 +2,7 @@
   <div class="project-tree__header">
     <button type="button" class="project-tree__toggle" (click)="expanded.set(!expanded())">
       <span class="project-tree__chevron" [class.project-tree__chevron--open]="expanded()" aria-hidden="true">▸</span>
-      <span class="project-tree__icon" aria-hidden="true">{{ project().icon }}</span>
+      <span class="project-tree__icon" aria-hidden="true"><app-icon [name]="project().icon" /></span>
       <span class="project-tree__name">{{ project().name }}</span>
     </button>
     @if (quadrantCounts(); as counts) {

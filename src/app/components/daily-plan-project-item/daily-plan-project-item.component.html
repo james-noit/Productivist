@@ -2,7 +2,7 @@
   <div class="plan-project__row">
     <button type="button" class="plan-project__header" (click)="expanded.set(!expanded())">
       <span class="plan-project__chevron" [class.plan-project__chevron--open]="expanded()" aria-hidden="true">▸</span>
-      <span class="plan-project__icon" aria-hidden="true">{{ project()?.icon ?? '📥' }}</span>
+      <span class="plan-project__icon" aria-hidden="true"><app-icon [name]="project()?.icon ?? 'inbox'" /></span>
       <span class="plan-project__name">{{ project()?.name ?? ('planningLab.freeTasks' | translate) }}</span>
       <span class="plan-project__count">{{ taskCount() }}</span>
     </button>

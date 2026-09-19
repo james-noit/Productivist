@@ -16,8 +16,9 @@
             type="button"
             class="picker__icon"
             [class.picker__icon--selected]="chosenIcon() === icon"
+            [attr.aria-label]="icon"
             (click)="chosenIcon.set(icon)"
-          >{{ icon }}</button>
+          ><app-icon [name]="icon" /></button>
         }
       </div>
       <input

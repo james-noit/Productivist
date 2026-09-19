@@ -11,6 +11,7 @@
     "planningLab": "Laboratorio de planificación",
     "pomodoro": "Pomodoro",
     "eisenhower": "Eisenhower",
+    "projects": "Proyectos",
     "reset": "Reiniciar",
     "resetWarning": "Esto borrará tu lista de tareas, proyectos y ajustes, y reiniciará el reloj pomodoro.",
     "resetInstruction": "Escribe \"{{phrase}}\" abajo para confirmar.",

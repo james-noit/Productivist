@@ -72,6 +72,27 @@
           </svg>
           {{ 'menu.eisenhower' | translate }}
         </button>
+        <button
+          type="button"
+          role="menuitem"
+          class="app-menu__view"
+          [class.app-menu__view--active]="view.current() === 'projects'"
+          [attr.aria-current]="view.current() === 'projects'"
+          (click)="goToView('projects')"
+        >
+          <svg class="app-menu__view-icon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+            <path
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M3 7a2 2 0 0 1 2-2h4l2 2.5h8a2 2 0 0 1 2 2V17a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"
+            />
+            <path fill="currentColor" opacity="0.55" d="M3 9.5h18V17a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+          </svg>
+          {{ 'menu.projects' | translate }}
+        </button>
       </div>
       <div class="app-menu__group">
         <span class="app-menu__group-label">{{ 'menu.file' | translate }}</span>

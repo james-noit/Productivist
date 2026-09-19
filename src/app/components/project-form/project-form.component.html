@@ -8,7 +8,7 @@
         [attr.aria-label]="option"
         (click)="icon.set(option)"
       >
-        {{ option }}
+        <app-icon [name]="option" />
       </button>
     }
   </div>

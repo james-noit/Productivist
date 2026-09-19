@@ -2,7 +2,7 @@
   <div class="free-tasks__header">
     <button type="button" class="free-tasks__toggle" (click)="expanded.set(!expanded())">
       <span class="free-tasks__chevron" [class.free-tasks__chevron--open]="expanded()" aria-hidden="true">▸</span>
-      <span class="free-tasks__icon" aria-hidden="true">📥</span>
+      <span class="free-tasks__icon" aria-hidden="true"><app-icon name="inbox" /></span>
       <span class="free-tasks__name">{{ 'planningLab.freeTasks' | translate }}</span>
     </button>
     <app-quadrant-count-badges class="free-tasks__badges" [counts]="counts()" />

@@ -7,6 +7,7 @@ import { sortByPriority } from '../../../lib/eisenhower';
 import { EditProjectModalComponent } from '../edit-project-modal/edit-project-modal.component';
 import { TaskBadgesComponent } from '../task-badges/task-badges.component';
 import { TodoFormComponent } from '../todo-form/todo-form.component';
+import { IconComponent } from '../icon/icon.component';
 import type { Project } from '../../../types/project';
 import type { Todo } from '../../../types/todo';
 
@@ -16,7 +17,7 @@ const EMPTY_TASKS: readonly Todo[] = [];
 @Component({
   selector: 'app-daily-plan-project-item',
   standalone: true,
-  imports: [TranslatePipe, EditProjectModalComponent, TaskBadgesComponent, TodoFormComponent],
+  imports: [TranslatePipe, EditProjectModalComponent, TaskBadgesComponent, TodoFormComponent, IconComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './daily-plan-project-item.component.html',
   styleUrl: './daily-plan-project-item.component.css',

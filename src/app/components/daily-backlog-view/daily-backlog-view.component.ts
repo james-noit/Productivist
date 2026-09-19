@@ -10,6 +10,7 @@ import { DailyPlanProjectItemComponent } from '../daily-plan-project-item/daily-
 import { ProjectFormComponent } from '../project-form/project-form.component';
 import { ProjectsPanelComponent } from '../projects-panel/projects-panel.component';
 import { TaskBadgesComponent } from '../task-badges/task-badges.component';
+import { IconComponent } from '../icon/icon.component';
 import type { Todo } from '../../../types/todo';
 import type { Project } from '../../../types/project';
 
@@ -43,7 +44,7 @@ const STEPS: PlanStep[] = [
     DailyPlanProjectItemComponent,
     ProjectFormComponent,
     ProjectsPanelComponent,
-  
+    IconComponent,
     TaskBadgesComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -193,10 +194,10 @@ export class DailyBacklogViewComponent {
 
   private projectDisplay(id: string): { id: string; icon: string; name: string } {
     if (id === UNASSIGNED_GROUP_ID) {
-      return { id, icon: '📥', name: this.translate.instant('planningLab.freeTasks') };
+      return { id, icon: 'inbox', name: this.translate.instant('planningLab.freeTasks') };
     }
     const project = this.projects.projects().find((p) => p.id === id);
-    return { id, icon: project?.icon ?? '📁', name: project?.name ?? '' };
+    return { id, icon: project?.icon ?? 'folder', name: project?.name ?? '' };
   }
 
   // --- Tasks step ---

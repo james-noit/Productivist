@@ -69,7 +69,7 @@
             (keydown.enter)="$event.preventDefault(); tasksModalOpen.set(true)"
             (keydown.space)="$event.preventDefault(); tasksModalOpen.set(true)"
           >
-            <span aria-hidden="true">🗂️</span> {{ 'planningLab.tasksButton' | translate }}
+            <app-icon name="folder-open" aria-hidden="true" /> {{ 'planningLab.tasksButton' | translate }}
           </span>
         </summary>
 
@@ -81,7 +81,7 @@
                   <span class="suggestion-row__title">{{ suggestion.todo.title }}</span>
                   @if (suggestion.project) {
                     <span class="suggestion-row__path">
-                      {{ suggestion.project.icon }} {{ suggestion.project.name }}
+                      <app-icon [name]="suggestion.project.icon" /> {{ suggestion.project.name }}
                       @if (suggestion.milestoneName) {
                         <span> · {{ suggestion.milestoneName }}</span>
                       }
@@ -145,7 +145,7 @@
               (dragstart)="dailyPlan.startDragProject(unassignedGroupId)"
               (dragend)="dailyPlan.endDragProject()"
             >
-              <span class="daily-backlog__project-icon" aria-hidden="true">📥</span>
+              <span class="daily-backlog__project-icon" aria-hidden="true"><app-icon name="inbox" /></span>
               <span class="daily-backlog__project-name">{{ 'planningLab.freeTasks' | translate }}</span>
               @if (projectObjectiveCount(unassignedGroupId) > 0) {
                 <span class="daily-backlog__project-badge">{{ projectObjectiveCount(unassignedGroupId) }}</span>
@@ -162,7 +162,7 @@
                 (dragstart)="dailyPlan.startDragProject(project.id)"
                 (dragend)="dailyPlan.endDragProject()"
               >
-                <span class="daily-backlog__project-icon" aria-hidden="true">{{ project.icon }}</span>
+                <span class="daily-backlog__project-icon" aria-hidden="true"><app-icon [name]="project.icon" /></span>
                 <span class="daily-backlog__project-name">{{ project.name }}</span>
                 @if (projectObjectiveCount(project.id) > 0) {
                   <span class="daily-backlog__project-badge">{{ projectObjectiveCount(project.id) }}</span>
@@ -201,7 +201,7 @@
                 <ul class="objective-bucket__chips">
                   @for (project of projectsInObjective(objective.id); track project.id) {
                     <li class="objective-chip">
-                      <span aria-hidden="true">{{ project.icon }}</span>
+                      <span aria-hidden="true"><app-icon [name]="project.icon" /></span>
                       <span class="objective-chip__name">{{ project.name }}</span>
                       <button
                         type="button"
@@ -248,7 +248,7 @@
         <div class="daily-backlog__groups">
           <div class="daily-backlog__groups-header">
             <button type="button" class="daily-backlog-prompt__tasks-button" (click)="tasksModalOpen.set(true)">
-              <span aria-hidden="true">🗂️</span> {{ 'planningLab.tasksButton' | translate }}
+              <app-icon name="folder-open" aria-hidden="true" /> {{ 'planningLab.tasksButton' | translate }}
             </button>
           </div>
 

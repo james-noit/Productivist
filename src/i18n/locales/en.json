@@ -11,6 +11,7 @@
     "planningLab": "Planning lab",
     "pomodoro": "Pomodoro",
     "eisenhower": "Eisenhower",
+    "projects": "Projects",
     "reset": "Reset",
     "resetWarning": "This will erase your to-do list, projects, and settings, and reset the pomodoro clock.",
     "resetInstruction": "Type \"{{phrase}}\" below to confirm.",

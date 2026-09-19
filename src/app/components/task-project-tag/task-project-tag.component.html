@@ -4,7 +4,7 @@
     [title]="milestone() ? project.name + ' · ' + milestone()!.name : project.name"
   >
     <span class="task-project-tag__project">
-      <span aria-hidden="true">{{ project.icon }}</span>
+      <span aria-hidden="true"><app-icon [name]="project.icon" /></span>
       {{ project.name }}
     </span>
     @if (milestone(); as milestone) {

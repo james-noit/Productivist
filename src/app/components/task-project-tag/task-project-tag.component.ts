@@ -1,10 +1,12 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 import { ProjectsService } from '../../../services/projects.service';
+import { IconComponent } from '../icon/icon.component';
 import type { Todo } from '../../../types/todo';
 
 @Component({
   selector: 'app-task-project-tag',
   standalone: true,
+  imports: [IconComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './task-project-tag.component.html',
   styleUrl: './task-project-tag.component.css',

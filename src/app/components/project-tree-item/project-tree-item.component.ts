@@ -9,6 +9,7 @@ import { TodoFormComponent } from '../todo-form/todo-form.component';
 import { QuadrantCountBadgesComponent } from '../quadrant-count-badges/quadrant-count-badges.component';
 import { TaskBadgesComponent } from '../task-badges/task-badges.component';
 import { InlineTaskEditorComponent } from '../inline-task-editor/inline-task-editor.component';
+import { IconComponent } from '../icon/icon.component';
 import type { Project } from '../../../types/project';
 import type { Todo } from '../../../types/todo';
 import type { QuadrantCounts } from '../../../lib/eisenhower';
@@ -20,7 +21,7 @@ const EMPTY_TASKS: readonly Todo[] = [];
 @Component({
   selector: 'app-project-tree-item',
   standalone: true,
-  imports: [FormsModule, TranslatePipe, EditProjectModalComponent, TodoFormComponent, QuadrantCountBadgesComponent, TaskBadgesComponent, InlineTaskEditorComponent],
+  imports: [FormsModule, TranslatePipe, EditProjectModalComponent, TodoFormComponent, QuadrantCountBadgesComponent, TaskBadgesComponent, InlineTaskEditorComponent, IconComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './project-tree-item.component.html',
   styleUrl: './project-tree-item.component.css',

@@ -2,6 +2,8 @@ import { ChangeDetectionStrategy, Component, computed, inject, input, model, out
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { ProjectsService } from '../../../services/projects.service';
+import { PROJECT_ICONS } from '../../../lib/project-icons';
+import { IconComponent } from '../icon/icon.component';
 
 /** Sentinel refs for the two selects, alongside '' (none) and a real id. */
 export const NEW_REF = '__new__';
@@ -10,8 +12,6 @@ export interface NewProjectInput {
   icon: string;
   name: string;
 }
-
-const ICONS = ['📁', '📌', '🚀', '🎯', '📚', '💼', '🛠️', '🎨', '🧪', '🏗️', '🌱', '🔥'];
 
 /**
  * The project + milestone selects, including the inline "new project" (icon grid + name)
@@ -26,7 +26,7 @@ const ICONS = ['📁', '📌', '🚀', '🎯', '📚', '💼', '🛠️', '🎨'
 @Component({
   selector: 'app-project-milestone-picker',
   standalone: true,
-  imports: [FormsModule, TranslatePipe],
+  imports: [FormsModule, TranslatePipe, IconComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './project-milestone-picker.component.html',
   styleUrl: './project-milestone-picker.component.css',
@@ -46,10 +46,10 @@ export class ProjectMilestonePickerComponent {
   readonly createProject = output<NewProjectInput>();
   readonly createMilestone = output<string>();
 
-  readonly icons = ICONS;
+  readonly icons = PROJECT_ICONS;
 
   /** Draft state for the inline create forms; the parent reads these at submit time. */
-  readonly chosenIcon = signal(ICONS[0]);
+  readonly chosenIcon = signal(PROJECT_ICONS[0]);
   readonly projectName = signal('');
   readonly milestoneName = signal('');
 
@@ -63,7 +63,7 @@ export class ProjectMilestonePickerComponent {
 
   readonly projectSelectOptions = computed(() => [
     { value: '', label: this.translate.instant('eisenhower.createTask.noProject') },
-    ...this.projects.sortedProjects().map((p) => ({ value: p.id, label: `${p.icon} ${p.name}` })),
+    ...this.projects.sortedProjects().map((p) => ({ value: p.id, label: p.name })),
     { value: NEW_REF, label: this.translate.instant('eisenhower.createTask.newProject') },
   ]);
 
@@ -79,7 +79,7 @@ export class ProjectMilestonePickerComponent {
 
   /** Resets the inline drafts, e.g. when the host points the picker at a different task. */
   resetDrafts(): void {
-    this.chosenIcon.set(ICONS[0]);
+    this.chosenIcon.set(PROJECT_ICONS[0]);
     this.projectName.set('');
     this.milestoneName.set('');
   }

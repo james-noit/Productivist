@@ -1,14 +1,14 @@
 import { ChangeDetectionStrategy, Component, input, linkedSignal, output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '@ngx-translate/core';
+import { PROJECT_ICONS } from '../../../lib/project-icons';
+import { IconComponent } from '../icon/icon.component';
 import type { Project } from '../../../types/project';
-
-const ICONS = ['📁', '📌', '🚀', '🎯', '📚', '💼', '🛠️', '🎨', '🧪', '🏗️', '🌱', '🔥'];
 
 @Component({
   selector: 'app-project-form',
   standalone: true,
-  imports: [FormsModule, TranslatePipe],
+  imports: [FormsModule, TranslatePipe, IconComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './project-form.component.html',
   styleUrl: './project-form.component.css',
@@ -18,9 +18,9 @@ export class ProjectFormComponent {
   readonly save = output<{ icon: string; name: string; description: string; notes: string }>();
   readonly cancel = output<void>();
 
-  readonly icons = ICONS;
+  readonly icons = PROJECT_ICONS;
 
-  readonly icon = linkedSignal(() => this.initial((p) => p.icon) ?? ICONS[0]);
+  readonly icon = linkedSignal(() => this.initial((p) => p.icon) ?? PROJECT_ICONS[0]);
   readonly name = linkedSignal(() => this.initial((p) => p.name) ?? '');
   readonly description = linkedSignal(() => this.initial((p) => p.description) ?? '');
   readonly notes = linkedSignal(() => this.initial((p) => p.notes) ?? '');

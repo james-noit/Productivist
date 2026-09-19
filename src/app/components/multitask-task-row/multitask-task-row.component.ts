@@ -7,6 +7,7 @@ import { ClockService } from '../../../services/clock.service';
 import { ProjectsService } from '../../../services/projects.service';
 import { TaskDetailModalComponent } from '../task-detail-modal/task-detail-modal.component';
 import { TaskPickerComponent } from '../task-picker/task-picker.component';
+import { IconComponent } from '../icon/icon.component';
 import type { AccomplishmentMark, MultitaskCard } from '../../../types/multitask';
 
 const FINISH_STRIKE_MS = 450;
@@ -14,7 +15,7 @@ const FINISH_STRIKE_MS = 450;
 @Component({
   selector: 'app-multitask-task-row',
   standalone: true,
-  imports: [FormsModule, TranslatePipe, TaskDetailModalComponent, TaskPickerComponent],
+  imports: [FormsModule, TranslatePipe, TaskDetailModalComponent, TaskPickerComponent, IconComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './multitask-task-row.component.html',
   styleUrl: './multitask-task-row.component.css',

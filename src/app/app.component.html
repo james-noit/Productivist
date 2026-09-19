@@ -21,6 +21,12 @@
   } @placeholder {
     <div class="view-loading" aria-hidden="true"></div>
   }
+} @else if (view.current() === 'projects') {
+  @defer (on immediate) {
+    <app-projects-view />
+  } @placeholder {
+    <div class="view-loading" aria-hidden="true"></div>
+  }
 } @else if (multitask.enabled()) {
   @defer (on immediate) {
     <app-multitask-view />

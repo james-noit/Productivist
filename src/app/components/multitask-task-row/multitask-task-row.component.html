@@ -59,7 +59,7 @@
               class="mt-row__project"
               [title]="milestone() ? project.name + ' · ' + milestone()!.name : project.name"
             >
-              <span aria-hidden="true">{{ project.icon }}</span>
+              <span aria-hidden="true"><app-icon [name]="project.icon" /></span>
               {{ project.name }}@if (milestone(); as milestone) { · {{ milestone.name }} }
             </div>
           }

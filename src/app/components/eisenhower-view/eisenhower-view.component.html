@@ -69,7 +69,7 @@
                 <div class="eisenhower-quadrant__group">
                   <span class="eisenhower-quadrant__group-name">
                     @if (group.icon) {
-                      <span aria-hidden="true">{{ group.icon }}</span>
+                      <span aria-hidden="true"><app-icon [name]="group.icon" /></span>
                     }
                     {{ group.name }}
                   </span>

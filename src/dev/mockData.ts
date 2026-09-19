@@ -17,7 +17,7 @@ export function seedMockData(todos: TodosService, projects: ProjectsService): vo
   projects.reset();
 
   const website = projects.addProject({
-    icon: '🌐',
+    icon: 'globe',
     name: 'Website Relaunch',
     description: 'Refresh the marketing site',
     notes: '',
@@ -26,7 +26,7 @@ export function seedMockData(todos: TodosService, projects: ProjectsService): vo
   const development = projects.addMilestone(website.id, 'Development');
 
   const personal = projects.addProject({
-    icon: '🧘',
+    icon: 'lotus',
     name: 'Personal',
     description: 'Life admin',
     notes: '',
