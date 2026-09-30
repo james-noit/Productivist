@@ -57,6 +57,16 @@
               "optimization": false,
               "extractLicenses": false,
               "sourceMap": true
+            },
+            // Layered on top of production for the Thunderbird add-on. Extension pages run
+            // under a CSP that forbids inline event handlers, and Angular's critical-CSS
+            // inlining emits `<link media="print" onload="...">`, so it has to be off.
+            "thunderbird": {
+              "optimization": {
+                "scripts": true,
+                "styles": { "minify": true, "inlineCritical": false },
+                "fonts": false
+              }
             }
           },
           "defaultConfiguration": "production"

@@ -7,7 +7,10 @@
     "dev": "ng serve",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
-    "preview": "ng serve --configuration production"
+    "preview": "ng serve --configuration production",
+    "build:tb": "ng build --configuration production,thunderbird --base-href ./ && node scripts/package-thunderbird.mjs",
+    "tb:run": "web-ext run -t thunderbird -s dist/thunderbird",
+    "tb:lint": "web-ext lint -s dist/thunderbird"
   },
   "dependencies": {
     "@angular/common": "^19.2.0",
@@ -25,6 +28,7 @@
     "@angular/cli": "^19.2.27",
     "@angular/compiler-cli": "^19.2.0",
     "@types/node": "^24.12.3",
-    "typescript": "~5.7.2"
+    "typescript": "~5.7.2",
+    "web-ext": "^8.3.0"
   }
 }

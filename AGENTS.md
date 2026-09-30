@@ -11,6 +11,20 @@ npm run watch     # ng build --watch --configuration development
 
 No test framework, no linter, no formatter configured.
 
+## Thunderbird add-on
+
+The built app also runs as a Thunderbird add-on (a WebExtension that opens `app/index.html` in a tab).
+
+```
+npm run build:tb   # production + `thunderbird` configuration, then assembles dist/thunderbird and dist/productivist.xpi
+npm run tb:lint    # web-ext lint
+npm run tb:run     # launches Thunderbird with the add-on loaded (needs Thunderbird installed)
+```
+
+- `extension/` holds `manifest.json` and `background.js`; `scripts/package-thunderbird.mjs` copies them next to the Angular build and syncs the manifest version with `package.json`.
+- Extension pages run under a strict CSP: no inline `<script>`, no inline event handlers, no remote scripts. Keep `index.html` free of them (the theme pre-paint snippet lives in `public/theme-init.js`, the Cookie font is bundled from `src/fonts/`), and keep `inlineCritical: false` in the `thunderbird` build configuration.
+- Manual install: Thunderbird → Tools → Developer Tools → Debug Add-ons → Load Temporary Add-on → pick `dist/thunderbird/manifest.json`.
+
 ## Architecture
 
 - **Entry:** `src/main.ts` → `src/app/app.component.ts` (`AppComponent`, standalone, bootstrapped via `bootstrapApplication`)
