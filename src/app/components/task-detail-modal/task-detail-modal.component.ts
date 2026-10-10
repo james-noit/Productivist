@@ -137,6 +137,10 @@ export class TaskDetailModalComponent {
     this.todos.updateTodo(this.todo().id, { projectId, milestoneId: created.id });
   }
 
+  closeOnBackdrop(event: MouseEvent): void {
+    if (event.target === event.currentTarget) this.close.emit();
+  }
+
   remove(): void {
     this.todos.removeTodo(this.todo().id);
     this.close.emit();

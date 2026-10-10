@@ -1,4 +1,4 @@
-<div class="modal-overlay task-detail__overlay" (click)="$event.target === $event.currentTarget && close.emit()">
+<div class="modal-overlay task-detail__overlay" (click)="closeOnBackdrop($event)">
   <div class="modal-panel task-detail__modal" role="dialog" aria-modal="true" [attr.aria-label]="'eisenhower.taskDetail' | translate">
     <div class="task-detail__header">
       <h3>{{ 'eisenhower.taskDetail' | translate }}</h3>

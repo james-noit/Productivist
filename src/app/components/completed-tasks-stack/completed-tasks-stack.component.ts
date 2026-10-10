@@ -23,4 +23,8 @@ export class CompletedTasksStackComponent {
   close(): void {
     this.open.set(false);
   }
+
+  closeOnBackdrop(event: MouseEvent): void {
+    if (event.target === event.currentTarget) this.close();
+  }
 }

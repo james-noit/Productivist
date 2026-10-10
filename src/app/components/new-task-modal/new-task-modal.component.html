@@ -1,6 +1,6 @@
 <div
   class="modal-overlay new-task__overlay"
-  (click)="$event.target === $event.currentTarget && close.emit()"
+  (click)="closeOnBackdrop($event)"
   (keydown)="handleKeydown($event)"
   role="dialog"
   aria-modal="true"

@@ -106,6 +106,10 @@ export class AppMenuComponent {
     this.resetConfirmText.set('');
   }
 
+  cancelResetOnBackdrop(event: MouseEvent): void {
+    if (event.target === event.currentTarget) this.cancelReset();
+  }
+
   confirmReset(): void {
     if (!this.resetConfirmValid()) return;
     this.todos.reset();

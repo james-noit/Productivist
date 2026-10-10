@@ -113,6 +113,10 @@ export class NewTaskModalComponent {
     this.close.emit();
   }
 
+  closeOnBackdrop(event: MouseEvent): void {
+    if (event.target === event.currentTarget) this.close.emit();
+  }
+
   handleKeydown(e: KeyboardEvent): void {
     if (e.key === 'Escape') {
       this.close.emit();
