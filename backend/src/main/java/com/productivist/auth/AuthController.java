@@ -89,7 +89,11 @@ public class AuthController {
     }
 
     private static String normalizedEmail(Credentials body) {
-        String email = body == null || body.email() == null ? "" : body.email().strip().toLowerCase(Locale.ROOT);
+        return normalizeEmail(body == null ? null : body.email());
+    }
+
+    public static String normalizeEmail(String raw) {
+        String email = raw == null ? "" : raw.strip().toLowerCase(Locale.ROOT);
         if (email.length() > MAX_EMAIL_LENGTH || !EMAIL.matcher(email).matches()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid email");
         }
@@ -97,7 +101,10 @@ public class AuthController {
     }
 
     private static String requirePassword(Credentials body, int minLength) {
-        String password = body == null ? null : body.password();
+        return requirePassword(body == null ? null : body.password(), minLength);
+    }
+
+    public static String requirePassword(String password, int minLength) {
         if (password == null || password.length() < minLength
                 || password.getBytes(StandardCharsets.UTF_8).length > MAX_PASSWORD_BYTES) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid password");

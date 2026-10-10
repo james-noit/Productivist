@@ -1,0 +1,73 @@
+<div class="modal-overlay" (click)="closeOnBackdrop($event)">
+  <div class="modal-panel admin-user-modal" role="dialog" aria-modal="true" [attr.aria-label]="user().email">
+    <div class="admin-user-modal__header">
+      <h3>{{ user().email }}</h3>
+      <button type="button" class="admin-user-modal__close" [attr.aria-label]="'todo.close' | translate" (click)="close.emit()">✕</button>
+    </div>
+
+    @if (isSelf()) {
+      <p class="admin-user-modal__hint">{{ 'admin.selfHint' | translate }}</p>
+    } @else {
+      <form class="admin-user-modal__section" (submit)="$event.preventDefault(); saveEmail()">
+        <label for="admin-email">{{ 'admin.email' | translate }}</label>
+        <div class="admin-user-modal__field">
+          <input
+            id="admin-email"
+            type="email"
+            name="email"
+            autocomplete="off"
+            [ngModel]="emailValue()"
+            (ngModelChange)="email.set($event)"
+          />
+          <button type="submit" [disabled]="!canSaveEmail()">{{ 'admin.save' | translate }}</button>
+        </div>
+      </form>
+
+      <form class="admin-user-modal__section" (submit)="$event.preventDefault(); savePassword()">
+        <label for="admin-password">{{ 'admin.newPassword' | translate }}</label>
+        <div class="admin-user-modal__field">
+          <input
+            id="admin-password"
+            type="password"
+            name="password"
+            autocomplete="new-password"
+            [ngModel]="password()"
+            (ngModelChange)="password.set($event)"
+          />
+          <button type="submit" [disabled]="!canSavePassword()">{{ 'admin.save' | translate }}</button>
+        </div>
+        <p class="admin-user-modal__hint">{{ 'admin.passwordHint' | translate }}</p>
+      </form>
+
+      <div class="admin-user-modal__section admin-user-modal__section--row">
+        <span>{{ 'admin.sessions' | translate: { count: user().sessions } }}</span>
+        <button type="button" [disabled]="busy() || user().sessions === 0" (click)="revoke()">
+          {{ 'admin.revoke' | translate }}
+        </button>
+      </div>
+
+      @if (error(); as error) {
+        <p class="admin-user-modal__error" role="alert">{{ 'admin.formError.' + error | translate }}</p>
+      }
+      @if (notice(); as notice) {
+        <p class="admin-user-modal__notice" role="status">{{ 'admin.notice.' + notice | translate }}</p>
+      }
+
+      <div class="admin-user-modal__danger">
+        @if (confirmingDelete()) {
+          <p>{{ 'admin.deleteWarning' | translate: { email: user().email } }}</p>
+          <div class="admin-user-modal__actions">
+            <button type="button" (click)="confirmingDelete.set(false)">{{ 'menu.cancel' | translate }}</button>
+            <button type="button" class="admin-user-modal__delete" [disabled]="busy()" (click)="remove()">
+              {{ 'admin.confirmDelete' | translate }}
+            </button>
+          </div>
+        } @else {
+          <button type="button" class="admin-user-modal__delete" [disabled]="busy()" (click)="confirmingDelete.set(true)">
+            {{ 'admin.delete' | translate }}
+          </button>
+        }
+      </div>
+    }
+  </div>
+</div>

@@ -1,7 +1,7 @@
 import { Injectable, signal } from '@angular/core';
 import { localStorageSignal } from '../core/local-storage-signal';
 
-export type AppView = 'planning-lab' | 'pomodoro' | 'eisenhower' | 'projects';
+export type AppView = 'planning-lab' | 'pomodoro' | 'eisenhower' | 'projects' | 'admin';
 export type PlanningLabTab = 'daily' | 'general';
 
 @Injectable({ providedIn: 'root' })

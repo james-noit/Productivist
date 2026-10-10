@@ -24,9 +24,22 @@ Schema is managed by Flyway (`src/main/resources/db/migration`).
 | POST | `/api/auth/login` `{email, password}` | Returns `{email, token}`; 401 for any wrong email or password. |
 | GET | `/api/sync?since=<cursor>` | Rows changed after `cursor` (0 = all), tombstones included, plus `state` if changed. Returns the next `cursor`. |
 | POST | `/api/sync` | Upserts `{projects, milestones, todos, state}`. Last-write-wins on each row's `updatedAt`. Returns `{cursor}`. |
+| GET | `/api/admin/me` | Admin only (403 for everyone else): `{email}`. The frontend uses it to decide whether to show the admin view. |
+| GET | `/api/admin/stats` | Admin only: account, session, task and project totals. |
+| GET | `/api/admin/users?query=&page=&size=` | Admin only: accounts newest first, filtered by email substring, with their task/project/session counts (never their content). |
+| PATCH | `/api/admin/users/{id}` `{email?, password?}` | Admin only: change the email and/or set a password (which also closes the user's sessions). 409 if the email is taken. |
+| DELETE | `/api/admin/users/{id}/sessions` | Admin only: sign the user out everywhere. |
+| DELETE | `/api/admin/users/{id}` | Admin only: delete the account and everything synced under it. |
 | GET | `/actuator/health` | Health check. |
 
 Everything except login and health needs `Authorization: Bearer <token>`.
+
+### Admin
+
+There is a single admin, identified by email: set `ADMIN_EMAIL` to the address of an account (blank, the default, disables
+`/api/admin/**`). Whoever holds a token for that account gets `ROLE_ADMIN`; there is no role column. **Register that account
+yourself before setting the variable**: signup is open, so whoever registers the address first owns it. The admin cannot change or
+delete their own account through these endpoints, and admin actions are logged (not stored).
 
 - Ids are client-generated. Deleting = pushing the row with `deleted: true` (a tombstone only needs `id`, `updatedAt` and the primitive fields zeroed; content is not required).
 - First login merge: push local data, then pull. Equal ids are resolved by `updatedAt`.

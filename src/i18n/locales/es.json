@@ -18,7 +18,8 @@
     "cancel": "Cancelar",
     "preferences": "Preferencias",
     "developer": "Desarrollo",
-    "seedMockData": "Cargar datos de prueba"
+    "seedMockData": "Cargar datos de prueba",
+    "admin": "Administración"
   },
   "account": {
     "title": "Cuenta",
@@ -297,5 +298,53 @@
     "plannedTasksEmptyLink": "Ve a Laboratorio de planificación → Backlog diario para organizar las tareas de hoy.",
     "executionLots": "Lotes de ejecución",
     "startNextLot": "Iniciar siguiente lote"
+  },
+  "admin": {
+    "title": "Administración",
+    "refresh": "Actualizar",
+    "search": "Buscar por email",
+    "you": "Tú",
+    "noPassword": "Sin contraseña",
+    "empty": "No se encontraron cuentas.",
+    "rowMeta": "{{todos}} tareas · {{projects}} proyectos · {{sessions}} sesiones",
+    "pagination": "Páginas",
+    "previous": "Anterior",
+    "next": "Siguiente",
+    "pageOf": "Página {{page}} de {{pages}}",
+    "stats": {
+      "users": "Cuentas",
+      "sessions": "Sesiones",
+      "todos": "Tareas",
+      "projects": "Proyectos",
+      "withoutPassword": "Sin contraseña"
+    },
+    "error": {
+      "network": "No se pudo conectar con el servidor.",
+      "session": "Tu sesión caducó o no eres administrador. Inicia sesión de nuevo."
+    },
+    "selfHint": "Esta es tu propia cuenta. Gestiónala desde el panel de Ajustes.",
+    "email": "Email",
+    "newPassword": "Nueva contraseña",
+    "passwordHint": "Al establecer una contraseña se cierra la sesión del usuario en todos sus dispositivos.",
+    "save": "Guardar",
+    "sessions": "Sesiones activas: {{count}}",
+    "revoke": "Cerrar sesión en todas partes",
+    "delete": "Eliminar cuenta",
+    "deleteWarning": "¿Eliminar definitivamente {{email}} y todas las tareas y proyectos sincronizados con ella? Los datos en los dispositivos del usuario no se tocan. No se puede deshacer.",
+    "confirmDelete": "Eliminar definitivamente",
+    "notice": {
+      "emailSaved": "Email actualizado.",
+      "passwordSaved": "Contraseña actualizada y sesiones cerradas.",
+      "revoked": "Sesión cerrada en todas partes."
+    },
+    "formError": {
+      "email": "Introduce un email válido.",
+      "taken": "Ese email ya tiene una cuenta.",
+      "tooShort": "Usa al menos 8 caracteres.",
+      "tooLong": "Esa contraseña es demasiado larga.",
+      "self": "La cuenta de administrador no se puede cambiar aquí.",
+      "gone": "Esa cuenta ya no existe.",
+      "network": "No se pudo conectar con el servidor. Inténtalo de nuevo."
+    }
   }
 }

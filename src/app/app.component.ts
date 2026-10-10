@@ -4,6 +4,7 @@ import { SettingsService, type Language } from '../services/settings.service';
 import { MultitaskService } from '../services/multitask.service';
 import { ViewService } from '../services/view.service';
 import { SyncService } from '../services/sync.service';
+import { AccountService } from '../services/account.service';
 import { AppHeaderComponent } from './components/app-header/app-header.component';
 import { PomodoroClockComponent } from './components/pomodoro-clock/pomodoro-clock.component';
 import { TodoListComponent } from './components/todo-list/todo-list.component';
@@ -11,6 +12,7 @@ import { MultitaskViewComponent } from './components/multitask-view/multitask-vi
 import { EisenhowerViewComponent } from './components/eisenhower-view/eisenhower-view.component';
 import { PlanningLabViewComponent } from './components/planning-lab-view/planning-lab-view.component';
 import { ProjectsViewComponent } from './components/projects-view/projects-view.component';
+import { AdminViewComponent } from './components/admin-view/admin-view.component';
 import en from '../i18n/locales/en.json';
 
 @Component({
@@ -26,6 +28,7 @@ import en from '../i18n/locales/en.json';
     EisenhowerViewComponent,
     PlanningLabViewComponent,
     ProjectsViewComponent,
+    AdminViewComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './app.component.html',
@@ -35,6 +38,7 @@ export class AppComponent {
   private readonly settings = inject(SettingsService);
   readonly multitask = inject(MultitaskService);
   readonly view = inject(ViewService);
+  readonly accounts = inject(AccountService);
   private readonly translate = inject(TranslateService);
 
   private readonly loaded = new Set<Language>(['en']);

@@ -33,10 +33,16 @@ public class TokenService {
         return token;
     }
 
-    public Optional<Long> resolve(String token) {
-        return jdbc.sql("SELECT user_id FROM auth_tokens WHERE token_hash = :hash")
+    /** Who a token belongs to: the user id and email (the email decides whether the user is the admin). */
+    public record Identity(long userId, String email) {}
+
+    public Optional<Identity> resolve(String token) {
+        return jdbc.sql("""
+                        SELECT u.id, u.email FROM auth_tokens t JOIN users u ON u.id = t.user_id
+                        WHERE t.token_hash = :hash
+                        """)
                 .param("hash", hash(token))
-                .query(Long.class)
+                .query((rs, i) -> new Identity(rs.getLong("id"), rs.getString("email")))
                 .optional();
     }
 

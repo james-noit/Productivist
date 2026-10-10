@@ -6,6 +6,7 @@ import { SettingsService } from '../../../services/settings.service';
 import { MultitaskService } from '../../../services/multitask.service';
 import { ViewService, type AppView } from '../../../services/view.service';
 import { ProjectsService } from '../../../services/projects.service';
+import { AccountService } from '../../../services/account.service';
 import { DailyPlanService } from '../../../services/daily-plan.service';
 import { LanguageSelectorComponent } from '../language-selector/language-selector.component';
 import { ThemeToggleComponent } from '../theme-toggle/theme-toggle.component';
@@ -25,6 +26,7 @@ export class AppMenuComponent {
   private readonly settings = inject(SettingsService);
   private readonly multitask = inject(MultitaskService);
   readonly view = inject(ViewService);
+  readonly accounts = inject(AccountService);
   private readonly projects = inject(ProjectsService);
   private readonly dailyPlan = inject(DailyPlanService);
 

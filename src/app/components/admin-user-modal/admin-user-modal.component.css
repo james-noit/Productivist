@@ -1,0 +1,110 @@
+.admin-user-modal {
+  --modal-max-width: 460px;
+  --modal-gap: 0.9rem;
+}
+
+.admin-user-modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.admin-user-modal__header h3 {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.admin-user-modal__close,
+.admin-user-modal button {
+  background: none;
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  border-radius: 6px;
+  padding: 0.3rem 0.8rem;
+  font-size: 0.85rem;
+}
+
+.admin-user-modal button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.admin-user-modal__section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.admin-user-modal__section--row {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.admin-user-modal__section label {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
+.admin-user-modal__field {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.admin-user-modal__field input {
+  flex: 1;
+  min-width: 0;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  padding: 0.4rem 0.6rem;
+  font-size: 0.9rem;
+}
+
+.admin-user-modal__hint,
+.admin-user-modal__error,
+.admin-user-modal__notice,
+.admin-user-modal__danger p {
+  margin: 0;
+  font-size: 0.8rem;
+}
+
+.admin-user-modal__hint {
+  color: var(--color-text-muted);
+}
+
+.admin-user-modal__error {
+  color: var(--color-high);
+}
+
+.admin-user-modal__notice {
+  color: var(--color-capacity-safe);
+}
+
+.admin-user-modal__danger {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  border-top: 1px solid var(--color-border);
+  padding-top: 0.9rem;
+}
+
+.admin-user-modal__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.admin-user-modal .admin-user-modal__delete {
+  background-color: var(--color-high);
+  border: none;
+  color: #fff;
+  align-self: flex-start;
+}
+
+.admin-user-modal__actions .admin-user-modal__delete {
+  align-self: auto;
+}

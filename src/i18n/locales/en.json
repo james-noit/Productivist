@@ -18,7 +18,8 @@
     "cancel": "Cancel",
     "preferences": "Preferences",
     "developer": "Developer",
-    "seedMockData": "Seed mock data"
+    "seedMockData": "Seed mock data",
+    "admin": "Admin"
   },
   "account": {
     "title": "Account",
@@ -297,5 +298,53 @@
     "plannedTasksEmptyLink": "Go to Planning lab → Daily backlog to organize today's tasks.",
     "executionLots": "Execution lots",
     "startNextLot": "Start next lot"
+  },
+  "admin": {
+    "title": "Administration",
+    "refresh": "Refresh",
+    "search": "Search by email",
+    "you": "You",
+    "noPassword": "No password",
+    "empty": "No accounts found.",
+    "rowMeta": "{{todos}} tasks · {{projects}} projects · {{sessions}} sessions",
+    "pagination": "Pages",
+    "previous": "Previous",
+    "next": "Next",
+    "pageOf": "Page {{page}} of {{pages}}",
+    "stats": {
+      "users": "Accounts",
+      "sessions": "Sessions",
+      "todos": "Tasks",
+      "projects": "Projects",
+      "withoutPassword": "Without password"
+    },
+    "error": {
+      "network": "Could not reach the server.",
+      "session": "Your session expired or you are not an admin. Log in again."
+    },
+    "selfHint": "This is your own account. Manage it from the Settings panel.",
+    "email": "Email",
+    "newPassword": "New password",
+    "passwordHint": "Setting a password signs the user out on every device.",
+    "save": "Save",
+    "sessions": "Active sessions: {{count}}",
+    "revoke": "Sign out everywhere",
+    "delete": "Delete account",
+    "deleteWarning": "Permanently delete {{email}} and every task and project synced to it? Data on the user's own devices is not touched. This cannot be undone.",
+    "confirmDelete": "Delete permanently",
+    "notice": {
+      "emailSaved": "Email updated.",
+      "passwordSaved": "Password updated and sessions closed.",
+      "revoked": "Signed out everywhere."
+    },
+    "formError": {
+      "email": "Enter a valid email.",
+      "taken": "That email already has an account.",
+      "tooShort": "Use at least 8 characters.",
+      "tooLong": "That password is too long.",
+      "self": "The admin account cannot be changed here.",
+      "gone": "That account no longer exists.",
+      "network": "Could not reach the server. Try again."
+    }
   }
 }

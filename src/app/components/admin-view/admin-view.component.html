@@ -1,0 +1,96 @@
+<main class="admin-view">
+  <div class="admin-view__header">
+    <h2>{{ 'admin.title' | translate }}</h2>
+    <button type="button" class="admin-view__button" [disabled]="admin.loading()" (click)="admin.refresh()">
+      {{ 'admin.refresh' | translate }}
+    </button>
+  </div>
+
+  @if (admin.stats(); as stats) {
+    <dl class="admin-view__stats">
+      <div class="admin-view__stat">
+        <dt>{{ 'admin.stats.users' | translate }}</dt>
+        <dd>{{ stats.users }}</dd>
+      </div>
+      <div class="admin-view__stat">
+        <dt>{{ 'admin.stats.sessions' | translate }}</dt>
+        <dd>{{ stats.sessions }}</dd>
+      </div>
+      <div class="admin-view__stat">
+        <dt>{{ 'admin.stats.todos' | translate }}</dt>
+        <dd>{{ stats.todos }}</dd>
+      </div>
+      <div class="admin-view__stat">
+        <dt>{{ 'admin.stats.projects' | translate }}</dt>
+        <dd>{{ stats.projects }}</dd>
+      </div>
+      @if (stats.withoutPassword > 0) {
+        <div class="admin-view__stat">
+          <dt>{{ 'admin.stats.withoutPassword' | translate }}</dt>
+          <dd>{{ stats.withoutPassword }}</dd>
+        </div>
+      }
+    </dl>
+  }
+
+  <input
+    type="search"
+    class="admin-view__search"
+    [value]="admin.query()"
+    [placeholder]="'admin.search' | translate"
+    [attr.aria-label]="'admin.search' | translate"
+    autocomplete="off"
+    (input)="onSearch($event)"
+  />
+
+  @if (admin.error(); as error) {
+    <p class="admin-view__error" role="alert">{{ 'admin.error.' + error | translate }}</p>
+  }
+
+  @if (admin.users().length > 0) {
+    <ul class="admin-view__list">
+      @for (user of admin.users(); track user.id) {
+        <li>
+          <button type="button" class="admin-view__row" (click)="open(user.id)">
+            <span class="admin-view__email">
+              {{ user.email }}
+              @if (isSelf(user.email)) {
+                <span class="badge">{{ 'admin.you' | translate }}</span>
+              }
+              @if (!user.hasPassword) {
+                <span class="badge badge--medium">{{ 'admin.noPassword' | translate }}</span>
+              }
+            </span>
+            <span class="admin-view__meta">
+              {{ 'admin.rowMeta' | translate: { todos: user.todos, projects: user.projects, sessions: user.sessions } }}
+              · {{ user.createdAt | date: 'mediumDate' }}
+            </span>
+          </button>
+        </li>
+      }
+    </ul>
+  } @else if (!admin.loading() && !admin.error()) {
+    <p class="admin-view__empty">{{ 'admin.empty' | translate }}</p>
+  }
+
+  @if (admin.pageCount() > 1) {
+    <nav class="admin-view__pager" [attr.aria-label]="'admin.pagination' | translate">
+      <button type="button" class="admin-view__button" [disabled]="admin.page() === 0" (click)="admin.setPage(admin.page() - 1)">
+        {{ 'admin.previous' | translate }}
+      </button>
+      <span>{{ 'admin.pageOf' | translate: { page: admin.page() + 1, pages: admin.pageCount() } }}</span>
+      <button
+        type="button"
+        class="admin-view__button"
+        [disabled]="admin.page() + 1 >= admin.pageCount()"
+        (click)="admin.setPage(admin.page() + 1)"
+      >
+        {{ 'admin.next' | translate }}
+      </button>
+    </nav>
+  }
+
+  @if (selected(); as user) {
+    <app-admin-user-modal [user]="user" [isSelf]="isSelf(user.email)" (close)="close()" />
+  }
+</main>

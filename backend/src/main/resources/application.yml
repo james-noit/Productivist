@@ -27,6 +27,10 @@ management:
         include: health
 
 app:
+  admin:
+    # The one account allowed into /api/admin/**. Blank disables the admin API. Register this account yourself
+    # before setting it: signup is open, so whoever registers the address first owns it.
+    email: ${ADMIN_EMAIL:}
   cors:
     # moz-extension origins are random per Thunderbird profile, hence the wildcard.
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:4200,moz-extension://*}
