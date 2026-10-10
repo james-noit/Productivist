@@ -12,6 +12,7 @@ dist
 dist-ssr
 .angular/
 *.local
+src/environments/environment.thunderbird.ts
 
 # Editor directories and files
 .vscode/*
