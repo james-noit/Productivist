@@ -1,0 +1,34 @@
+spring:
+  autoconfigure:
+    # Auth is bearer-token only; do not generate a default in-memory user.
+    exclude: org.springframework.boot.security.autoconfigure.UserDetailsServiceAutoConfiguration
+  application:
+    name: productivist-backend
+  datasource:
+    # Railway's Postgres plugin exposes PGHOST/PGPORT/PGDATABASE/PGUSER/PGPASSWORD
+    # (DATABASE_URL is not a JDBC URL, so it is not used here).
+    url: jdbc:postgresql://${PGHOST:localhost}:${PGPORT:5432}/${PGDATABASE:productivist}
+    username: ${PGUSER:productivist}
+    password: ${PGPASSWORD:productivist}
+  servlet:
+    multipart:
+      enabled: false
+
+server:
+  port: ${PORT:8080}
+  tomcat:
+    max-http-form-post-size: 1MB
+  forward-headers-strategy: framework
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+
+app:
+  cors:
+    # moz-extension origins are random per Thunderbird profile, hence the wildcard.
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:4200,moz-extension://*}
+  sync:
+    max-batch-size: 5000

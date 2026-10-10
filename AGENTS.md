@@ -25,6 +25,12 @@ npm run tb:run     # launches Thunderbird with the add-on loaded (needs Thunderb
 - Extension pages run under a strict CSP: no inline `<script>`, no inline event handlers, no remote scripts. Keep `index.html` free of them (the theme pre-paint snippet lives in `public/theme-init.js`, the Cookie font is bundled from `src/fonts/`), and keep `inlineCritical: false` in the `thunderbird` build configuration.
 - Manual install: Thunderbird → Tools → Developer Tools → Debug Add-ons → Load Temporary Add-on → pick `dist/thunderbird/manifest.json`.
 
+## Backend
+
+`backend/` is a separate Spring Boot 4 / Java 21 / Postgres sync service (Maven, plain `JdbcClient`, Flyway). The Angular app stays local-first; see `backend/README.md` for run instructions and the API. It is not part of the npm scripts.
+
+The frontend side is optional and off unless `src/environments/environment.ts` has an `apiUrl` (the production file leaves it empty, which hides the account UI and disables sync). `AccountService` holds the email-only login; `SyncService` (instantiated in `AppComponent`) diffs the todos/projects/milestones signals against per-row metadata in `productivist.sync` to find edits and deletions, so the stores themselves know nothing about syncing — the pure logic is in `src/lib/sync-engine.ts`. Settings, daily plan and multitask state travel as one blob (`buildState`/`applyState` in `sync.service.ts`); a new persisted setting only syncs if it is added there. Device-local UI state (view, filters, timer, dismissed tips) is deliberately not synced.
+
 ## Architecture
 
 - **Entry:** `src/main.ts` → `src/app/app.component.ts` (`AppComponent`, standalone, bootstrapped via `bootstrapApplication`)

@@ -1,0 +1,66 @@
+.account-modal {
+  --modal-max-width: 380px;
+  --modal-max-height: none;
+  --modal-padding: 1.25rem;
+  --modal-gap: 0.6rem;
+}
+
+.account-modal__title {
+  margin: 0;
+}
+
+.account-modal p {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--color-text);
+}
+
+.account-modal__email {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.account-modal__warning {
+  color: var(--color-text-muted) !important;
+}
+
+.account-modal__status--error {
+  color: var(--color-high) !important;
+}
+
+.account-modal__input {
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  padding: 0.5rem 0.6rem;
+}
+
+.account-modal__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.account-modal__actions button {
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+}
+
+.account-modal__secondary {
+  background: none;
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+}
+
+.account-modal__primary {
+  background-color: var(--color-primary);
+  border: none;
+  color: var(--color-primary-contrast);
+}
+
+.account-modal__primary:disabled {
+  opacity: 0.4;
+  cursor: default;
+}

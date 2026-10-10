@@ -1,0 +1,54 @@
+<div class="modal-overlay" (click)="$event.target === $event.currentTarget && close()">
+  <div class="modal-panel account-modal" role="dialog" aria-modal="true" [attr.aria-label]="'account.title' | translate">
+    <h3 class="account-modal__title">{{ 'account.title' | translate }}</h3>
+
+    @if (accounts.account(); as account) {
+      <p class="account-modal__email">{{ account.email }}</p>
+      <p class="account-modal__status" [class.account-modal__status--error]="sync.status() === 'error'" role="status">
+        @switch (sync.status()) {
+          @case ('syncing') {
+            {{ 'account.syncing' | translate }}
+          }
+          @case ('error') {
+            {{ 'account.error.' + sync.errorKind() | translate }}
+          }
+          @default {
+            @if (sync.lastSyncedAt(); as at) {
+              {{ 'account.lastSynced' | translate: { time: (at | date: 'shortTime') } }}
+            } @else {
+              {{ 'account.notSyncedYet' | translate }}
+            }
+          }
+        }
+      </p>
+      <div class="account-modal__actions">
+        <button type="button" class="account-modal__secondary" (click)="signOut()">{{ 'account.signOut' | translate }}</button>
+        <button type="button" class="account-modal__primary" [disabled]="sync.status() === 'syncing'" (click)="sync.syncNow()">
+          {{ 'account.syncNow' | translate }}
+        </button>
+      </div>
+    } @else {
+      <p class="account-modal__text">{{ 'account.intro' | translate }}</p>
+      <input
+        [ngModel]="email()"
+        (ngModelChange)="email.set($event)"
+        name="email"
+        type="email"
+        class="account-modal__input"
+        [placeholder]="'account.emailPlaceholder' | translate"
+        autocomplete="email"
+        (keydown.enter)="signIn()"
+      />
+      @if (loginError(); as error) {
+        <p class="account-modal__status account-modal__status--error" role="alert">{{ 'account.loginError.' + error | translate }}</p>
+      }
+      <p class="account-modal__warning">{{ 'account.warning' | translate }}</p>
+      <div class="account-modal__actions">
+        <button type="button" class="account-modal__secondary" (click)="close()">{{ 'menu.cancel' | translate }}</button>
+        <button type="button" class="account-modal__primary" [disabled]="!emailValid() || busy()" (click)="signIn()">
+          {{ 'account.signIn' | translate }}
+        </button>
+      </div>
+    }
+  </div>
+</div>

@@ -99,6 +99,14 @@
         <button type="button" role="menuitem" (click)="exportTodo()">{{ 'menu.exportTodo' | translate }}</button>
         <button type="button" role="menuitem" (click)="importTodo()">{{ 'menu.importTodo' | translate }}</button>
       </div>
+      @if (accounts.enabled) {
+        <div class="app-menu__group">
+          <span class="app-menu__group-label">{{ 'account.title' | translate }}</span>
+          <button type="button" role="menuitem" (click)="openAccountModal()">
+            {{ accounts.account()?.email ?? ('account.signInMenu' | translate) }}
+          </button>
+        </div>
+      }
       <div class="app-menu__group">
         <span class="app-menu__group-label">{{ 'menu.preferences' | translate }}</span>
         <div class="app-menu__preference">
@@ -122,6 +130,12 @@
     </div>
   }
   <input #fileInput type="file" accept=".json,application/json" class="visually-hidden" (change)="onFileSelected($event)" />
+
+  @if (accountModalOpen()) {
+    @defer (on immediate) {
+      <app-account-modal (closed)="accountModalOpen.set(false)" />
+    }
+  }
 
   @if (resetModalOpen()) {
     <div class="modal-overlay app-menu__reset-overlay" (click)="$event.target === $event.currentTarget && cancelReset()">

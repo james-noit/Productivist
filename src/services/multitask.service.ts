@@ -20,8 +20,8 @@ export class MultitaskService {
   // Finishing/discarding a card removes it outright (see removeCard), which would
   // otherwise wipe its accomplishments from the effectivity totals. Archive the
   // counts here first so the totals survive the card's removal.
-  private readonly archivedGreen = localStorageSignal<number>('productivist.multitaskArchivedGreen', 0);
-  private readonly archivedRed = localStorageSignal<number>('productivist.multitaskArchivedRed', 0);
+  readonly archivedGreen = localStorageSignal<number>('productivist.multitaskArchivedGreen', 0);
+  readonly archivedRed = localStorageSignal<number>('productivist.multitaskArchivedRed', 0);
 
   private readonly dissolveTimers = new Map<string, ReturnType<typeof setTimeout>>();
 

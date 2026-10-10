@@ -20,6 +20,28 @@
     "developer": "Developer",
     "seedMockData": "Seed mock data"
   },
+  "account": {
+    "title": "Account & sync",
+    "signInMenu": "Sign in to sync",
+    "intro": "Sign in with your email to sync your tasks, projects and settings across devices. Without an account everything stays on this device.",
+    "emailPlaceholder": "you@example.com",
+    "signIn": "Sign in",
+    "signOut": "Sign out",
+    "syncNow": "Sync now",
+    "syncing": "Syncing…",
+    "lastSynced": "Last synced at {{time}}",
+    "notSyncedYet": "Not synced yet.",
+    "warning": "For now there is no password or email confirmation: anyone who knows your email can open this account. Don't store anything sensitive. Data already on this device is merged into the account.",
+    "loginError": {
+      "invalid": "That email address is not valid.",
+      "network": "Could not reach the server. Try again later."
+    },
+    "error": {
+      "network": "Could not reach the server. Will retry.",
+      "server": "The server rejected the sync. Will retry.",
+      "session": "Your session expired. Sign in again."
+    }
+  },
   "theme": {
     "label": "Theme",
     "light": "Theme: Light",
