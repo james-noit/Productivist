@@ -1,0 +1,275 @@
+:host {
+  display: block;
+  min-width: 0;
+  height: 100%;
+}
+
+.flow-canvas {
+  position: relative;
+  height: 100%;
+  min-height: 20rem;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background-color: var(--color-surface);
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+}
+
+.flow-canvas--panning {
+  cursor: grabbing;
+}
+
+.flow-canvas--linking {
+  cursor: crosshair;
+}
+
+.flow-canvas:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
+}
+
+/* One transform moves and scales everything; the cards inside are positioned in world units. */
+.flow-canvas__world {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+  transform-origin: 0 0;
+}
+
+.flow-canvas__lane {
+  --lane-tint: var(--color-primary);
+  position: absolute;
+  top: 0;
+  box-sizing: border-box;
+  border-right: 1px dashed var(--color-border);
+  background-color: color-mix(in srgb, var(--lane-tint) 5%, transparent);
+  transition: background-color 0.15s;
+}
+
+.flow-canvas__lane--work {
+  --lane-tint: var(--color-text-muted);
+}
+
+.flow-canvas__lane--short {
+  --lane-tint: var(--color-horizon-short);
+}
+
+.flow-canvas__lane--medium {
+  --lane-tint: var(--color-horizon-medium);
+}
+
+.flow-canvas__lane--long {
+  --lane-tint: var(--color-horizon-long);
+  border-right: none;
+}
+
+/* The horizon an objective would join if dropped now. */
+.flow-canvas__lane--drop {
+  background-color: color-mix(in srgb, var(--lane-tint) 18%, transparent);
+}
+
+.flow-canvas__lane-label {
+  position: absolute;
+  top: 14px;
+  left: 28px;
+  right: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  pointer-events: none;
+}
+
+.flow-canvas__lane-name {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--lane-tint);
+}
+
+.flow-canvas__lane-span {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+
+.flow-canvas__edges {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 1px;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.flow-canvas__edge {
+  fill: none;
+  stroke: var(--color-text-muted);
+  stroke-width: 2;
+  stroke-opacity: 0.55;
+  pointer-events: none;
+}
+
+.flow-canvas__edge--lit {
+  stroke: var(--color-primary);
+  stroke-opacity: 1;
+  stroke-width: 2.5;
+}
+
+.flow-canvas__edge--dim {
+  stroke-opacity: 0.12;
+}
+
+.flow-canvas__edge--selected {
+  stroke: var(--color-primary);
+  stroke-opacity: 1;
+  stroke-width: 3.5;
+}
+
+.flow-canvas__edge--preview {
+  stroke: var(--color-primary);
+  stroke-opacity: 1;
+  stroke-dasharray: 6 5;
+}
+
+/* A fat invisible stroke, so a thin link is easy to click. */
+.flow-canvas__edge-hit {
+  fill: none;
+  stroke: transparent;
+  stroke-width: 14;
+  pointer-events: stroke;
+  cursor: pointer;
+}
+
+.flow-canvas__badge {
+  pointer-events: all;
+  cursor: pointer;
+}
+
+.flow-canvas__badge circle {
+  fill: var(--color-surface);
+  stroke: var(--color-primary);
+  stroke-width: 2;
+}
+
+.flow-canvas__badge text {
+  fill: var(--color-primary);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.flow-canvas__badge:hover circle,
+.flow-canvas__badge:focus-visible circle {
+  fill: var(--color-primary);
+}
+
+.flow-canvas__badge:hover text,
+.flow-canvas__badge:focus-visible text {
+  fill: var(--color-primary-contrast);
+}
+
+.flow-canvas__badge:focus-visible {
+  outline: none;
+}
+
+/* The selected node's link button: always 24 screen pixels, wherever the zoom is. Anchored by its top-right corner. */
+.flow-canvas__more {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 24px;
+  height: 24px;
+  margin-left: -24px;
+  padding: 0;
+  transform-origin: 100% 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: 1px solid var(--color-primary);
+  background-color: var(--color-surface);
+  color: var(--color-primary);
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  z-index: 15;
+}
+
+.flow-canvas__more:hover,
+.flow-canvas__more[aria-expanded='true'] {
+  background-color: var(--color-primary);
+  color: var(--color-primary-contrast);
+}
+
+.flow-canvas__more:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.flow-canvas__menu {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+}
+
+.flow-canvas__ghost {
+  position: absolute;
+  top: 0;
+  left: 0;
+  max-width: 220px;
+  padding: 0.25rem 0.6rem;
+  border-radius: 6px;
+  border: 1px solid var(--color-primary);
+  background-color: var(--color-surface);
+  box-shadow: 0 4px 12px rgb(0 0 0 / 0.3);
+  font-size: 0.85rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+  z-index: 20;
+}
+
+.flow-canvas__hint {
+  position: absolute;
+  left: 50%;
+  bottom: 1rem;
+  transform: translateX(-50%);
+  max-width: 90%;
+  margin: 0;
+  padding: 0.4rem 0.9rem;
+  border-radius: 999px;
+  background-color: var(--color-surface-alt);
+  color: var(--color-text);
+  font-size: 0.85rem;
+  text-align: center;
+  pointer-events: none;
+}
+
+.flow-canvas__toast {
+  position: absolute;
+  left: 50%;
+  top: 0.75rem;
+  transform: translateX(-50%);
+  max-width: 90%;
+  margin: 0;
+  padding: 0.4rem 0.9rem;
+  border-radius: 6px;
+  border: 1px solid var(--color-quadrant-do-first);
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  font-size: 0.85rem;
+  box-shadow: 0 4px 12px rgb(0 0 0 / 0.2);
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flow-canvas__lane {
+    transition: none;
+  }
+}

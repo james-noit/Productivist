@@ -1,0 +1,104 @@
+<div class="flow-outline">
+  @if (!hasObjectives()) {
+    <p class="flow-outline__hint">{{ 'flow.outline.noObjectives' | translate }}</p>
+  }
+
+  @if (!rows().length) {
+    <p class="flow-outline__hint">{{ 'flow.outline.empty' | translate }}</p>
+  } @else {
+    <ul class="flow-outline__list" [attr.aria-label]="'flow.outline.label' | translate">
+      @for (row of rows(); track row.path) {
+        @if (row.kind === 'section') {
+          <li class="flow-outline__section">
+            <h3>{{ 'flow.outline.unlinked' | translate }}</h3>
+            <span class="flow-outline__count">{{ row.count }}</span>
+          </li>
+        } @else {
+          <li
+            class="flow-outline__row"
+            [attr.data-kind]="row.kind"
+            [attr.data-horizon]="row.horizon"
+            [attr.aria-level]="row.depth + 1"
+            [class.flow-outline__row--done]="row.done"
+            [class.flow-outline__row--dropped]="row.status === 'dropped'"
+            [style.--depth]="row.depth"
+          >
+            @if (row.hasChildren) {
+              <button
+                type="button"
+                class="flow-outline__chevron"
+                [class.flow-outline__chevron--open]="row.open"
+                [attr.aria-expanded]="row.open"
+                [attr.aria-label]="(row.open ? 'flow.collapse' : 'flow.expand') | translate"
+                [title]="(row.open ? 'flow.collapse' : 'flow.expand') | translate"
+                (click)="toggle(row)"
+              >
+                ▸
+              </button>
+            } @else {
+              <span class="flow-outline__chevron-gap" aria-hidden="true"></span>
+            }
+
+            <div class="flow-outline__main">
+              <div class="flow-outline__line">
+                @if (row.kind === 'card') {
+                  <span class="flow-outline__title flow-outline__title--plain">{{ 'kanban.noMilestone' | translate }}</span>
+                } @else {
+                  <button type="button" class="flow-outline__title" [title]="'flow.outline.edit' | translate" (click)="edit(row)">
+                    {{ row.title }}
+                  </button>
+                }
+
+                @if (row.kind === 'objective') {
+                  @if (row.target; as target) {
+                    <span class="flow-outline__date" [class.flow-outline__date--overdue]="row.overdue">{{ target }}</span>
+                  } @else {
+                    <span class="flow-outline__date">{{ 'flow.horizons.' + row.horizon | translate }}</span>
+                  }
+                  <span class="flow-outline__status" [attr.data-status]="row.status">{{ 'flow.statuses.' + row.status | translate }}</span>
+                }
+                @if (row.progress; as progress) {
+                  <span class="flow-outline__count">{{ progress.done }}/{{ progress.total }}</span>
+                }
+              </div>
+
+              @if (row.progress; as progress) {
+                @if (row.kind === 'objective') {
+                  <div
+                    class="flow-outline__bar"
+                    role="progressbar"
+                    aria-valuemin="0"
+                    aria-valuemax="100"
+                    [attr.aria-valuenow]="progress.percent"
+                    [attr.aria-label]="'flow.progress' | translate: { done: progress.done, total: progress.total }"
+                  >
+                    <div class="flow-outline__fill" [style.width.%]="progress.percent"></div>
+                  </div>
+                }
+              }
+            </div>
+
+            @if (row.source) {
+              <button
+                type="button"
+                class="flow-outline__more"
+                aria-haspopup="dialog"
+                [attr.data-menu-trigger]="row.path"
+                [attr.aria-expanded]="menuPath() === row.path"
+                [attr.aria-label]="'flow.link.open' | translate: { name: row.title }"
+                [title]="'flow.link.openShort' | translate"
+                (mousedown)="$event.preventDefault()"
+                (click)="toggleMenu(row)"
+              >
+                ⋯
+              </button>
+              @if (menuPath() === row.path) {
+                <app-flow-link-menu class="flow-outline__menu" [source]="row.source" [label]="row.title" (closed)="closeMenu(row.path, $event)" />
+              }
+            }
+          </li>
+        }
+      }
+    </ul>
+  }
+</div>

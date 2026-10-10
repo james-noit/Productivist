@@ -27,6 +27,7 @@
   </div>
   <div class="kanban-card__meta">
     <app-task-badges [todo]="todo()" [showTags]="true" />
+    <app-objective-chip [titles]="objectives()" />
     @if (todo().pomodorosForTermination) {
       <span class="kanban-card__pomodoros" aria-hidden="true">🍅 {{ todo().pomodorosForTermination }}</span>
     }

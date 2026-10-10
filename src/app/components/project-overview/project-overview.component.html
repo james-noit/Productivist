@@ -25,6 +25,50 @@
       </div>
     </section>
 
+    @if (objectiveGroups().length) {
+      <section class="project-overview__card project-overview__card--wide" aria-labelledby="overview-objectives">
+        <div class="project-overview__card-head">
+          <h3 id="overview-objectives">{{ 'overview.objectives.title' | translate }}</h3>
+          <button type="button" class="button-ghost" (click)="openFlow()">{{ 'overview.objectives.open' | translate }}</button>
+        </div>
+        <div class="project-overview__horizons">
+          @for (group of objectiveGroups(); track group.horizon) {
+            <div class="project-overview__horizon" [attr.data-horizon]="group.horizon">
+              <h4>{{ 'flow.horizons.' + group.horizon | translate }}</h4>
+              <ul class="project-overview__objectives">
+                @for (row of group.rows; track row.id) {
+                  <li class="project-overview__objective" [class.project-overview__objective--dropped]="row.status === 'dropped'">
+                    <span class="project-overview__row-head">
+                      <span class="project-overview__row-name">{{ row.title }}</span>
+                      @if (row.target) {
+                        <span class="project-overview__row-due" [class.project-overview__row-due--overdue]="row.overdue">
+                          {{ 'overview.milestones.due' | translate: { date: row.target } }}
+                        </span>
+                      }
+                      @if (row.status !== 'active') {
+                        <span class="badge project-overview__status">{{ 'flow.statuses.' + row.status | translate }}</span>
+                      }
+                      <span class="project-overview__row-count">{{ row.progress.done }}/{{ row.progress.total }}</span>
+                    </span>
+                    <span
+                      class="project-overview__goal-track"
+                      role="progressbar"
+                      aria-valuemin="0"
+                      aria-valuemax="100"
+                      [attr.aria-valuenow]="row.progress.percent"
+                      [attr.aria-label]="'flow.progress' | translate: { done: row.progress.done, total: row.progress.total }"
+                    >
+                      <span class="project-overview__goal-fill" [style.width.%]="row.progress.percent"></span>
+                    </span>
+                  </li>
+                }
+              </ul>
+            </div>
+          }
+        </div>
+      </section>
+    }
+
     <section class="project-overview__card" aria-labelledby="overview-milestones">
       <h3 id="overview-milestones">{{ 'overview.milestones.title' | translate }}</h3>
       <ul class="project-overview__rows">

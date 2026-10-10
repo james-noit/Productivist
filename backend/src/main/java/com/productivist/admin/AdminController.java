@@ -37,10 +37,11 @@ public class AdminController {
 
     public record Me(String email) {}
 
-    public record Stats(long users, long withoutPassword, long sessions, long todos, long projects) {}
+    public record Stats(long users, long withoutPassword, long sessions, long todos, long projects,
+            long objectives) {}
 
     public record UserSummary(long id, String email, OffsetDateTime createdAt, boolean hasPassword, int sessions,
-            int todos, int projects) {}
+            int todos, int projects, int objectives) {}
 
     public record UserPage(List<UserSummary> users, long total) {}
 
@@ -72,10 +73,11 @@ public class AdminController {
                                (SELECT count(*) FROM users WHERE password_hash IS NULL) AS without_password,
                                (SELECT count(*) FROM auth_tokens) AS sessions,
                                (SELECT count(*) FROM todos WHERE NOT deleted) AS todos,
-                               (SELECT count(*) FROM projects WHERE NOT deleted) AS projects
+                               (SELECT count(*) FROM projects WHERE NOT deleted) AS projects,
+                               (SELECT count(*) FROM objectives WHERE NOT deleted) AS objectives
                         """)
                 .query((rs, i) -> new Stats(rs.getLong("users"), rs.getLong("without_password"), rs.getLong("sessions"),
-                        rs.getLong("todos"), rs.getLong("projects")))
+                        rs.getLong("todos"), rs.getLong("projects"), rs.getLong("objectives")))
                 .single();
     }
 
@@ -94,7 +96,8 @@ public class AdminController {
                         SELECT id, email, created_at, password_hash IS NOT NULL AS has_password,
                                (SELECT count(*) FROM auth_tokens t WHERE t.user_id = users.id) AS sessions,
                                (SELECT count(*) FROM todos t WHERE t.user_id = users.id AND NOT t.deleted) AS todos,
-                               (SELECT count(*) FROM projects p WHERE p.user_id = users.id AND NOT p.deleted) AS projects
+                               (SELECT count(*) FROM projects p WHERE p.user_id = users.id AND NOT p.deleted) AS projects,
+                               (SELECT count(*) FROM objectives o WHERE o.user_id = users.id AND NOT o.deleted) AS objectives
                         FROM users WHERE\s""" + filter + """
                          ORDER BY created_at DESC, id DESC LIMIT :limit OFFSET :offset
                         """)
@@ -103,7 +106,7 @@ public class AdminController {
                 .param("offset", offset)
                 .query((rs, i) -> new UserSummary(rs.getLong("id"), rs.getString("email"),
                         rs.getObject("created_at", OffsetDateTime.class), rs.getBoolean("has_password"),
-                        rs.getInt("sessions"), rs.getInt("todos"), rs.getInt("projects")))
+                        rs.getInt("sessions"), rs.getInt("todos"), rs.getInt("projects"), rs.getInt("objectives")))
                 .list();
         return new UserPage(users, total);
     }

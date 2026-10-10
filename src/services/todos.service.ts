@@ -1,8 +1,9 @@
-import { Injectable, computed, signal } from '@angular/core';
+import { Injectable, computed, inject, signal } from '@angular/core';
 import { localStorageSignal } from '../core/local-storage-signal';
 import { createId } from '../core/create-id';
 import { comparePriority } from '../lib/eisenhower';
 import { sanitizeDates } from '../lib/dates';
+import { FlowService } from './flow.service';
 import { columnOf, reorderSlice, statusOf, type BoardColumnKey } from '../lib/kanban';
 import type { Priority, TaskStatus, Todo, TodoExport } from '../types/todo';
 
@@ -36,6 +37,8 @@ export type TodoPatch = Partial<
 
 @Injectable({ providedIn: 'root' })
 export class TodosService {
+  private readonly flow = inject(FlowService);
+
   readonly todos = localStorageSignal<Todo[]>('productivist.todos', []);
   readonly filters = localStorageSignal<TodoFilters>('productivist.todoFilters', {
     importance: 'all',
@@ -162,6 +165,7 @@ export class TodosService {
 
   removeTodo(id: string): void {
     this.todos.update((list) => list.filter((todo) => todo.id !== id));
+    this.flow.removeLinksFrom('task', id);
     if (this.currentTaskId() === id) this.currentTaskId.set(null);
   }
 
@@ -197,6 +201,7 @@ export class TodosService {
     if (!ids.length) return;
     const selected = new Set(ids);
     this.todos.update((list) => list.filter((todo) => !selected.has(todo.id)));
+    this.flow.removeLinksFrom('task', ids);
     const current = this.currentTaskId();
     if (current && selected.has(current)) this.currentTaskId.set(null);
   }

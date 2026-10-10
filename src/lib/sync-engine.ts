@@ -1,3 +1,4 @@
+import type { FlowLayout, FlowLink, FlowLinkKind, FlowPosition, Horizon, Objective, ObjectiveStatus } from '../types/flow';
 import type { Milestone, Project } from '../types/project';
 import type { Priority, TaskStatus, Todo } from '../types/todo';
 
@@ -177,6 +178,32 @@ export interface TodoWire extends WireRow {
   dueDate?: string | null;
 }
 
+export interface ObjectiveWire extends WireRow {
+  projectId: string;
+  title: string;
+  horizon: Horizon;
+  status: ObjectiveStatus;
+  order: number;
+  createdAt: number;
+  /** Optional on the wire: absent or null means none. */
+  description?: string | null;
+  targetDate?: string | null;
+}
+
+export interface FlowLinkWire extends WireRow {
+  projectId: string;
+  fromKind: FlowLinkKind;
+  fromId: string;
+  toObjectiveId: string;
+  createdAt: number;
+}
+
+/** One row per project: the id is the project id. */
+export interface FlowLayoutWire extends WireRow {
+  positions: Record<string, FlowPosition>;
+  collapsed: string[];
+}
+
 type Content<W extends WireRow> = Omit<W, 'updatedAt' | 'deleted'>;
 
 export const projectCodec = {
@@ -283,6 +310,86 @@ export const todoCodec = {
     milestoneId: null,
     pomodorosForTermination: null,
   }),
+};
+
+export const objectiveCodec = {
+  toWire: (o: Objective): Content<ObjectiveWire> => ({
+    id: o.id,
+    projectId: o.projectId,
+    title: o.title,
+    horizon: o.horizon,
+    status: o.status,
+    order: o.order,
+    createdAt: o.createdAt,
+    // Only when set, like Todo.status.
+    ...(o.description ? { description: o.description } : {}),
+    ...(o.targetDate ? { targetDate: o.targetDate } : {}),
+  }),
+  fromWire: (w: ObjectiveWire): Objective => {
+    const objective: Objective = {
+      id: w.id,
+      projectId: w.projectId,
+      title: w.title,
+      horizon: w.horizon,
+      status: w.status,
+      order: w.order,
+      createdAt: w.createdAt,
+    };
+    if (w.description) objective.description = w.description;
+    if (w.targetDate) objective.targetDate = w.targetDate;
+    return objective;
+  },
+  tombstone: (id: string): Content<ObjectiveWire> => ({
+    id,
+    projectId: '',
+    title: '',
+    horizon: 'short',
+    status: 'active',
+    order: 0,
+    createdAt: 0,
+  }),
+};
+
+export const flowLinkCodec = {
+  toWire: (l: FlowLink): Content<FlowLinkWire> => ({
+    id: l.id,
+    projectId: l.projectId,
+    fromKind: l.fromKind,
+    fromId: l.fromId,
+    toObjectiveId: l.toObjectiveId,
+    createdAt: l.createdAt,
+  }),
+  fromWire: (w: FlowLinkWire): FlowLink => ({
+    id: w.id,
+    projectId: w.projectId,
+    fromKind: w.fromKind,
+    fromId: w.fromId,
+    toObjectiveId: w.toObjectiveId,
+    createdAt: w.createdAt,
+  }),
+  tombstone: (id: string): Content<FlowLinkWire> => ({
+    id,
+    projectId: '',
+    fromKind: 'task',
+    fromId: '',
+    toObjectiveId: '',
+    createdAt: 0,
+  }),
+};
+
+export const flowLayoutCodec = {
+  // Keys are sorted so the content hash does not depend on insertion order (Postgres JSONB reorders keys).
+  toWire: (l: FlowLayout): Content<FlowLayoutWire> => ({
+    id: l.id,
+    positions: Object.fromEntries(Object.entries(l.positions).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))),
+    collapsed: [...l.collapsed].sort(),
+  }),
+  fromWire: (w: FlowLayoutWire): FlowLayout => ({
+    id: w.id,
+    positions: w.positions ?? {},
+    collapsed: w.collapsed ?? [],
+  }),
+  tombstone: (id: string): Content<FlowLayoutWire> => ({ id, positions: {}, collapsed: [] }),
 };
 
 /** Content hash of a row, independent of key order and of null-vs-absent optional fields. */

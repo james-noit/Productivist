@@ -4,6 +4,7 @@ import { dueState, formatIso } from '../../../lib/dates';
 import { BOARD_COLUMNS, columnOf, type BoardColumnKey } from '../../../lib/kanban';
 import { SettingsService } from '../../../services/settings.service';
 import { TodosService } from '../../../services/todos.service';
+import { ObjectiveChipComponent } from '../objective-chip/objective-chip.component';
 import { TaskBadgesComponent } from '../task-badges/task-badges.component';
 import type { Milestone } from '../../../types/project';
 import type { Todo } from '../../../types/todo';
@@ -15,7 +16,7 @@ import type { Todo } from '../../../types/todo';
 @Component({
   selector: 'app-kanban-card',
   standalone: true,
-  imports: [TranslatePipe, TaskBadgesComponent],
+  imports: [TranslatePipe, TaskBadgesComponent, ObjectiveChipComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './kanban-card.component.html',
   styleUrl: './kanban-card.component.css',
@@ -30,6 +31,8 @@ export class KanbanCardComponent {
   readonly milestoneName = input<string | null>(null);
   /** Milestones offered by the menu's "Milestone" section; empty hides it (flat board). */
   readonly moveMilestones = input<readonly Milestone[]>([]);
+  /** Titles of the project objectives this task serves (the 🎯 chip); empty shows nothing. */
+  readonly objectives = input<readonly string[]>([]);
 
   readonly open = output<void>();
   readonly moveColumn = output<BoardColumnKey>();

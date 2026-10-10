@@ -23,7 +23,7 @@ Schema is managed by Flyway (`src/main/resources/db/migration`).
 | POST | `/api/auth/signup` `{email, password}` | Creates the account (password 8+ characters, at most 72 bytes) and returns `{email, token}`. 409 if the email is taken. No email confirmation. |
 | POST | `/api/auth/login` `{email, password}` | Returns `{email, token}`; 401 for any wrong email or password. |
 | GET | `/api/sync?since=<cursor>` | Rows changed after `cursor` (0 = all), tombstones included, plus `state` if changed. Returns the next `cursor`. |
-| POST | `/api/sync` | Upserts `{projects, milestones, todos, state}`. Last-write-wins on each row's `updatedAt`. Returns `{cursor}`. |
+| POST | `/api/sync` | Upserts `{projects, milestones, todos, objectives, flowLinks, flowLayouts, state}` (the Flow lists are optional, so older clients keep working). Last-write-wins on each row's `updatedAt`. Returns `{cursor}`. |
 | GET | `/api/admin/me` | Admin only (403 for everyone else): `{email}`. The frontend uses it to decide whether to show the admin view. |
 | GET | `/api/admin/stats` | Admin only: account, session, task and project totals. |
 | GET | `/api/admin/users?query=&page=&size=` | Admin only: accounts newest first, filtered by email substring, with their task/project/session counts (never their content). |

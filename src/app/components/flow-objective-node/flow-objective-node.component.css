@@ -1,0 +1,226 @@
+:host {
+  --horizon: var(--color-horizon-short);
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  box-sizing: border-box;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.12);
+  color: var(--color-text);
+  cursor: grab;
+  user-select: none;
+  touch-action: none;
+  transition: opacity 0.15s;
+}
+
+:host(.flow-node--medium) {
+  --horizon: var(--color-horizon-medium);
+}
+
+:host(.flow-node--long) {
+  --horizon: var(--color-horizon-long);
+}
+
+:host(:focus-visible) {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+:host(.flow-node--selected) {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px var(--color-primary);
+}
+
+:host(.flow-node--dimmed) {
+  opacity: 0.3;
+}
+
+:host(.flow-node--dragging) {
+  cursor: grabbing;
+  box-shadow: 0 6px 18px rgb(0 0 0 / 0.3);
+  z-index: 10;
+  transition: none;
+}
+
+/* While a link is being dragged: where it may end, and where it may not. */
+:host(.flow-node--link-valid) {
+  border-color: var(--horizon);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--horizon) 35%, transparent);
+}
+
+:host(.flow-node--link-valid.flow-node--hovered) {
+  box-shadow: 0 0 0 4px var(--horizon);
+}
+
+:host(.flow-node--link-invalid) {
+  opacity: 0.35;
+}
+
+:host(.flow-node--link-invalid.flow-node--hovered),
+:host(.flow-node--refused) {
+  opacity: 1;
+  border-color: var(--color-quadrant-do-first);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-quadrant-do-first) 45%, transparent);
+}
+
+:host(.flow-node--refused) {
+  animation: flow-refused 0.35s;
+}
+
+@keyframes flow-refused {
+  20%,
+  60% {
+    margin-left: -4px;
+  }
+  40%,
+  80% {
+    margin-left: 4px;
+  }
+}
+
+.flow-objective__stripe {
+  flex-shrink: 0;
+  width: 6px;
+  border-radius: 7px 0 0 7px;
+  background-color: var(--horizon);
+}
+
+.flow-objective__body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0 0.85rem 0 0.7rem;
+}
+
+.flow-objective__title {
+  font-weight: 700;
+  font-size: 0.95rem;
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.flow-objective__meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+}
+
+.flow-objective__date {
+  color: var(--color-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.flow-objective__date--overdue {
+  color: var(--color-quadrant-do-first);
+  font-weight: 700;
+}
+
+.flow-objective__status {
+  flex-shrink: 0;
+  border-radius: 999px;
+  padding: 0.05rem 0.5rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  background-color: color-mix(in srgb, var(--color-primary) 18%, transparent);
+  color: var(--color-text);
+}
+
+.flow-objective__status--achieved {
+  background-color: color-mix(in srgb, var(--color-capacity-safe) 28%, transparent);
+}
+
+.flow-objective__status--dropped {
+  background-color: var(--color-surface-alt);
+  color: var(--color-text-muted);
+}
+
+.flow-objective__progress {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.flow-objective__bar {
+  flex: 1;
+  height: 6px;
+  border-radius: 999px;
+  background-color: var(--color-surface-alt);
+  overflow: hidden;
+}
+
+.flow-objective__fill {
+  height: 100%;
+  background-color: var(--horizon);
+}
+
+.flow-objective__count {
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-muted);
+}
+
+.flow-port {
+  position: absolute;
+  top: 50%;
+  width: 12px;
+  height: 12px;
+  margin-top: -6px;
+  box-sizing: border-box;
+  border-radius: 50%;
+  background-color: var(--color-surface);
+  border: 2px solid var(--horizon);
+}
+
+/* A bigger invisible target, so the port is easy to grab. */
+.flow-port::before {
+  content: '';
+  position: absolute;
+  inset: -8px;
+}
+
+.flow-port--in {
+  left: -6px;
+}
+
+.flow-port--out {
+  right: -6px;
+  cursor: crosshair;
+  transition: transform 0.12s;
+}
+
+/* The grab area of the out port: as tall as a row, reaching well past the card edge, and about 28 screen pixels wide at any zoom. */
+.flow-port--out::before {
+  inset: auto;
+  top: -12px;
+  bottom: -12px;
+  left: -10px;
+  width: max(36px, calc(28px / var(--flow-k, 1)));
+}
+
+.flow-port--out:hover {
+  background-color: var(--horizon);
+  transform: scale(1.35);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :host,
+  .flow-port--out {
+    transition: none;
+  }
+
+  :host(.flow-node--refused) {
+    animation: none;
+  }
+}

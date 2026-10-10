@@ -8,6 +8,7 @@ import { ViewService, type AppView } from '../../../services/view.service';
 import { ProjectsService } from '../../../services/projects.service';
 import { AccountService } from '../../../services/account.service';
 import { DailyPlanService } from '../../../services/daily-plan.service';
+import { FlowService } from '../../../services/flow.service';
 
 const RESET_PHRASE = 'confirm reset';
 
@@ -27,6 +28,7 @@ export class AppMenuComponent {
   readonly accounts = inject(AccountService);
   private readonly projects = inject(ProjectsService);
   private readonly dailyPlan = inject(DailyPlanService);
+  private readonly flow = inject(FlowService);
 
   readonly resetPhrase = RESET_PHRASE;
   readonly isDev = isDevMode();
@@ -65,11 +67,13 @@ export class AppMenuComponent {
 
   exportTodo(): void {
     const data = {
-      // 3 added optional startDate/dueDate on todos and milestones; 2 and 3 import the same way.
-      version: 3,
+      // 3 added optional startDate/dueDate on todos and milestones; 4 added objectives, flowLinks and
+      // flowLayouts. 2 to 4 import the same way (missing arrays are empty).
+      version: 4,
       todos: this.todos.todos(),
       projects: this.projects.projects(),
       milestones: this.projects.milestones(),
+      ...this.flow.exportFlow(),
     };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
@@ -94,9 +98,12 @@ export class AppMenuComponent {
     const text = await file.text();
     try {
       const parsed = JSON.parse(text);
-      if (typeof parsed.version === 'number' && parsed.version > 3) throw new Error('Unsupported export version');
+      if (typeof parsed.version === 'number' && parsed.version > 4) throw new Error('Unsupported export version');
       this.todos.importTodos({ version: 1, todos: parsed.todos ?? [] });
       this.projects.importProjects({ projects: parsed.projects ?? [], milestones: parsed.milestones ?? [] });
+      this.flow.importFlow(parsed);
+      // Drops links to tasks and milestones the file does not contain.
+      this.projects.sweepFlow();
     } catch (error) {
       console.error('Failed to import to-do file', error);
     }
@@ -124,6 +131,7 @@ export class AppMenuComponent {
     this.multitask.reset();
     this.view.reset();
     this.projects.reset();
+    this.flow.reset();
     this.dailyPlan.reset();
     this.resetModalOpen.set(false);
     this.resetConfirmText.set('');

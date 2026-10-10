@@ -7,7 +7,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.productivist.sync.SyncDtos.FlowLayoutDto;
+import com.productivist.sync.SyncDtos.FlowLinkDto;
 import com.productivist.sync.SyncDtos.MilestoneDto;
+import com.productivist.sync.SyncDtos.ObjectiveDto;
 import com.productivist.sync.SyncDtos.ProjectDto;
 import com.productivist.sync.SyncDtos.PullResponse;
 import com.productivist.sync.SyncDtos.PushRequest;
@@ -33,6 +36,9 @@ import tools.jackson.databind.ObjectMapper;
 public class SyncService {
 
     private static final int MAX_JSON_CHARS = 256_000;
+    /** Positions per layout; a project would need hundreds of cards to get near it. */
+    private static final int MAX_LAYOUT_ENTRIES = 2000;
+    private static final int MAX_LAYOUT_KEY_CHARS = 200;
 
     private final JdbcClient jdbc;
     private final ObjectMapper json;
@@ -49,12 +55,20 @@ public class SyncService {
         List<ProjectDto> projects = orEmpty(request.projects());
         List<MilestoneDto> milestones = orEmpty(request.milestones());
         List<TodoDto> todos = orEmpty(request.todos());
-        if (projects.size() + milestones.size() + todos.size() > maxBatchSize) {
+        List<ObjectiveDto> objectives = orEmpty(request.objectives());
+        List<FlowLinkDto> flowLinks = orEmpty(request.flowLinks());
+        List<FlowLayoutDto> flowLayouts = orEmpty(request.flowLayouts());
+        int rows = projects.size() + milestones.size() + todos.size()
+                + objectives.size() + flowLinks.size() + flowLayouts.size();
+        if (rows > maxBatchSize) {
             throw new ResponseStatusException(HttpStatus.CONTENT_TOO_LARGE, "Batch exceeds " + maxBatchSize + " rows");
         }
         projects.forEach(p -> upsertProject(userId, p));
         milestones.forEach(m -> upsertMilestone(userId, m));
         todos.forEach(t -> upsertTodo(userId, t));
+        objectives.forEach(o -> upsertObjective(userId, o));
+        flowLinks.forEach(l -> upsertFlowLink(userId, l));
+        flowLayouts.forEach(l -> upsertFlowLayout(userId, l));
         if (request.state() != null) upsertState(userId, request.state());
         return currentCursor(userId);
     }
@@ -96,6 +110,37 @@ public class SyncService {
                 .param("u", userId).param("since", since).param("cursor", cursor)
                 .query((rs, i) -> mapTodo(rs))
                 .list();
+        List<ObjectiveDto> objectives = jdbc.sql("""
+                        SELECT id, project_id, title, description, horizon, status, target_date, sort_order,
+                               created_at, updated_at, deleted
+                        FROM objectives WHERE user_id = :u AND seq > :since AND seq <= :cursor ORDER BY seq
+                        """)
+                .param("u", userId).param("since", since).param("cursor", cursor)
+                .query((rs, i) -> new ObjectiveDto(
+                        rs.getString("id"), rs.getString("project_id"), rs.getString("title"),
+                        rs.getString("description"), rs.getString("horizon"), rs.getString("status"),
+                        rs.getString("target_date"), rs.getDouble("sort_order"), rs.getLong("created_at"),
+                        rs.getLong("updated_at"), rs.getBoolean("deleted")))
+                .list();
+        List<FlowLinkDto> flowLinks = jdbc.sql("""
+                        SELECT id, project_id, from_kind, from_id, to_objective_id, created_at, updated_at, deleted
+                        FROM flow_links WHERE user_id = :u AND seq > :since AND seq <= :cursor ORDER BY seq
+                        """)
+                .param("u", userId).param("since", since).param("cursor", cursor)
+                .query((rs, i) -> new FlowLinkDto(
+                        rs.getString("id"), rs.getString("project_id"), rs.getString("from_kind"),
+                        rs.getString("from_id"), rs.getString("to_objective_id"), rs.getLong("created_at"),
+                        rs.getLong("updated_at"), rs.getBoolean("deleted")))
+                .list();
+        List<FlowLayoutDto> flowLayouts = jdbc.sql("""
+                        SELECT id, positions::text AS positions, collapsed::text AS collapsed, updated_at, deleted
+                        FROM flow_layouts WHERE user_id = :u AND seq > :since AND seq <= :cursor ORDER BY seq
+                        """)
+                .param("u", userId).param("since", since).param("cursor", cursor)
+                .query((rs, i) -> new FlowLayoutDto(
+                        rs.getString("id"), json.readTree(rs.getString("positions")),
+                        json.readTree(rs.getString("collapsed")), rs.getLong("updated_at"), rs.getBoolean("deleted")))
+                .list();
         StateDto state = jdbc.sql("""
                         SELECT settings::text AS settings, daily_plan::text AS daily_plan, multitask::text AS multitask,
                                current_task_id, has_custom_order, updated_at
@@ -107,7 +152,7 @@ public class SyncService {
                         json.readTree(rs.getString("multitask")), rs.getString("current_task_id"),
                         rs.getBoolean("has_custom_order"), rs.getLong("updated_at")))
                 .optional().orElse(null);
-        return new PullResponse(cursor, projects, milestones, todos, state);
+        return new PullResponse(cursor, projects, milestones, todos, objectives, flowLinks, flowLayouts, state);
     }
 
     private long currentCursor(long userId) {
@@ -116,6 +161,9 @@ public class SyncService {
                             (SELECT COALESCE(MAX(seq), 0) FROM projects   WHERE user_id = :u),
                             (SELECT COALESCE(MAX(seq), 0) FROM milestones WHERE user_id = :u),
                             (SELECT COALESCE(MAX(seq), 0) FROM todos      WHERE user_id = :u),
+                            (SELECT COALESCE(MAX(seq), 0) FROM objectives WHERE user_id = :u),
+                            (SELECT COALESCE(MAX(seq), 0) FROM flow_links WHERE user_id = :u),
+                            (SELECT COALESCE(MAX(seq), 0) FROM flow_layouts WHERE user_id = :u),
                             (SELECT COALESCE(MAX(seq), 0) FROM user_state WHERE user_id = :u))
                         """)
                 .param("u", userId)
@@ -202,6 +250,108 @@ public class SyncService {
                 .update();
     }
 
+    private void upsertObjective(long userId, ObjectiveDto o) {
+        if (o.deleted()) {
+            tombstone("objectives", "project_id, title, horizon, status, created_at", "'', '', 'short', 'active', 0",
+                    userId, o.id(), o.updatedAt());
+            return;
+        }
+        requireText(o.projectId(), "objective projectId");
+        requireText(o.title(), "objective title");
+        requireText(o.horizon(), "objective horizon");
+        requireText(o.status(), "objective status");
+        jdbc.sql("""
+                        INSERT INTO objectives (user_id, id, project_id, title, description, horizon, status, target_date,
+                                                sort_order, created_at, updated_at, deleted)
+                        VALUES (:u, :id, :projectId, :title, :description, :horizon, :status, :targetDate,
+                                :order, :createdAt, :updatedAt, :deleted)
+                        ON CONFLICT (user_id, id) DO UPDATE SET
+                            project_id = EXCLUDED.project_id, title = EXCLUDED.title, description = EXCLUDED.description,
+                            horizon = EXCLUDED.horizon, status = EXCLUDED.status, target_date = EXCLUDED.target_date,
+                            sort_order = EXCLUDED.sort_order, created_at = EXCLUDED.created_at,
+                            updated_at = EXCLUDED.updated_at, deleted = EXCLUDED.deleted, seq = nextval('sync_seq')
+                        WHERE objectives.updated_at <= EXCLUDED.updated_at
+                        """)
+                .params(objectiveParams(userId, o))
+                .update();
+    }
+
+    private void upsertFlowLink(long userId, FlowLinkDto l) {
+        if (l.deleted()) {
+            tombstone("flow_links", "project_id, from_kind, from_id, to_objective_id, created_at",
+                    "'', 'task', '', '', 0", userId, l.id(), l.updatedAt());
+            return;
+        }
+        requireText(l.projectId(), "link projectId");
+        requireText(l.fromKind(), "link fromKind");
+        requireText(l.fromId(), "link fromId");
+        requireText(l.toObjectiveId(), "link toObjectiveId");
+        jdbc.sql("""
+                        INSERT INTO flow_links (user_id, id, project_id, from_kind, from_id, to_objective_id,
+                                                created_at, updated_at, deleted)
+                        VALUES (:u, :id, :projectId, :fromKind, :fromId, :toObjectiveId, :createdAt, :updatedAt, :deleted)
+                        ON CONFLICT (user_id, id) DO UPDATE SET
+                            project_id = EXCLUDED.project_id, from_kind = EXCLUDED.from_kind, from_id = EXCLUDED.from_id,
+                            to_objective_id = EXCLUDED.to_objective_id, created_at = EXCLUDED.created_at,
+                            updated_at = EXCLUDED.updated_at, deleted = EXCLUDED.deleted, seq = nextval('sync_seq')
+                        WHERE flow_links.updated_at <= EXCLUDED.updated_at
+                        """)
+                .param("u", userId).param("id", l.id()).param("projectId", l.projectId())
+                .param("fromKind", l.fromKind()).param("fromId", l.fromId()).param("toObjectiveId", l.toObjectiveId())
+                .param("createdAt", l.createdAt()).param("updatedAt", l.updatedAt()).param("deleted", l.deleted())
+                .update();
+    }
+
+    private void upsertFlowLayout(long userId, FlowLayoutDto l) {
+        if (l.deleted()) {
+            tombstone("flow_layouts", "positions, collapsed", "'{}', '[]'", userId, l.id(), l.updatedAt());
+            return;
+        }
+        String positions = layoutJson(l.positions(), true);
+        String collapsed = layoutJson(l.collapsed(), false);
+        jdbc.sql("""
+                        INSERT INTO flow_layouts (user_id, id, positions, collapsed, updated_at, deleted)
+                        VALUES (:u, :id, CAST(:positions AS jsonb), CAST(:collapsed AS jsonb), :updatedAt, :deleted)
+                        ON CONFLICT (user_id, id) DO UPDATE SET
+                            positions = EXCLUDED.positions, collapsed = EXCLUDED.collapsed,
+                            updated_at = EXCLUDED.updated_at, deleted = EXCLUDED.deleted, seq = nextval('sync_seq')
+                        WHERE flow_layouts.updated_at <= EXCLUDED.updated_at
+                        """)
+                .param("u", userId).param("id", l.id()).param("positions", positions).param("collapsed", collapsed)
+                .param("updatedAt", l.updatedAt()).param("deleted", l.deleted())
+                .update();
+    }
+
+    /**
+     * Validates one layout column and returns it as JSON text: positions must be an object of at most
+     * {@value #MAX_LAYOUT_ENTRIES} {@code {x, y}} numeric pairs, collapsed an array of that many short strings.
+     * Absent or null means empty.
+     */
+    private String layoutJson(JsonNode node, boolean positions) {
+        if (node == null || node.isNull() || node.isMissingNode()) return positions ? "{}" : "[]";
+        if (positions ? !node.isObject() : !node.isArray()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid layout " + (positions ? "positions" : "collapsed"));
+        }
+        if (node.size() > MAX_LAYOUT_ENTRIES) {
+            throw new ResponseStatusException(HttpStatus.CONTENT_TOO_LARGE, "Layout too large");
+        }
+        if (positions) {
+            node.properties().forEach(entry -> {
+                JsonNode p = entry.getValue();
+                boolean valid = entry.getKey().length() <= MAX_LAYOUT_KEY_CHARS && p.isObject()
+                        && p.path("x").isNumber() && p.path("y").isNumber();
+                if (!valid) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid layout position");
+            });
+        } else {
+            node.forEach(key -> {
+                if (!key.isString() || key.asString().length() > MAX_LAYOUT_KEY_CHARS) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid collapsed key");
+                }
+            });
+        }
+        return jsonText(node);
+    }
+
     /**
      * Marks a row deleted without needing its content. Table and column lists are internal constants, never
      * request data. An unknown id gets a blank placeholder row so the tombstone still reaches other devices.
@@ -222,6 +372,23 @@ public class SyncService {
         if (value == null || value.isBlank()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Missing " + what);
         }
+    }
+
+    private static Map<String, Object> objectiveParams(long userId, ObjectiveDto o) {
+        Map<String, Object> m = new HashMap<>();
+        m.put("u", userId);
+        m.put("id", o.id());
+        m.put("projectId", o.projectId());
+        m.put("title", o.title());
+        m.put("description", o.description());
+        m.put("horizon", o.horizon());
+        m.put("status", o.status());
+        m.put("targetDate", o.targetDate());
+        m.put("order", o.order());
+        m.put("createdAt", o.createdAt());
+        m.put("updatedAt", o.updatedAt());
+        m.put("deleted", o.deleted());
+        return m;
     }
 
     private static Map<String, Object> todoParams(long userId, TodoDto t, String tagsJson) {

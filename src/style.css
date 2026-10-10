@@ -28,6 +28,10 @@
   --color-quadrant-schedule: #3f6fb0;
   --color-quadrant-delegate: #d9a441;
   --color-quadrant-eliminate: #9c8b7a;
+  /* Flow view: one hue per objective horizon. Derived from the tokens above, so every theme gets its own. */
+  --color-horizon-short: var(--color-quadrant-schedule);
+  --color-horizon-medium: var(--color-capacity-safe);
+  --color-horizon-long: var(--color-primary);
 
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   color-scheme: light;
@@ -105,6 +109,8 @@
   --color-quadrant-schedule: #81a1c1;
   --color-quadrant-delegate: #ebcb8b;
   --color-quadrant-eliminate: #7b88a1;
+  /* Short (#81a1c1) and long (primary, #5e81ac) would both be blue here; Nord's purple keeps the horizons apart. */
+  --color-horizon-long: #b48ead;
   color-scheme: light;
 }
 

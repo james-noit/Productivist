@@ -1,0 +1,104 @@
+.objective-modal {
+  --modal-max-width: 460px;
+}
+
+.objective-modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.objective-modal__header h3 {
+  margin: 0;
+}
+
+.objective-modal__close {
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  color: var(--color-text);
+  padding: 0.2rem 0.5rem;
+}
+
+.objective-modal__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.objective-modal__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+.objective-modal__field input,
+.objective-modal__field select,
+.objective-modal__field textarea {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  color: var(--color-text);
+  padding: 0.4rem 0.6rem;
+  min-width: 0;
+  font: inherit;
+}
+
+.objective-modal__field textarea {
+  resize: vertical;
+}
+
+.objective-modal__hint {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
+.objective-modal__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.objective-modal__spacer {
+  flex: 1;
+}
+
+.objective-modal__cancel,
+.objective-modal__save,
+.objective-modal__delete {
+  border-radius: 6px;
+  padding: 0.4rem 0.9rem;
+}
+
+.objective-modal__cancel {
+  background: none;
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+}
+
+.objective-modal__delete {
+  background: none;
+  border: 1px solid var(--color-quadrant-do-first);
+  color: var(--color-quadrant-do-first);
+}
+
+.objective-modal__save {
+  background-color: var(--color-primary);
+  border: 1px solid var(--color-primary);
+  color: var(--color-primary-contrast);
+  font-weight: 600;
+}
+
+.objective-modal__save:disabled {
+  opacity: 0.5;
+}
+
+@media (max-width: 480px) {
+  .objective-modal__row {
+    grid-template-columns: 1fr;
+  }
+}

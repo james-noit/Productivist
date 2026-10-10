@@ -1,0 +1,239 @@
+:host {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.12);
+  color: var(--color-text);
+  user-select: none;
+  touch-action: none;
+  transition: opacity 0.15s;
+}
+
+:host(.flow-node--loose) {
+  border-style: dashed;
+}
+
+:host(:focus-visible) {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+:host(.flow-node--selected) {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px var(--color-primary);
+}
+
+:host(.flow-node--dimmed) {
+  opacity: 0.3;
+}
+
+:host(.flow-node--dragging) {
+  box-shadow: 0 6px 18px rgb(0 0 0 / 0.3);
+  z-index: 10;
+  transition: none;
+}
+
+/* A task row is being dragged over this card: dropping it here moves it into this milestone. */
+:host(.flow-node--drop) {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 40%, transparent);
+}
+
+.flow-milestone__header {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  box-sizing: border-box;
+  padding: 0 0.85rem 0 0.4rem;
+  background-color: var(--color-surface-alt);
+  border-radius: 7px 7px 0 0;
+  cursor: grab;
+  position: relative;
+}
+
+:host(.flow-node--dragging) .flow-milestone__header {
+  cursor: grabbing;
+}
+
+.flow-milestone__chevron {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  color: var(--color-text-muted);
+  padding: 0.2rem 0.35rem;
+  font-size: 0.85rem;
+  line-height: 1;
+  transition: transform 0.15s;
+}
+
+.flow-milestone__chevron--open {
+  transform: rotate(90deg);
+}
+
+.flow-milestone__chevron:hover {
+  color: var(--color-text);
+}
+
+.flow-milestone__chevron:focus-visible {
+  outline: 2px solid var(--color-primary);
+  border-radius: 4px;
+}
+
+.flow-milestone__name {
+  flex: 1;
+  min-width: 0;
+  font-weight: 700;
+  font-size: 0.95rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.flow-milestone__count {
+  flex-shrink: 0;
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-muted);
+}
+
+.flow-milestone__row {
+  position: relative;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  box-sizing: border-box;
+  padding: 0 0.85rem 0 0.4rem;
+  font-size: 0.85rem;
+}
+
+.flow-milestone__row:hover {
+  background-color: color-mix(in srgb, var(--color-surface-alt) 55%, transparent);
+}
+
+.flow-milestone__row--selected {
+  background-color: color-mix(in srgb, var(--color-primary) 16%, transparent);
+  box-shadow: inset 3px 0 0 var(--color-primary);
+}
+
+.flow-milestone__row--dimmed {
+  opacity: 0.35;
+}
+
+.flow-milestone__row--done .flow-milestone__task {
+  text-decoration: line-through;
+  color: var(--color-text-muted);
+}
+
+.flow-milestone__grip {
+  flex-shrink: 0;
+  width: 1.1rem;
+  text-align: center;
+  color: var(--color-text-muted);
+  cursor: grab;
+  opacity: 0.5;
+  line-height: 1;
+}
+
+.flow-milestone__row:hover .flow-milestone__grip {
+  opacity: 1;
+}
+
+.flow-milestone__task {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.flow-milestone__add {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  padding: 0 0.6rem;
+}
+
+.flow-milestone__add-button {
+  background: none;
+  border: none;
+  color: var(--color-text-muted);
+  padding: 0.15rem 0.25rem;
+  font-size: 0.8rem;
+  text-align: left;
+}
+
+.flow-milestone__add-button:hover {
+  color: var(--color-primary);
+}
+
+.flow-milestone__add-button:focus-visible {
+  outline: 2px solid var(--color-primary);
+  border-radius: 4px;
+}
+
+.flow-milestone__input {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  color: var(--color-text);
+  padding: 0.15rem 0.5rem;
+  font-size: 0.8rem;
+}
+
+.flow-port {
+  position: absolute;
+  right: -6px;
+  top: 50%;
+  width: 12px;
+  height: 12px;
+  margin-top: -6px;
+  box-sizing: border-box;
+  border-radius: 50%;
+  background-color: var(--color-surface);
+  border: 2px solid var(--color-text-muted);
+  cursor: crosshair;
+}
+
+/*
+ * A bigger invisible target, so the port is easy to grab: as tall as the row, reaching well past the card
+ * edge, and wide enough to stay about 28 screen pixels when the diagram is zoomed out (--flow-k is the
+ * canvas zoom). The canvas also treats a press within reach of a port as a press on it.
+ */
+.flow-port::before {
+  content: '';
+  position: absolute;
+  top: -9px;
+  bottom: -9px;
+  left: -10px;
+  width: max(36px, calc(28px / var(--flow-k, 1)));
+}
+
+.flow-port {
+  transition: transform 0.12s;
+}
+
+.flow-port:hover {
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
+  transform: scale(1.35);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :host,
+  .flow-milestone__chevron,
+  .flow-port {
+    transition: none;
+  }
+}

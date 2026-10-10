@@ -1,12 +1,13 @@
 {
   "name": "productivist",
   "private": true,
-  "version": "0.13.0",
+  "version": "0.14.0",
   "scripts": {
     "ng": "ng",
     "dev": "ng serve",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
+    "check:lazy": "ng build --stats-json && node scripts/check-lazy-chunks.mjs",
     "preview": "ng serve --configuration production",
     "build:tb": "node scripts/write-thunderbird-environment.mjs && ng build --configuration production,thunderbird --base-href ./ && node scripts/package-thunderbird.mjs",
     "tb:run": "web-ext run -t thunderbird -s dist/thunderbird",

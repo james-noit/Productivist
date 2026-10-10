@@ -1,0 +1,123 @@
+<div
+  class="flow-canvas"
+  #viewportEl
+  tabindex="0"
+  role="application"
+  [attr.aria-label]="'flow.canvasLabel' | translate"
+  [class.flow-canvas--panning]="panning()"
+  [class.flow-canvas--linking]="linkSource() !== null"
+  (pointerdown)="onPointerDown($event)"
+  (pointermove)="onPointerMove($event)"
+  (pointerup)="onPointerUp($event)"
+  (pointercancel)="onPointerCancel($event)"
+  (wheel)="onWheel($event)"
+  (dblclick)="onDblClick($event)"
+  (keydown)="onKeydown($event)"
+  (focusin)="onFocusIn($event)"
+>
+  <div class="flow-canvas__world" [style.transform]="worldTransform()" [style.--flow-k]="viewport().k">
+    @for (lane of lanes; track lane.key) {
+      <div
+        [class]="'flow-canvas__lane flow-canvas__lane--' + lane.key"
+        [class.flow-canvas__lane--drop]="dropLane() === lane.key"
+        [style.left.px]="lane.x"
+        [style.width.px]="laneWidth"
+        [style.height.px]="worldHeight()"
+      >
+        <div class="flow-canvas__lane-label">
+          <span class="flow-canvas__lane-name">{{ lane.label | translate }}</span>
+          @if (lane.span) {
+            <span class="flow-canvas__lane-span">{{ lane.span | translate }}</span>
+          }
+        </div>
+      </div>
+    }
+
+    <svg class="flow-canvas__edges">
+      @for (edge of edges(); track edge.id) {
+        <path [class]="'flow-canvas__edge flow-canvas__edge--' + edge.state" [attr.d]="edge.d" />
+        <path class="flow-canvas__edge-hit" [attr.data-link-id]="edge.id" [attr.d]="edge.d" />
+      }
+      @if (previewPath(); as d) {
+        <path class="flow-canvas__edge flow-canvas__edge--preview" [attr.d]="d" />
+      }
+      @if (selectedEdge(); as edge) {
+        <g
+          class="flow-canvas__badge"
+          data-unlink
+          role="button"
+          tabindex="0"
+          [attr.transform]="'translate(' + edge.mid.x + ' ' + edge.mid.y + ')'"
+          [attr.aria-label]="'flow.unlink' | translate"
+          (click)="unlink(edge.id)"
+          (keydown.enter)="unlink(edge.id)"
+        >
+          <title>{{ 'flow.unlink' | translate }}</title>
+          <circle r="11" />
+          <text y="1" text-anchor="middle" dominant-baseline="middle">✕</text>
+        </g>
+      }
+    </svg>
+
+    @for (card of renderedCards(); track card.key) {
+      <app-flow-milestone-node
+        [card]="card"
+        [position]="posOf(card.key)"
+        [height]="heightOf(card)"
+        [collapsed]="isCollapsed(card)"
+        [highlight]="highlight()"
+        [selectedKey]="selectedKey()"
+        [dropTarget]="taskDrag()?.over === card.key"
+        [dragging]="drag()?.key === card.key"
+        (toggleCollapse)="toggleCollapse(card)"
+        (addTask)="addTask(card, $event)"
+      />
+    }
+
+    @for (objective of renderedObjectives(); track objective.id) {
+      <app-flow-objective-node
+        [objective]="objective"
+        [progress]="progressOf(objective.id)"
+        [position]="posOf('objective:' + objective.id)"
+        [selected]="selectedKey() === 'objective:' + objective.id"
+        [dimmed]="isDimmed('objective:' + objective.id)"
+        [linkState]="linkStateOf(objective.id)"
+        [hovered]="hoverId() === objective.id"
+        [refused]="refusal()?.id === objective.id"
+        [dragging]="drag()?.key === 'objective:' + objective.id"
+      />
+    }
+
+    @if (moreButton(); as more) {
+      <button
+        type="button"
+        class="flow-canvas__more"
+        aria-haspopup="dialog"
+        [attr.aria-expanded]="menuKey() !== null"
+        [style.transform]="'translate(' + more.x + 'px, ' + more.y + 'px) scale(calc(1 / var(--flow-k, 1)))'"
+        [attr.aria-label]="'flow.link.openShort' | translate"
+        [title]="'flow.link.openShort' | translate"
+        (mousedown)="$event.preventDefault()"
+        (click)="menuKey() ? closeMenu(true) : openMenu()"
+      >
+        ⋯
+      </button>
+    }
+
+    @if (taskDrag(); as ghost) {
+      <div class="flow-canvas__ghost" [style.transform]="'translate(' + (ghost.pos.x + 12) + 'px, ' + (ghost.pos.y + 12) + 'px)'">{{ ghost.title }}</div>
+    }
+  </div>
+
+  @if (!graph().objectives.length) {
+    <p class="flow-canvas__hint">{{ 'flow.emptyHint' | translate }}</p>
+  }
+
+  @if (menuSource(); as source) {
+    <app-flow-link-menu class="flow-canvas__menu" [source]="source" [label]="menuLabel()" (closed)="closeMenu($event)" />
+  }
+
+  @if (refusal(); as refused) {
+    <p class="flow-canvas__toast" role="status">{{ 'flow.refusals.' + refused.reason | translate }}</p>
+  }
+</div>

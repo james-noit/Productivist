@@ -1,0 +1,24 @@
+:host {
+  display: contents;
+}
+
+.objective-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  max-width: 14rem;
+  margin: var(--objective-chip-margin, 0);
+  background-color: color-mix(in srgb, var(--color-primary) 14%, var(--color-surface-alt));
+  color: var(--color-text);
+}
+
+.objective-chip__text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.objective-chip__more {
+  flex-shrink: 0;
+  color: var(--color-text-muted);
+}

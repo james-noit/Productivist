@@ -4,10 +4,13 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { localStorageSignal } from '../../../core/local-storage-signal';
 import { dueState, isIsoDate, orderedDates, todayIso, type DueState } from '../../../lib/dates';
 import { PRIORITY_RANK } from '../../../lib/eisenhower';
+import { objectivesServing } from '../../../lib/flow-graph';
 import { BOARD_COLUMNS, columnOf, type BoardColumnKey } from '../../../lib/kanban';
+import { FlowService } from '../../../services/flow.service';
 import { ProjectsService } from '../../../services/projects.service';
 import { TodosService } from '../../../services/todos.service';
 import { ViewService } from '../../../services/view.service';
+import { ObjectiveChipComponent } from '../objective-chip/objective-chip.component';
 import { PrioritySelectComponent } from '../priority-select/priority-select.component';
 import { TaskDetailModalComponent } from '../task-detail-modal/task-detail-modal.component';
 import type { Milestone, Project } from '../../../types/project';
@@ -64,7 +67,7 @@ interface Group {
 @Component({
   selector: 'app-project-task-list',
   standalone: true,
-  imports: [FormsModule, TranslatePipe, PrioritySelectComponent, TaskDetailModalComponent],
+  imports: [FormsModule, TranslatePipe, ObjectiveChipComponent, PrioritySelectComponent, TaskDetailModalComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './project-task-list.component.html',
   styleUrl: './project-task-list.component.css',
@@ -72,6 +75,7 @@ interface Group {
 export class ProjectTaskListComponent {
   private readonly todosService = inject(TodosService);
   private readonly projects = inject(ProjectsService);
+  private readonly flow = inject(FlowService);
   private readonly translate = inject(TranslateService);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   readonly view = inject(ViewService);
@@ -104,6 +108,22 @@ export class ProjectTaskListComponent {
       .filter((m) => m.projectId === id)
       .sort((a, b) => a.order - b.order);
   });
+
+  /** Task id → titles of the objectives it serves, for the 🎯 chips; one map for the whole table. */
+  readonly servedBy = computed(() => {
+    const projectId = this.project().id;
+    const objectives = this.flow.objectivesByProject().get(projectId) ?? [];
+    const links = this.flow.linksByProject().get(projectId) ?? [];
+    if (!objectives.length || !links.length) return new Map<string, string[]>();
+    return objectivesServing({
+      projectId,
+      objectives,
+      links,
+      milestones: this.milestones(),
+      todos: this.todosService.todos().filter((t) => t.projectId === projectId),
+    });
+  });
+  protected readonly noObjectives: readonly string[] = [];
 
   private readonly milestoneById = computed(() => new Map(this.milestones().map((m) => [m.id, m])));
 

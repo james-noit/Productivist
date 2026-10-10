@@ -109,6 +109,13 @@
           <div class="view-loading" aria-hidden="true"></div>
         }
       }
+      @case ('flow') {
+        @defer (on immediate) {
+          <app-project-flow [project]="project" />
+        } @placeholder {
+          <div class="view-loading" aria-hidden="true"></div>
+        }
+      }
     }
 
     @if (editing()) {

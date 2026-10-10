@@ -2,6 +2,7 @@ import { Injectable, computed, inject } from '@angular/core';
 import { localStorageSignal } from '../core/local-storage-signal';
 import { sanitizeDates } from '../lib/dates';
 import { createId } from '../core/create-id';
+import { FlowService } from './flow.service';
 import { TodosService } from './todos.service';
 import type { Milestone, Project, ProjectExport } from '../types/project';
 
@@ -9,6 +10,7 @@ import type { Milestone, Project, ProjectExport } from '../types/project';
 @Injectable({ providedIn: 'root' })
 export class ProjectsService {
   private readonly todos = inject(TodosService);
+  private readonly flow = inject(FlowService);
 
   readonly projects = localStorageSignal<Project[]>('productivist.projects', []);
   readonly milestones = localStorageSignal<Milestone[]>('productivist.milestones', []);
@@ -48,6 +50,7 @@ export class ProjectsService {
     this.projects.update((list) => list.filter((p) => p.id !== id));
     this.todos.clearProjectRefs(id);
     for (const milestoneId of removedMilestoneIds) this.todos.clearMilestoneRefs(milestoneId);
+    this.flow.removeForProject(id);
   }
 
   addMilestone(projectId: string, name: string): Milestone {
@@ -72,6 +75,20 @@ export class ProjectsService {
   removeMilestone(id: string): void {
     this.milestones.update((list) => list.filter((m) => m.id !== id));
     this.todos.clearMilestoneRefs(id);
+    this.flow.removeLinksFrom('milestone', id);
+  }
+
+  /**
+   * Drops Flow data that points at a project, milestone or task that no longer exists (or a task that moved
+   * to another project). Called on startup, after a sync pull and after an import. Lives here because this
+   * service already sees all three stores while FlowService depends on none of them.
+   */
+  sweepFlow(): void {
+    this.flow.sweep({
+      projectIds: new Set(this.projects().map((p) => p.id)),
+      milestoneProjects: new Map(this.milestones().map((m) => [m.id, m.projectId])),
+      taskProjects: new Map(this.todos.todos().map((t) => [t.id, t.projectId])),
+    });
   }
 
   exportProjects(): ProjectExport {

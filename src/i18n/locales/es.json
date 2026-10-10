@@ -369,7 +369,8 @@
       "list": "Lista",
       "matrix": "Matriz",
       "roadmap": "Hoja de ruta",
-      "calendar": "Calendario"
+      "calendar": "Calendario",
+      "flow": "Flujo"
     },
     "presentationsLabel": "Vistas del proyecto",
     "edit": "Editar proyecto",
@@ -445,6 +446,10 @@
       "older": "Más de 3 meses",
       "oldest": "Tareas abiertas más antiguas",
       "days": "{{count}} d"
+    },
+    "objectives": {
+      "title": "Objetivos",
+      "open": "Abrir en Flujo"
     }
   },
   "taskList": {
@@ -517,5 +522,88 @@
     "unscheduled": "Sin programar",
     "unscheduledHint": "Arrastra una tarea a un día para darle fecha de vencimiento.",
     "unscheduledEmpty": "Todas las tareas abiertas tienen fecha de vencimiento."
+  },
+  "flow": {
+    "title": "Flujo",
+    "view": "Vista",
+    "diagram": "Diagrama",
+    "horizon": "Plazo",
+    "horizonFilter": "Filtrar por plazo",
+    "status": "Estado",
+    "statusFilter": "Filtrar por estado",
+    "addObjective": "Objetivo",
+    "addMilestone": "Hito",
+    "tidyUp": "Ordenar",
+    "tidyUpHint": "Olvidar las posiciones colocadas a mano y volver a ordenarlo todo",
+    "fit": "Ajustar",
+    "zoom": "Zoom",
+    "zoomIn": "Acercar",
+    "zoomOut": "Alejar",
+    "canvasLabel": "Diagrama de flujo. Arrastra el fondo para moverte, Ctrl + rueda o pellizca para hacer zoom, Alt + flechas para mover la tarjeta seleccionada, L para enlazarla.",
+    "lanes": {
+      "work": "Hitos y tareas",
+      "workSpan": "El trabajo"
+    },
+    "emptyHint": "Añade un objetivo con + Objetivo o con doble clic en una columna, y arrastra un puerto ● hasta él para enlazarle trabajo.",
+    "refusals": {
+      "missing": "Ese objetivo ya no existe.",
+      "self": "Un objetivo no puede alimentarse a sí mismo.",
+      "project": "Los enlaces se quedan dentro de un proyecto.",
+      "horizon": "Un objetivo solo puede alimentar a otro de plazo más largo.",
+      "duplicate": "Ya está enlazado."
+    },
+    "unlink": "Quitar enlace",
+    "dragToLink": "Arrastra hasta un objetivo para enlazar",
+    "moveTask": "Arrastra a otro hito para mover esta tarea",
+    "collapse": "Contraer",
+    "expand": "Expandir",
+    "progress": "{{done}} de {{total}} tareas hechas",
+    "horizonChangeConfirm": "Cambiar el plazo elimina los enlaces a objetivos que ya no quedarían más adelante. ¿Continuar?",
+    "objective": {
+      "newTitle": "Nuevo objetivo",
+      "editTitle": "Editar objetivo",
+      "title": "Título",
+      "titlePlaceholder": "p. ej. El pago funciona en el móvil",
+      "horizon": "Plazo",
+      "status": "Estado",
+      "targetDate": "Fecha objetivo",
+      "progressHint": "El progreso sale del trabajo enlazado a este objetivo; nunca se marca a mano.",
+      "delete": "Eliminar",
+      "deleteConfirm": "¿Eliminar este objetivo y sus enlaces? Las tareas e hitos enlazados se conservan."
+    },
+    "horizons": {
+      "short": "Corto plazo",
+      "medium": "Medio plazo",
+      "long": "Largo plazo"
+    },
+    "horizonSpans": {
+      "short": "De días a semanas",
+      "medium": "De 1 a 3 meses",
+      "long": "De trimestres a años"
+    },
+    "statuses": {
+      "active": "Activo",
+      "achieved": "Logrado",
+      "dropped": "Descartado"
+    },
+    "tidyUpConfirm": "Ordenar olvida todas las posiciones colocadas a mano en el diagrama de este proyecto y no se puede deshacer. ¿Continuar?",
+    "serves": "Sirve a: {{names}}",
+    "outline": {
+      "title": "Esquema",
+      "label": "Objetivos y el trabajo que los alimenta",
+      "noObjectives": "Todavía no hay objetivos. Añade uno con + Objetivo y enlázale trabajo con el botón ⋯ de una tarea o un hito.",
+      "empty": "Aún no hay nada que mostrar. Añade un hito o un objetivo.",
+      "unlinked": "Sin enlazar a ningún objetivo",
+      "edit": "Editar"
+    },
+    "link": {
+      "title": "Enlaces de {{name}}",
+      "open": "Enlaces de {{name}}",
+      "openShort": "Enlazar a un objetivo (L)",
+      "linkedTo": "Enlazado a",
+      "linkTo": "Enlazar a un objetivo",
+      "remove": "Quitar el enlace a {{title}}",
+      "none": "No hay ningún objetivo al que enlazar."
+    }
   }
 }

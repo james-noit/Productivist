@@ -3,7 +3,10 @@ import { TranslatePipe } from '@ngx-translate/core';
 import { buildBurnup } from '../../../lib/burnup';
 import { addDays, formatIso, todayIso } from '../../../lib/dates';
 import { QUADRANTS, classify } from '../../../lib/eisenhower';
+import { buildFlowGraph, type Progress } from '../../../lib/flow-graph';
+import { HORIZONS } from '../../../lib/flow-rules';
 import { columnOf, type BoardColumnKey } from '../../../lib/kanban';
+import { FlowService } from '../../../services/flow.service';
 import { ProjectsService } from '../../../services/projects.service';
 import { SettingsService } from '../../../services/settings.service';
 import { TodosService } from '../../../services/todos.service';
@@ -11,6 +14,7 @@ import { ViewService } from '../../../services/view.service';
 import { MilestoneDatesModalComponent } from '../milestone-dates-modal/milestone-dates-modal.component';
 import { TaskDetailModalComponent } from '../task-detail-modal/task-detail-modal.component';
 import type { EisenhowerQuadrant } from '../../../types/eisenhower';
+import type { Horizon, ObjectiveStatus } from '../../../types/flow';
 import type { Milestone, Project } from '../../../types/project';
 import type { Todo } from '../../../types/todo';
 
@@ -41,6 +45,16 @@ interface MilestoneRow {
   counts: Record<BoardColumnKey, number>;
 }
 
+interface ObjectiveRow {
+  id: string;
+  title: string;
+  status: ObjectiveStatus;
+  progress: Progress;
+  /** Formatted target date, null when none. */
+  target: string | null;
+  overdue: boolean;
+}
+
 interface Chart {
   paths: { scope: string; done: string; doneArea: string };
   xTicks: { x: number; label: string }[];
@@ -66,6 +80,7 @@ export class ProjectOverviewComponent {
   private readonly todosService = inject(TodosService);
   private readonly projects = inject(ProjectsService);
   private readonly settings = inject(SettingsService);
+  private readonly flow = inject(FlowService);
   private readonly view = inject(ViewService);
 
   readonly project = input.required<Project>();
@@ -167,6 +182,41 @@ export class ProjectOverviewComponent {
     };
   });
 
+  /** The project's objectives grouped by horizon (shortest first) with the progress rolled up from their linked work. */
+  readonly objectiveGroups = computed(() => {
+    const projectId = this.project().id;
+    const objectives = this.flow.objectivesByProject().get(projectId) ?? [];
+    if (!objectives.length) return [];
+    const graph = buildFlowGraph({
+      projectId,
+      objectives,
+      links: this.flow.linksByProject().get(projectId) ?? [],
+      milestones: this.projects
+        .milestones()
+        .filter((m) => m.projectId === projectId)
+        .sort((a, b) => a.order - b.order),
+      todos: this.projectTodos(),
+      showDone: true,
+    });
+    const today = todayIso();
+    const format = this.shortDate();
+    return HORIZONS.map((horizon: Horizon) => ({
+      horizon,
+      rows: graph.objectives
+        .filter((o) => o.horizon === horizon)
+        .map(
+          (o): ObjectiveRow => ({
+            id: o.id,
+            title: o.title,
+            status: o.status,
+            progress: graph.progress.get(o.id) ?? { done: 0, total: 0, percent: 0 },
+            target: o.targetDate ? formatIso(format, o.targetDate) : null,
+            overdue: o.status === 'active' && !!o.targetDate && o.targetDate < today,
+          }),
+        ),
+    })).filter((group) => group.rows.length);
+  });
+
   private buildChart(todos: readonly Todo[], today: string, doneCount: number): Chart | null {
     // A flat "completed" line carries no information, so no chart until something is done.
     if (!doneCount) return null;
@@ -220,6 +270,10 @@ export class ProjectOverviewComponent {
 
   openMilestone(row: MilestoneRow): void {
     this.view.openKanbanForMilestone(this.project().id, row.milestone?.id ?? null);
+  }
+
+  openFlow(): void {
+    this.view.projectPresentation.set('flow');
   }
 
   openMatrix(): void {

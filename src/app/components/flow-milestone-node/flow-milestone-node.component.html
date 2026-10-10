@@ -1,0 +1,72 @@
+<header class="flow-milestone__header" data-drag="node" [style.height.px]="headerHeight">
+  <button
+    type="button"
+    class="flow-milestone__chevron"
+    [class.flow-milestone__chevron--open]="!collapsed()"
+    [attr.aria-expanded]="!collapsed()"
+    [attr.aria-label]="(collapsed() ? 'flow.expand' : 'flow.collapse') | translate"
+    [title]="(collapsed() ? 'flow.expand' : 'flow.collapse') | translate"
+    (click)="toggleCollapse.emit()"
+  >
+    ▸
+  </button>
+  <span class="flow-milestone__name" [title]="card().milestone ? card().milestone!.name : ''">
+    {{ card().milestone ? card().milestone!.name : ('kanban.noMilestone' | translate) }}
+  </span>
+  <span class="flow-milestone__count">{{ card().done }}/{{ card().total }}</span>
+  @if (card().milestone; as milestone) {
+    <span
+      class="flow-port flow-port--header"
+      data-port
+      data-port-kind="milestone"
+      [attr.data-port-id]="milestone.id"
+      [title]="'flow.dragToLink' | translate"
+      aria-hidden="true"
+    ></span>
+  }
+</header>
+
+@if (!collapsed()) {
+  @for (task of card().rows; track task.id) {
+    <div [class]="rowClass(task.id, task.done)" [attr.data-key]="'task:' + task.id" [style.height.px]="rowHeight">
+      <span
+        class="flow-milestone__grip"
+        data-drag="task"
+        [attr.data-task-id]="task.id"
+        [title]="'flow.moveTask' | translate"
+        aria-hidden="true"
+      >
+        ⠿
+      </span>
+      <span class="flow-milestone__task" [title]="task.title">{{ task.title }}</span>
+      <span
+        class="flow-port flow-port--row"
+        data-port
+        data-port-kind="task"
+        [attr.data-port-id]="task.id"
+        [title]="'flow.dragToLink' | translate"
+        aria-hidden="true"
+      ></span>
+    </div>
+  }
+
+  <div class="flow-milestone__add" [style.height.px]="addRowHeight">
+    @if (adding()) {
+      <input
+        type="text"
+        class="flow-milestone__input"
+        name="flowQuickAdd"
+        autocomplete="off"
+        [value]="draft()"
+        [placeholder]="'kanban.taskTitlePlaceholder' | translate"
+        [attr.aria-label]="'kanban.addTask' | translate"
+        (input)="draft.set($any($event.target).value)"
+        (keydown.enter)="submit()"
+        (keydown.escape)="cancelAdding($event)"
+        (blur)="cancelAdding()"
+      />
+    } @else {
+      <button type="button" class="flow-milestone__add-button" (click)="startAdding()">+ {{ 'kanban.addTask' | translate }}</button>
+    }
+  </div>
+}

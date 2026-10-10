@@ -11,6 +11,7 @@ import { ProjectTaskListComponent } from '../project-task-list/project-task-list
 import { ProjectOverviewComponent } from '../project-overview/project-overview.component';
 import { ProjectRoadmapComponent } from '../project-roadmap/project-roadmap.component';
 import { ProjectCalendarComponent } from '../project-calendar/project-calendar.component';
+import { ProjectFlowComponent } from '../project-flow/project-flow.component';
 
 interface PresentationTab {
   key: ProjectPresentation;
@@ -27,13 +28,14 @@ const PRESENTATIONS: readonly PresentationTab[] = [
   { key: 'matrix', labelKey: 'projectDetail.presentations.matrix', icon: 'M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z' },
   { key: 'roadmap', labelKey: 'projectDetail.presentations.roadmap', icon: 'M4 6h9M8 12h12M6 18h8' },
   { key: 'calendar', labelKey: 'projectDetail.presentations.calendar', icon: 'M4 6h16v14H4zM4 10h16M8 3v4M16 3v4' },
+  { key: 'flow', labelKey: 'projectDetail.presentations.flow', icon: 'M5 5h5v4H5zM5 15h5v4H5zM14 10h5v4h-5zM10 7h2a2 2 0 0 1 2 2v1M10 17h2a2 2 0 0 0 2-2v-1' },
 ];
 
 @Component({
   selector: 'app-project-detail-view',
   standalone: true,
   // The presentations are only used inside @defer blocks, so each gets its own chunk.
-  imports: [TranslatePipe, IconComponent, EditProjectModalComponent, KanbanBoardComponent, ProjectOverviewComponent, ProjectTaskListComponent, EisenhowerViewComponent, ProjectRoadmapComponent, ProjectCalendarComponent],
+  imports: [TranslatePipe, IconComponent, EditProjectModalComponent, KanbanBoardComponent, ProjectOverviewComponent, ProjectTaskListComponent, EisenhowerViewComponent, ProjectRoadmapComponent, ProjectCalendarComponent, ProjectFlowComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './project-detail-view.component.html',
   styleUrl: './project-detail-view.component.css',

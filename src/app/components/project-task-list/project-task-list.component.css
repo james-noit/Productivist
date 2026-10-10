@@ -195,6 +195,8 @@
 .task-list__cell-title {
   min-width: 14rem;
   width: 28%;
+  /* The 🎯 chip sits under the title button. */
+  --objective-chip-margin: 0.15rem 0.3rem 0;
 }
 
 .task-list__title {

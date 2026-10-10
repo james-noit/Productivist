@@ -1,0 +1,36 @@
+<span class="flow-objective__stripe" aria-hidden="true"></span>
+<div class="flow-objective__body">
+  <div class="flow-objective__title" [title]="objective().title">{{ objective().title }}</div>
+  <div class="flow-objective__meta">
+    @if (target(); as target) {
+      <span class="flow-objective__date" [class.flow-objective__date--overdue]="target.overdue">{{ target.text }}</span>
+    } @else {
+      <span class="flow-objective__date flow-objective__date--none">{{ ('flow.horizons.' + objective().horizon) | translate }}</span>
+    }
+    <span class="flow-objective__status" [class]="'flow-objective__status--' + objective().status">
+      {{ 'flow.statuses.' + objective().status | translate }}
+    </span>
+  </div>
+  <div class="flow-objective__progress">
+    <div
+      class="flow-objective__bar"
+      role="progressbar"
+      aria-valuemin="0"
+      aria-valuemax="100"
+      [attr.aria-valuenow]="progress().percent"
+      [attr.aria-label]="'flow.progress' | translate: { done: progress().done, total: progress().total }"
+    >
+      <div class="flow-objective__fill" [style.width.%]="progress().percent"></div>
+    </div>
+    <span class="flow-objective__count">{{ progress().done }}/{{ progress().total }}</span>
+  </div>
+</div>
+<span class="flow-port flow-port--in" aria-hidden="true"></span>
+<span
+  class="flow-port flow-port--out"
+  data-port
+  data-port-kind="objective"
+  [attr.data-port-id]="objective().id"
+  [title]="'flow.dragToLink' | translate"
+  aria-hidden="true"
+></span>

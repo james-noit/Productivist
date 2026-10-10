@@ -1,0 +1,34 @@
+<p class="flow-link-menu__title">{{ label() }}</p>
+
+@if (linked().length) {
+  <span class="flow-link-menu__heading">{{ 'flow.link.linkedTo' | translate }}</span>
+  @for (item of linked(); track item.linkId) {
+    <button
+      type="button"
+      class="flow-link-menu__item"
+      [attr.data-horizon]="item.horizon"
+      [attr.aria-label]="'flow.link.remove' | translate: { title: item.title }"
+      [title]="'flow.unlink' | translate"
+      (click)="unlink(item.linkId)"
+    >
+      <i class="flow-link-menu__swatch" aria-hidden="true"></i>
+      <span class="flow-link-menu__text">{{ item.title }}</span>
+      <span class="flow-link-menu__remove" aria-hidden="true">✕</span>
+    </button>
+  }
+}
+
+<span class="flow-link-menu__heading">{{ 'flow.link.linkTo' | translate }}</span>
+@for (target of targets(); track target.id) {
+  <button type="button" class="flow-link-menu__item" [attr.data-horizon]="target.horizon" (click)="link(target.id)">
+    <i class="flow-link-menu__swatch" aria-hidden="true"></i>
+    <span class="flow-link-menu__text">{{ target.title }}</span>
+    <span class="flow-link-menu__hint">{{ 'flow.horizons.' + target.horizon | translate }}</span>
+  </button>
+} @empty {
+  <p class="flow-link-menu__empty">{{ 'flow.link.none' | translate }}</p>
+}
+
+@if (message()) {
+  <p class="flow-link-menu__empty" role="alert">{{ message() }}</p>
+}

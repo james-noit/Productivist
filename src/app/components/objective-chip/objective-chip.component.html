@@ -1,0 +1,9 @@
+@if (titles().length) {
+  <span class="badge objective-chip" [title]="'flow.serves' | translate: { names: all() }">
+    <span aria-hidden="true">🎯</span>
+    <span class="objective-chip__text">{{ titles()[0] }}</span>
+    @if (titles().length > 1) {
+      <span class="objective-chip__more">+{{ titles().length - 1 }}</span>
+    }
+  </span>
+}

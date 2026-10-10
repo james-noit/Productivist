@@ -11,6 +11,8 @@ export interface AdminUser {
   sessions: number;
   todos: number;
   projects: number;
+  /** Flow objectives; no admin UI shows it yet. */
+  objectives?: number;
 }
 
 export interface AdminStats {
@@ -19,6 +21,8 @@ export interface AdminStats {
   sessions: number;
   todos: number;
   projects: number;
+  /** Flow objectives; no admin UI shows it yet. */
+  objectives?: number;
 }
 
 interface UserPage {

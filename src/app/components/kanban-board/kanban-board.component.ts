@@ -2,7 +2,9 @@ import { ChangeDetectionStrategy, Component, ElementRef, computed, inject, input
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '@ngx-translate/core';
 import { localStorageSignal } from '../../../core/local-storage-signal';
+import { objectivesServing } from '../../../lib/flow-graph';
 import { BOARD_COLUMNS, columnOf, type BoardColumnKey } from '../../../lib/kanban';
+import { FlowService } from '../../../services/flow.service';
 import { ProjectsService } from '../../../services/projects.service';
 import { TodosService } from '../../../services/todos.service';
 import { ViewService } from '../../../services/view.service';
@@ -49,6 +51,7 @@ const emptyColumns = (): Record<BoardColumnKey, Todo[]> => ({ todo: [], inProgre
 export class KanbanBoardComponent {
   private readonly todosService = inject(TodosService);
   private readonly projects = inject(ProjectsService);
+  private readonly flow = inject(FlowService);
   readonly view = inject(ViewService);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
 
@@ -81,6 +84,22 @@ export class KanbanBoardComponent {
     const stored = this.filters()[this.project().id] ?? null;
     return stored && this.milestones().some((m) => m.id === stored) ? stored : null;
   });
+
+  /** Task id → titles of the objectives it serves, for the 🎯 chips; one map for the whole board. */
+  readonly servedBy = computed(() => {
+    const projectId = this.project().id;
+    const objectives = this.flow.objectivesByProject().get(projectId) ?? [];
+    const links = this.flow.linksByProject().get(projectId) ?? [];
+    if (!objectives.length || !links.length) return new Map<string, string[]>();
+    return objectivesServing({
+      projectId,
+      objectives,
+      links,
+      milestones: this.milestones(),
+      todos: this.todosService.todos().filter((t) => t.projectId === projectId),
+    });
+  });
+  protected readonly noObjectives: readonly string[] = [];
 
   private readonly milestoneNames = computed(() => new Map(this.milestones().map((m) => [m.id, m.name])));
 

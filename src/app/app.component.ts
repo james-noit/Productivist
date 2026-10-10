@@ -4,6 +4,7 @@ import { SettingsService, type Language } from '../services/settings.service';
 import { MultitaskService } from '../services/multitask.service';
 import { ViewService } from '../services/view.service';
 import { SyncService } from '../services/sync.service';
+import { ProjectsService } from '../services/projects.service';
 import { AccountService } from '../services/account.service';
 import { AppHeaderComponent } from './components/app-header/app-header.component';
 import { PomodoroClockComponent } from './components/pomodoro-clock/pomodoro-clock.component';
@@ -48,6 +49,10 @@ export class AppComponent {
   constructor() {
     // Instantiated for its side effects: it syncs in the background while signed in.
     inject(SyncService);
+
+    // Flow links left pointing at tasks, milestones or projects that were removed while this code did not
+    // run (older versions, another device) are dropped once at startup.
+    inject(ProjectsService).sweepFlow();
 
     // English is the default and the fallback, so it is bundled. Every other locale is
     // fetched on demand — shipping them all eagerly cost ~11 kB for a language most

@@ -196,6 +196,7 @@
                   <button type="button" class="task-list__title" [title]="'taskList.editTitle' | translate" (click)="startEditTitle(row.todo)">
                     {{ row.todo.title }}
                   </button>
+                  <app-objective-chip [titles]="servedBy().get(row.todo.id) ?? noObjectives" />
                 }
               </td>
               <td>

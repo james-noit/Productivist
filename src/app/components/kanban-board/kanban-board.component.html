@@ -111,6 +111,7 @@
                     [todo]="todo"
                     [milestoneName]="milestoneNameOf(todo)"
                     [moveMilestones]="swimlanes() === 'milestones' ? milestones() : []"
+                    [objectives]="servedBy().get(todo.id) ?? noObjectives"
                     (open)="detailId.set(todo.id)"
                     (moveColumn)="moveColumn(todo, $event)"
                     (moveMilestone)="moveMilestone(todo, $event)"

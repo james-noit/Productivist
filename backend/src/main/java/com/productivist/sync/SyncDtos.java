@@ -65,6 +65,43 @@ public final class SyncDtos {
             long updatedAt,
             boolean deleted) {}
 
+    /** A project outcome of the Flow view; the horizon and status values mirror src/types/flow.ts. */
+    public record ObjectiveDto(
+            @NotBlank @Size(max = 64) String id,
+            @Size(max = 64) String projectId,
+            @Size(max = 1000) String title,
+            @Size(max = 10_000) String description,
+            @Pattern(regexp = "short|medium|long") String horizon,
+            @Pattern(regexp = "active|achieved|dropped") String status,
+            @Pattern(regexp = DATE) String targetDate,
+            double order,
+            long createdAt,
+            long updatedAt,
+            boolean deleted) {}
+
+    /** "fromId contributes to toObjectiveId"; fromId is a task, milestone or objective id depending on fromKind. */
+    public record FlowLinkDto(
+            @NotBlank @Size(max = 64) String id,
+            @Size(max = 64) String projectId,
+            @Pattern(regexp = "task|milestone|objective") String fromKind,
+            @Size(max = 64) String fromId,
+            @Size(max = 64) String toObjectiveId,
+            long createdAt,
+            long updatedAt,
+            boolean deleted) {}
+
+    /**
+     * One project's hand-placed node positions ({@code id} is the project id): an object of
+     * {@code "kind:id": {x, y}} and an array of collapsed card keys. Their shape and size are checked by
+     * {@link SyncService}.
+     */
+    public record FlowLayoutDto(
+            @NotBlank @Size(max = 64) String id,
+            JsonNode positions,
+            JsonNode collapsed,
+            long updatedAt,
+            boolean deleted) {}
+
     /** The per-user JSON blobs: settings, daily planner and multitask state. */
     public record StateDto(
             JsonNode settings,
@@ -78,6 +115,10 @@ public final class SyncDtos {
             @Valid List<@Valid ProjectDto> projects,
             @Valid List<@Valid MilestoneDto> milestones,
             @Valid List<@Valid TodoDto> todos,
+            // The Flow lists are nullable so clients older than the Flow view keep working.
+            @Valid List<@Valid ObjectiveDto> objectives,
+            @Valid List<@Valid FlowLinkDto> flowLinks,
+            @Valid List<@Valid FlowLayoutDto> flowLayouts,
             @Valid StateDto state) {}
 
     public record PushResponse(long cursor) {}
@@ -88,5 +129,8 @@ public final class SyncDtos {
             List<ProjectDto> projects,
             List<MilestoneDto> milestones,
             List<TodoDto> todos,
+            List<ObjectiveDto> objectives,
+            List<FlowLinkDto> flowLinks,
+            List<FlowLayoutDto> flowLayouts,
             StateDto state) {}
 }

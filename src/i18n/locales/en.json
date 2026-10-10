@@ -369,7 +369,8 @@
       "list": "List",
       "matrix": "Matrix",
       "roadmap": "Roadmap",
-      "calendar": "Calendar"
+      "calendar": "Calendar",
+      "flow": "Flow"
     },
     "presentationsLabel": "Project presentations",
     "edit": "Edit project",
@@ -445,6 +446,10 @@
       "older": "Over 3 months",
       "oldest": "Oldest open tasks",
       "days": "{{count}} d"
+    },
+    "objectives": {
+      "title": "Objectives",
+      "open": "Open in Flow"
     }
   },
   "taskList": {
@@ -517,5 +522,88 @@
     "unscheduled": "Unscheduled",
     "unscheduledHint": "Drag a task onto a day to give it a due date.",
     "unscheduledEmpty": "Every open task has a due date."
+  },
+  "flow": {
+    "title": "Flow",
+    "view": "View",
+    "diagram": "Diagram",
+    "horizon": "Horizon",
+    "horizonFilter": "Filter by horizon",
+    "status": "Status",
+    "statusFilter": "Filter by status",
+    "addObjective": "Objective",
+    "addMilestone": "Milestone",
+    "tidyUp": "Tidy up",
+    "tidyUpHint": "Forget the hand-placed positions and lay everything out again",
+    "fit": "Fit",
+    "zoom": "Zoom",
+    "zoomIn": "Zoom in",
+    "zoomOut": "Zoom out",
+    "canvasLabel": "Flow diagram. Drag the background to pan, Ctrl + wheel or pinch to zoom, Alt + arrows to move the selected card, L to link it.",
+    "lanes": {
+      "work": "Milestones and tasks",
+      "workSpan": "The work"
+    },
+    "emptyHint": "Add an objective with + Objective or by double-clicking a lane, then drag a ● port onto it to link work to it.",
+    "refusals": {
+      "missing": "That objective no longer exists.",
+      "self": "An objective cannot feed itself.",
+      "project": "Links stay inside one project.",
+      "horizon": "An objective can only feed one with a longer horizon.",
+      "duplicate": "Already linked."
+    },
+    "unlink": "Remove link",
+    "dragToLink": "Drag onto an objective to link",
+    "moveTask": "Drag onto another milestone to move this task",
+    "collapse": "Collapse",
+    "expand": "Expand",
+    "progress": "{{done}} of {{total}} tasks done",
+    "horizonChangeConfirm": "Changing the horizon removes the links to objectives that would no longer be further ahead. Continue?",
+    "objective": {
+      "newTitle": "New objective",
+      "editTitle": "Edit objective",
+      "title": "Title",
+      "titlePlaceholder": "e.g. Checkout works on mobile",
+      "horizon": "Horizon",
+      "status": "Status",
+      "targetDate": "Target date",
+      "progressHint": "Progress comes from the work linked to this objective; it is never ticked off by hand.",
+      "delete": "Delete",
+      "deleteConfirm": "Delete this objective and its links? The tasks and milestones linked to it are kept."
+    },
+    "horizons": {
+      "short": "Short term",
+      "medium": "Medium term",
+      "long": "Long term"
+    },
+    "horizonSpans": {
+      "short": "Days to weeks",
+      "medium": "1 to 3 months",
+      "long": "Quarters to years"
+    },
+    "statuses": {
+      "active": "Active",
+      "achieved": "Achieved",
+      "dropped": "Dropped"
+    },
+    "tidyUpConfirm": "Tidy up forgets every hand-placed position of this project's diagram, and there is no undo. Continue?",
+    "serves": "Serves: {{names}}",
+    "outline": {
+      "title": "Outline",
+      "label": "Objectives and the work that feeds them",
+      "noObjectives": "No objectives yet. Add one with + Objective, then link work to it with the ⋯ button of a task or milestone.",
+      "empty": "Nothing to show yet. Add a milestone or an objective.",
+      "unlinked": "Not linked to any objective",
+      "edit": "Edit"
+    },
+    "link": {
+      "title": "Links of {{name}}",
+      "open": "Links of {{name}}",
+      "openShort": "Link to an objective (L)",
+      "linkedTo": "Linked to",
+      "linkTo": "Link to objective",
+      "remove": "Remove link to {{title}}",
+      "none": "No objective available to link to."
+    }
   }
 }
