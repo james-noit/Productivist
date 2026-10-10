@@ -59,6 +59,17 @@
       </label>
     </div>
 
+    <div class="task-detail__row">
+      <label>
+        {{ 'todo.startDate' | translate }}
+        <input type="date" name="startDate" [ngModel]="startDate()" (ngModelChange)="startDate.set($event)" (change)="commitDates()" />
+      </label>
+      <label>
+        {{ 'todo.dueDate' | translate }}
+        <input type="date" name="dueDate" [ngModel]="dueDate()" (ngModelChange)="dueDate.set($event)" (change)="commitDates()" />
+      </label>
+    </div>
+
     <label class="task-detail__tags-label">
       {{ 'todo.tags' | translate }}
       <input

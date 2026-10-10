@@ -1,25 +1,15 @@
 <section class="kanban-board" [attr.aria-label]="'kanban.board' | translate">
   <div class="kanban-board__toolbar">
-    <div class="kanban-board__group" role="group" [attr.aria-label]="'kanban.swimlanes' | translate">
-      <span class="kanban-board__group-label">{{ 'kanban.swimlanes' | translate }}</span>
-      <button
-        type="button"
-        class="kanban-board__chip"
-        [class.kanban-board__chip--active]="swimlanes() === 'milestones'"
-        [attr.aria-pressed]="swimlanes() === 'milestones'"
-        (click)="setSwimlanes('milestones')"
-      >
-        {{ 'kanban.swimlanesMilestones' | translate }}
-      </button>
-      <button
-        type="button"
-        class="kanban-board__chip"
-        [class.kanban-board__chip--active]="swimlanes() === 'none'"
-        [attr.aria-pressed]="swimlanes() === 'none'"
-        (click)="setSwimlanes('none')"
-      >
-        {{ 'kanban.swimlanesNone' | translate }}
-      </button>
+    <div class="kanban-board__group" role="group" [attr.aria-label]="'kanban.groupBy' | translate">
+      <span class="control-label">{{ 'kanban.groupBy' | translate }}</span>
+      <div class="segmented">
+        <button type="button" class="segmented__option" [attr.aria-pressed]="swimlanes() === 'milestones'" (click)="setSwimlanes('milestones')">
+          {{ 'kanban.swimlanesMilestones' | translate }}
+        </button>
+        <button type="button" class="segmented__option" [attr.aria-pressed]="swimlanes() === 'none'" (click)="setSwimlanes('none')">
+          {{ 'kanban.swimlanesNone' | translate }}
+        </button>
+      </div>
     </div>
 
     <input
@@ -31,6 +21,11 @@
       [placeholder]="'kanban.search' | translate"
       [attr.aria-label]="'kanban.search' | translate"
     />
+
+    <button type="button" class="switch" role="switch" [attr.aria-checked]="view.showDoneTasks()" (click)="toggleShowDone()">
+      <span class="switch__track" aria-hidden="true"></span>
+      {{ 'projectDetail.showDone' | translate }}
+    </button>
 
     @if (addingMilestone()) {
       <input
@@ -46,31 +41,20 @@
         (blur)="cancelAddMilestone()"
       />
     } @else {
-      <button type="button" class="kanban-board__chip kanban-board__add-milestone" (click)="startAddMilestone()">
-        {{ 'kanban.addMilestone' | translate }}
+      <button type="button" class="button-ghost kanban-board__add-milestone" (click)="startAddMilestone()">
+        + {{ 'kanban.addMilestone' | translate }}
       </button>
     }
   </div>
 
   @if (milestones().length) {
     <div class="kanban-board__filter" role="group" [attr.aria-label]="'kanban.milestoneFilter' | translate">
-      <button
-        type="button"
-        class="kanban-board__chip"
-        [class.kanban-board__chip--active]="!milestoneFilter()"
-        [attr.aria-pressed]="!milestoneFilter()"
-        (click)="setFilter(null)"
-      >
+      <span class="control-label">{{ 'kanban.milestoneLabel' | translate }}</span>
+      <button type="button" class="filter-chip" [attr.aria-pressed]="!milestoneFilter()" (click)="setFilter(null)">
         {{ 'kanban.allMilestones' | translate }}
       </button>
       @for (m of milestones(); track m.id) {
-        <button
-          type="button"
-          class="kanban-board__chip"
-          [class.kanban-board__chip--active]="milestoneFilter() === m.id"
-          [attr.aria-pressed]="milestoneFilter() === m.id"
-          (click)="setFilter(m.id)"
-        >
+        <button type="button" class="filter-chip" [attr.aria-pressed]="milestoneFilter() === m.id" (click)="setFilter(m.id)">
           {{ m.name }}
         </button>
       }
@@ -132,6 +116,12 @@
                     (moveMilestone)="moveMilestone(todo, $event)"
                     (cardDrop)="onCellDrop($event, lane, col.key, todo.id)"
                   />
+                }
+
+                @if (col.key === 'done' && !view.showDoneTasks() && lane.doneCount) {
+                  <button type="button" class="kanban-board__more" (click)="view.showDoneTasks.set(true)">
+                    {{ 'kanban.doneHidden' | translate: { count: lane.doneCount } }}
+                  </button>
                 }
 
                 @if (col.key === 'done' && lane.hiddenDone) {

@@ -5,6 +5,7 @@ import { localStorageSignal } from '../../../core/local-storage-signal';
 import { BOARD_COLUMNS, columnOf, type BoardColumnKey } from '../../../lib/kanban';
 import { ProjectsService } from '../../../services/projects.service';
 import { TodosService } from '../../../services/todos.service';
+import { ViewService } from '../../../services/view.service';
 import { KanbanCardComponent } from '../kanban-card/kanban-card.component';
 import { TaskDetailModalComponent } from '../task-detail-modal/task-detail-modal.component';
 import type { Milestone, Project } from '../../../types/project';
@@ -22,6 +23,8 @@ interface Lane {
   /** Null for the flat board and for the "No milestone" lane. */
   milestone: Milestone | null;
   columns: Record<BoardColumnKey, Todo[]>;
+  /** Tasks in the Done cell, whether or not they are shown. */
+  doneCount: number;
   /** Cards in the Done cell beyond the cap, hidden until "Show all". */
   hiddenDone: number;
   total: number;
@@ -46,13 +49,14 @@ const emptyColumns = (): Record<BoardColumnKey, Todo[]> => ({ todo: [], inProgre
 export class KanbanBoardComponent {
   private readonly todosService = inject(TodosService);
   private readonly projects = inject(ProjectsService);
+  readonly view = inject(ViewService);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
 
   readonly project = input.required<Project>();
 
   readonly columns = BOARD_COLUMNS;
   readonly swimlanes = localStorageSignal<Swimlanes>('productivist.kanbanSwimlanes', 'milestones');
-  private readonly filters = localStorageSignal<Record<string, string | null>>('productivist.kanbanMilestoneFilter', {});
+  private readonly filters = this.view.kanbanMilestoneFilter;
 
   readonly search = signal('');
   readonly collapsed = signal<ReadonlySet<string>>(new Set());
@@ -88,12 +92,13 @@ export class KanbanBoardComponent {
     const lanesOn = this.swimlanes() === 'milestones';
     const query = this.search().trim().toLowerCase();
     const showAllDone = this.showAllDone();
+    const showDone = this.view.showDoneTasks();
     const known = new Set(milestones.map((m) => m.id));
 
     const lanes: Lane[] = [];
     const byKey = new Map<string, Lane>();
     const addLane = (key: string, milestone: Milestone | null) => {
-      const lane: Lane = { key, milestone, columns: emptyColumns(), hiddenDone: 0, total: 0 };
+      const lane: Lane = { key, milestone, columns: emptyColumns(), doneCount: 0, hiddenDone: 0, total: 0 };
       lanes.push(lane);
       byKey.set(key, lane);
     };
@@ -116,7 +121,9 @@ export class KanbanBoardComponent {
       const lane = byKey.get(lanesOn ? (milestoneId ?? NO_MILESTONE_LANE) : FLAT_LANE);
       if (!lane) continue;
       const column = columnOf(todo);
-      lane.columns[column].push(todo);
+      // Hidden done tasks still count (header, lane total, placeholder) but render no card.
+      if (column === 'done') lane.doneCount++;
+      if (column !== 'done' || showDone) lane.columns[column].push(todo);
       lane.total++;
       totals[column]++;
       totalTasks++;
@@ -132,9 +139,8 @@ export class KanbanBoardComponent {
     return { lanes, totals, totalTasks };
   });
 
-  readonly hiddenDoneTotal = computed(() => this.board().lanes.reduce((n, l) => n + l.hiddenDone, 0));
   /** Only meaningful while the cap is lifted: whether there is anything to collapse again. */
-  readonly doneOverLimit = computed(() => this.showAllDone() && this.board().lanes.some((l) => l.columns.done.length > DONE_LIMIT));
+  readonly doneOverLimit = computed(() => this.view.showDoneTasks() && this.showAllDone() && this.board().lanes.some((l) => l.columns.done.length > DONE_LIMIT));
 
   /** Whether the project has any task at all, ignoring search and filter, for the empty hint. */
   readonly projectHasTasks = computed(() => {
@@ -152,6 +158,10 @@ export class KanbanBoardComponent {
   milestoneNameOf(todo: Todo): string | null {
     if (this.swimlanes() === 'milestones' || !todo.milestoneId) return null;
     return this.milestoneNames().get(todo.milestoneId) ?? null;
+  }
+
+  toggleShowDone(): void {
+    this.view.showDoneTasks.update((on) => !on);
   }
 
   setSwimlanes(value: Swimlanes): void {

@@ -1,0 +1,385 @@
+:host {
+  display: block;
+  min-width: 0;
+}
+
+.project-roadmap {
+  --roadmap-label: 14rem;
+  --line-height: 2.5rem;
+  --task-line-height: 1.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.project-roadmap__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+}
+
+.project-roadmap__group {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.project-roadmap__done-switch {
+  margin-left: auto;
+}
+
+.project-roadmap__empty {
+  margin: 0;
+  padding: 2rem 1rem;
+  text-align: center;
+  color: var(--color-text-muted);
+}
+
+/* The grid scrolls inside this box, never the page; the header sticks to its top, labels to its left. */
+.project-roadmap__scroll {
+  overflow: auto;
+  max-height: calc(100vh - 14rem);
+  min-height: 8rem;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background-color: var(--color-surface);
+}
+
+.project-roadmap__canvas {
+  width: max-content;
+  min-width: 100%;
+}
+
+.project-roadmap__head {
+  position: sticky;
+  top: 0;
+  z-index: 4;
+  display: flex;
+  background-color: var(--color-surface-alt);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.project-roadmap__head-track {
+  flex-shrink: 0;
+}
+
+.project-roadmap__head-row {
+  position: relative;
+  height: 1.6rem;
+}
+
+.project-roadmap__head-row--weeks {
+  border-top: 1px solid var(--color-border);
+}
+
+.project-roadmap__head-cell {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  padding: 0 0.4rem;
+  border-left: 1px solid var(--color-border);
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.project-roadmap__head-row--weeks .project-roadmap__head-cell {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Label column: sticky on the left, with the tracks scrolling underneath. */
+.project-roadmap__label {
+  position: sticky;
+  left: 0;
+  z-index: 3;
+  flex: 0 0 var(--roadmap-label);
+  width: var(--roadmap-label);
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0 0.6rem 0 0.25rem;
+  background-color: var(--color-surface);
+  border-right: 1px solid var(--color-border);
+  min-width: 0;
+}
+
+.project-roadmap__label--head {
+  background-color: var(--color-surface-alt);
+  padding-left: 0.6rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.project-roadmap__label--task {
+  padding-left: 1.75rem;
+}
+
+.project-roadmap__body {
+  position: relative;
+}
+
+.project-roadmap__overlay {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: var(--roadmap-label);
+  right: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.project-roadmap__month-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background-color: var(--color-border);
+  opacity: 0.6;
+}
+
+.project-roadmap__today {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  margin-left: -1px;
+  background-color: var(--color-high);
+}
+
+.project-roadmap__line {
+  display: flex;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.project-roadmap__line--milestone {
+  height: var(--line-height);
+}
+
+.project-roadmap__line--task {
+  height: var(--task-line-height);
+}
+
+.project-roadmap__line--task .project-roadmap__label {
+  background-color: var(--color-surface);
+}
+
+.project-roadmap__track {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.project-roadmap__chevron {
+  flex-shrink: 0;
+  width: 1.4rem;
+  background: none;
+  border: none;
+  border-radius: 4px;
+  color: var(--color-text-muted);
+  padding: 0.2rem 0;
+  transition: transform 0.15s;
+}
+
+.project-roadmap__chevron:disabled {
+  opacity: 0.3;
+}
+
+.project-roadmap__chevron--open {
+  transform: rotate(90deg);
+}
+
+.project-roadmap__chevron:focus-visible,
+.project-roadmap__task-name:focus-visible,
+.project-roadmap__bar:focus-visible,
+.project-roadmap__mark:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 1px;
+}
+
+.project-roadmap__name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+.project-roadmap__count {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.project-roadmap__task-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: left;
+  background: none;
+  border: none;
+  padding: 0.1rem 0;
+  font-size: 0.85rem;
+  color: var(--color-text);
+}
+
+.project-roadmap__task-name:hover {
+  text-decoration: underline;
+}
+
+.project-roadmap__task-name--done {
+  color: var(--color-text-muted);
+  text-decoration: line-through;
+}
+
+/* Milestone bars: a tinted track filled with the done share. */
+.project-roadmap__bar {
+  position: absolute;
+  top: 50%;
+  height: 1.5rem;
+  transform: translateY(-50%);
+  padding: 0;
+  overflow: hidden;
+  background-color: color-mix(in srgb, var(--color-primary) 22%, transparent);
+  border: 1px solid var(--color-primary);
+  border-radius: 6px;
+  color: var(--color-text);
+  z-index: 2;
+  /* Horizontal drags move the bar; vertical ones still scroll the grid. */
+  touch-action: pan-y;
+  cursor: grab;
+  user-select: none;
+}
+
+.project-roadmap__bar:active {
+  cursor: grabbing;
+}
+
+.project-roadmap__fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background-color: color-mix(in srgb, var(--color-primary) 60%, transparent);
+}
+
+.project-roadmap__bar-text {
+  position: relative;
+  padding: 0 0.4rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.project-roadmap__bar--overdue {
+  background-color: color-mix(in srgb, var(--color-high) 22%, transparent);
+  border-color: var(--color-high);
+}
+
+.project-roadmap__bar--overdue .project-roadmap__fill {
+  background-color: color-mix(in srgb, var(--color-high) 60%, transparent);
+}
+
+.project-roadmap__bar--open {
+  border-right-style: dashed;
+}
+
+.project-roadmap__tail {
+  position: absolute;
+  top: 50%;
+  height: 1.5rem;
+  transform: translateY(-50%);
+  background: linear-gradient(to right, color-mix(in srgb, var(--color-primary) 35%, transparent), transparent);
+  border-radius: 0 6px 6px 0;
+  pointer-events: none;
+}
+
+.project-roadmap__bar--point {
+  width: 1.1rem;
+  height: 1.1rem;
+  margin-left: -0.55rem;
+  transform: translateY(-50%) rotate(45deg);
+  border-radius: 3px;
+  background-color: var(--color-primary);
+}
+
+.project-roadmap__bar--point.project-roadmap__bar--overdue {
+  background-color: var(--color-high);
+}
+
+/* Task marks: thin bars for a start-to-due range, dots for a single day. */
+.project-roadmap__mark {
+  position: absolute;
+  top: 50%;
+  padding: 0;
+  border: none;
+  z-index: 2;
+  background-color: var(--color-primary);
+}
+
+.project-roadmap__mark--bar {
+  height: 0.6rem;
+  transform: translateY(-50%);
+  border-radius: 3px;
+}
+
+.project-roadmap__mark--dot {
+  width: 0.7rem;
+  height: 0.7rem;
+  margin-left: -0.35rem;
+  transform: translateY(-50%);
+  border-radius: 50%;
+}
+
+.project-roadmap__mark--soon {
+  background-color: var(--color-capacity-high);
+}
+
+.project-roadmap__mark--overdue {
+  background-color: var(--color-high);
+}
+
+.project-roadmap__mark--done {
+  background-color: var(--color-capacity-safe);
+}
+
+.project-roadmap__unscheduled {
+  padding: 0.75rem 1rem;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+}
+
+.project-roadmap__unscheduled h3 {
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
+}
+
+.project-roadmap__unscheduled ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.project-roadmap__unscheduled li {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .project-roadmap__chevron {
+    transition: none;
+  }
+}

@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, input, output, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '@ngx-translate/core';
+import { isIsoDate, orderedDates } from '../../../lib/dates';
 import { TodosService } from '../../../services/todos.service';
 import { ProjectsService } from '../../../services/projects.service';
 import {
@@ -34,6 +35,8 @@ export class TaskDetailModalComponent {
   readonly importance = signal<Priority>('medium');
   readonly urgency = signal<Priority>('medium');
   readonly tagsInput = signal('');
+  readonly startDate = signal('');
+  readonly dueDate = signal('');
   readonly pomodorosForTermination = signal('');
 
   readonly projectRef = signal('');
@@ -54,6 +57,8 @@ export class TaskDetailModalComponent {
       this.importance.set(todo.importance);
       this.urgency.set(todo.urgency);
       this.tagsInput.set(todo.tags.join(', '));
+      this.startDate.set(todo.startDate ?? '');
+      this.dueDate.set(todo.dueDate ?? '');
       this.pomodorosForTermination.set(todo.pomodorosForTermination?.toString() ?? '');
       this.projectRef.set(todo.projectId ?? '');
       this.milestoneRef.set(todo.milestoneId ?? '');
@@ -80,6 +85,17 @@ export class TaskDetailModalComponent {
 
   commitUrgency(): void {
     this.todos.updateTodo(this.todo().id, { urgency: this.urgency() });
+  }
+
+  /** An empty or invalid date input clears the field; a start after the due date swaps the two. */
+  commitDates(): void {
+    const dates = orderedDates(
+      isIsoDate(this.startDate()) ? this.startDate() : undefined,
+      isIsoDate(this.dueDate()) ? this.dueDate() : undefined,
+    );
+    this.startDate.set(dates.startDate ?? '');
+    this.dueDate.set(dates.dueDate ?? '');
+    this.todos.updateTodo(this.todo().id, dates);
   }
 
   commitTags(): void {

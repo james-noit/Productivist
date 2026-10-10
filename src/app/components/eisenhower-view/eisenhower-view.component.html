@@ -99,6 +99,6 @@
   }
 
   @if (activeQuadrant(); as quadrant) {
-    <app-new-task-modal [quadrant]="quadrant" (close)="closeNewTask()" />
+    <app-new-task-modal [quadrant]="quadrant" [projectId]="projectId()" (close)="closeNewTask()" />
   }
 </section>

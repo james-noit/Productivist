@@ -1,0 +1,31 @@
+<div class="modal-overlay" (click)="closeOnBackdrop($event)">
+  <form class="modal-panel milestone-dates" role="dialog" aria-modal="true" [attr.aria-label]="'milestoneDates.title' | translate" (ngSubmit)="save()">
+    <div class="milestone-dates__header">
+      <h3>{{ 'milestoneDates.title' | translate }}</h3>
+      <button type="button" class="milestone-dates__close" [attr.aria-label]="'todo.close' | translate" (click)="close.emit()">✕</button>
+    </div>
+
+    <label class="milestone-dates__field">
+      {{ 'projects.name' | translate }}
+      <input type="text" name="name" [ngModel]="name()" (ngModelChange)="name.set($event)" [placeholder]="'projects.milestoneNamePlaceholder' | translate" />
+    </label>
+
+    <div class="milestone-dates__row">
+      <label class="milestone-dates__field">
+        {{ 'todo.startDate' | translate }}
+        <input type="date" name="startDate" [ngModel]="startDate()" (ngModelChange)="startDate.set($event)" />
+      </label>
+      <label class="milestone-dates__field">
+        {{ 'todo.dueDate' | translate }}
+        <input type="date" name="dueDate" [ngModel]="dueDate()" (ngModelChange)="dueDate.set($event)" />
+      </label>
+    </div>
+
+    <div class="milestone-dates__actions">
+      <button type="button" class="button-ghost" [disabled]="!hasDates()" (click)="clearDates()">{{ 'milestoneDates.clear' | translate }}</button>
+      <span class="milestone-dates__spacer"></span>
+      <button type="button" class="milestone-dates__cancel" (click)="close.emit()">{{ 'projects.cancel' | translate }}</button>
+      <button type="submit" class="milestone-dates__save">{{ 'projects.save' | translate }}</button>
+    </div>
+  </form>
+</div>

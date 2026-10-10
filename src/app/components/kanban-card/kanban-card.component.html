@@ -30,6 +30,11 @@
     @if (todo().pomodorosForTermination) {
       <span class="kanban-card__pomodoros" aria-hidden="true">🍅 {{ todo().pomodorosForTermination }}</span>
     }
+    @if (due(); as due) {
+      <span class="kanban-card__due" [class]="'kanban-card__due--' + due.state" [title]="'todo.dueDate' | translate">
+        {{ due.label }}
+      </span>
+    }
     @if (milestoneName(); as name) {
       <span class="badge kanban-card__milestone">{{ name }}</span>
     }

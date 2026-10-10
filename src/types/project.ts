@@ -14,6 +14,9 @@ export interface Milestone {
   name: string
   order: number
   createdAt: number
+  /** Local calendar days as 'YYYY-MM-DD' (see lib/dates.ts). */
+  startDate?: string
+  dueDate?: string
 }
 
 export interface ProjectExport {

@@ -4,11 +4,12 @@ import type { EisenhowerQuadrant } from '../types/eisenhower';
 
 export type AppView = 'pomodoro' | 'projects' | 'project' | 'admin';
 /** How the project detail view shows its project. A union so later presentations extend it. */
-export type ProjectPresentation = 'kanban';
+export type ProjectPresentation = 'overview' | 'kanban' | 'list' | 'matrix' | 'roadmap' | 'calendar';
 export type ProjectsTab = 'projects' | 'matrix';
 export type ConfigSection = 'general' | 'account';
 
 const VIEWS: readonly AppView[] = ['pomodoro', 'projects', 'project', 'admin'];
+const PRESENTATIONS: readonly ProjectPresentation[] = ['overview', 'kanban', 'list', 'matrix', 'roadmap', 'calendar'];
 
 /**
  * The Planning lab and Eisenhower views were folded into Projects. A stored value naming either
@@ -33,6 +34,19 @@ function migrateLegacyView(): void {
       }
     }
     localStorage.removeItem('productivist.planningLabTab');
+    // An unknown stored presentation (a newer or older build wrote it) would render an empty project view.
+    const presentation = localStorage.getItem('productivist.projectPresentation');
+    if (presentation !== null) {
+      let stored: unknown;
+      try {
+        stored = JSON.parse(presentation);
+      } catch {
+        stored = null;
+      }
+      if (!PRESENTATIONS.includes(stored as ProjectPresentation)) {
+        localStorage.setItem('productivist.projectPresentation', JSON.stringify('kanban'));
+      }
+    }
   } catch {
     // Storage disabled — the signals fall back to their defaults.
   }
@@ -65,6 +79,18 @@ export class ViewService {
   /** Project shown by the `project` view, and the presentation it uses. Both survive reloads. */
   readonly activeProjectId = localStorageSignal<string | null>('productivist.activeProjectId', null);
   readonly projectPresentation = localStorageSignal<ProjectPresentation>('productivist.projectPresentation', 'kanban');
+
+  /**
+   * Whether the Kanban, List and Calendar presentations show completed tasks. Hidden by default so a
+   * long-running project does not drown in finished work. Device-local, like the rest of the view state.
+   */
+  readonly showDoneTasks = localStorageSignal<boolean>('productivist.showDoneTasks', false);
+
+  /**
+   * The Kanban board's milestone filter, per project id (null = all). Lives here rather than in the board
+   * because the Overview opens the board already filtered, and two signals on one key would go stale.
+   */
+  readonly kanbanMilestoneFilter = localStorageSignal<Record<string, string | null>>('productivist.kanbanMilestoneFilter', {});
 
   /** Open state of the Plan-my-day modal. Not persisted: the wizard's own stage is. */
   readonly planningOpen = signal(false);
@@ -99,6 +125,12 @@ export class ViewService {
     this.setView('project');
   }
 
+  /** Opens the Kanban presentation of the active project, narrowed to one milestone (null = all). */
+  openKanbanForMilestone(projectId: string, milestoneId: string | null): void {
+    this.kanbanMilestoneFilter.update((all) => ({ ...all, [projectId]: milestoneId }));
+    this.projectPresentation.set('kanban');
+  }
+
   openPlanning(): void {
     this.planningOpen.set(true);
   }
@@ -116,6 +148,7 @@ export class ViewService {
   reset(): void {
     this.current.set('projects');
     this.activeProjectId.set(null);
+    this.showDoneTasks.set(false);
     this.projectsTab.set('projects');
     this.focusQuadrant.set(null);
     this.planningOpen.set(false);

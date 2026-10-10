@@ -1,0 +1,161 @@
+<section class="project-roadmap" [attr.aria-label]="'roadmap.title' | translate">
+  <div class="project-roadmap__toolbar">
+    <div class="project-roadmap__group" role="group" [attr.aria-label]="'roadmap.zoom' | translate">
+      <span class="control-label">{{ 'roadmap.zoom' | translate }}</span>
+      <div class="segmented">
+        @for (z of zooms; track z) {
+          <button type="button" class="segmented__option" [attr.aria-pressed]="zoom() === z" (click)="setZoom(z)">
+            {{ 'roadmap.zooms.' + z | translate }}
+          </button>
+        }
+      </div>
+    </div>
+
+    <button type="button" class="button-ghost" (click)="scrollToToday()">{{ 'roadmap.today' | translate }}</button>
+
+    <button type="button" class="switch project-roadmap__done-switch" role="switch" [attr.aria-checked]="view.showDoneTasks()" (click)="toggleShowDone()">
+      <span class="switch__track" aria-hidden="true"></span>
+      {{ 'projectDetail.showDone' | translate }}
+    </button>
+  </div>
+
+  @if (!layout().lines.length && !layout().unscheduled.length) {
+    <p class="project-roadmap__empty">{{ 'roadmap.empty' | translate }}</p>
+  } @else {
+    @if (layout().lines.length) {
+      <div class="project-roadmap__scroll" #scroller>
+        <div class="project-roadmap__canvas">
+          <div class="project-roadmap__head">
+            <div class="project-roadmap__label project-roadmap__label--head">{{ 'roadmap.milestones' | translate }}</div>
+            <div class="project-roadmap__head-track" [style.width.px]="layout().width">
+              <div class="project-roadmap__head-row">
+                @for (cell of layout().months; track cell.key) {
+                  <span class="project-roadmap__head-cell" [style.left.px]="cell.left" [style.width.px]="cell.width">{{ cell.label }}</span>
+                }
+              </div>
+              @if (layout().weeks.length) {
+                <div class="project-roadmap__head-row project-roadmap__head-row--weeks">
+                  @for (cell of layout().weeks; track cell.key) {
+                    <span class="project-roadmap__head-cell" [style.left.px]="cell.left" [style.width.px]="cell.width">
+                      {{ 'roadmap.week' | translate: { number: cell.number } }}
+                    </span>
+                  }
+                </div>
+              }
+            </div>
+          </div>
+
+          <div class="project-roadmap__body">
+            <div class="project-roadmap__overlay" aria-hidden="true">
+              @for (cell of layout().months; track cell.key) {
+                <span class="project-roadmap__month-line" [style.left.px]="cell.left"></span>
+              }
+              @if (layout().todayX !== null) {
+                <span class="project-roadmap__today" [style.left.px]="layout().todayX"></span>
+              }
+            </div>
+
+            @for (line of layout().lines; track line.key) {
+              @if (line.kind === 'milestone') {
+                <div class="project-roadmap__line project-roadmap__line--milestone">
+                  <div class="project-roadmap__label">
+                    <button
+                      type="button"
+                      class="project-roadmap__chevron"
+                      [class.project-roadmap__chevron--open]="line.expanded"
+                      [disabled]="!line.taskCount"
+                      [attr.aria-expanded]="line.expanded"
+                      [attr.aria-label]="(line.expanded ? 'roadmap.collapse' : 'roadmap.expand') | translate"
+                      (click)="toggleExpanded(line.key)"
+                    >
+                      ▸
+                    </button>
+                    <span class="project-roadmap__name">{{ line.milestone ? line.milestone.name : ('kanban.noMilestone' | translate) }}</span>
+                    <span class="project-roadmap__count">{{ line.done }}/{{ line.total }}</span>
+                  </div>
+                  <div class="project-roadmap__track" [style.width.px]="layout().width">
+                    @if (line.bar; as bar) {
+                      @if (line.milestone; as milestone) {
+                        <button
+                          type="button"
+                          class="project-roadmap__bar"
+                          [class]="'project-roadmap__bar--' + bar.kind"
+                          [class.project-roadmap__bar--overdue]="line.overdue"
+                          [style.left.px]="bar.left"
+                          [style.width.px]="bar.kind === 'point' ? null : bar.width"
+                          [attr.aria-label]="'roadmap.editDates' | translate: { name: milestone.name }"
+                          [title]="line.range ? (line.range.key | translate: line.range.params) : ''"
+                          [style.translate.px]="dragOffset(milestone.id)"
+                          (pointerdown)="onBarPointerDown($event, milestone)"
+                          (pointermove)="onBarPointerMove($event)"
+                          (pointerup)="onBarPointerUp(milestone)"
+                          (pointercancel)="onBarPointerCancel()"
+                          (click)="openDates(milestone.id)"
+                        >
+                          @if (bar.kind !== 'point') {
+                            <span class="project-roadmap__fill" [style.width.%]="line.percent"></span>
+                            @if (bar.showLabel) {
+                              <span class="project-roadmap__bar-text">{{ line.percent }}%</span>
+                            }
+                          }
+                        </button>
+                        @if (bar.kind === 'open' && bar.tail) {
+                          <span class="project-roadmap__tail" aria-hidden="true" [style.left.px]="bar.left + bar.width" [style.width.px]="bar.tail"></span>
+                        }
+                      }
+                    }
+                  </div>
+                </div>
+              } @else {
+                <div class="project-roadmap__line project-roadmap__line--task">
+                  <div class="project-roadmap__label project-roadmap__label--task">
+                    <button type="button" class="project-roadmap__task-name" [class.project-roadmap__task-name--done]="line.todo.done" (click)="detailId.set(line.todo.id)">
+                      {{ line.todo.title }}
+                    </button>
+                  </div>
+                  <div class="project-roadmap__track" [style.width.px]="layout().width">
+                    @if (line.mark; as mark) {
+                      <button
+                        type="button"
+                        class="project-roadmap__mark"
+                        [class]="'project-roadmap__mark--' + mark.kind + ' project-roadmap__mark--' + line.state"
+                        [style.left.px]="mark.left"
+                        [style.width.px]="mark.kind === 'bar' ? mark.width : null"
+                        [attr.aria-label]="line.todo.title"
+                        [title]="line.todo.title + (line.range ? ' · ' : '') + (line.range ? (line.range.key | translate: line.range.params) : '')"
+                        (click)="detailId.set(line.todo.id)"
+                      ></button>
+                    }
+                  </div>
+                </div>
+              }
+            }
+          </div>
+        </div>
+      </div>
+    }
+
+    @if (layout().unscheduled.length) {
+      <section class="project-roadmap__unscheduled" aria-labelledby="roadmap-unscheduled">
+        <h3 id="roadmap-unscheduled">{{ 'roadmap.unscheduled' | translate }}</h3>
+        <ul>
+          @for (item of layout().unscheduled; track item.milestone.id) {
+            <li>
+              <span class="project-roadmap__name">{{ item.milestone.name }}</span>
+              <span class="project-roadmap__count">{{ item.done }}/{{ item.total }}</span>
+              <button type="button" class="button-ghost" (click)="datesId.set(item.milestone.id)">{{ 'roadmap.setDates' | translate }}</button>
+            </li>
+          }
+        </ul>
+      </section>
+    }
+  }
+
+  @if (detailTodo(); as todo) {
+    <app-task-detail-modal [todo]="todo" (close)="detailId.set(null)" />
+  }
+
+  @if (datesMilestone(); as milestone) {
+    <app-milestone-dates-modal [milestone]="milestone" (close)="datesId.set(null)" />
+  }
+</section>

@@ -20,6 +20,8 @@ public final class SyncDtos {
     private SyncDtos() {}
 
     private static final String PRIORITY = "low|medium|high";
+    /** A local calendar day, e.g. 2026-10-10. */
+    private static final String DATE = "\\d{4}-\\d{2}-\\d{2}";
 
     public record ProjectDto(
             @NotBlank @Size(max = 64) String id,
@@ -38,6 +40,8 @@ public final class SyncDtos {
             @Size(max = 500) String name,
             double order,
             long createdAt,
+            @Pattern(regexp = DATE) String startDate,
+            @Pattern(regexp = DATE) String dueDate,
             long updatedAt,
             boolean deleted) {}
 
@@ -56,6 +60,8 @@ public final class SyncDtos {
             @Size(max = 64) String milestoneId,
             Integer pomodorosForTermination,
             @Pattern(regexp = "todo|inProgress|review") String status,
+            @Pattern(regexp = DATE) String startDate,
+            @Pattern(regexp = DATE) String dueDate,
             long updatedAt,
             boolean deleted) {}
 

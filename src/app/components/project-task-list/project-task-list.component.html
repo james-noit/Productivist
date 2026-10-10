@@ -1,0 +1,272 @@
+<section class="task-list" [attr.aria-label]="'taskList.title' | translate">
+  @if (selectedCount()) {
+    <div class="task-list__bulk" role="toolbar" [attr.aria-label]="'taskList.bulk.label' | translate">
+      <span class="task-list__bulk-count">{{ 'taskList.bulk.selected' | translate: { count: selectedCount() } }}</span>
+
+      <select [attr.aria-label]="'taskList.columns.status' | translate" (change)="bulkStatus($event)">
+        <option value="" selected disabled>{{ 'taskList.columns.status' | translate }}</option>
+        @for (col of boardColumns; track col.key) {
+          <option [value]="col.key">{{ col.labelKey | translate }}</option>
+        }
+      </select>
+      <select [attr.aria-label]="'taskList.columns.milestone' | translate" (change)="bulkMilestone($event)">
+        <option value="" selected disabled>{{ 'taskList.columns.milestone' | translate }}</option>
+        <option [value]="noMilestone">{{ 'kanban.noMilestone' | translate }}</option>
+        @for (m of milestones(); track m.id) {
+          <option [value]="m.id">{{ m.name }}</option>
+        }
+      </select>
+      <select [attr.aria-label]="'todo.importance' | translate" (change)="bulkPriority('importance', $event)">
+        <option value="" selected disabled>{{ 'todo.importance' | translate }}</option>
+        <option value="low">{{ 'todo.low' | translate }}</option>
+        <option value="medium">{{ 'todo.medium' | translate }}</option>
+        <option value="high">{{ 'todo.high' | translate }}</option>
+      </select>
+      <select [attr.aria-label]="'todo.urgency' | translate" (change)="bulkPriority('urgency', $event)">
+        <option value="" selected disabled>{{ 'todo.urgency' | translate }}</option>
+        <option value="low">{{ 'todo.low' | translate }}</option>
+        <option value="medium">{{ 'todo.medium' | translate }}</option>
+        <option value="high">{{ 'todo.high' | translate }}</option>
+      </select>
+      <label class="task-list__bulk-date">
+        <span class="control-label">{{ 'todo.dueDate' | translate }}</span>
+        <input type="date" (change)="bulkDueDate($event)" />
+      </label>
+
+      <button type="button" class="button-ghost" (click)="bulkDone()">{{ 'taskList.bulk.markDone' | translate }}</button>
+      <button type="button" class="button-ghost task-list__danger" (click)="bulkDelete()">{{ 'todo.delete' | translate }}</button>
+      <button type="button" class="button-ghost task-list__bulk-clear" (click)="clearSelection()">{{ 'taskList.bulk.clear' | translate }}</button>
+    </div>
+  } @else {
+    <div class="task-list__toolbar">
+      <input
+        type="search"
+        class="task-list__search"
+        [ngModel]="search()"
+        (ngModelChange)="search.set($event)"
+        name="listSearch"
+        [placeholder]="'kanban.search' | translate"
+        [attr.aria-label]="'kanban.search' | translate"
+      />
+
+      <div class="task-list__group" role="group" [attr.aria-label]="'taskList.groupBy' | translate">
+        <span class="control-label">{{ 'kanban.groupBy' | translate }}</span>
+        <div class="segmented">
+          <button type="button" class="segmented__option" [attr.aria-pressed]="grouping() === 'none'" (click)="setGrouping('none')">
+            {{ 'kanban.swimlanesNone' | translate }}
+          </button>
+          <button type="button" class="segmented__option" [attr.aria-pressed]="grouping() === 'milestone'" (click)="setGrouping('milestone')">
+            {{ 'taskList.columns.milestone' | translate }}
+          </button>
+          <button type="button" class="segmented__option" [attr.aria-pressed]="grouping() === 'status'" (click)="setGrouping('status')">
+            {{ 'taskList.columns.status' | translate }}
+          </button>
+        </div>
+      </div>
+
+      <button type="button" class="switch" role="switch" [attr.aria-checked]="view.showDoneTasks()" (click)="toggleShowDone()">
+        <span class="switch__track" aria-hidden="true"></span>
+        {{ 'projectDetail.showDone' | translate }}
+      </button>
+
+      <button type="button" class="button-ghost task-list__add" (click)="startAdd()">+ {{ 'kanban.addTask' | translate }}</button>
+    </div>
+
+    <div class="task-list__filters">
+      <div class="task-list__filter" role="group" [attr.aria-label]="'taskList.statusFilter' | translate">
+        <span class="control-label">{{ 'taskList.columns.status' | translate }}</span>
+        <button type="button" class="filter-chip" [attr.aria-pressed]="statusFilter() === 'all'" (click)="statusFilter.set('all')">
+          {{ 'kanban.allMilestones' | translate }}
+        </button>
+        @for (key of statusFilters; track key) {
+          <button type="button" class="filter-chip" [attr.aria-pressed]="statusFilter() === key" (click)="statusFilter.set(key)">
+            {{ 'kanban.columns.' + key | translate }}
+          </button>
+        }
+      </div>
+
+      @if (milestones().length) {
+        <div class="task-list__filter" role="group" [attr.aria-label]="'kanban.milestoneFilter' | translate">
+          <span class="control-label">{{ 'kanban.milestoneLabel' | translate }}</span>
+          <button type="button" class="filter-chip" [attr.aria-pressed]="milestoneFilter() === 'all'" (click)="milestoneFilter.set('all')">
+            {{ 'kanban.allMilestones' | translate }}
+          </button>
+          @for (m of milestones(); track m.id) {
+            <button type="button" class="filter-chip" [attr.aria-pressed]="milestoneFilter() === m.id" (click)="milestoneFilter.set(m.id)">
+              {{ m.name }}
+            </button>
+          }
+          <button type="button" class="filter-chip" [attr.aria-pressed]="milestoneFilter() === noMilestone" (click)="milestoneFilter.set(noMilestone)">
+            {{ 'kanban.noMilestone' | translate }}
+          </button>
+        </div>
+      }
+    </div>
+  }
+
+  @if (!projectHasTasks() && !adding()) {
+    <p class="task-list__empty">{{ 'kanban.emptyProject' | translate }}</p>
+  } @else if (!visibleCount() && !adding()) {
+    <p class="task-list__empty">{{ 'taskList.noResults' | translate }}</p>
+  }
+
+  <div class="task-list__scroll">
+    <table class="task-list__table">
+      <caption class="visually-hidden">{{ 'taskList.title' | translate }}</caption>
+      <thead>
+        <tr>
+          <th scope="col" class="task-list__col-select">
+            <input
+              type="checkbox"
+              [checked]="allSelected()"
+              [indeterminate]="someSelected()"
+              [disabled]="!visibleCount()"
+              [attr.aria-label]="'taskList.selectAll' | translate"
+              (change)="toggleSelectAll()"
+            />
+          </th>
+          @for (col of tableColumns; track col.key) {
+            <th scope="col" [attr.aria-sort]="col.sort ? sortState(col.sort.key) : null" [attr.data-col]="col.key">
+              @if (col.sort) {
+                <button type="button" class="task-list__sort" (click)="toggleSort(col)">
+                  {{ col.labelKey | translate }}
+                  <span class="task-list__sort-icon" aria-hidden="true">{{ sortIcon(col) }}</span>
+                </button>
+              } @else {
+                {{ col.labelKey | translate }}
+              }
+            </th>
+          }
+          <th scope="col" class="task-list__col-open"><span class="visually-hidden">{{ 'eisenhower.taskDetail' | translate }}</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        @if (adding()) {
+          <tr class="task-list__add-row">
+            <td></td>
+            <td [attr.colspan]="tableColumns.length + 1">
+              <input
+                type="text"
+                class="task-list__add-input"
+                [ngModel]="newTitle()"
+                (ngModelChange)="newTitle.set($event)"
+                name="listQuickAdd"
+                [placeholder]="'kanban.taskTitlePlaceholder' | translate"
+                [attr.aria-label]="'kanban.taskTitlePlaceholder' | translate"
+                (keydown.enter)="addTask()"
+                (keydown.escape)="cancelAdd()"
+                (blur)="cancelAdd()"
+              />
+            </td>
+          </tr>
+        }
+
+        @for (group of groups(); track group.key) {
+          @if (group.labelKey || group.name) {
+            <tr class="task-list__group-row">
+              <th scope="rowgroup" [attr.colspan]="tableColumns.length + 2">
+                {{ group.labelKey ? (group.labelKey | translate) : group.name }}
+                <span class="task-list__group-count">{{ group.rows.length }}</span>
+              </th>
+            </tr>
+          }
+          @for (row of group.rows; track row.todo.id) {
+            <tr [class.task-list__row--selected]="isSelected(row.todo.id)" [class.task-list__row--done]="row.todo.done">
+              <td class="task-list__col-select">
+                <input
+                  type="checkbox"
+                  [checked]="isSelected(row.todo.id)"
+                  [attr.aria-label]="'taskList.selectRow' | translate: { title: row.todo.title }"
+                  (change)="toggleSelect(row.todo.id)"
+                />
+              </td>
+              <td class="task-list__cell-title">
+                @if (editingId() === row.todo.id) {
+                  <input
+                    type="text"
+                    class="task-list__title-input"
+                    [value]="draftTitle()"
+                    [attr.aria-label]="'taskList.columns.title' | translate"
+                    (input)="onDraftInput($event)"
+                    (keydown.enter)="commitTitle(row.todo)"
+                    (keydown.escape)="cancelEditTitle()"
+                    (blur)="commitTitle(row.todo)"
+                  />
+                } @else {
+                  <button type="button" class="task-list__title" [title]="'taskList.editTitle' | translate" (click)="startEditTitle(row.todo)">
+                    {{ row.todo.title }}
+                  </button>
+                }
+              </td>
+              <td>
+                <select [attr.aria-label]="'taskList.columns.status' | translate" (change)="setStatus(row.todo, $event)">
+                  @for (col of boardColumns; track col.key) {
+                    <option [value]="col.key" [selected]="col.key === row.column">{{ col.labelKey | translate }}</option>
+                  }
+                </select>
+              </td>
+              <td>
+                <select [attr.aria-label]="'taskList.columns.milestone' | translate" (change)="setMilestone(row.todo, $event)">
+                  <option value="" [selected]="!row.todo.milestoneId">{{ 'kanban.noMilestone' | translate }}</option>
+                  @for (m of milestones(); track m.id) {
+                    <option [value]="m.id" [selected]="m.id === row.todo.milestoneId">{{ m.name }}</option>
+                  }
+                </select>
+              </td>
+              <td>
+                <app-priority-select [value]="row.todo.importance" (valueChange)="setPriority(row.todo, 'importance', $event)" />
+              </td>
+              <td>
+                <app-priority-select [value]="row.todo.urgency" (valueChange)="setPriority(row.todo, 'urgency', $event)" />
+              </td>
+              <td>
+                <input
+                  type="date"
+                  [value]="row.todo.startDate ?? ''"
+                  [attr.aria-label]="'todo.startDate' | translate"
+                  (change)="setDate(row.todo, 'startDate', $event)"
+                />
+              </td>
+              <td>
+                <input
+                  type="date"
+                  class="task-list__due"
+                  [class]="row.due ? 'task-list__due--' + row.due : ''"
+                  [value]="row.todo.dueDate ?? ''"
+                  [attr.aria-label]="'todo.dueDate' | translate"
+                  (change)="setDate(row.todo, 'dueDate', $event)"
+                />
+              </td>
+              <td>
+                <input
+                  type="text"
+                  class="task-list__tags"
+                  [value]="row.todo.tags.join(', ')"
+                  [attr.aria-label]="'todo.tags' | translate"
+                  [placeholder]="'todo.tagsPlaceholder' | translate"
+                  (change)="setTags(row.todo, $event)"
+                />
+              </td>
+              <td class="task-list__age">{{ 'overview.age.days' | translate: { count: row.ageDays } }}</td>
+              <td class="task-list__col-open">
+                <button
+                  type="button"
+                  class="task-list__open"
+                  [attr.aria-label]="'eisenhower.taskDetail' | translate"
+                  [title]="'eisenhower.taskDetail' | translate"
+                  (click)="detailId.set(row.todo.id)"
+                >
+                  ⤢
+                </button>
+              </td>
+            </tr>
+          }
+        }
+      </tbody>
+    </table>
+  </div>
+
+  @if (detailTodo(); as todo) {
+    <app-task-detail-modal [todo]="todo" (close)="detailId.set(null)" />
+  }
+</section>

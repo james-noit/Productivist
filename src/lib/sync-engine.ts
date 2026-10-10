@@ -153,6 +153,9 @@ export interface MilestoneWire extends WireRow {
   name: string;
   order: number;
   createdAt: number;
+  /** Optional on the wire: absent or null means no date. */
+  startDate?: string | null;
+  dueDate?: string | null;
 }
 
 export interface TodoWire extends WireRow {
@@ -170,6 +173,8 @@ export interface TodoWire extends WireRow {
   pomodorosForTermination: number | null;
   /** Optional on the wire: absent or null means 'todo'. */
   status?: TaskStatus | null;
+  startDate?: string | null;
+  dueDate?: string | null;
 }
 
 type Content<W extends WireRow> = Omit<W, 'updatedAt' | 'deleted'>;
@@ -203,14 +208,22 @@ export const milestoneCodec = {
     name: m.name,
     order: m.order,
     createdAt: m.createdAt,
+    // Only when set, like Todo.status: an always-present key would change every existing row's hash.
+    ...(m.startDate ? { startDate: m.startDate } : {}),
+    ...(m.dueDate ? { dueDate: m.dueDate } : {}),
   }),
-  fromWire: (w: MilestoneWire): Milestone => ({
-    id: w.id,
-    projectId: w.projectId,
-    name: w.name,
-    order: w.order,
-    createdAt: w.createdAt,
-  }),
+  fromWire: (w: MilestoneWire): Milestone => {
+    const milestone: Milestone = {
+      id: w.id,
+      projectId: w.projectId,
+      name: w.name,
+      order: w.order,
+      createdAt: w.createdAt,
+    };
+    if (w.startDate) milestone.startDate = w.startDate;
+    if (w.dueDate) milestone.dueDate = w.dueDate;
+    return milestone;
+  },
   tombstone: (id: string): Content<MilestoneWire> => ({ id, projectId: '', name: '', order: 0, createdAt: 0 }),
 };
 
@@ -231,6 +244,8 @@ export const todoCodec = {
     pomodorosForTermination: t.pomodorosForTermination ?? null,
     // Only when set: an always-present key would change every existing todo's content hash.
     ...(t.status ? { status: t.status } : {}),
+    ...(t.startDate ? { startDate: t.startDate } : {}),
+    ...(t.dueDate ? { dueDate: t.dueDate } : {}),
   }),
   fromWire: (w: TodoWire): Todo => {
     const todo: Todo = {
@@ -249,6 +264,8 @@ export const todoCodec = {
     if (w.milestoneId !== null) todo.milestoneId = w.milestoneId;
     if (w.pomodorosForTermination !== null) todo.pomodorosForTermination = w.pomodorosForTermination;
     if (w.status) todo.status = w.status;
+    if (w.startDate) todo.startDate = w.startDate;
+    if (w.dueDate) todo.dueDate = w.dueDate;
     return todo;
   },
   tombstone: (id: string): Content<TodoWire> => ({

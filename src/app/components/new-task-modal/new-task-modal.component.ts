@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject, input, output, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, input, output, signal, untracked, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { ProjectsService } from '../../../services/projects.service';
@@ -22,6 +22,9 @@ export class NewTaskModalComponent {
   private readonly translate = inject(TranslateService);
 
   readonly quadrant = input.required<EisenhowerQuadrant>();
+  /** Preselects the picker, so a task added from a project's own matrix lands in that project. */
+  readonly projectId = input<string | null>(null);
+  readonly milestoneId = input<string | null>(null);
   readonly close = output<void>();
 
   private readonly picker = viewChild(ProjectMilestonePickerComponent);
@@ -44,8 +47,10 @@ export class NewTaskModalComponent {
   private init(): void {
     this.title.set('');
     this.description.set('');
-    this.projectRef.set('');
-    this.milestoneRef.set('');
+    // Untracked: a changed preselection must not wipe what the user has typed.
+    const projectId = untracked(this.projectId);
+    this.projectRef.set(projectId ?? '');
+    this.milestoneRef.set(projectId ? (untracked(this.milestoneId) ?? '') : '');
     this.pomodorosForTermination.set('');
     this.picker()?.resetDrafts();
   }

@@ -1,6 +1,8 @@
 import { ChangeDetectionStrategy, Component, ElementRef, computed, inject, input, output, signal } from '@angular/core';
 import { TranslatePipe } from '@ngx-translate/core';
+import { dueState, formatIso } from '../../../lib/dates';
 import { BOARD_COLUMNS, columnOf, type BoardColumnKey } from '../../../lib/kanban';
+import { SettingsService } from '../../../services/settings.service';
 import { TodosService } from '../../../services/todos.service';
 import { TaskBadgesComponent } from '../task-badges/task-badges.component';
 import type { Milestone } from '../../../types/project';
@@ -20,6 +22,7 @@ import type { Todo } from '../../../types/todo';
 })
 export class KanbanCardComponent {
   private readonly todos = inject(TodosService);
+  private readonly settings = inject(SettingsService);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
 
   readonly todo = input.required<Todo>();
@@ -39,6 +42,16 @@ export class KanbanCardComponent {
   readonly menuOpen = signal(false);
   readonly dragging = computed(() => this.todos.draggedId() === this.todo().id);
   readonly column = computed(() => columnOf(this.todo()));
+
+  private readonly dateFormat = computed(
+    () => new Intl.DateTimeFormat(this.settings.language(), { day: 'numeric', month: 'short' }),
+  );
+  /** The due-date chip: its text and urgency (`soon` = within 2 days, `overdue` = past and still open). */
+  readonly due = computed(() => {
+    const iso = this.todo().dueDate;
+    if (!iso) return null;
+    return { label: formatIso(this.dateFormat(), iso), state: dueState(iso, this.todo().done) };
+  });
 
   onDragStart(event: DragEvent): void {
     this.menuOpen.set(false);

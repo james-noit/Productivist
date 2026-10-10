@@ -77,18 +77,20 @@ public class SyncService {
                         rs.getLong("updated_at"), rs.getBoolean("deleted")))
                 .list();
         List<MilestoneDto> milestones = jdbc.sql("""
-                        SELECT id, project_id, name, sort_order, created_at, updated_at, deleted
+                        SELECT id, project_id, name, sort_order, created_at, start_date, due_date, updated_at, deleted
                         FROM milestones WHERE user_id = :u AND seq > :since AND seq <= :cursor ORDER BY seq
                         """)
                 .param("u", userId).param("since", since).param("cursor", cursor)
                 .query((rs, i) -> new MilestoneDto(
                         rs.getString("id"), rs.getString("project_id"), rs.getString("name"),
-                        rs.getDouble("sort_order"), rs.getLong("created_at"), rs.getLong("updated_at"),
-                        rs.getBoolean("deleted")))
+                        rs.getDouble("sort_order"), rs.getLong("created_at"),
+                        rs.getString("start_date"), rs.getString("due_date"),
+                        rs.getLong("updated_at"), rs.getBoolean("deleted")))
                 .list();
         List<TodoDto> todos = jdbc.sql("""
                         SELECT id, title, description, importance, urgency, tags, done, sort_order, created_at,
-                               completed_at, project_id, milestone_id, pomodoros_for_termination, status, updated_at, deleted
+                               completed_at, project_id, milestone_id, pomodoros_for_termination, status, start_date, due_date,
+                               updated_at, deleted
                         FROM todos WHERE user_id = :u AND seq > :since AND seq <= :cursor ORDER BY seq
                         """)
                 .param("u", userId).param("since", since).param("cursor", cursor)
@@ -152,16 +154,19 @@ public class SyncService {
         requireText(m.projectId(), "milestone projectId");
         requireText(m.name(), "milestone name");
         jdbc.sql("""
-                        INSERT INTO milestones (user_id, id, project_id, name, sort_order, created_at, updated_at, deleted)
-                        VALUES (:u, :id, :projectId, :name, :order, :createdAt, :updatedAt, :deleted)
+                        INSERT INTO milestones (user_id, id, project_id, name, sort_order, created_at,
+                                                start_date, due_date, updated_at, deleted)
+                        VALUES (:u, :id, :projectId, :name, :order, :createdAt, :startDate, :dueDate, :updatedAt, :deleted)
                         ON CONFLICT (user_id, id) DO UPDATE SET
                             project_id = EXCLUDED.project_id, name = EXCLUDED.name, sort_order = EXCLUDED.sort_order,
-                            created_at = EXCLUDED.created_at, updated_at = EXCLUDED.updated_at,
+                            created_at = EXCLUDED.created_at, start_date = EXCLUDED.start_date,
+                            due_date = EXCLUDED.due_date, updated_at = EXCLUDED.updated_at,
                             deleted = EXCLUDED.deleted, seq = nextval('sync_seq')
                         WHERE milestones.updated_at <= EXCLUDED.updated_at
                         """)
                 .param("u", userId).param("id", m.id()).param("projectId", m.projectId()).param("name", m.name())
                 .param("order", m.order()).param("createdAt", m.createdAt())
+                .param("startDate", m.startDate()).param("dueDate", m.dueDate())
                 .param("updatedAt", m.updatedAt()).param("deleted", m.deleted())
                 .update();
     }
@@ -177,10 +182,11 @@ public class SyncService {
         jdbc.sql("""
                         INSERT INTO todos (user_id, id, title, description, importance, urgency, tags, done, sort_order,
                                            created_at, completed_at, project_id, milestone_id, pomodoros_for_termination,
-                                           status, updated_at, deleted)
+                                           status, start_date, due_date, updated_at, deleted)
                         VALUES (:u, :id, :title, :description, :importance, :urgency,
                                 ARRAY(SELECT jsonb_array_elements_text(CAST(:tags AS jsonb))), :done, :order,
-                                :createdAt, :completedAt, :projectId, :milestoneId, :pomodoros, :status, :updatedAt, :deleted)
+                                :createdAt, :completedAt, :projectId, :milestoneId, :pomodoros, :status, :startDate, :dueDate,
+                                :updatedAt, :deleted)
                         ON CONFLICT (user_id, id) DO UPDATE SET
                             title = EXCLUDED.title, description = EXCLUDED.description, importance = EXCLUDED.importance,
                             urgency = EXCLUDED.urgency, tags = EXCLUDED.tags, done = EXCLUDED.done,
@@ -188,7 +194,7 @@ public class SyncService {
                             completed_at = EXCLUDED.completed_at, project_id = EXCLUDED.project_id,
                             milestone_id = EXCLUDED.milestone_id,
                             pomodoros_for_termination = EXCLUDED.pomodoros_for_termination,
-                            status = EXCLUDED.status,
+                            status = EXCLUDED.status, start_date = EXCLUDED.start_date, due_date = EXCLUDED.due_date,
                             updated_at = EXCLUDED.updated_at, deleted = EXCLUDED.deleted, seq = nextval('sync_seq')
                         WHERE todos.updated_at <= EXCLUDED.updated_at
                         """)
@@ -236,6 +242,8 @@ public class SyncService {
         m.put("milestoneId", t.milestoneId());
         m.put("pomodoros", t.pomodorosForTermination());
         m.put("status", t.status());
+        m.put("startDate", t.startDate());
+        m.put("dueDate", t.dueDate());
         m.put("updatedAt", t.updatedAt());
         m.put("deleted", t.deleted());
         return m;
@@ -282,7 +290,7 @@ public class SyncService {
                 rs.getDouble("sort_order"), rs.getLong("created_at"), rs.getObject("completed_at", Long.class),
                 rs.getString("project_id"), rs.getString("milestone_id"),
                 rs.getObject("pomodoros_for_termination", Integer.class),
-                rs.getString("status"),
+                rs.getString("status"), rs.getString("start_date"), rs.getString("due_date"),
                 rs.getLong("updated_at"), rs.getBoolean("deleted"));
     }
 

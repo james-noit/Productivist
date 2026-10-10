@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, ElementRef, afterNextRender, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, afterNextRender, computed, inject, input, signal } from '@angular/core';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { localStorageSignal } from '../../../core/local-storage-signal';
 import { TodosService } from '../../../services/todos.service';
@@ -54,24 +54,52 @@ export class EisenhowerViewComponent {
     });
   }
 
+  /** Limits the matrix to one project (the project detail's Matrix presentation); null shows every task. */
+  readonly projectId = input<string | null>(null);
+
   readonly viewMode = localStorageSignal<EisenhowerViewMode>('productivist.eisenhowerViewMode', 'detailed');
 
-  readonly activeTodos = computed(() => this.todos.sortTasks(this.todos.todos().filter((todo) => !todo.done)));
+  readonly activeTodos = computed(() => {
+    const projectId = this.projectId();
+    return this.todos.sortTasks(this.todos.todos().filter((todo) => !todo.done && (!projectId || todo.projectId === projectId)));
+  });
 
   /**
    * Every quadrant with its tasks already split and grouped by project. The template used
    * to call `groupByProject(listFor(q.key))` inline, which rebuilt a Map and one array per
-   * project for all four quadrants on every change detection pass.
+   * project for all four quadrants on every change detection pass. Inside a single project the
+   * compact and minimal modes group by milestone instead, since every task has the same project.
    */
   readonly quadrants = computed<QuadrantSection[]>(() => {
     const byQuadrant: Record<EisenhowerQuadrant, Todo[]> = { doFirst: [], schedule: [], delegate: [], eliminate: [] };
     for (const todo of this.activeTodos()) byQuadrant[classify(todo)].push(todo);
+    const byMilestone = !!this.projectId();
     return QUADRANTS.map((def) => ({
       ...def,
       todos: byQuadrant[def.key],
-      groups: this.groupByProject(byQuadrant[def.key]),
+      groups: byMilestone ? this.groupByMilestone(byQuadrant[def.key]) : this.groupByProject(byQuadrant[def.key]),
     }));
   });
+
+  /** Groups in milestone order, with tasks that have no (or a deleted) milestone last. */
+  private groupByMilestone(list: Todo[]): ProjectGroup[] {
+    const milestones = new Map(this.projects.milestones().map((m) => [m.id, m]));
+    const groups = new Map<string, ProjectGroup & { order: number }>();
+    for (const todo of list) {
+      const milestone = todo.milestoneId ? milestones.get(todo.milestoneId) : undefined;
+      const key = milestone ? milestone.id : '__none__';
+      if (!groups.has(key)) {
+        groups.set(key, {
+          key,
+          name: milestone ? milestone.name : this.translate.instant('kanban.noMilestone'),
+          order: milestone ? milestone.order : Number.POSITIVE_INFINITY,
+          todos: [],
+        });
+      }
+      groups.get(key)!.todos.push(todo);
+    }
+    return Array.from(groups.values()).sort((a, b) => (a.order === b.order ? 0 : a.order < b.order ? -1 : 1));
+  }
 
   private groupByProject(list: Todo[]): ProjectGroup[] {
     const groups = new Map<string, ProjectGroup>();

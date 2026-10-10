@@ -1,5 +1,6 @@
 import { Injectable, computed, inject } from '@angular/core';
 import { localStorageSignal } from '../core/local-storage-signal';
+import { sanitizeDates } from '../lib/dates';
 import { createId } from '../core/create-id';
 import { TodosService } from './todos.service';
 import type { Milestone, Project, ProjectExport } from '../types/project';
@@ -64,7 +65,7 @@ export class ProjectsService {
     return milestone;
   }
 
-  updateMilestone(id: string, patch: Partial<Pick<Milestone, 'name'>>): void {
+  updateMilestone(id: string, patch: Partial<Pick<Milestone, 'name' | 'startDate' | 'dueDate'>>): void {
     this.milestones.update((list) => list.map((m) => (m.id === id ? { ...m, ...patch } : m)));
   }
 
@@ -79,7 +80,7 @@ export class ProjectsService {
 
   importProjects(data: Partial<ProjectExport>): void {
     this.projects.set(Array.isArray(data?.projects) ? data.projects : []);
-    this.milestones.set(Array.isArray(data?.milestones) ? data.milestones : []);
+    this.milestones.set(Array.isArray(data?.milestones) ? data.milestones.map(sanitizeDates) : []);
   }
 
   reset(): void {

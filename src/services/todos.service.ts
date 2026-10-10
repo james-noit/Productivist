@@ -2,6 +2,7 @@ import { Injectable, computed, signal } from '@angular/core';
 import { localStorageSignal } from '../core/local-storage-signal';
 import { createId } from '../core/create-id';
 import { comparePriority } from '../lib/eisenhower';
+import { sanitizeDates } from '../lib/dates';
 import { columnOf, reorderSlice, statusOf, type BoardColumnKey } from '../lib/kanban';
 import type { Priority, TaskStatus, Todo, TodoExport } from '../types/todo';
 
@@ -12,6 +13,24 @@ export interface TodoFilters {
 }
 
 export type TodoViewMode = 'all' | 'projects';
+
+/** The fields `updateTodo`/`updateMany` may change. Completion goes through `toggleDone`/`updateMany({ done })`. */
+export type TodoPatch = Partial<
+  Pick<
+    Todo,
+    | 'title'
+    | 'description'
+    | 'importance'
+    | 'urgency'
+    | 'tags'
+    | 'projectId'
+    | 'milestoneId'
+    | 'pomodorosForTermination'
+    | 'status'
+    | 'startDate'
+    | 'dueDate'
+  >
+>;
 
 
 
@@ -87,6 +106,8 @@ export class TodosService {
     milestoneId?: string;
     pomodorosForTermination?: number;
     status?: TaskStatus;
+    startDate?: string;
+    dueDate?: string;
   }): void {
     const maxOrder = this.todos().reduce((max, t) => Math.max(max, t.order), -1);
     const todo: Todo = {
@@ -103,6 +124,8 @@ export class TodosService {
       milestoneId: input.milestoneId,
       pomodorosForTermination: input.pomodorosForTermination,
       ...(input.status ? { status: input.status } : {}),
+      ...(input.startDate ? { startDate: input.startDate } : {}),
+      ...(input.dueDate ? { dueDate: input.dueDate } : {}),
     };
     this.todos.update((list) => [...list, todo]);
   }
@@ -142,24 +165,40 @@ export class TodosService {
     if (this.currentTaskId() === id) this.currentTaskId.set(null);
   }
 
-  updateTodo(
-    id: string,
-    patch: Partial<
-      Pick<
-        Todo,
-        | 'title'
-        | 'description'
-        | 'importance'
-        | 'urgency'
-        | 'tags'
-        | 'projectId'
-        | 'milestoneId'
-        | 'pomodorosForTermination'
-        | 'status'
-      >
-    >,
-  ): void {
+  updateTodo(id: string, patch: TodoPatch): void {
     this.patchTodo(id, patch);
+  }
+
+  /**
+   * Applies one patch to several todos in a single write (the List's bulk actions). `done` is handled
+   * like `toggleDone`: completing stamps `completedAt`, un-completing clears it.
+   */
+  updateMany(ids: readonly string[], patch: TodoPatch & { done?: boolean }): void {
+    if (!ids.length) return;
+    const selected = new Set(ids);
+    const { done, ...rest } = patch;
+    const now = Date.now();
+    this.todos.update((list) =>
+      list.map((todo) => {
+        if (!selected.has(todo.id)) return todo;
+        const next: Todo = { ...todo, ...rest };
+        if (done !== undefined && done !== todo.done) {
+          next.done = done;
+          next.completedAt = done ? now : undefined;
+        }
+        return next;
+      }),
+    );
+    const current = this.currentTaskId();
+    if (done && current && selected.has(current)) this.currentTaskId.set(null);
+  }
+
+  removeMany(ids: readonly string[]): void {
+    if (!ids.length) return;
+    const selected = new Set(ids);
+    this.todos.update((list) => list.filter((todo) => !selected.has(todo.id)));
+    const current = this.currentTaskId();
+    if (current && selected.has(current)) this.currentTaskId.set(null);
   }
 
   toggleDone(id: string): void {
@@ -277,7 +316,7 @@ export class TodosService {
     if (!data || data.version !== 1 || !Array.isArray(data.todos)) {
       throw new Error('Invalid Productivist to-do file');
     }
-    this.todos.set(data.todos);
+    this.todos.set(data.todos.map(sanitizeDates));
   }
 
   reset(): void {

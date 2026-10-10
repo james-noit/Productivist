@@ -65,7 +65,8 @@ export class AppMenuComponent {
 
   exportTodo(): void {
     const data = {
-      version: 2,
+      // 3 added optional startDate/dueDate on todos and milestones; 2 and 3 import the same way.
+      version: 3,
       todos: this.todos.todos(),
       projects: this.projects.projects(),
       milestones: this.projects.milestones(),
@@ -93,6 +94,7 @@ export class AppMenuComponent {
     const text = await file.text();
     try {
       const parsed = JSON.parse(text);
+      if (typeof parsed.version === 'number' && parsed.version > 3) throw new Error('Unsupported export version');
       this.todos.importTodos({ version: 1, todos: parsed.todos ?? [] });
       this.projects.importProjects({ projects: parsed.projects ?? [], milestones: parsed.milestones ?? [] });
     } catch (error) {

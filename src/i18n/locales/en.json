@@ -135,7 +135,9 @@
     "viewAll": "All tasks",
     "viewProjects": "Projects",
     "searchPlaceholder": "Search by name…",
-    "noResults": "No matches"
+    "noResults": "No matches",
+    "startDate": "Start date",
+    "dueDate": "Due date"
   },
   "projects": {
     "title": "Tasks and projects",
@@ -359,14 +361,21 @@
     }
   },
   "projectDetail": {
-    "back": "← Tasks and projects",
+    "back": "Tasks and projects",
     "progress": "{{done}} of {{total}} tasks done",
     "presentations": {
-      "kanban": "Kanban"
+      "kanban": "Kanban",
+      "overview": "Overview",
+      "list": "List",
+      "matrix": "Matrix",
+      "roadmap": "Roadmap",
+      "calendar": "Calendar"
     },
     "presentationsLabel": "Project presentations",
     "edit": "Edit project",
-    "delete": "Delete project"
+    "delete": "Delete project",
+    "breadcrumb": "Breadcrumb",
+    "showDone": "Show done"
   },
   "kanban": {
     "columns": {
@@ -375,7 +384,6 @@
       "review": "Review",
       "done": "Done"
     },
-    "swimlanes": "Swimlanes",
     "swimlanesMilestones": "Milestones",
     "swimlanesNone": "None",
     "allMilestones": "All",
@@ -384,7 +392,7 @@
     "search": "Search tasks…",
     "addTask": "Add task",
     "taskTitlePlaceholder": "Task title",
-    "addMilestone": "+ Milestone",
+    "addMilestone": "Milestone",
     "moveTo": "Move to",
     "moveToMilestone": "Milestone",
     "moveCard": "Move card",
@@ -395,6 +403,119 @@
     "expandLane": "Expand lane",
     "board": "Kanban board",
     "dropHere": "Drop here",
-    "noMatches": "No tasks match your filters."
+    "noMatches": "No tasks match your filters.",
+    "groupBy": "Group by",
+    "milestoneLabel": "Milestone",
+    "doneHidden": "{{count}} done · Show"
+  },
+  "overview": {
+    "empty": "This project has no tasks yet. Add some from the Kanban or List presentation.",
+    "summary": "Project summary",
+    "noOpen": "No open tasks.",
+    "tiles": {
+      "open": "Open",
+      "inProgress": "In progress",
+      "done": "Done",
+      "overdue": "Overdue",
+      "complete": "Complete"
+    },
+    "milestones": {
+      "title": "Progress by milestone",
+      "open": "Open in Kanban",
+      "due": "Due {{date}}",
+      "segments": "{{done}} done, {{review}} in review, {{inProgress}} in progress, {{todo}} to do",
+      "editDates": "Edit dates of {{name}}"
+    },
+    "burnup": {
+      "title": "Burn-up",
+      "scope": "Scope (tasks created)",
+      "completed": "Completed",
+      "empty": "Complete a task to see the burn-up chart.",
+      "summary": "{{done}} of {{total}} tasks done"
+    },
+    "quadrants": {
+      "title": "Open tasks by priority",
+      "open": "Open the Matrix"
+    },
+    "age": {
+      "title": "Age of open tasks",
+      "week": "Under 1 week",
+      "month": "1–4 weeks",
+      "quarter": "1–3 months",
+      "older": "Over 3 months",
+      "oldest": "Oldest open tasks",
+      "days": "{{count}} d"
+    }
+  },
+  "taskList": {
+    "title": "Task list",
+    "groupBy": "Group by",
+    "statusFilter": "Filter by status",
+    "noResults": "No tasks to show. Done tasks stay hidden unless \"Show done\" is on.",
+    "selectAll": "Select all visible tasks",
+    "selectRow": "Select {{title}}",
+    "editTitle": "Click to edit",
+    "columns": {
+      "title": "Title",
+      "status": "Status",
+      "milestone": "Milestone",
+      "start": "Start",
+      "due": "Due",
+      "age": "Age"
+    },
+    "bulk": {
+      "label": "Bulk actions",
+      "selected": "{{count}} selected",
+      "markDone": "Mark done",
+      "clear": "Clear selection",
+      "deleteConfirm": "Delete {{count}} selected tasks? This cannot be undone."
+    }
+  },
+  "milestoneDates": {
+    "title": "Milestone dates",
+    "clear": "Clear dates"
+  },
+  "roadmap": {
+    "title": "Roadmap",
+    "zoom": "Zoom",
+    "zooms": {
+      "weeks": "Weeks",
+      "months": "Months",
+      "quarters": "Quarters"
+    },
+    "today": "Today",
+    "milestones": "Milestones",
+    "week": "W{{number}}",
+    "expand": "Show tasks",
+    "collapse": "Hide tasks",
+    "editDates": "Edit dates of {{name}}",
+    "range": "{{start}} – {{due}}",
+    "dueOn": "Due {{date}}",
+    "startOn": "From {{date}}",
+    "unscheduled": "Unscheduled milestones",
+    "setDates": "Set dates",
+    "empty": "This project has no milestones yet. Add milestones from the Kanban presentation, then give them dates here."
+  },
+  "calendar": {
+    "title": "Calendar",
+    "navigate": "Change period",
+    "previous": "Previous",
+    "next": "Next",
+    "today": "Today",
+    "view": "View",
+    "modes": {
+      "month": "Month",
+      "week": "Week"
+    },
+    "addTask": "Add a task due {{date}}",
+    "taskTitlePlaceholder": "Task title",
+    "more": "+{{count}} more",
+    "dayTasks": "Tasks due {{date}}",
+    "milestoneDue": "Milestone due: {{name}}",
+    "changeDate": "Change due date",
+    "clearDate": "Clear date",
+    "unscheduled": "Unscheduled",
+    "unscheduledHint": "Drag a task onto a day to give it a due date.",
+    "unscheduledEmpty": "Every open task has a due date."
   }
 }

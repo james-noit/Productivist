@@ -18,6 +18,9 @@ export interface Todo {
   milestoneId?: string
   pomodorosForTermination?: number
   status?: TaskStatus
+  /** Local calendar days as 'YYYY-MM-DD' (see lib/dates.ts); never epoch values, which shift across timezones. */
+  startDate?: string
+  dueDate?: string
 }
 
 export interface TodoExport {

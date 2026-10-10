@@ -1,0 +1,78 @@
+.milestone-dates {
+  --modal-max-width: 420px;
+}
+
+.milestone-dates__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.milestone-dates__header h3 {
+  margin: 0;
+}
+
+.milestone-dates__close {
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  color: var(--color-text);
+  padding: 0.2rem 0.5rem;
+}
+
+.milestone-dates__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.milestone-dates__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+.milestone-dates__field input {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  color: var(--color-text);
+  padding: 0.4rem 0.6rem;
+  min-width: 0;
+}
+
+.milestone-dates__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.milestone-dates__spacer {
+  flex: 1;
+}
+
+.milestone-dates__cancel,
+.milestone-dates__save {
+  border-radius: 6px;
+  padding: 0.4rem 0.9rem;
+}
+
+.milestone-dates__cancel {
+  background: none;
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+}
+
+.milestone-dates__save {
+  background-color: var(--color-primary);
+  border: 1px solid var(--color-primary);
+  color: var(--color-primary-contrast);
+  font-weight: 600;
+}
+
+.milestone-dates__actions .button-ghost:disabled {
+  opacity: 0.4;
+}

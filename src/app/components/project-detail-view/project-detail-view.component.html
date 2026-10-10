@@ -1,8 +1,15 @@
 @if (project(); as project) {
   <main class="project-detail">
-    <div class="project-detail__top">
-      <button type="button" class="project-detail__back" (click)="back()">{{ 'projectDetail.back' | translate }}</button>
-    </div>
+    <nav class="project-detail__crumbs" [attr.aria-label]="'projectDetail.breadcrumb' | translate">
+      <button type="button" class="project-detail__back" (click)="back()">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M19 12H5M11 6l-6 6 6 6" />
+        </svg>
+        {{ 'projectDetail.back' | translate }}
+      </button>
+      <span class="project-detail__crumb-sep" aria-hidden="true">/</span>
+      <span class="project-detail__crumb-current" aria-current="page">{{ project.name }}</span>
+    </nav>
 
     <header class="project-detail__header">
       <span class="project-detail__icon" aria-hidden="true"><app-icon [name]="project.icon" /></span>
@@ -51,15 +58,53 @@
           [class.active]="view.projectPresentation() === tab.key"
           (click)="selectPresentation(tab.key)"
         >
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path [attr.d]="tab.icon" />
+          </svg>
           {{ tab.labelKey | translate }}
         </button>
       }
     </div>
 
     @switch (view.projectPresentation()) {
+      @case ('overview') {
+        @defer (on immediate) {
+          <app-project-overview [project]="project" />
+        } @placeholder {
+          <div class="view-loading" aria-hidden="true"></div>
+        }
+      }
       @case ('kanban') {
         @defer (on immediate) {
           <app-kanban-board [project]="project" />
+        } @placeholder {
+          <div class="view-loading" aria-hidden="true"></div>
+        }
+      }
+      @case ('list') {
+        @defer (on immediate) {
+          <app-project-task-list [project]="project" />
+        } @placeholder {
+          <div class="view-loading" aria-hidden="true"></div>
+        }
+      }
+      @case ('matrix') {
+        @defer (on immediate) {
+          <app-eisenhower-view [projectId]="project.id" />
+        } @placeholder {
+          <div class="view-loading" aria-hidden="true"></div>
+        }
+      }
+      @case ('roadmap') {
+        @defer (on immediate) {
+          <app-project-roadmap [project]="project" />
+        } @placeholder {
+          <div class="view-loading" aria-hidden="true"></div>
+        }
+      }
+      @case ('calendar') {
+        @defer (on immediate) {
+          <app-project-calendar [project]="project" />
         } @placeholder {
           <div class="view-loading" aria-hidden="true"></div>
         }

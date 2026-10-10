@@ -135,7 +135,9 @@
     "viewAll": "Todas las tareas",
     "viewProjects": "Proyectos",
     "searchPlaceholder": "Buscar por nombre…",
-    "noResults": "Sin coincidencias"
+    "noResults": "Sin coincidencias",
+    "startDate": "Fecha de inicio",
+    "dueDate": "Fecha límite"
   },
   "projects": {
     "title": "Tareas y proyectos",
@@ -359,14 +361,21 @@
     }
   },
   "projectDetail": {
-    "back": "← Tareas y proyectos",
+    "back": "Tareas y proyectos",
     "progress": "{{done}} de {{total}} tareas hechas",
     "presentations": {
-      "kanban": "Kanban"
+      "kanban": "Kanban",
+      "overview": "Resumen",
+      "list": "Lista",
+      "matrix": "Matriz",
+      "roadmap": "Hoja de ruta",
+      "calendar": "Calendario"
     },
     "presentationsLabel": "Vistas del proyecto",
     "edit": "Editar proyecto",
-    "delete": "Eliminar proyecto"
+    "delete": "Eliminar proyecto",
+    "breadcrumb": "Ruta de navegación",
+    "showDone": "Mostrar hechas"
   },
   "kanban": {
     "columns": {
@@ -375,7 +384,6 @@
       "review": "En revisión",
       "done": "Hecho"
     },
-    "swimlanes": "Carriles",
     "swimlanesMilestones": "Hitos",
     "swimlanesNone": "Ninguno",
     "allMilestones": "Todos",
@@ -384,7 +392,7 @@
     "search": "Buscar tareas…",
     "addTask": "Añadir tarea",
     "taskTitlePlaceholder": "Título de la tarea",
-    "addMilestone": "+ Hito",
+    "addMilestone": "Hito",
     "moveTo": "Mover a",
     "moveToMilestone": "Hito",
     "moveCard": "Mover tarjeta",
@@ -395,6 +403,119 @@
     "expandLane": "Expandir carril",
     "board": "Tablero Kanban",
     "dropHere": "Suelta aquí",
-    "noMatches": "Ninguna tarea coincide con los filtros."
+    "noMatches": "Ninguna tarea coincide con los filtros.",
+    "groupBy": "Agrupar por",
+    "milestoneLabel": "Hito",
+    "doneHidden": "{{count}} hechas · Mostrar"
+  },
+  "overview": {
+    "empty": "Este proyecto aún no tiene tareas. Añade algunas desde Kanban o Lista.",
+    "summary": "Resumen del proyecto",
+    "noOpen": "No hay tareas abiertas.",
+    "tiles": {
+      "open": "Abiertas",
+      "inProgress": "En curso",
+      "done": "Hechas",
+      "overdue": "Vencidas",
+      "complete": "Completado"
+    },
+    "milestones": {
+      "title": "Progreso por hito",
+      "open": "Abrir en Kanban",
+      "due": "Vence {{date}}",
+      "segments": "{{done}} hechas, {{review}} en revisión, {{inProgress}} en curso, {{todo}} por hacer",
+      "editDates": "Editar las fechas de {{name}}"
+    },
+    "burnup": {
+      "title": "Burn-up",
+      "scope": "Alcance (tareas creadas)",
+      "completed": "Completadas",
+      "empty": "Completa una tarea para ver el gráfico burn-up.",
+      "summary": "{{done}} de {{total}} tareas hechas"
+    },
+    "quadrants": {
+      "title": "Tareas abiertas por prioridad",
+      "open": "Abrir la matriz"
+    },
+    "age": {
+      "title": "Antigüedad de las tareas abiertas",
+      "week": "Menos de 1 semana",
+      "month": "1–4 semanas",
+      "quarter": "1–3 meses",
+      "older": "Más de 3 meses",
+      "oldest": "Tareas abiertas más antiguas",
+      "days": "{{count}} d"
+    }
+  },
+  "taskList": {
+    "title": "Lista de tareas",
+    "groupBy": "Agrupar por",
+    "statusFilter": "Filtrar por estado",
+    "noResults": "No hay tareas que mostrar. Las tareas hechas se ocultan salvo que \"Mostrar hechas\" esté activado.",
+    "selectAll": "Seleccionar todas las tareas visibles",
+    "selectRow": "Seleccionar {{title}}",
+    "editTitle": "Haz clic para editar",
+    "columns": {
+      "title": "Título",
+      "status": "Estado",
+      "milestone": "Hito",
+      "start": "Inicio",
+      "due": "Vence",
+      "age": "Antigüedad"
+    },
+    "bulk": {
+      "label": "Acciones en bloque",
+      "selected": "{{count}} seleccionadas",
+      "markDone": "Marcar como hechas",
+      "clear": "Quitar selección",
+      "deleteConfirm": "¿Eliminar {{count}} tareas seleccionadas? No se puede deshacer."
+    }
+  },
+  "milestoneDates": {
+    "title": "Fechas del hito",
+    "clear": "Borrar fechas"
+  },
+  "roadmap": {
+    "title": "Hoja de ruta",
+    "zoom": "Zoom",
+    "zooms": {
+      "weeks": "Semanas",
+      "months": "Meses",
+      "quarters": "Trimestres"
+    },
+    "today": "Hoy",
+    "milestones": "Hitos",
+    "week": "S{{number}}",
+    "expand": "Mostrar tareas",
+    "collapse": "Ocultar tareas",
+    "editDates": "Editar las fechas de {{name}}",
+    "range": "{{start}} – {{due}}",
+    "dueOn": "Vence el {{date}}",
+    "startOn": "Desde el {{date}}",
+    "unscheduled": "Hitos sin fechas",
+    "setDates": "Poner fechas",
+    "empty": "Este proyecto aún no tiene hitos. Añade hitos desde la presentación Kanban y ponles fechas aquí."
+  },
+  "calendar": {
+    "title": "Calendario",
+    "navigate": "Cambiar de periodo",
+    "previous": "Anterior",
+    "next": "Siguiente",
+    "today": "Hoy",
+    "view": "Vista",
+    "modes": {
+      "month": "Mes",
+      "week": "Semana"
+    },
+    "addTask": "Añadir una tarea para el {{date}}",
+    "taskTitlePlaceholder": "Título de la tarea",
+    "more": "+{{count}} más",
+    "dayTasks": "Tareas del {{date}}",
+    "milestoneDue": "Hito que vence: {{name}}",
+    "changeDate": "Cambiar la fecha de vencimiento",
+    "clearDate": "Quitar la fecha",
+    "unscheduled": "Sin programar",
+    "unscheduledHint": "Arrastra una tarea a un día para darle fecha de vencimiento.",
+    "unscheduledEmpty": "Todas las tareas abiertas tienen fecha de vencimiento."
   }
 }

@@ -10,15 +10,45 @@
   margin: 0 auto;
 }
 
+.project-detail__crumbs {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-width: 0;
+}
+
 .project-detail__back {
-  background: none;
-  border: none;
-  color: var(--color-text-muted);
-  padding: 0.25rem 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 2.25rem;
+  padding: 0 0.85rem 0 0.65rem;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  color: var(--color-text);
+  font-size: 0.9rem;
+  flex-shrink: 0;
 }
 
 .project-detail__back:hover {
-  color: var(--color-text);
+  background-color: var(--color-surface-alt);
+}
+
+.project-detail__back:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.project-detail__crumb-sep,
+.project-detail__crumb-current {
+  color: var(--color-text-muted);
+}
+
+.project-detail__crumb-current {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .project-detail__header {
@@ -100,19 +130,40 @@
 
 .project-detail__tabs {
   display: flex;
-  gap: 0.5rem;
+  gap: 0.25rem;
+  border-bottom: 1px solid var(--color-border);
+  overflow-x: auto;
+  scrollbar-width: thin;
 }
 
 .project-detail__tabs button {
-  background: none;
-  border: 1px solid var(--color-border);
-  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-shrink: 0;
+  background: transparent;
+  border: none;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -1px;
+  border-radius: 0;
   color: var(--color-text-muted);
-  padding: 0.35rem 1rem;
+  padding: 0.6rem 0.9rem;
+  font-size: 0.95rem;
+  white-space: nowrap;
+}
+
+.project-detail__tabs button:hover {
+  color: var(--color-text);
+  border-bottom-color: var(--color-border);
 }
 
 .project-detail__tabs button.active {
-  background-color: var(--color-primary);
-  color: var(--color-primary-contrast);
-  border-color: var(--color-primary);
+  color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
+  font-weight: 600;
+}
+
+.project-detail__tabs button:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
 }

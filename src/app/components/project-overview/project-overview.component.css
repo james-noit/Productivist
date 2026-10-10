@@ -1,0 +1,439 @@
+:host {
+  display: block;
+  min-width: 0;
+}
+
+.project-overview {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1rem;
+}
+
+@media (min-width: 900px) {
+  .project-overview {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .project-overview__card--wide {
+    grid-column: 1 / -1;
+  }
+}
+
+.project-overview__empty,
+.project-overview__muted {
+  margin: 0;
+  color: var(--color-text-muted);
+}
+
+.project-overview__empty {
+  grid-column: 1 / -1;
+  padding: 2rem 1rem;
+  text-align: center;
+}
+
+.project-overview__card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-width: 0;
+  padding: 1rem;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+}
+
+.project-overview__card h3,
+.project-overview__card h4 {
+  margin: 0;
+}
+
+.project-overview__card h3 {
+  font-size: 1rem;
+}
+
+.project-overview__card h4 {
+  margin-top: 0.5rem;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted);
+}
+
+/* Headline tiles */
+
+.project-overview__tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(7.5rem, 1fr));
+  gap: 0.75rem;
+}
+
+.project-overview__tile {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.75rem 1rem;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-left: 4px solid var(--color-text-muted);
+  border-radius: 8px;
+}
+
+.project-overview__tile--progress {
+  border-left-color: var(--color-primary);
+}
+
+.project-overview__tile--done {
+  border-left-color: var(--color-capacity-safe);
+}
+
+.project-overview__tile--overdue {
+  border-left-color: var(--color-high);
+}
+
+.project-overview__tile--overdue .project-overview__tile-value {
+  color: var(--color-high);
+}
+
+.project-overview__tile-value {
+  font-size: 1.7rem;
+  font-weight: 700;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.project-overview__tile-label {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
+/* Board column colours, shared by the milestone bars and their legend so the views agree */
+
+[data-column] {
+  --column-accent: var(--color-text-muted);
+}
+
+[data-column='inProgress'] {
+  --column-accent: var(--color-primary);
+}
+
+[data-column='review'] {
+  --column-accent: var(--color-medium);
+}
+
+[data-column='done'] {
+  --column-accent: var(--color-capacity-safe);
+}
+
+/* Milestone progress */
+
+.project-overview__rows,
+.project-overview__ages,
+.project-overview__oldest {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.project-overview__row-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.25rem;
+}
+
+.project-overview__row-dates {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 0.4rem;
+  padding: 0.35rem;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: var(--color-text-muted);
+}
+
+.project-overview__row-dates:hover {
+  background-color: var(--color-surface-alt);
+  color: var(--color-text);
+}
+
+.project-overview__row-dates:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 1px;
+}
+
+.project-overview__row {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.5rem 0.6rem;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: var(--color-text);
+  text-align: left;
+}
+
+.project-overview__row:hover {
+  background-color: var(--color-surface-alt);
+}
+
+.project-overview__row:focus-visible,
+.project-overview__quadrants:focus-visible,
+.project-overview__oldest button:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 1px;
+}
+
+.project-overview__row-head {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+}
+
+.project-overview__row-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+.project-overview__row-due,
+.project-overview__row-count {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.project-overview__row-due--overdue {
+  color: var(--color-high);
+  font-weight: 600;
+}
+
+.project-overview__stack {
+  display: flex;
+  height: 0.6rem;
+  border-radius: 999px;
+  overflow: hidden;
+  background-color: var(--color-surface-alt);
+}
+
+.project-overview__segment {
+  background-color: var(--column-accent);
+}
+
+.project-overview__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1rem;
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
+.project-overview__legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.project-overview__swatch {
+  display: inline-block;
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 2px;
+  background-color: var(--column-accent);
+}
+
+.project-overview__swatch--scope {
+  height: 0;
+  width: 1.1rem;
+  border-top: 2px solid var(--color-primary);
+  border-radius: 0;
+  background: none;
+}
+
+.project-overview__swatch--completed {
+  height: 0;
+  width: 1.1rem;
+  border-top: 3px solid var(--color-capacity-safe);
+  border-radius: 0;
+  background: none;
+}
+
+/* Burn-up chart */
+
+.project-overview__chart {
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.project-overview__grid {
+  stroke: var(--color-border);
+  stroke-width: 1;
+}
+
+.project-overview__axis {
+  fill: var(--color-text-muted);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.project-overview__area {
+  fill: var(--color-capacity-safe);
+  fill-opacity: 0.14;
+}
+
+.project-overview__line {
+  fill: none;
+  stroke-width: 2.5;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.project-overview__line--scope {
+  stroke: var(--color-primary);
+  stroke-dasharray: 5 4;
+}
+
+.project-overview__line--done {
+  stroke: var(--color-capacity-safe);
+}
+
+/* Eisenhower breakdown */
+
+.project-overview__quadrants {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+  padding: 0;
+  background: none;
+  border: none;
+  color: var(--color-text);
+  text-align: left;
+}
+
+.project-overview__quadrant {
+  --quadrant: var(--color-text-muted);
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: baseline;
+  gap: 0.15rem 0.5rem;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid color-mix(in srgb, var(--quadrant) 45%, transparent);
+  border-radius: 6px;
+  background-color: color-mix(in srgb, var(--quadrant) 14%, transparent);
+}
+
+.project-overview__quadrants:hover .project-overview__quadrant {
+  background-color: color-mix(in srgb, var(--quadrant) 22%, transparent);
+}
+
+.project-overview__quadrant--do-first {
+  --quadrant: var(--color-quadrant-do-first);
+}
+
+.project-overview__quadrant--schedule {
+  --quadrant: var(--color-quadrant-schedule);
+}
+
+.project-overview__quadrant--delegate {
+  --quadrant: var(--color-quadrant-delegate);
+}
+
+.project-overview__quadrant--eliminate {
+  --quadrant: var(--color-quadrant-eliminate);
+}
+
+.project-overview__quadrant-label {
+  grid-column: 1 / -1;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.project-overview__quadrant-count {
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.project-overview__quadrant-percent {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Age */
+
+.project-overview__ages li {
+  display: grid;
+  grid-template-columns: 6.5rem minmax(0, 1fr) 2rem;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.85rem;
+}
+
+.project-overview__age-label {
+  color: var(--color-text-muted);
+}
+
+.project-overview__age-track {
+  height: 0.6rem;
+  border-radius: 999px;
+  background-color: var(--color-surface-alt);
+  overflow: hidden;
+}
+
+.project-overview__age-bar {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background-color: var(--color-primary);
+}
+
+.project-overview__age-count {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.project-overview__oldest button {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.35rem 0.5rem;
+  background: none;
+  border: none;
+  border-radius: 6px;
+  color: var(--color-text);
+  text-align: left;
+}
+
+.project-overview__oldest button:hover {
+  background-color: var(--color-surface-alt);
+}
+
+.project-overview__oldest-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.project-overview__oldest-age {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}

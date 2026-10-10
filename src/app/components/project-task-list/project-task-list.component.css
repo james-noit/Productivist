@@ -1,0 +1,275 @@
+:host {
+  display: block;
+  min-width: 0;
+}
+
+.task-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.task-list__toolbar,
+.task-list__filters,
+.task-list__filter,
+.task-list__bulk {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+}
+
+.task-list__filters {
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.task-list__filter,
+.task-list__group {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.task-list__search,
+.task-list__add-input,
+.task-list__title-input,
+.task-list__tags,
+.task-list__table input[type='date'],
+.task-list__table select,
+.task-list__bulk select,
+.task-list__bulk input[type='date'] {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  color: var(--color-text);
+  padding: 0.3rem 0.5rem;
+  min-width: 0;
+  font-size: 0.85rem;
+}
+
+.task-list__search {
+  flex: 1 1 12rem;
+  max-width: 20rem;
+  border-radius: 6px;
+  padding: 0.35rem 0.6rem;
+  font-size: 1rem;
+}
+
+.task-list__add {
+  margin-left: auto;
+}
+
+.task-list__empty {
+  margin: 0;
+  padding: 1rem;
+  text-align: center;
+  color: var(--color-text-muted);
+}
+
+/* Bulk action bar: replaces the toolbar and stays in view while the page scrolls. */
+.task-list__bulk {
+  position: sticky;
+  top: 0;
+  z-index: 4;
+  padding: 0.5rem 0.75rem;
+  background-color: color-mix(in srgb, var(--color-primary) 12%, var(--color-surface));
+  border: 1px solid var(--color-primary);
+  border-radius: 8px;
+}
+
+.task-list__bulk-count {
+  font-weight: 700;
+}
+
+.task-list__bulk-date {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.task-list__bulk-clear {
+  margin-left: auto;
+  color: var(--color-text-muted);
+}
+
+.task-list__danger {
+  color: var(--color-high);
+}
+
+/* The table scrolls inside this box (both ways), with the header row stuck to its top. */
+.task-list__scroll {
+  overflow: auto;
+  max-height: calc(100vh - 14rem);
+  min-height: 8rem;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+}
+
+.task-list__table {
+  width: 100%;
+  min-width: 68rem;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.85rem;
+}
+
+.task-list__table th,
+.task-list__table td {
+  padding: 0.35rem 0.5rem;
+  border-bottom: 1px solid var(--color-border);
+  text-align: left;
+  vertical-align: middle;
+}
+
+.task-list__table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background-color: var(--color-surface-alt);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.task-list__sort {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.1rem 0.2rem;
+  background: none;
+  border: none;
+  border-radius: 4px;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+}
+
+.task-list__sort:hover {
+  color: var(--color-text);
+}
+
+.task-list__sort:focus-visible,
+.task-list__title:focus-visible,
+.task-list__open:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 1px;
+}
+
+.task-list__sort-icon {
+  display: inline-block;
+  min-width: 0.8em;
+  font-size: 0.7em;
+}
+
+.task-list__col-select {
+  width: 2rem;
+  text-align: center !important;
+}
+
+.task-list__col-open {
+  width: 2.5rem;
+  text-align: center !important;
+}
+
+.task-list__table tbody tr:hover {
+  background-color: color-mix(in srgb, var(--color-surface-alt) 55%, transparent);
+}
+
+.task-list__row--selected,
+.task-list__row--selected:hover {
+  background-color: color-mix(in srgb, var(--color-primary) 10%, transparent) !important;
+}
+
+.task-list__row--done .task-list__title {
+  text-decoration: line-through;
+  color: var(--color-text-muted);
+}
+
+.task-list__cell-title {
+  min-width: 14rem;
+  width: 28%;
+}
+
+.task-list__title {
+  width: 100%;
+  padding: 0.25rem 0.3rem;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  color: var(--color-text);
+  font: inherit;
+  text-align: left;
+  overflow-wrap: anywhere;
+  cursor: text;
+}
+
+.task-list__title:hover {
+  border-color: var(--color-border);
+}
+
+.task-list__title-input {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.task-list__tags {
+  width: 100%;
+  min-width: 7rem;
+  box-sizing: border-box;
+}
+
+.task-list__due--soon {
+  border-color: var(--color-capacity-high) !important;
+}
+
+.task-list__due--overdue {
+  border-color: var(--color-high) !important;
+  color: var(--color-high) !important;
+}
+
+.task-list__age {
+  white-space: nowrap;
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.task-list__open {
+  min-width: 1.75rem;
+  min-height: 1.75rem;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  color: var(--color-text-muted);
+  line-height: 1;
+}
+
+.task-list__open:hover {
+  border-color: var(--color-border);
+  color: var(--color-text);
+}
+
+.task-list__group-row th {
+  position: static;
+  background-color: var(--color-surface-alt);
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.task-list__group-count {
+  margin-left: 0.4rem;
+  font-weight: 400;
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.task-list__add-input {
+  width: 100%;
+  box-sizing: border-box;
+}

@@ -1,0 +1,172 @@
+<div class="project-overview">
+  @if (!stats().total) {
+    <p class="project-overview__empty">{{ 'overview.empty' | translate }}</p>
+  } @else {
+    <section class="project-overview__tiles project-overview__card--wide" [attr.aria-label]="'overview.summary' | translate">
+      <div class="project-overview__tile">
+        <span class="project-overview__tile-value">{{ stats().open }}</span>
+        <span class="project-overview__tile-label">{{ 'overview.tiles.open' | translate }}</span>
+      </div>
+      <div class="project-overview__tile project-overview__tile--progress">
+        <span class="project-overview__tile-value">{{ stats().columns.inProgress }}</span>
+        <span class="project-overview__tile-label">{{ 'overview.tiles.inProgress' | translate }}</span>
+      </div>
+      <div class="project-overview__tile project-overview__tile--done">
+        <span class="project-overview__tile-value">{{ stats().columns.done }}</span>
+        <span class="project-overview__tile-label">{{ 'overview.tiles.done' | translate }}</span>
+      </div>
+      <div class="project-overview__tile" [class.project-overview__tile--overdue]="stats().overdue">
+        <span class="project-overview__tile-value">{{ stats().overdue }}</span>
+        <span class="project-overview__tile-label">{{ 'overview.tiles.overdue' | translate }}</span>
+      </div>
+      <div class="project-overview__tile">
+        <span class="project-overview__tile-value">{{ stats().percent }}%</span>
+        <span class="project-overview__tile-label">{{ 'overview.tiles.complete' | translate }}</span>
+      </div>
+    </section>
+
+    <section class="project-overview__card" aria-labelledby="overview-milestones">
+      <h3 id="overview-milestones">{{ 'overview.milestones.title' | translate }}</h3>
+      <ul class="project-overview__rows">
+        @for (row of stats().rows; track row.key) {
+          <li class="project-overview__row-item">
+            <button
+              type="button"
+              class="project-overview__row"
+              [title]="'overview.milestones.open' | translate"
+              (click)="openMilestone(row)"
+            >
+              <span class="project-overview__row-head">
+                <span class="project-overview__row-name">{{ row.milestone ? row.milestone.name : ('kanban.noMilestone' | translate) }}</span>
+                @if (row.due) {
+                  <span class="project-overview__row-due" [class.project-overview__row-due--overdue]="row.overdue">
+                    {{ 'overview.milestones.due' | translate: { date: row.due } }}
+                  </span>
+                }
+                <span class="project-overview__row-count">{{ row.done }}/{{ row.total }}</span>
+              </span>
+              <span
+                class="project-overview__stack"
+                role="img"
+                [attr.aria-label]="
+                  'overview.milestones.segments'
+                    | translate: { done: row.counts.done, review: row.counts.review, inProgress: row.counts.inProgress, todo: row.counts.todo }
+                "
+              >
+                @for (seg of row.segments; track seg.column) {
+                  @if (seg.count) {
+                    <span class="project-overview__segment" [attr.data-column]="seg.column" [style.width.%]="seg.percent"></span>
+                  }
+                }
+              </span>
+            </button>
+            @if (row.milestone; as milestone) {
+              <button
+                type="button"
+                class="project-overview__row-dates"
+                [attr.aria-label]="'overview.milestones.editDates' | translate: { name: milestone.name }"
+                [title]="'overview.milestones.editDates' | translate: { name: milestone.name }"
+                (click)="datesId.set(milestone.id)"
+              >
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M4 6h16v14H4zM4 10h16M8 3v4M16 3v4" />
+                </svg>
+              </button>
+            }
+          </li>
+        }
+      </ul>
+      <p class="project-overview__legend">
+        <span><i class="project-overview__swatch" data-column="done"></i>{{ 'kanban.columns.done' | translate }}</span>
+        <span><i class="project-overview__swatch" data-column="review"></i>{{ 'kanban.columns.review' | translate }}</span>
+        <span><i class="project-overview__swatch" data-column="inProgress"></i>{{ 'kanban.columns.inProgress' | translate }}</span>
+        <span><i class="project-overview__swatch" data-column="todo"></i>{{ 'kanban.columns.todo' | translate }}</span>
+      </p>
+    </section>
+
+    <section class="project-overview__card" aria-labelledby="overview-burnup">
+      <h3 id="overview-burnup">{{ 'overview.burnup.title' | translate }}</h3>
+      @if (stats().chart; as chart) {
+        <svg
+          class="project-overview__chart"
+          [attr.viewBox]="'0 0 ' + chartSize.width + ' ' + chartSize.height"
+          role="img"
+          [attr.aria-label]="'overview.burnup.summary' | translate: { done: stats().columns.done, total: stats().total }"
+        >
+          <title>{{ 'overview.burnup.summary' | translate: { done: stats().columns.done, total: stats().total } }}</title>
+          @for (tick of chart.yTicks; track tick.value) {
+            <line class="project-overview__grid" [attr.x1]="chart.box.left" [attr.x2]="chart.box.right" [attr.y1]="tick.y" [attr.y2]="tick.y" />
+            <text class="project-overview__axis" [attr.x]="chart.box.left - 6" [attr.y]="tick.y" text-anchor="end" dominant-baseline="middle">{{ tick.value }}</text>
+          }
+          @for (tick of chart.xTicks; track tick.x) {
+            <text class="project-overview__axis" [attr.x]="tick.x" [attr.y]="chart.box.bottom + 16" text-anchor="middle">{{ tick.label }}</text>
+          }
+          <path class="project-overview__area" [attr.d]="chart.paths.doneArea" />
+          <path class="project-overview__line project-overview__line--scope" [attr.d]="chart.paths.scope" />
+          <path class="project-overview__line project-overview__line--done" [attr.d]="chart.paths.done" />
+        </svg>
+        <p class="project-overview__legend">
+          <span><i class="project-overview__swatch project-overview__swatch--scope"></i>{{ 'overview.burnup.scope' | translate }}</span>
+          <span><i class="project-overview__swatch project-overview__swatch--completed"></i>{{ 'overview.burnup.completed' | translate }}</span>
+        </p>
+      } @else {
+        <p class="project-overview__muted">{{ 'overview.burnup.empty' | translate }}</p>
+      }
+    </section>
+
+    <section class="project-overview__card" aria-labelledby="overview-quadrants">
+      <h3 id="overview-quadrants">{{ 'overview.quadrants.title' | translate }}</h3>
+      @if (stats().open) {
+        <button type="button" class="project-overview__quadrants" [title]="'overview.quadrants.open' | translate" (click)="openMatrix()">
+          @for (q of stats().quadrants; track q.key) {
+            <span class="project-overview__quadrant" [class]="'project-overview__quadrant--' + q.cssKey">
+              <span class="project-overview__quadrant-label">{{ q.labelKey | translate }}</span>
+              <span class="project-overview__quadrant-count">{{ q.count }}</span>
+              <span class="project-overview__quadrant-percent">{{ q.percent }}%</span>
+            </span>
+          }
+        </button>
+      } @else {
+        <p class="project-overview__muted">{{ 'overview.noOpen' | translate }}</p>
+      }
+    </section>
+
+    <section class="project-overview__card" aria-labelledby="overview-age">
+      <h3 id="overview-age">{{ 'overview.age.title' | translate }}</h3>
+      @if (stats().open) {
+        <ul class="project-overview__ages">
+          @for (bucket of stats().ages; track bucket.key) {
+            <li>
+              <span class="project-overview__age-label">{{ bucket.labelKey | translate }}</span>
+              <span class="project-overview__age-track" aria-hidden="true">
+                <span class="project-overview__age-bar" [style.width.%]="bucket.width"></span>
+              </span>
+              <span class="project-overview__age-count">{{ bucket.count }}</span>
+            </li>
+          }
+        </ul>
+        <h4>{{ 'overview.age.oldest' | translate }}</h4>
+        <ul class="project-overview__oldest">
+          @for (item of stats().oldest; track item.todo.id) {
+            <li>
+              <button type="button" (click)="detailId.set(item.todo.id)">
+                <span class="project-overview__oldest-title">{{ item.todo.title }}</span>
+                <span class="project-overview__oldest-age">{{ 'overview.age.days' | translate: { count: item.days } }}</span>
+              </button>
+            </li>
+          }
+        </ul>
+      } @else {
+        <p class="project-overview__muted">{{ 'overview.noOpen' | translate }}</p>
+      }
+    </section>
+  }
+
+  @if (detailTodo(); as todo) {
+    <app-task-detail-modal [todo]="todo" (close)="detailId.set(null)" />
+  }
+
+  @if (datesMilestone(); as milestone) {
+    <app-milestone-dates-modal [milestone]="milestone" (close)="datesId.set(null)" />
+  }
+</div>

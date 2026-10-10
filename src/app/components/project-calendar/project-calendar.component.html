@@ -1,0 +1,189 @@
+<ng-template #chip let-todo>
+  <div
+    #chipEl
+    class="project-calendar__chip"
+    [class]="'project-calendar__chip--' + todo.importance + ' project-calendar__chip--' + chipState(todo)"
+    [class.project-calendar__chip--done]="todo.done"
+    [class.project-calendar__chip--dragging]="draggedId() === todo.id"
+    draggable="true"
+    (dragstart)="onChipDragStart($event, todo)"
+    (dragend)="onChipDragEnd()"
+    (focusout)="onChipFocusOut($event, chipEl)"
+  >
+    <!-- A span, not a button: Firefox does not start a drag from a mousedown on a button. -->
+    <span
+      class="project-calendar__chip-title"
+      role="button"
+      tabindex="0"
+      [title]="todo.title"
+      (click)="detailId.set(todo.id)"
+      (keydown.enter)="detailId.set(todo.id)"
+      (keydown.space)="$event.preventDefault(); detailId.set(todo.id)"
+    >
+      <span class="project-calendar__dot" aria-hidden="true"></span>
+      <span class="project-calendar__chip-text">{{ todo.title }}</span>
+    </span>
+    <button
+      type="button"
+      class="project-calendar__chip-menu"
+      aria-haspopup="true"
+      [attr.aria-expanded]="dateMenuId() === todo.id"
+      [attr.aria-label]="'calendar.changeDate' | translate"
+      [title]="'calendar.changeDate' | translate"
+      (click)="toggleDateMenu(todo, $event)"
+    >
+      ⋯
+    </button>
+    @if (dateMenuId() === todo.id) {
+      <div class="project-calendar__date-menu" (click)="$event.stopPropagation()" (keydown.escape)="closeDateMenu($event)">
+        <label>
+          {{ 'todo.dueDate' | translate }}
+          <input type="date" [value]="todo.dueDate ?? ''" (change)="onDateInput(todo, $event)" />
+        </label>
+        @if (todo.dueDate) {
+          <button type="button" class="button-ghost" (click)="clearDate(todo)">{{ 'calendar.clearDate' | translate }}</button>
+        }
+      </div>
+    }
+  </div>
+</ng-template>
+
+<section class="project-calendar" [attr.aria-label]="'calendar.title' | translate">
+  <div class="project-calendar__toolbar">
+    <div class="project-calendar__nav" role="group" [attr.aria-label]="'calendar.navigate' | translate">
+      <button type="button" class="project-calendar__step" [attr.aria-label]="'calendar.previous' | translate" (click)="step(-1)">‹</button>
+      <button type="button" class="project-calendar__step" [attr.aria-label]="'calendar.next' | translate" (click)="step(1)">›</button>
+      <button type="button" class="button-ghost" (click)="goToday()">{{ 'calendar.today' | translate }}</button>
+    </div>
+    <h3 class="project-calendar__title" aria-live="polite">{{ title() }}</h3>
+
+    <div class="project-calendar__group" role="group" [attr.aria-label]="'calendar.view' | translate">
+      <span class="control-label">{{ 'calendar.view' | translate }}</span>
+      <div class="segmented">
+        @for (m of modes; track m) {
+          <button type="button" class="segmented__option" [attr.aria-pressed]="mode() === m" (click)="setMode(m)">
+            {{ 'calendar.modes.' + m | translate }}
+          </button>
+        }
+      </div>
+    </div>
+
+    <button type="button" class="switch project-calendar__done-switch" role="switch" [attr.aria-checked]="view.showDoneTasks()" (click)="toggleShowDone()">
+      <span class="switch__track" aria-hidden="true"></span>
+      {{ 'projectDetail.showDone' | translate }}
+    </button>
+  </div>
+
+  <div class="project-calendar__layout">
+    <div class="project-calendar__scroll">
+      <div class="project-calendar__grid" [class.project-calendar__grid--week]="mode() === 'week'">
+        @for (name of weekdays(); track $index) {
+          <div class="project-calendar__weekday">{{ name }}</div>
+        }
+        @for (cell of cells(); track cell.iso) {
+          <div
+            class="project-calendar__cell"
+            [class.project-calendar__cell--outside]="!cell.inRange"
+            [class.project-calendar__cell--today]="cell.today"
+            [class.project-calendar__cell--over]="dragOverIso() === cell.iso"
+            role="group"
+            [attr.aria-label]="dayLabel(cell.iso)"
+            (dragover)="onDragOver($event, cell.iso)"
+            (dragleave)="onDragLeave($event, cell.iso)"
+            (drop)="onDropOnDay($event, cell.iso)"
+          >
+            <div class="project-calendar__cell-head">
+              <span class="project-calendar__day">{{ cell.day }}</span>
+              <button
+                type="button"
+                class="project-calendar__add"
+                [attr.aria-label]="'calendar.addTask' | translate: { date: dayLabel(cell.iso) }"
+                [title]="'calendar.addTask' | translate: { date: dayLabel(cell.iso) }"
+                (click)="startAdd(cell.iso)"
+              >
+                +
+              </button>
+            </div>
+
+            @for (milestone of cell.milestones; track milestone.id) {
+              <button
+                type="button"
+                class="project-calendar__flag"
+                [title]="'calendar.milestoneDue' | translate: { name: milestone.name }"
+                (click)="datesId.set(milestone.id)"
+              >
+                <span aria-hidden="true">⚑</span>
+                <span class="project-calendar__chip-text">{{ milestone.name }}</span>
+              </button>
+            }
+
+            @for (todo of cell.shown; track todo.id) {
+              <ng-container [ngTemplateOutlet]="chip" [ngTemplateOutletContext]="{ $implicit: todo }" />
+            }
+
+            @if (cell.more) {
+              <button type="button" class="project-calendar__more" [attr.aria-expanded]="expandedDay() === cell.iso" (click)="toggleMore(cell.iso)">
+                {{ 'calendar.more' | translate: { count: cell.more } }}
+              </button>
+            }
+
+            @if (addingIso() === cell.iso) {
+              <input
+                type="text"
+                class="project-calendar__add-input"
+                [ngModel]="newTitle()"
+                (ngModelChange)="newTitle.set($event)"
+                name="calendarQuickAdd"
+                [placeholder]="'calendar.taskTitlePlaceholder' | translate"
+                [attr.aria-label]="'calendar.taskTitlePlaceholder' | translate"
+                (keydown.enter)="addTask(cell.iso)"
+                (keydown.escape)="cancelAdd($event)"
+                (blur)="cancelAdd()"
+              />
+            }
+
+            @if (expandedDay() === cell.iso) {
+              <div class="project-calendar__popover" role="dialog" [attr.aria-label]="'calendar.dayTasks' | translate: { date: dayLabel(cell.iso) }" (keydown.escape)="closePopover($event)">
+                <div class="project-calendar__popover-head">
+                  <strong>{{ dayLabel(cell.iso) }}</strong>
+                  <button type="button" [attr.aria-label]="'todo.close' | translate" (click)="expandedDay.set(null)">✕</button>
+                </div>
+                @for (todo of cell.tasks; track todo.id) {
+                  <ng-container [ngTemplateOutlet]="chip" [ngTemplateOutletContext]="{ $implicit: todo }" />
+                }
+              </div>
+            }
+          </div>
+        }
+      </div>
+    </div>
+
+    <aside
+      class="project-calendar__unscheduled"
+      [class.project-calendar__unscheduled--over]="dragOverIso() === unscheduledKey"
+      [attr.aria-label]="'calendar.unscheduled' | translate"
+      (dragover)="onDragOver($event, unscheduledKey)"
+      (dragleave)="onDragLeave($event, unscheduledKey)"
+      (drop)="onDropOnUnscheduled($event)"
+    >
+      <h3>
+        {{ 'calendar.unscheduled' | translate }}
+        <span class="project-calendar__count">{{ unscheduled().length }}</span>
+      </h3>
+      <p class="project-calendar__hint">{{ 'calendar.unscheduledHint' | translate }}</p>
+      @for (todo of unscheduled(); track todo.id) {
+        <ng-container [ngTemplateOutlet]="chip" [ngTemplateOutletContext]="{ $implicit: todo }" />
+      } @empty {
+        <p class="project-calendar__hint">{{ 'calendar.unscheduledEmpty' | translate }}</p>
+      }
+    </aside>
+  </div>
+
+  @if (detailTodo(); as todo) {
+    <app-task-detail-modal [todo]="todo" (close)="detailId.set(null)" />
+  }
+
+  @if (datesMilestone(); as milestone) {
+    <app-milestone-dates-modal [milestone]="milestone" (close)="datesId.set(null)" />
+  }
+</section>
