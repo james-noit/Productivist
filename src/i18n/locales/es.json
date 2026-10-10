@@ -17,7 +17,8 @@
     "preferences": "Preferencias",
     "developer": "Desarrollo",
     "seedMockData": "Cargar datos de prueba",
-    "admin": "Administración"
+    "admin": "Administración",
+    "configuration": "Configuración"
   },
   "account": {
     "title": "Cuenta",
@@ -57,15 +58,7 @@
       "network": "No se pudo contactar con el servidor. Inténtalo más tarde."
     }
   },
-  "theme": {
-    "label": "Tema",
-    "light": "Tema: Claro",
-    "dark": "Tema: Oscuro",
-    "japanese": "Tema: Cuaderno japonés",
-    "nordic": "Tema: Gris nórdico"
-  },
   "language": {
-    "label": "Idioma",
     "en": "Inglés",
     "es": "Español"
   },
@@ -345,6 +338,23 @@
       "self": "La cuenta de administrador no se puede cambiar aquí.",
       "gone": "Esa cuenta ya no existe.",
       "network": "No se pudo conectar con el servidor. Inténtalo de nuevo."
+    }
+  },
+  "config": {
+    "title": "Configuración",
+    "close": "Cerrar",
+    "sections": "Secciones de configuración",
+    "general": "General",
+    "account": "Cuenta",
+    "language": "Idioma",
+    "languageHint": "El idioma de la interfaz.",
+    "theme": "Tema",
+    "themeHint": "Elige el aspecto de Productivist.",
+    "themes": {
+      "light": "Claro",
+      "dark": "Oscuro",
+      "japanese": "Cuaderno japonés",
+      "nordic": "Gris nórdico"
     }
   }
 }

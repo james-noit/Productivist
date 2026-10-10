@@ -10,6 +10,7 @@ import { PomodoroClockComponent } from './components/pomodoro-clock/pomodoro-clo
 import { TodoListComponent } from './components/todo-list/todo-list.component';
 import { MultitaskViewComponent } from './components/multitask-view/multitask-view.component';
 import { PlanningLabModalComponent } from './components/planning-lab-modal/planning-lab-modal.component';
+import { ConfigModalComponent } from './components/config-modal/config-modal.component';
 import { ProjectsViewComponent } from './components/projects-view/projects-view.component';
 import { AdminViewComponent } from './components/admin-view/admin-view.component';
 import en from '../i18n/locales/en.json';
@@ -25,6 +26,7 @@ import en from '../i18n/locales/en.json';
     TodoListComponent,
     MultitaskViewComponent,
     PlanningLabModalComponent,
+    ConfigModalComponent,
     ProjectsViewComponent,
     AdminViewComponent,
   ],

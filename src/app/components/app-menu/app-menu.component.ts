@@ -8,15 +8,13 @@ import { ViewService, type AppView } from '../../../services/view.service';
 import { ProjectsService } from '../../../services/projects.service';
 import { AccountService } from '../../../services/account.service';
 import { DailyPlanService } from '../../../services/daily-plan.service';
-import { LanguageSelectorComponent } from '../language-selector/language-selector.component';
-import { ThemeToggleComponent } from '../theme-toggle/theme-toggle.component';
 
 const RESET_PHRASE = 'confirm reset';
 
 @Component({
   selector: 'app-app-menu',
   standalone: true,
-  imports: [FormsModule, TranslatePipe, LanguageSelectorComponent, ThemeToggleComponent],
+  imports: [FormsModule, TranslatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './app-menu.component.html',
   styleUrl: './app-menu.component.css',
@@ -57,6 +55,11 @@ export class AppMenuComponent {
 
   goToView(next: AppView): void {
     this.view.setView(next);
+    this.close();
+  }
+
+  openConfiguration(): void {
+    this.view.openConfiguration();
     this.close();
   }
 

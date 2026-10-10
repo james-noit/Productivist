@@ -4,6 +4,7 @@ import type { EisenhowerQuadrant } from '../types/eisenhower';
 
 export type AppView = 'pomodoro' | 'projects' | 'admin';
 export type ProjectsTab = 'projects' | 'matrix';
+export type ConfigSection = 'general' | 'account';
 
 const VIEWS: readonly AppView[] = ['pomodoro', 'projects', 'admin'];
 
@@ -62,15 +63,23 @@ export class ViewService {
   /** Open state of the Plan-my-day modal. Not persisted: the wizard's own stage is. */
   readonly planningOpen = signal(false);
 
-  /**
-   * Open state of the clock's Settings panel. Shared so the header's account chip can open it from any
-   * view: the panel is rendered by the Pomodoro and Multitask views only.
-   */
+  /** Open state of the clock's own settings panel (clock style and sounds). */
   readonly settingsOpen = signal(false);
 
-  openSettings(): void {
-    if (this.current() !== 'pomodoro') this.current.set('pomodoro');
-    this.settingsOpen.set(true);
+  /**
+   * Configuration modal (language, theme, account). Global like the Plan-my-day modal, so the menu and the
+   * header's account chip can open it over any view. `configSection` is the section it opens on.
+   */
+  readonly configOpen = signal(false);
+  readonly configSection = signal<ConfigSection>('general');
+
+  openConfiguration(section: ConfigSection = 'general'): void {
+    this.configSection.set(section);
+    this.configOpen.set(true);
+  }
+
+  closeConfiguration(): void {
+    this.configOpen.set(false);
   }
 
   /** Any navigation closes the plan, which is how the wizard's launch actions close the modal. */
@@ -98,5 +107,6 @@ export class ViewService {
     this.projectsTab.set('projects');
     this.focusQuadrant.set(null);
     this.planningOpen.set(false);
+    this.configOpen.set(false);
   }
 }

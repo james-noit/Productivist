@@ -27,8 +27,8 @@ const MAX_PASSWORD_BYTES = 72;
 
 /**
  * Header entry point for accounts. Signed out: a "Login" button that drops a compact form underneath, with the
- * sign-up fields hidden until "Sign up" is clicked. Signed in: a chip that opens the Settings panel, where the
- * account itself is managed.
+ * sign-up fields hidden until "Sign up" is clicked. Signed in: a chip that opens the Configuration modal on its
+ * Account section, where the account itself is managed.
  */
 @Component({
   selector: 'app-login-popover',

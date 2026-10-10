@@ -85,16 +85,6 @@
   color: var(--color-high);
 }
 
-.app-menu__preference {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  padding: 0.4rem 1rem;
-  font-size: 0.85rem;
-  color: var(--color-text);
-}
-
 
 .app-menu__reset-modal {
   --modal-max-width: 380px;

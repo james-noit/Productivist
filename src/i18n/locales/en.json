@@ -17,7 +17,8 @@
     "preferences": "Preferences",
     "developer": "Developer",
     "seedMockData": "Seed mock data",
-    "admin": "Admin"
+    "admin": "Admin",
+    "configuration": "Configuration"
   },
   "account": {
     "title": "Account",
@@ -57,15 +58,7 @@
       "network": "Could not reach the server. Try again later."
     }
   },
-  "theme": {
-    "label": "Theme",
-    "light": "Theme: Light",
-    "dark": "Theme: Dark",
-    "japanese": "Theme: Japanese notebook",
-    "nordic": "Theme: Nordic grey"
-  },
   "language": {
-    "label": "Language",
     "en": "English",
     "es": "Spanish"
   },
@@ -345,6 +338,23 @@
       "self": "The admin account cannot be changed here.",
       "gone": "That account no longer exists.",
       "network": "Could not reach the server. Try again."
+    }
+  },
+  "config": {
+    "title": "Configuration",
+    "close": "Close",
+    "sections": "Configuration sections",
+    "general": "General",
+    "account": "Account",
+    "language": "Language",
+    "languageHint": "The language of the interface.",
+    "theme": "Theme",
+    "themeHint": "Choose how Productivist looks.",
+    "themes": {
+      "light": "Light",
+      "dark": "Dark",
+      "japanese": "Japanese notebook",
+      "nordic": "Nordic grey"
     }
   }
 }

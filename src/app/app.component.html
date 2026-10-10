@@ -45,3 +45,9 @@
     <app-planning-lab-modal />
   }
 }
+
+@if (view.configOpen()) {
+  @defer (on immediate) {
+    <app-config-modal />
+  }
+}

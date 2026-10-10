@@ -1,0 +1,89 @@
+<div class="modal-overlay config-modal-overlay" (click)="closeOnBackdrop($event)">
+  <div
+    #panel
+    class="modal-panel config-modal"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="config-modal-title"
+    tabindex="-1"
+  >
+    <div class="config-modal__header">
+      <h2 id="config-modal-title">{{ 'config.title' | translate }}</h2>
+      <button type="button" class="config-modal__close" [attr.aria-label]="'config.close' | translate" (click)="close()">
+        ✕
+      </button>
+    </div>
+
+    <div class="config-modal__layout">
+      @if (sections.length > 1) {
+        <nav class="config-modal__nav" [attr.aria-label]="'config.sections' | translate">
+          @for (s of sections; track s) {
+            <button
+              type="button"
+              class="config-modal__nav-item"
+              [class.config-modal__nav-item--active]="section() === s"
+              [attr.aria-current]="section() === s ? 'page' : null"
+              (click)="selectSection(s)"
+            >
+              {{ 'config.' + s | translate }}
+            </button>
+          }
+        </nav>
+      }
+
+      <div class="config-modal__content">
+        @if (section() === 'general') {
+          <section class="config-modal__section" aria-labelledby="config-language">
+            <h3 id="config-language">{{ 'config.language' | translate }}</h3>
+            <p class="config-modal__hint">{{ 'config.languageHint' | translate }}</p>
+            <div class="config-modal__choices" role="radiogroup" [attr.aria-labelledby]="'config-language'">
+              @for (lang of languages; track lang.id) {
+                <button
+                  type="button"
+                  role="radio"
+                  class="config-modal__pill"
+                  [class.config-modal__pill--active]="settings.language() === lang.id"
+                  [attr.aria-checked]="settings.language() === lang.id"
+                  (click)="setLanguage(lang.id)"
+                >
+                  {{ lang.nativeName }}
+                </button>
+              }
+            </div>
+          </section>
+
+          <section class="config-modal__section" aria-labelledby="config-theme">
+            <h3 id="config-theme">{{ 'config.theme' | translate }}</h3>
+            <p class="config-modal__hint">{{ 'config.themeHint' | translate }}</p>
+            <div class="config-modal__themes" role="radiogroup" [attr.aria-labelledby]="'config-theme'">
+              @for (theme of themes; track theme.id) {
+                <button
+                  type="button"
+                  role="radio"
+                  class="config-modal__theme"
+                  [class.config-modal__theme--active]="settings.theme() === theme.id"
+                  [attr.aria-checked]="settings.theme() === theme.id"
+                  (click)="setTheme(theme.id)"
+                >
+                  <span class="config-modal__swatch" [style.background-color]="theme.bg" aria-hidden="true">
+                    <span class="config-modal__swatch-bar" [style.background-color]="theme.primary"></span>
+                    <span class="config-modal__swatch-card" [style.background-color]="theme.surface">
+                      <span class="config-modal__swatch-line" [style.background-color]="theme.text"></span>
+                      <span class="config-modal__swatch-line config-modal__swatch-line--short" [style.background-color]="theme.text"></span>
+                    </span>
+                  </span>
+                  <span class="config-modal__theme-name">{{ 'config.themes.' + theme.id | translate }}</span>
+                </button>
+              }
+            </div>
+          </section>
+        } @else {
+          <section class="config-modal__section" aria-labelledby="config-account">
+            <h3 id="config-account">{{ 'config.account' | translate }}</h3>
+            <app-account-settings />
+          </section>
+        }
+      </div>
+    </div>
+  </div>
+</div>

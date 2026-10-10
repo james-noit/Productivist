@@ -5,7 +5,7 @@
       class="login__chip"
       [attr.title]="'account.manage' | translate"
       [attr.aria-label]="('account.manage' | translate) + ': ' + account.email"
-      (click)="view.openSettings()"
+      (click)="view.openConfiguration('account')"
     >
       <span class="login__dot" [attr.data-status]="sync.status()" aria-hidden="true"></span>
       <span class="login__chip-email">{{ account.email }}</span>
