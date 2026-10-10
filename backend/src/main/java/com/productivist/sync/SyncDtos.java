@@ -12,6 +12,8 @@ import tools.jackson.databind.JsonNode;
 /**
  * Wire shapes for sync. Field names mirror the frontend types in src/types; every synced row also
  * carries {@code updatedAt} (client edit time, epoch ms, decides last-write-wins) and {@code deleted}.
+ * A tombstone ({@code deleted = true}) only needs {@code id} and {@code updatedAt}; the other fields are required
+ * for live rows and enforced by {@link SyncService}.
  */
 public final class SyncDtos {
 
@@ -22,7 +24,7 @@ public final class SyncDtos {
     public record ProjectDto(
             @NotBlank @Size(max = 64) String id,
             @Size(max = 32) String icon,
-            @NotBlank @Size(max = 500) String name,
+            @Size(max = 500) String name,
             @Size(max = 5000) String description,
             @Size(max = 100_000) String notes,
             double order,
@@ -32,8 +34,8 @@ public final class SyncDtos {
 
     public record MilestoneDto(
             @NotBlank @Size(max = 64) String id,
-            @NotBlank @Size(max = 64) String projectId,
-            @NotBlank @Size(max = 500) String name,
+            @Size(max = 64) String projectId,
+            @Size(max = 500) String name,
             double order,
             long createdAt,
             long updatedAt,
@@ -41,7 +43,7 @@ public final class SyncDtos {
 
     public record TodoDto(
             @NotBlank @Size(max = 64) String id,
-            @NotBlank @Size(max = 1000) String title,
+            @Size(max = 1000) String title,
             @Size(max = 100_000) String description,
             @Pattern(regexp = PRIORITY) String importance,
             @Pattern(regexp = PRIORITY) String urgency,

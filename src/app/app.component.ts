@@ -3,6 +3,7 @@ import { TranslateService } from '@ngx-translate/core';
 import { SettingsService, type Language } from '../services/settings.service';
 import { MultitaskService } from '../services/multitask.service';
 import { ViewService } from '../services/view.service';
+import { SyncService } from '../services/sync.service';
 import { AppHeaderComponent } from './components/app-header/app-header.component';
 import { PomodoroClockComponent } from './components/pomodoro-clock/pomodoro-clock.component';
 import { TodoListComponent } from './components/todo-list/todo-list.component';
@@ -39,6 +40,9 @@ export class AppComponent {
   private readonly loaded = new Set<Language>(['en']);
 
   constructor() {
+    // Instantiated for its side effects: it syncs in the background while signed in.
+    inject(SyncService);
+
     // English is the default and the fallback, so it is bundled. Every other locale is
     // fetched on demand — shipping them all eagerly cost ~11 kB for a language most
     // users never switch to.

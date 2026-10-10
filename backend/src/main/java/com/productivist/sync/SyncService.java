@@ -122,6 +122,11 @@ public class SyncService {
     }
 
     private void upsertProject(long userId, ProjectDto p) {
+        if (p.deleted()) {
+            tombstone("projects", "name, created_at", "'', 0", userId, p.id(), p.updatedAt());
+            return;
+        }
+        requireText(p.name(), "project name");
         jdbc.sql("""
                         INSERT INTO projects (user_id, id, icon, name, description, notes, sort_order, created_at, updated_at, deleted)
                         VALUES (:u, :id, :icon, :name, :description, :notes, :order, :createdAt, :updatedAt, :deleted)
@@ -140,6 +145,12 @@ public class SyncService {
     }
 
     private void upsertMilestone(long userId, MilestoneDto m) {
+        if (m.deleted()) {
+            tombstone("milestones", "project_id, name, created_at", "'', '', 0", userId, m.id(), m.updatedAt());
+            return;
+        }
+        requireText(m.projectId(), "milestone projectId");
+        requireText(m.name(), "milestone name");
         jdbc.sql("""
                         INSERT INTO milestones (user_id, id, project_id, name, sort_order, created_at, updated_at, deleted)
                         VALUES (:u, :id, :projectId, :name, :order, :createdAt, :updatedAt, :deleted)
@@ -156,6 +167,12 @@ public class SyncService {
     }
 
     private void upsertTodo(long userId, TodoDto t) {
+        if (t.deleted()) {
+            tombstone("todos", "title, importance, urgency, created_at", "'', 'medium', 'medium', 0",
+                    userId, t.id(), t.updatedAt());
+            return;
+        }
+        requireText(t.title(), "todo title");
         String tags = json.writeValueAsString(t.tags() == null ? List.of() : t.tags());
         jdbc.sql("""
                         INSERT INTO todos (user_id, id, title, description, importance, urgency, tags, done, sort_order,
@@ -176,6 +193,28 @@ public class SyncService {
                         """)
                 .params(todoParams(userId, t, tags))
                 .update();
+    }
+
+    /**
+     * Marks a row deleted without needing its content. Table and column lists are internal constants, never
+     * request data. An unknown id gets a blank placeholder row so the tombstone still reaches other devices.
+     */
+    private void tombstone(String table, String requiredCols, String requiredVals, long userId, String id, long updatedAt) {
+        jdbc.sql(("""
+                        INSERT INTO %1$s (user_id, id, %2$s, updated_at, deleted)
+                        VALUES (:u, :id, %3$s, :updatedAt, TRUE)
+                        ON CONFLICT (user_id, id) DO UPDATE SET
+                            deleted = TRUE, updated_at = EXCLUDED.updated_at, seq = nextval('sync_seq')
+                        WHERE %1$s.updated_at <= EXCLUDED.updated_at
+                        """).formatted(table, requiredCols, requiredVals))
+                .param("u", userId).param("id", id).param("updatedAt", updatedAt)
+                .update();
+    }
+
+    private static void requireText(String value, String what) {
+        if (value == null || value.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Missing " + what);
+        }
     }
 
     private static Map<String, Object> todoParams(long userId, TodoDto t, String tagsJson) {

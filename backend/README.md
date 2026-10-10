@@ -27,7 +27,7 @@ Schema is managed by Flyway (`src/main/resources/db/migration`).
 
 Everything except login and health needs `Authorization: Bearer <token>`.
 
-- Ids are client-generated. Deleting = pushing the row with `deleted: true` (tombstone).
+- Ids are client-generated. Deleting = pushing the row with `deleted: true` (a tombstone only needs `id`, `updatedAt` and the primitive fields zeroed; content is not required).
 - First login merge: push local data, then pull. Equal ids are resolved by `updatedAt`.
 - `state` holds `settings`, `dailyPlan`, `multitask` (free-form JSON), `currentTaskId`, `hasCustomOrder`.
 - Fields are required in the JSON (including `done`, `deleted`, `updatedAt`); a missing one is a 400.

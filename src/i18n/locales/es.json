@@ -20,6 +20,28 @@
     "developer": "Desarrollo",
     "seedMockData": "Cargar datos de prueba"
   },
+  "account": {
+    "title": "Cuenta y sincronización",
+    "signInMenu": "Iniciar sesión para sincronizar",
+    "intro": "Inicia sesión con tu correo para sincronizar tus tareas, proyectos y ajustes entre dispositivos. Sin cuenta, todo se queda en este dispositivo.",
+    "emailPlaceholder": "tu@ejemplo.com",
+    "signIn": "Iniciar sesión",
+    "signOut": "Cerrar sesión",
+    "syncNow": "Sincronizar ahora",
+    "syncing": "Sincronizando…",
+    "lastSynced": "Última sincronización a las {{time}}",
+    "notSyncedYet": "Aún sin sincronizar.",
+    "warning": "Por ahora no hay contraseña ni confirmación de correo: cualquiera que conozca tu correo puede abrir esta cuenta. No guardes nada sensible. Los datos que ya hay en este dispositivo se combinan con la cuenta.",
+    "loginError": {
+      "invalid": "Ese correo no es válido.",
+      "network": "No se pudo contactar con el servidor. Inténtalo más tarde."
+    },
+    "error": {
+      "network": "No se pudo contactar con el servidor. Se reintentará.",
+      "server": "El servidor rechazó la sincronización. Se reintentará.",
+      "session": "Tu sesión ha caducado. Inicia sesión de nuevo."
+    }
+  },
   "theme": {
     "label": "Tema",
     "light": "Tema: Claro",
