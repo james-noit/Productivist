@@ -1,0 +1,28 @@
+@if (accounts.account(); as account) {
+  <p class="account-settings__email">{{ account.email }}</p>
+  <p class="account-settings__status" [class.account-settings__status--error]="sync.status() === 'error'" role="status">
+    @switch (sync.status()) {
+      @case ('syncing') {
+        {{ 'account.syncing' | translate }}
+      }
+      @case ('error') {
+        {{ 'account.error.' + sync.errorKind() | translate }}
+      }
+      @default {
+        @if (sync.lastSyncedAt(); as at) {
+          {{ 'account.lastSynced' | translate: { time: (at | date: 'shortTime') } }}
+        } @else {
+          {{ 'account.notSyncedYet' | translate }}
+        }
+      }
+    }
+  </p>
+  <div class="account-settings__actions">
+    <button type="button" [disabled]="sync.status() === 'syncing'" (click)="sync.syncNow()">
+      {{ 'account.syncNow' | translate }}
+    </button>
+    <button type="button" (click)="accounts.logout()">{{ 'account.signOut' | translate }}</button>
+  </div>
+} @else {
+  <p class="account-settings__status">{{ 'account.notSignedIn' | translate }}</p>
+}

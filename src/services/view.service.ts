@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, signal } from '@angular/core';
 import { localStorageSignal } from '../core/local-storage-signal';
 
 export type AppView = 'planning-lab' | 'pomodoro' | 'eisenhower' | 'projects';
@@ -15,6 +15,17 @@ export class ViewService {
    * session if the Planning Lab had already been rendered once.
    */
   readonly planningLabTab = localStorageSignal<PlanningLabTab>('productivist.planningLabTab', 'daily');
+
+  /**
+   * Open state of the clock's Settings panel. Shared so the header's account chip can open it from any
+   * view: the panel is rendered by the Pomodoro and Multitask views only.
+   */
+  readonly settingsOpen = signal(false);
+
+  openSettings(): void {
+    if (this.current() !== 'pomodoro') this.current.set('pomodoro');
+    this.settingsOpen.set(true);
+  }
 
   setView(view: AppView): void {
     this.current.set(view);

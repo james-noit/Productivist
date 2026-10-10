@@ -20,7 +20,8 @@ Schema is managed by Flyway (`src/main/resources/db/migration`).
 
 | Method | Path | |
 |---|---|---|
-| POST | `/api/auth/login` `{email}` | Creates the user if new, returns `{email, token}`. No confirmation, no secret yet. |
+| POST | `/api/auth/signup` `{email, password}` | Creates the account (password 8+ characters, at most 72 bytes) and returns `{email, token}`. 409 if the email is taken. No email confirmation. |
+| POST | `/api/auth/login` `{email, password}` | Returns `{email, token}`; 401 for any wrong email or password. |
 | GET | `/api/sync?since=<cursor>` | Rows changed after `cursor` (0 = all), tombstones included, plus `state` if changed. Returns the next `cursor`. |
 | POST | `/api/sync` | Upserts `{projects, milestones, todos, state}`. Last-write-wins on each row's `updatedAt`. Returns `{cursor}`. |
 | GET | `/actuator/health` | Health check. |
@@ -34,7 +35,8 @@ Everything except login and health needs `Authorization: Bearer <token>`.
 
 ## Known gaps
 
-- Anyone who knows an email can sign in as that user (recovery key planned). No rate limiting on login.
+- No email confirmation, so anyone can register an address they do not own, and there is no password reset yet. Login and signup are rate-limited by the frontend's nginx only, not by the backend itself.
+- Accounts created before passwords existed have no password: the first `signup` with that email claims it (and sets the password); until then it cannot be logged into.
 - Sequence-based cursors can, in theory, skip a row whose transaction commits after a later one; a periodic full
   pull (`since=0`) repairs it.
 - No automated tests yet.

@@ -21,25 +21,41 @@
     "seedMockData": "Seed mock data"
   },
   "account": {
-    "title": "Account & sync",
-    "signInMenu": "Sign in to sync",
-    "intro": "Sign in with your email to sync your tasks, projects and settings across devices. Without an account everything stays on this device.",
-    "emailPlaceholder": "you@example.com",
-    "signIn": "Sign in",
+    "title": "Account",
+    "notSignedIn": "Not signed in. Use Login in the header to keep your tasks synced across devices.",
     "signOut": "Sign out",
     "syncNow": "Sync now",
     "syncing": "Syncing…",
     "lastSynced": "Last synced at {{time}}",
     "notSyncedYet": "Not synced yet.",
-    "warning": "For now there is no password or email confirmation: anyone who knows your email can open this account. Don't store anything sensitive. Data already on this device is merged into the account.",
-    "loginError": {
-      "invalid": "That email address is not valid.",
-      "network": "Could not reach the server. Try again later."
-    },
+    "manage": "Account and sync",
     "error": {
       "network": "Could not reach the server. Will retry.",
       "server": "The server rejected the sync. Will retry.",
-      "session": "Your session expired. Sign in again."
+      "session": "Your session expired. Log in again."
+    }
+  },
+  "login": {
+    "tag": "Keep your tasks synced",
+    "button": "Login",
+    "emailPlaceholder": "Email",
+    "passwordPlaceholder": "Password",
+    "repeatPlaceholder": "Repeat password",
+    "submitLogin": "Log in",
+    "submitSignup": "Create account",
+    "noAccount": "No account?",
+    "signUp": "Sign up",
+    "haveAccount": "Already registered?",
+    "logIn": "Log in",
+    "signupHint": "At least 8 characters. Tasks already on this device are added to the account.",
+    "errors": {
+      "email": "Enter a valid email.",
+      "tooShort": "Use at least 8 characters.",
+      "tooLong": "That password is too long.",
+      "mismatch": "The passwords do not match.",
+      "credentials": "Wrong email or password.",
+      "taken": "That email already has an account. Log in instead.",
+      "network": "Could not reach the server. Try again later."
     }
   },
   "theme": {

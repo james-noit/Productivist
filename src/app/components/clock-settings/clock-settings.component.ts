@@ -1,12 +1,15 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { SettingsService, type BellSoundId, type BoxClockOrder, type ClockStyle } from '../../../services/settings.service';
 import { playSound } from '../../../services/clock.service';
+import { ViewService } from '../../../services/view.service';
+import { AccountService } from '../../../services/account.service';
+import { AccountSettingsComponent } from '../account-settings/account-settings.component';
 
 @Component({
   selector: 'app-clock-settings',
   standalone: true,
-  imports: [TranslatePipe],
+  imports: [TranslatePipe, AccountSettingsComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './clock-settings.component.html',
   styleUrl: './clock-settings.component.css',
@@ -25,7 +28,8 @@ export class ClockSettingsComponent {
   readonly clockStyles: { id: ClockStyle }[] = [{ id: 'boxes' }, { id: 'ring' }];
   readonly boxOrders: { id: BoxClockOrder }[] = [{ id: 'sequential' }, { id: 'random' }];
 
-  readonly open = signal(false);
+  readonly accounts = inject(AccountService);
+  readonly open = inject(ViewService).settingsOpen;
 
   get settingsLabel(): string {
     return this.translate.instant('clock.settings');

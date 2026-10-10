@@ -35,7 +35,7 @@ server {
     }
 
     # Only /api/ reaches the backend: its actuator and anything else stay unreachable from outside.
-    location = /api/auth/login {
+    location ~ ^/api/auth/(login|signup)$ {
         limit_req zone=login burst=5 nodelay;
         set $backend "${BACKEND_ORIGIN}";
         include /etc/nginx/proxy-api.conf;

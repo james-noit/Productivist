@@ -7,17 +7,15 @@ import { MultitaskService } from '../../../services/multitask.service';
 import { ViewService, type AppView } from '../../../services/view.service';
 import { ProjectsService } from '../../../services/projects.service';
 import { DailyPlanService } from '../../../services/daily-plan.service';
-import { AccountService } from '../../../services/account.service';
 import { LanguageSelectorComponent } from '../language-selector/language-selector.component';
 import { ThemeToggleComponent } from '../theme-toggle/theme-toggle.component';
-import { AccountModalComponent } from '../account-modal/account-modal.component';
 
 const RESET_PHRASE = 'confirm reset';
 
 @Component({
   selector: 'app-app-menu',
   standalone: true,
-  imports: [FormsModule, TranslatePipe, LanguageSelectorComponent, ThemeToggleComponent, AccountModalComponent],
+  imports: [FormsModule, TranslatePipe, LanguageSelectorComponent, ThemeToggleComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './app-menu.component.html',
   styleUrl: './app-menu.component.css',
@@ -29,7 +27,6 @@ export class AppMenuComponent {
   readonly view = inject(ViewService);
   private readonly projects = inject(ProjectsService);
   private readonly dailyPlan = inject(DailyPlanService);
-  readonly accounts = inject(AccountService);
 
   readonly resetPhrase = RESET_PHRASE;
   readonly isDev = isDevMode();
@@ -38,7 +35,6 @@ export class AppMenuComponent {
   private readonly fileInput = viewChild<ElementRef<HTMLInputElement>>('fileInput');
   private readonly host = inject(ElementRef<HTMLElement>);
 
-  readonly accountModalOpen = signal(false);
   readonly resetModalOpen = signal(false);
   readonly resetConfirmText = signal('');
   readonly resetConfirmValid = computed(() => this.resetConfirmText().trim().toLowerCase() === RESET_PHRASE);
@@ -97,11 +93,6 @@ export class AppMenuComponent {
     } catch (error) {
       console.error('Failed to import to-do file', error);
     }
-  }
-
-  openAccountModal(): void {
-    this.close();
-    this.accountModalOpen.set(true);
   }
 
   openResetModal(): void {

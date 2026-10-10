@@ -21,25 +21,41 @@
     "seedMockData": "Cargar datos de prueba"
   },
   "account": {
-    "title": "Cuenta y sincronización",
-    "signInMenu": "Iniciar sesión para sincronizar",
-    "intro": "Inicia sesión con tu correo para sincronizar tus tareas, proyectos y ajustes entre dispositivos. Sin cuenta, todo se queda en este dispositivo.",
-    "emailPlaceholder": "tu@ejemplo.com",
-    "signIn": "Iniciar sesión",
+    "title": "Cuenta",
+    "notSignedIn": "Sin sesión. Usa Acceder en la cabecera para mantener tus tareas sincronizadas entre dispositivos.",
     "signOut": "Cerrar sesión",
     "syncNow": "Sincronizar ahora",
     "syncing": "Sincronizando…",
     "lastSynced": "Última sincronización a las {{time}}",
     "notSyncedYet": "Aún sin sincronizar.",
-    "warning": "Por ahora no hay contraseña ni confirmación de correo: cualquiera que conozca tu correo puede abrir esta cuenta. No guardes nada sensible. Los datos que ya hay en este dispositivo se combinan con la cuenta.",
-    "loginError": {
-      "invalid": "Ese correo no es válido.",
-      "network": "No se pudo contactar con el servidor. Inténtalo más tarde."
-    },
+    "manage": "Cuenta y sincronización",
     "error": {
       "network": "No se pudo contactar con el servidor. Se reintentará.",
       "server": "El servidor rechazó la sincronización. Se reintentará.",
-      "session": "Tu sesión ha caducado. Inicia sesión de nuevo."
+      "session": "Tu sesión ha caducado. Vuelve a acceder."
+    }
+  },
+  "login": {
+    "tag": "Mantén tus tareas sincronizadas",
+    "button": "Acceder",
+    "emailPlaceholder": "Correo",
+    "passwordPlaceholder": "Contraseña",
+    "repeatPlaceholder": "Repite la contraseña",
+    "submitLogin": "Acceder",
+    "submitSignup": "Crear cuenta",
+    "noAccount": "¿Sin cuenta?",
+    "signUp": "Regístrate",
+    "haveAccount": "¿Ya tienes cuenta?",
+    "logIn": "Accede",
+    "signupHint": "Al menos 8 caracteres. Las tareas que ya hay en este dispositivo se añaden a la cuenta.",
+    "errors": {
+      "email": "Introduce un correo válido.",
+      "tooShort": "Usa al menos 8 caracteres.",
+      "tooLong": "La contraseña es demasiado larga.",
+      "mismatch": "Las contraseñas no coinciden.",
+      "credentials": "Correo o contraseña incorrectos.",
+      "taken": "Ese correo ya tiene una cuenta. Accede en su lugar.",
+      "network": "No se pudo contactar con el servidor. Inténtalo más tarde."
     }
   },
   "theme": {

@@ -1,0 +1,175 @@
+:host {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.login__tag {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  .login__tag {
+    display: none;
+  }
+}
+
+.login__button,
+.login__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.login__button {
+  padding: 0.3rem 0.9rem;
+  background-color: var(--color-primary);
+  color: var(--color-primary-contrast);
+  border: 1px solid var(--color-primary);
+}
+
+.login__chip {
+  padding: 0.25rem 0.7rem;
+  background: none;
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  max-width: 14rem;
+}
+
+.login__chip-email {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.login__dot {
+  flex: none;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background-color: var(--color-capacity-safe);
+}
+
+.login__dot[data-status='syncing'] {
+  background-color: var(--color-capacity-high);
+}
+
+.login__dot[data-status='error'] {
+  background-color: var(--color-high);
+}
+
+.login__popover {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  z-index: 25;
+  width: 17rem;
+  max-width: calc(100vw - 1.5rem);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  text-align: left;
+}
+
+/* The header wraps on narrow screens, which can leave the button on the left; anchor the popover to the whole
+   header instead of to the button so it always fits the viewport. */
+@media (max-width: 640px) {
+  :host {
+    position: static;
+  }
+
+  .login__popover {
+    top: 100%;
+    left: 0.75rem;
+    right: 0.75rem;
+    width: auto;
+    max-width: none;
+    margin-top: 0.25rem;
+  }
+}
+
+.login__input {
+  width: 100%;
+  box-sizing: border-box;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  padding: 0.45rem 0.6rem;
+}
+
+.login__extra {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  animation: login-expand 0.18s ease-out;
+}
+
+@keyframes login-expand {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login__extra {
+    animation: none;
+  }
+}
+
+.login__submit {
+  padding: 0.45rem 0.9rem;
+  border-radius: 6px;
+  border: none;
+  background-color: var(--color-primary);
+  color: var(--color-primary-contrast);
+}
+
+.login__submit:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.login__popover p {
+  margin: 0;
+  font-size: 0.75rem;
+}
+
+.login__hint,
+.login__switch {
+  color: var(--color-text-muted);
+}
+
+.login__error {
+  color: var(--color-high);
+}
+
+.login__switch {
+  text-align: center;
+}
+
+.login__link {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  color: var(--color-text-muted);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.login__link:hover {
+  color: var(--color-primary);
+}

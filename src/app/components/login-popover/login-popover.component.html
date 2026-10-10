@@ -1,0 +1,86 @@
+@if (accounts.enabled) {
+  @if (accounts.account(); as account) {
+    <button
+      type="button"
+      class="login__chip"
+      [attr.title]="'account.manage' | translate"
+      [attr.aria-label]="('account.manage' | translate) + ': ' + account.email"
+      (click)="view.openSettings()"
+    >
+      <span class="login__dot" [attr.data-status]="sync.status()" aria-hidden="true"></span>
+      <span class="login__chip-email">{{ account.email }}</span>
+    </button>
+  } @else {
+    <span class="login__tag">{{ 'login.tag' | translate }}</span>
+    <button
+      type="button"
+      class="login__button"
+      aria-haspopup="dialog"
+      [attr.aria-expanded]="open()"
+      (click)="toggle()"
+    >
+      {{ 'login.button' | translate }}
+    </button>
+
+    @if (open()) {
+      <form
+        class="login__popover"
+        role="dialog"
+        [attr.aria-label]="'login.button' | translate"
+        (ngSubmit)="submit()"
+      >
+        <input
+          #emailInput
+          [ngModel]="email()"
+          (ngModelChange)="email.set($event)"
+          name="email"
+          type="email"
+          class="login__input"
+          [placeholder]="'login.emailPlaceholder' | translate"
+          [attr.aria-label]="'login.emailPlaceholder' | translate"
+          autocomplete="email"
+        />
+        <input
+          [ngModel]="password()"
+          (ngModelChange)="password.set($event)"
+          name="password"
+          type="password"
+          class="login__input"
+          [placeholder]="'login.passwordPlaceholder' | translate"
+          [attr.aria-label]="'login.passwordPlaceholder' | translate"
+          [attr.autocomplete]="mode() === 'signup' ? 'new-password' : 'current-password'"
+        />
+        @if (mode() === 'signup') {
+          <div class="login__extra">
+            <input
+              [ngModel]="repeat()"
+              (ngModelChange)="repeat.set($event)"
+              name="repeat"
+              type="password"
+              class="login__input"
+              [placeholder]="'login.repeatPlaceholder' | translate"
+              [attr.aria-label]="'login.repeatPlaceholder' | translate"
+              autocomplete="new-password"
+            />
+            <p class="login__hint">{{ 'login.signupHint' | translate }}</p>
+          </div>
+        }
+        @if (error(); as error) {
+          <p class="login__error" role="alert">{{ 'login.errors.' + error | translate }}</p>
+        }
+        <button type="submit" class="login__submit" [disabled]="!canSubmit()">
+          {{ (mode() === 'signup' ? 'login.submitSignup' : 'login.submitLogin') | translate }}
+        </button>
+        <p class="login__switch">
+          @if (mode() === 'login') {
+            {{ 'login.noAccount' | translate }}
+            <button type="button" class="login__link" (click)="setMode('signup')">{{ 'login.signUp' | translate }}</button>
+          } @else {
+            {{ 'login.haveAccount' | translate }}
+            <button type="button" class="login__link" (click)="setMode('login')">{{ 'login.logIn' | translate }}</button>
+          }
+        </p>
+      </form>
+    }
+  }
+}
