@@ -8,9 +8,7 @@
     "exportTodo": "Exportar datos",
     "importTodo": "Importar datos",
     "views": "Vistas",
-    "planningLab": "Laboratorio de planificación",
     "pomodoro": "Pomodoro",
-    "eisenhower": "Eisenhower",
     "projects": "Proyectos",
     "reset": "Reiniciar",
     "resetWarning": "Esto borrará tu lista de tareas, proyectos y ajustes, y reiniciará el reloj pomodoro.",
@@ -172,7 +170,13 @@
     "noProjects": "Aún no hay proyectos. Crea uno para organizar tus tareas en hitos.",
     "unassign": "Quitar del hito",
     "unassignedPool": "Tareas sin asignar",
-    "noUnassigned": "No hay tareas sin asignar."
+    "noUnassigned": "No hay tareas sin asignar.",
+    "tabProjects": "Proyectos",
+    "tabMatrix": "Matriz",
+    "allOpenTasks": "tareas abiertas",
+    "sortManual": "Orden manual",
+    "sortUrgency": "Por urgencia",
+    "sortLabel": "Ordenar proyectos"
   },
   "multitask": {
     "toggleLabel": "Multitarea",
@@ -200,7 +204,6 @@
     "restartCounterConfirm": "¿Reiniciar todas las cajas de efectividad de todas las tareas?"
   },
   "eisenhower": {
-    "title": "Matriz de Eisenhower",
     "doFirst": "Hacer primero",
     "doFirstHint": "Importante y urgente",
     "schedule": "Planificar",
@@ -237,18 +240,12 @@
     }
   },
   "planningLab": {
-    "title": "Laboratorio de planificación",
+    "title": "Planificar mi día",
     "dailyBacklog": "Backlog diario",
     "dailyPlanProjectEmpty": "Aún no hay tareas en este proyecto.",
-    "generalBacklog": "Backlog general",
-    "generalBacklogHint": "Desglosa un objetivo en las tareas que te llevan hasta él.",
-    "generalBacklogEmpty": "Aún no hay nada en el backlog general.",
     "freeTasks": "Tareas libres sin proyecto",
     "newUnclassifiedTask": "Nueva tarea sin clasificar",
     "noMilestoneGroup": "Sin hito",
-    "allProjectsCombined": "Todos los proyectos combinados",
-    "project": "Proyecto",
-    "totalTasks": "Total",
     "objectivePromptTitle": "¿Qué quieres lograr hoy?",
     "objectivePromptSubtitle": "¿Cuál es ese objetivo u objetivos que, alcanzados en esta sesión, te harán sentir realizado?",
     "objectivePlaceholder": "p. ej. Lanzar el nuevo flujo de pago",
@@ -295,9 +292,12 @@
     "backToPlanning": "Volver a la planificación",
     "plannedTasks": "Tareas planificadas",
     "plannedTasksEmptyTitle": "Aún no hay tareas planificadas.",
-    "plannedTasksEmptyLink": "Ve a Laboratorio de planificación → Backlog diario para organizar las tareas de hoy.",
+    "plannedTasksEmptyLink": "Planificar mi día →",
     "executionLots": "Lotes de ejecución",
-    "startNextLot": "Iniciar siguiente lote"
+    "startNextLot": "Iniciar siguiente lote",
+    "openButton": "Planificar mi día",
+    "resumeButton": "Continuar planificación · {{step}}/3",
+    "close": "Cerrar"
   },
   "admin": {
     "title": "Administración",

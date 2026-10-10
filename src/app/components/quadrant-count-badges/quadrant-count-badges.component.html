@@ -1,11 +1,24 @@
 <span class="quadrant-badges">
   @for (q of quadrants; track q.key) {
-    <span
-      class="quadrant-badges__circle"
-      [class]="'quadrant-badges__circle--' + q.cssKey"
-      [title]="q.labelKey | translate"
-    >
-      {{ counts()[q.key] }}
-    </span>
+    @if (interactive()) {
+      <button
+        type="button"
+        class="quadrant-badges__circle quadrant-badges__circle--button"
+        [class]="'quadrant-badges__circle--' + q.cssKey"
+        [title]="q.labelKey | translate"
+        [attr.aria-label]="(q.labelKey | translate) + ': ' + counts()[q.key]"
+        (click)="pick.emit(q.key)"
+      >
+        {{ counts()[q.key] }}
+      </button>
+    } @else {
+      <span
+        class="quadrant-badges__circle"
+        [class]="'quadrant-badges__circle--' + q.cssKey"
+        [title]="q.labelKey | translate"
+      >
+        {{ counts()[q.key] }}
+      </span>
+    }
   }
 </span>

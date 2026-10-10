@@ -1,8 +1,9 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, afterNextRender, computed, inject, signal } from '@angular/core';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { localStorageSignal } from '../../../core/local-storage-signal';
 import { TodosService } from '../../../services/todos.service';
 import { ProjectsService } from '../../../services/projects.service';
+import { ViewService } from '../../../services/view.service';
 import { EisenhowerCardComponent } from '../eisenhower-card/eisenhower-card.component';
 import { TaskDetailModalComponent } from '../task-detail-modal/task-detail-modal.component';
 import { NewTaskModalComponent } from '../new-task-modal/new-task-modal.component';
@@ -35,6 +36,23 @@ export class EisenhowerViewComponent {
   private readonly todos = inject(TodosService);
   private readonly projects = inject(ProjectsService);
   private readonly translate = inject(TranslateService);
+  private readonly view = inject(ViewService);
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+
+  constructor() {
+    // The Projects tab's summary badges ask for a quadrant to be brought into view. The matrix is
+    // always freshly mounted when they do, so consuming the request once after first render is enough.
+    afterNextRender(() => {
+      const key = this.view.focusQuadrant();
+      if (!key) return;
+      this.view.focusQuadrant.set(null);
+      const section = this.host.nativeElement.querySelector<HTMLElement>(`[data-quadrant="${key}"]`);
+      if (!section) return;
+      section.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      section.classList.add('eisenhower-quadrant--flash');
+      section.addEventListener('animationend', () => section.classList.remove('eisenhower-quadrant--flash'), { once: true });
+    });
+  }
 
   readonly viewMode = localStorageSignal<EisenhowerViewMode>('productivist.eisenhowerViewMode', 'detailed');
 

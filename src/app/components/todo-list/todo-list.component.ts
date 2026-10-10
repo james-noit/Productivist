@@ -46,7 +46,7 @@ export class TodoListComponent {
     this.todos.setViewMode(mode);
   }
 
-  goToPlanningLab(): void {
-    this.view.openPlanningLab('daily');
+  openPlanning(): void {
+    this.view.openPlanning();
   }
 }

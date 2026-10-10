@@ -8,9 +8,7 @@
     "exportTodo": "Export data",
     "importTodo": "Import data",
     "views": "Views",
-    "planningLab": "Planning lab",
     "pomodoro": "Pomodoro",
-    "eisenhower": "Eisenhower",
     "projects": "Projects",
     "reset": "Reset",
     "resetWarning": "This will erase your to-do list, projects, and settings, and reset the pomodoro clock.",
@@ -172,7 +170,13 @@
     "noProjects": "No projects yet. Create one to organize your tasks into milestones.",
     "unassign": "Remove from milestone",
     "unassignedPool": "Unassigned tasks",
-    "noUnassigned": "No unassigned tasks."
+    "noUnassigned": "No unassigned tasks.",
+    "tabProjects": "Projects",
+    "tabMatrix": "Matrix",
+    "allOpenTasks": "open tasks",
+    "sortManual": "Manual order",
+    "sortUrgency": "By urgency",
+    "sortLabel": "Sort projects"
   },
   "multitask": {
     "toggleLabel": "Multitask",
@@ -200,7 +204,6 @@
     "restartCounterConfirm": "Reset all effectivity squares across all tasks?"
   },
   "eisenhower": {
-    "title": "Eisenhower Matrix",
     "doFirst": "Do first",
     "doFirstHint": "Important & urgent",
     "schedule": "Schedule",
@@ -237,18 +240,12 @@
     }
   },
   "planningLab": {
-    "title": "Planning lab",
+    "title": "Plan my day",
     "dailyBacklog": "Daily backlog",
     "dailyPlanProjectEmpty": "No tasks in this project yet.",
-    "generalBacklog": "General backlog",
-    "generalBacklogHint": "Break an objective down into the tasks that get you there.",
-    "generalBacklogEmpty": "Nothing in the general backlog yet.",
     "freeTasks": "Free tasks without project",
     "newUnclassifiedTask": "New unclassified task",
     "noMilestoneGroup": "No milestone",
-    "allProjectsCombined": "All projects combined",
-    "project": "Project",
-    "totalTasks": "Total",
     "objectivePromptTitle": "What do you want to achieve today?",
     "objectivePromptSubtitle": "What is that objective or objectives that, achieved in this session, will make you feel accomplished?",
     "objectivePlaceholder": "e.g. Ship the new checkout flow",
@@ -295,9 +292,12 @@
     "backToPlanning": "Back to planning",
     "plannedTasks": "Planned tasks",
     "plannedTasksEmptyTitle": "No planned tasks yet.",
-    "plannedTasksEmptyLink": "Go to Planning lab → Daily backlog to organize today's tasks.",
+    "plannedTasksEmptyLink": "Plan my day →",
     "executionLots": "Execution lots",
-    "startNextLot": "Start next lot"
+    "startNextLot": "Start next lot",
+    "openButton": "Plan my day",
+    "resumeButton": "Resume planning · {{step}}/3",
+    "close": "Close"
   },
   "admin": {
     "title": "Administration",

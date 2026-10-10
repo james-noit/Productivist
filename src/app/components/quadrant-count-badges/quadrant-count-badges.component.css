@@ -38,3 +38,20 @@
   background-color: color-mix(in srgb, var(--color-quadrant-eliminate) 25%, transparent);
   color: var(--color-quadrant-eliminate);
 }
+
+/* Opt-in `interactive` rendering: the same circles, as buttons. */
+.quadrant-badges__circle--button {
+  border: none;
+  padding: 0;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.quadrant-badges__circle--button:hover {
+  filter: brightness(1.15);
+}
+
+.quadrant-badges__circle--button:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}

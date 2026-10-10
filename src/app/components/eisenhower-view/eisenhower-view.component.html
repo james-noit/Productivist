@@ -1,6 +1,5 @@
-<main class="eisenhower-view">
+<section class="eisenhower-view">
   <div class="eisenhower-view__header">
-    <h2>{{ 'eisenhower.title' | translate }}</h2>
     <div class="eisenhower-view__modes" role="tablist">
       <button
         type="button"
@@ -45,6 +44,7 @@
       @for (q of quadrants(); track q.key) {
         <section
           class="eisenhower-quadrant"
+          [attr.data-quadrant]="q.key"
           [class]="'eisenhower-quadrant--' + q.cssKey"
           (dragover)="$event.preventDefault()"
           (drop)="onDrop(q.key)"
@@ -101,4 +101,4 @@
   @if (activeQuadrant(); as quadrant) {
     <app-new-task-modal [quadrant]="quadrant" (close)="closeNewTask()" />
   }
-</main>
+</section>

@@ -9,8 +9,7 @@ import { AppHeaderComponent } from './components/app-header/app-header.component
 import { PomodoroClockComponent } from './components/pomodoro-clock/pomodoro-clock.component';
 import { TodoListComponent } from './components/todo-list/todo-list.component';
 import { MultitaskViewComponent } from './components/multitask-view/multitask-view.component';
-import { EisenhowerViewComponent } from './components/eisenhower-view/eisenhower-view.component';
-import { PlanningLabViewComponent } from './components/planning-lab-view/planning-lab-view.component';
+import { PlanningLabModalComponent } from './components/planning-lab-modal/planning-lab-modal.component';
 import { ProjectsViewComponent } from './components/projects-view/projects-view.component';
 import { AdminViewComponent } from './components/admin-view/admin-view.component';
 import en from '../i18n/locales/en.json';
@@ -25,8 +24,7 @@ import en from '../i18n/locales/en.json';
     PomodoroClockComponent,
     TodoListComponent,
     MultitaskViewComponent,
-    EisenhowerViewComponent,
-    PlanningLabViewComponent,
+    PlanningLabModalComponent,
     ProjectsViewComponent,
     AdminViewComponent,
   ],

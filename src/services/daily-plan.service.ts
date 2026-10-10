@@ -20,6 +20,29 @@ export interface ExecutionLot {
 @Injectable({ providedIn: 'root' })
 export class DailyPlanService {
   readonly stage = localStorageSignal<DailyPlanStage>('productivist.dailyPlanStage', 'prompt');
+  /**
+   * Step-1 form state, before the objectives are committed by startPlanning(). In-memory only (not
+   * persisted or synced), but kept here rather than in the wizard so closing the Plan-my-day modal
+   * on step 1 does not discard what was typed.
+   */
+  readonly objectiveDraft = signal('');
+  readonly objectivesList = signal<string[]>([]);
+  readonly hasAnyObjective = computed(
+    () => this.objectivesList().length > 0 || this.objectiveDraft().trim().length > 0,
+  );
+
+  /** 0-based wizard step: objectives, projects, tasks (planning and grouping share the last). */
+  readonly stepIndex = computed(() => {
+    switch (this.stage()) {
+      case 'prompt':
+        return 0;
+      case 'chooseProjects':
+        return 1;
+      default:
+        return 2;
+    }
+  });
+
   readonly objectives = localStorageSignal<DailyObjective[]>('productivist.dailyPlanObjectives', []);
   /** objectiveId -> projectIds assigned to it. A project may belong to several objectives at once. */
   readonly projectAssignments = localStorageSignal<Record<string, string[]>>('productivist.dailyPlanProjectAssignments', {});
@@ -201,6 +224,8 @@ export class DailyPlanService {
 
   startOver(): void {
     this.stage.set('prompt');
+    this.objectiveDraft.set('');
+    this.objectivesList.set([]);
     this.objectives.set([]);
     this.projectAssignments.set({});
     this.assignments.set({});

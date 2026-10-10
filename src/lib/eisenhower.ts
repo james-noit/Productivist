@@ -41,6 +41,16 @@ export function countByQuadrant(list: Todo[]): QuadrantCounts {
   return counts
 }
 
+/**
+ * Red (doFirst) > yellow (delegate) > blue (schedule) > grey (eliminate), each descending,
+ * matching the priority a project's most urgent work implies.
+ */
+export function compareByUrgency(a: QuadrantCounts, b: QuadrantCounts): number {
+  return (
+    b.doFirst - a.doFirst || b.delegate - a.delegate || b.schedule - a.schedule || b.eliminate - a.eliminate
+  )
+}
+
 export interface QuadrantDef {
   key: EisenhowerQuadrant
   /** Modifier suffix for the quadrant's CSS classes. */

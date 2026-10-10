@@ -1,27 +1,16 @@
 <app-app-header />
 
 <!--
-  Each view is its own lazy chunk: only one is ever on screen, and the Planning Lab alone
-  is roughly 1,900 lines of component. `on immediate` starts fetching the moment the
+  Each view is its own lazy chunk: only one is ever on screen. The Projects view in turn
+  defers its Matrix tab, and the Plan-my-day modal below is its own chunk too (the wizard
+  alone is roughly 1,900 lines of component). `on immediate` starts fetching the moment the
   branch renders, so the first switch to a view costs one small chunk and every switch
   after that is served from cache.
 
   There is deliberately no `prefetch` trigger: a defer block inside an unrendered @if
   branch does not exist yet, so a prefetch declared there would never fire.
 -->
-@if (view.current() === 'planning-lab') {
-  @defer (on immediate) {
-    <app-planning-lab-view />
-  } @placeholder {
-    <div class="view-loading" aria-hidden="true"></div>
-  }
-} @else if (view.current() === 'eisenhower') {
-  @defer (on immediate) {
-    <app-eisenhower-view />
-  } @placeholder {
-    <div class="view-loading" aria-hidden="true"></div>
-  }
-} @else if (view.current() === 'projects') {
+@if (view.current() === 'projects') {
   @defer (on immediate) {
     <app-projects-view />
   } @placeholder {
@@ -47,5 +36,12 @@
     </main>
   } @placeholder {
     <div class="view-loading" aria-hidden="true"></div>
+  }
+}
+
+<!-- Global, so the Pomodoro view can open it in place. Only fetched the first time someone plans. -->
+@if (view.planningOpen()) {
+  @defer (on immediate) {
+    <app-planning-lab-modal />
   }
 }

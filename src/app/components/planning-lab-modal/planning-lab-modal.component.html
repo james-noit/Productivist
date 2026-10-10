@@ -1,0 +1,25 @@
+<div class="modal-overlay planning-lab-modal-overlay" (click)="closeOnBackdrop($event)">
+  <div
+    #panel
+    class="modal-panel planning-lab-modal"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="planning-lab-modal-title"
+    tabindex="-1"
+  >
+    <div class="planning-lab-modal__header">
+      <h2 id="planning-lab-modal-title">{{ 'planningLab.title' | translate }}</h2>
+      <button
+        type="button"
+        class="planning-lab-modal__close"
+        [attr.aria-label]="'planningLab.close' | translate"
+        (click)="close()"
+      >
+        ✕
+      </button>
+    </div>
+    <div class="planning-lab-modal__body">
+      <app-daily-backlog-view />
+    </div>
+  </div>
+</div>

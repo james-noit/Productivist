@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, HostListener, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { ProjectsService } from '../../../services/projects.service';
@@ -62,22 +62,12 @@ export class DailyBacklogViewComponent {
   readonly unassignedGroupId = UNASSIGNED_GROUP_ID;
 
   readonly steps = STEPS;
-  readonly stepIndex = computed(() => {
-    switch (this.dailyPlan.stage()) {
-      case 'prompt':
-        return 0;
-      case 'chooseProjects':
-        return 1;
-      default:
-        return 2;
-    }
-  });
+  readonly stepIndex = this.dailyPlan.stepIndex;
 
-  readonly objectiveDraft = signal('');
-  readonly objectivesList = signal<string[]>([]);
-  readonly hasAnyObjective = computed(
-    () => this.objectivesList().length > 0 || this.objectiveDraft().trim().length > 0,
-  );
+  // Held by DailyPlanService so they survive the Plan-my-day modal being closed and reopened.
+  readonly objectiveDraft = this.dailyPlan.objectiveDraft;
+  readonly objectivesList = this.dailyPlan.objectivesList;
+  readonly hasAnyObjective = this.dailyPlan.hasAnyObjective;
 
   private readonly activeTodos = computed(() => this.todos.todos().filter((t) => !t.done));
 
@@ -106,6 +96,16 @@ export class DailyBacklogViewComponent {
 
   closeTasksModalOnBackdrop(event: MouseEvent): void {
     if (event.target === event.currentTarget) this.tasksModalOpen.set(false);
+  }
+
+  /**
+   * Escape closes the wizard's own modals, topmost first. PlanningLabModalComponent leaves Escape
+   * alone while any nested overlay exists, so this is what keeps it from also closing the plan.
+   */
+  @HostListener('document:keydown.escape')
+  onEscape(): void {
+    if (this.showOverwriteConfirm()) this.cancelOverwrite();
+    else if (this.tasksModalOpen()) this.tasksModalOpen.set(false);
   }
 
   readonly showNewProjectForm = signal(false);

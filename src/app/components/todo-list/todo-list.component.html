@@ -33,7 +33,7 @@
   @if (showDailyBacklog()) {
     @if (!dailyPlan.committedPlannedTaskIds().length) {
       <p class="todo-list__empty">{{ 'planningLab.plannedTasksEmptyTitle' | translate }}</p>
-      <button type="button" class="todo-list__daily-link" (click)="goToPlanningLab()">
+      <button type="button" class="todo-list__daily-link" (click)="openPlanning()">
         {{ 'planningLab.plannedTasksEmptyLink' | translate }}
       </button>
     } @else if (!plannedTasks().length) {

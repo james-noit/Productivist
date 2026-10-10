@@ -1,5 +1,33 @@
 <div class="projects-panel">
+  @if (withBacklog() && openTaskTotal() > 0) {
+    <div class="projects-panel__summary">
+      <app-quadrant-count-badges [counts]="combinedCounts()" [interactive]="true" (pick)="openMatrix($event)" />
+      <span class="projects-panel__summary-total">{{ openTaskTotal() }}</span>
+      <span class="projects-panel__summary-label">{{ 'projects.allOpenTasks' | translate }}</span>
+    </div>
+  }
+
   <div class="projects-panel__toolbar">
+    @if (withBacklog()) {
+      <div class="projects-panel__sort" role="group" [attr.aria-label]="'projects.sortLabel' | translate">
+        <button
+          type="button"
+          [class.active]="sort() === 'manual'"
+          [attr.aria-pressed]="sort() === 'manual'"
+          (click)="sort.set('manual')"
+        >
+          {{ 'projects.sortManual' | translate }}
+        </button>
+        <button
+          type="button"
+          [class.active]="sort() === 'urgency'"
+          [attr.aria-pressed]="sort() === 'urgency'"
+          (click)="sort.set('urgency')"
+        >
+          {{ 'projects.sortUrgency' | translate }}
+        </button>
+      </div>
+    }
     <button type="button" class="projects-panel__new" (click)="creating.set(!creating())">
       {{ 'projects.newProject' | translate }}
     </button>
@@ -9,18 +37,22 @@
     <app-project-form (save)="createProject($event)" (cancel)="creating.set(false)" />
   }
 
-  @if (!projects.sortedProjects().length && !creating()) {
+  @if (isEmpty() && !creating()) {
     <p class="projects-panel__empty">
       {{ 'projects.noProjects' | translate }}
     </p>
   } @else {
     <div class="projects-panel__list">
-      @for (project of projects.sortedProjects(); track project.id) {
+      @if (withBacklog()) {
+        <app-free-tasks-card />
+      }
+      @for (row of rows(); track row.project.id) {
         <app-project-tree-item
-          [project]="project"
+          [project]="row.project"
           [multitaskMode]="multitaskMode()"
           [isTaskPickable]="isTaskPickable()"
           [onPickTask]="onPickTask()"
+          [quadrantCounts]="row.counts"
         />
       }
     </div>

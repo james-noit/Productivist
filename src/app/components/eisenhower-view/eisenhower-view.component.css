@@ -1,24 +1,15 @@
 .eisenhower-view {
-  flex: 1;
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  padding: 1rem;
-  max-width: 1100px;
-  width: 100%;
-  margin: 0 auto;
 }
 
 .eisenhower-view__header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   gap: 1rem;
   flex-wrap: wrap;
-}
-
-.eisenhower-view h2 {
-  margin: 0;
 }
 
 .eisenhower-view__modes {
@@ -248,5 +239,18 @@
     justify-content: center;
     writing-mode: vertical-lr;
     transform: rotate(180deg);
+  }
+}
+
+.eisenhower-quadrant--flash {
+  animation: quadrant-flash 1.2s ease-out;
+}
+
+@keyframes quadrant-flash {
+  0% {
+    box-shadow: 0 0 0 3px var(--color-primary);
+  }
+  100% {
+    box-shadow: 0 0 0 3px transparent;
   }
 }

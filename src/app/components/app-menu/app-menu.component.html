@@ -19,63 +19,6 @@
           type="button"
           role="menuitem"
           class="app-menu__view"
-          [class.app-menu__view--active]="view.current() === 'planning-lab'"
-          [attr.aria-current]="view.current() === 'planning-lab'"
-          (click)="goToView('planning-lab')"
-        >
-          <svg class="app-menu__view-icon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
-            <path
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.8"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              d="M9 2h6M10 2v6.2L4.7 17a2 2 0 0 0 1.7 3h11.2a2 2 0 0 0 1.7-3L14 8.2V2"
-            />
-            <path
-              fill="currentColor"
-              opacity="0.55"
-              d="M6.9 15h10.2l1.6 2.7a1 1 0 0 1-.86 1.3H6.16a1 1 0 0 1-.86-1.3z"
-            />
-            <circle cx="10" cy="12.5" r="0.8" fill="currentColor" />
-            <circle cx="13.5" cy="14" r="0.6" fill="currentColor" />
-          </svg>
-          {{ 'menu.planningLab' | translate }}
-        </button>
-        <button
-          type="button"
-          role="menuitem"
-          class="app-menu__view"
-          [class.app-menu__view--active]="view.current() === 'pomodoro'"
-          [attr.aria-current]="view.current() === 'pomodoro'"
-          (click)="goToView('pomodoro')"
-        >
-          <svg class="app-menu__view-icon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
-            <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2" />
-            <path d="M12 7v5l3.5 2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-          </svg>
-          {{ 'menu.pomodoro' | translate }}
-        </button>
-        <button
-          type="button"
-          role="menuitem"
-          class="app-menu__view"
-          [class.app-menu__view--active]="view.current() === 'eisenhower'"
-          [attr.aria-current]="view.current() === 'eisenhower'"
-          (click)="goToView('eisenhower')"
-        >
-          <svg class="app-menu__view-icon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
-            <rect x="3" y="3" width="8" height="8" rx="1.5" fill="currentColor" />
-            <rect x="13" y="3" width="8" height="8" rx="1.5" fill="currentColor" opacity="0.55" />
-            <rect x="3" y="13" width="8" height="8" rx="1.5" fill="currentColor" opacity="0.55" />
-            <rect x="13" y="13" width="8" height="8" rx="1.5" fill="currentColor" opacity="0.3" />
-          </svg>
-          {{ 'menu.eisenhower' | translate }}
-        </button>
-        <button
-          type="button"
-          role="menuitem"
-          class="app-menu__view"
           [class.app-menu__view--active]="view.current() === 'projects'"
           [attr.aria-current]="view.current() === 'projects'"
           (click)="goToView('projects')"
@@ -92,6 +35,20 @@
             <path fill="currentColor" opacity="0.55" d="M3 9.5h18V17a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
           </svg>
           {{ 'menu.projects' | translate }}
+        </button>
+        <button
+          type="button"
+          role="menuitem"
+          class="app-menu__view"
+          [class.app-menu__view--active]="view.current() === 'pomodoro'"
+          [attr.aria-current]="view.current() === 'pomodoro'"
+          (click)="goToView('pomodoro')"
+        >
+          <svg class="app-menu__view-icon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+            <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2" />
+            <path d="M12 7v5l3.5 2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+          {{ 'menu.pomodoro' | translate }}
         </button>
         @if (accounts.isAdmin()) {
           <button

@@ -118,6 +118,11 @@ body {
   padding: 0;
 }
 
+/* Set by the Plan-my-day modal while it is open. */
+body.planning-lab-open {
+  overflow: hidden;
+}
+
 body {
   background-color: var(--color-bg);
   color: var(--color-text);

@@ -1,0 +1,54 @@
+.planning-lab-modal-overlay {
+  --modal-z: 50;
+}
+
+.planning-lab-modal {
+  --modal-max-width: 1100px;
+  --modal-max-height: 92vh;
+  --modal-padding: 1.25rem;
+  --modal-radius: 10px;
+  overflow: hidden;
+}
+
+.planning-lab-modal:focus {
+  outline: none;
+}
+
+.planning-lab-modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex: none;
+}
+
+.planning-lab-modal__header h2 {
+  margin: 0;
+}
+
+.planning-lab-modal__close {
+  background: none;
+  border: none;
+  color: var(--color-text-muted);
+  min-width: 2rem;
+  min-height: 2rem;
+}
+
+.planning-lab-modal__body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+@media (max-width: 600px) {
+  .planning-lab-modal-overlay {
+    padding: 0;
+  }
+
+  .planning-lab-modal {
+    --modal-max-height: 100dvh;
+    --modal-radius: 0;
+    height: 100dvh;
+    border: none;
+  }
+}
