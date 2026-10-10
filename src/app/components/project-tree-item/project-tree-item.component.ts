@@ -4,6 +4,7 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { ProjectsService } from '../../../services/projects.service';
 import { TodosService } from '../../../services/todos.service';
 import { MultitaskService } from '../../../services/multitask.service';
+import { ViewService } from '../../../services/view.service';
 import { EditProjectModalComponent } from '../edit-project-modal/edit-project-modal.component';
 import { TodoFormComponent } from '../todo-form/todo-form.component';
 import { QuadrantCountBadgesComponent } from '../quadrant-count-badges/quadrant-count-badges.component';
@@ -31,12 +32,15 @@ export class ProjectTreeItemComponent {
   readonly todos = inject(TodosService);
   private readonly multitask = inject(MultitaskService);
   private readonly translate = inject(TranslateService);
+  private readonly view = inject(ViewService);
 
   readonly project = input.required<Project>();
   readonly multitaskMode = input(false);
   readonly isTaskPickable = input<(todoId: string) => boolean>();
   readonly onPickTask = input<(todoId: string) => void>();
   readonly quadrantCounts = input<QuadrantCounts>();
+  /** Opt-in: shows the Manage project button that opens the project detail view. */
+  readonly manageable = input(false);
 
 
   readonly expanded = signal(false);
@@ -94,6 +98,10 @@ export class ProjectTreeItemComponent {
   saveEdit(data: { icon: string; name: string; description: string; notes: string }): void {
     this.projects.updateProject(this.project().id, data);
     this.editing.set(false);
+  }
+
+  manageProject(): void {
+    this.view.openProject(this.project().id);
   }
 
   deleteProject(): void {

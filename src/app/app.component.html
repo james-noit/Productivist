@@ -16,6 +16,12 @@
   } @placeholder {
     <div class="view-loading" aria-hidden="true"></div>
   }
+} @else if (view.current() === 'project') {
+  @defer (on immediate) {
+    <app-project-detail-view />
+  } @placeholder {
+    <div class="view-loading" aria-hidden="true"></div>
+  }
 } @else if (view.current() === 'admin' && accounts.isAdmin()) {
   @defer (on immediate) {
     <app-admin-view />

@@ -1,0 +1,64 @@
+<div
+  class="kanban-card"
+  [class.kanban-card--dragging]="dragging()"
+  [class.kanban-card--done]="todo().done"
+  tabindex="0"
+  draggable="true"
+  (dragstart)="onDragStart($event)"
+  (dragend)="onDragEnd()"
+  (drop)="cardDrop.emit($event)"
+  (click)="open.emit()"
+  (keydown)="onKeydown($event)"
+  (focusout)="onFocusOut($event)"
+>
+  <div class="kanban-card__top">
+    <span class="kanban-card__title">{{ todo().title }}</span>
+    <button
+      type="button"
+      class="kanban-card__move"
+      aria-haspopup="menu"
+      [attr.aria-expanded]="menuOpen()"
+      [attr.aria-label]="'kanban.moveCard' | translate"
+      [title]="'kanban.moveCard' | translate"
+      (click)="toggleMenu($event)"
+    >
+      ⋯
+    </button>
+  </div>
+  <div class="kanban-card__meta">
+    <app-task-badges [todo]="todo()" [showTags]="true" />
+    @if (todo().pomodorosForTermination) {
+      <span class="kanban-card__pomodoros" aria-hidden="true">🍅 {{ todo().pomodorosForTermination }}</span>
+    }
+    @if (milestoneName(); as name) {
+      <span class="badge kanban-card__milestone">{{ name }}</span>
+    }
+  </div>
+
+  @if (menuOpen()) {
+    <div class="kanban-card__menu" role="menu" (click)="$event.stopPropagation()" (keydown)="onMenuKeydown($event)">
+      <span class="kanban-card__menu-label">{{ 'kanban.moveTo' | translate }}</span>
+      @for (col of columns; track col.key) {
+        <button
+          type="button"
+          role="menuitem"
+          [disabled]="col.key === column()"
+          (click)="chooseColumn(col.key)"
+        >
+          {{ col.labelKey | translate }}
+        </button>
+      }
+      @if (moveMilestones().length) {
+        <span class="kanban-card__menu-label">{{ 'kanban.moveToMilestone' | translate }}</span>
+        @for (m of moveMilestones(); track m.id) {
+          <button type="button" role="menuitem" [disabled]="m.id === todo().milestoneId" (click)="chooseMilestone(m.id)">
+            {{ m.name }}
+          </button>
+        }
+        <button type="button" role="menuitem" [disabled]="!todo().milestoneId" (click)="chooseMilestone(null)">
+          {{ 'kanban.noMilestone' | translate }}
+        </button>
+      }
+    </div>
+  }
+</div>

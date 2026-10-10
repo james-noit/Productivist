@@ -2,7 +2,8 @@ import { Injectable, computed, signal } from '@angular/core';
 import { localStorageSignal } from '../core/local-storage-signal';
 import { createId } from '../core/create-id';
 import { comparePriority } from '../lib/eisenhower';
-import type { Priority, Todo, TodoExport } from '../types/todo';
+import { columnOf, reorderSlice, statusOf, type BoardColumnKey } from '../lib/kanban';
+import type { Priority, TaskStatus, Todo, TodoExport } from '../types/todo';
 
 export interface TodoFilters {
   importance: Priority | 'all';
@@ -85,6 +86,7 @@ export class TodosService {
     projectId?: string;
     milestoneId?: string;
     pomodorosForTermination?: number;
+    status?: TaskStatus;
   }): void {
     const maxOrder = this.todos().reduce((max, t) => Math.max(max, t.order), -1);
     const todo: Todo = {
@@ -100,6 +102,7 @@ export class TodosService {
       projectId: input.projectId,
       milestoneId: input.milestoneId,
       pomodorosForTermination: input.pomodorosForTermination,
+      ...(input.status ? { status: input.status } : {}),
     };
     this.todos.update((list) => [...list, todo]);
   }
@@ -152,6 +155,7 @@ export class TodosService {
         | 'projectId'
         | 'milestoneId'
         | 'pomodorosForTermination'
+        | 'status'
       >
     >,
   ): void {
@@ -164,6 +168,69 @@ export class TodosService {
     const done = !todo.done;
     this.patchTodo(id, { done, completedAt: done ? Date.now() : undefined });
     if (done && this.currentTaskId() === id) this.currentTaskId.set(null);
+  }
+
+  /**
+   * Moves a card on a project board: sets done/completedAt/status from the target column, optionally
+   * its milestone (`null` clears it) and places it before `beforeId` (end of the column when null).
+   * Only the target column slice (same project, same lane when `milestoneId` is given) gets new
+   * `order` values. One write, so one sync diff.
+   */
+  moveOnBoard(
+    id: string,
+    target: { column: BoardColumnKey; milestoneId?: string | null; beforeId?: string | null },
+  ): void {
+    const list = this.todos();
+    const moved = list.find((t) => t.id === id);
+    if (!moved) return;
+    const now = Date.now();
+    const toDone = target.column === 'done';
+    const wasDone = moved.done;
+    const status = statusOf(target.column);
+    const patch: Partial<Todo> = {};
+    if (toDone) {
+      if (!wasDone) {
+        patch.done = true;
+        patch.completedAt = now;
+      }
+    } else {
+      patch.done = false;
+      patch.completedAt = undefined;
+      // A task kept at 'todo' stores no status, so its wire form stays unchanged.
+      patch.status = status === 'todo' ? undefined : status;
+    }
+    const milestoneId = target.milestoneId === undefined ? moved.milestoneId : (target.milestoneId ?? undefined);
+    if (target.milestoneId !== undefined) patch.milestoneId = milestoneId;
+
+    let orders: Map<string, number> | null = null;
+    // The Done column is sorted by completion time, so its order values mean nothing.
+    if (!toDone) {
+      const slice = list
+        .filter(
+          (t) =>
+            t.id !== id &&
+            t.projectId === moved.projectId &&
+            columnOf(t) === target.column &&
+            (target.milestoneId === undefined || t.milestoneId === milestoneId),
+        )
+        .sort((a, b) => a.order - b.order)
+        .map((t) => t.id);
+      const orderById = new Map(list.map((t) => [t.id, t.order]));
+      orders = reorderSlice(slice, id, target.beforeId ?? null, (x) => orderById.get(x) ?? 0);
+    }
+
+    this.todos.update((all) =>
+      all.map((t) => {
+        if (t.id === id) {
+          const next = { ...t, ...patch };
+          if (orders?.has(id)) next.order = orders.get(id)!;
+          return next;
+        }
+        const order = orders?.get(t.id);
+        return order !== undefined && order !== t.order ? { ...t, order } : t;
+      }),
+    );
+    if (toDone && this.currentTaskId() === id) this.currentTaskId.set(null);
   }
 
   reorderTodoBefore(draggedTodoId: string, targetTodoId: string, before: boolean): void {

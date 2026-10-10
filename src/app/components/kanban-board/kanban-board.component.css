@@ -1,0 +1,206 @@
+:host {
+  display: block;
+  min-width: 0;
+}
+
+.kanban-board {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.kanban-board__toolbar,
+.kanban-board__filter {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.kanban-board__group {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.kanban-board__group-label {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
+.kanban-board__chip {
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  color: var(--color-text-muted);
+  padding: 0.25rem 0.8rem;
+  font-size: 0.85rem;
+}
+
+.kanban-board__chip--active {
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
+  color: var(--color-primary-contrast);
+}
+
+.kanban-board__add-milestone {
+  margin-left: auto;
+}
+
+.kanban-board__search,
+.kanban-board__milestone-input,
+.kanban-board__quick-input {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  color: var(--color-text);
+  padding: 0.35rem 0.6rem;
+  min-width: 0;
+}
+
+.kanban-board__search {
+  flex: 1 1 12rem;
+  max-width: 20rem;
+}
+
+.kanban-board__milestone-input {
+  margin-left: auto;
+}
+
+.kanban-board__empty {
+  margin: 0;
+  padding: 1rem;
+  text-align: center;
+  color: var(--color-text-muted);
+}
+
+/* The board scrolls inside this box, never the page; the header row sticks to its top. */
+.kanban-board__scroll {
+  overflow: auto;
+  max-height: calc(100vh - 15rem);
+  min-height: 12rem;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+}
+
+.kanban-board__grid {
+  min-width: 62rem;
+}
+
+.kanban-board__heads,
+.kanban-board__row {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(15rem, 1fr));
+}
+
+.kanban-board__heads {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background-color: var(--color-surface-alt);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.kanban-board__head,
+.kanban-board__cell {
+  --column-accent: var(--color-text-muted);
+}
+
+.kanban-board [data-column='inProgress'] {
+  --column-accent: var(--color-primary);
+}
+
+.kanban-board [data-column='review'] {
+  --column-accent: var(--color-medium);
+}
+
+.kanban-board [data-column='done'] {
+  --column-accent: var(--color-capacity-safe);
+}
+
+.kanban-board__head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 0.75rem;
+  border-top: 3px solid var(--column-accent);
+  font-weight: 600;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.kanban-board__head-count,
+.kanban-board__lane-count {
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-muted);
+}
+
+.kanban-board__lane-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.45rem 0.75rem;
+  background-color: var(--color-surface-alt);
+  border: none;
+  border-top: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text);
+  text-align: left;
+  font-weight: 600;
+  position: sticky;
+  left: 0;
+}
+
+.kanban-board__chevron {
+  display: inline-block;
+  transition: transform 0.15s;
+}
+
+.kanban-board__chevron--open {
+  transform: rotate(90deg);
+}
+
+.kanban-board__cell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-height: 5rem;
+  padding: 0.6rem;
+  border: 2px dashed transparent;
+  border-radius: 6px;
+  margin: 2px;
+}
+
+.kanban-board__cell--over {
+  border-color: var(--column-accent);
+  background-color: color-mix(in srgb, var(--column-accent) 10%, transparent);
+}
+
+.kanban-board__add,
+.kanban-board__more {
+  background: none;
+  border: 1px dashed var(--color-border);
+  border-radius: 6px;
+  color: var(--color-text-muted);
+  padding: 0.4rem 0.6rem;
+  text-align: left;
+}
+
+.kanban-board__add:hover,
+.kanban-board__more:hover {
+  color: var(--color-text);
+  border-color: var(--color-text-muted);
+}
+
+.kanban-board__more--collapse {
+  align-self: flex-start;
+}
+
+.kanban-board__quick-input {
+  width: 100%;
+  box-sizing: border-box;
+}

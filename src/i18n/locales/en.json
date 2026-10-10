@@ -9,7 +9,7 @@
     "importTodo": "Import data",
     "views": "Views",
     "pomodoro": "Pomodoro",
-    "projects": "Projects",
+    "projects": "Tasks and projects",
     "reset": "Reset",
     "resetWarning": "This will erase your to-do list, projects, and settings, and reset the pomodoro clock.",
     "resetInstruction": "Type \"{{phrase}}\" below to confirm.",
@@ -138,7 +138,7 @@
     "noResults": "No matches"
   },
   "projects": {
-    "title": "Projects",
+    "title": "Tasks and projects",
     "newProject": "New project",
     "editProject": "Edit project",
     "edit": "Edit",
@@ -169,7 +169,8 @@
     "allOpenTasks": "open tasks",
     "sortManual": "Manual order",
     "sortUrgency": "By urgency",
-    "sortLabel": "Sort projects"
+    "sortLabel": "Sort projects",
+    "manage": "Manage project"
   },
   "multitask": {
     "toggleLabel": "Multitask",
@@ -356,5 +357,44 @@
       "japanese": "Japanese notebook",
       "nordic": "Nordic grey"
     }
+  },
+  "projectDetail": {
+    "back": "← Tasks and projects",
+    "progress": "{{done}} of {{total}} tasks done",
+    "presentations": {
+      "kanban": "Kanban"
+    },
+    "presentationsLabel": "Project presentations",
+    "edit": "Edit project",
+    "delete": "Delete project"
+  },
+  "kanban": {
+    "columns": {
+      "todo": "To do",
+      "inProgress": "In progress",
+      "review": "Review",
+      "done": "Done"
+    },
+    "swimlanes": "Swimlanes",
+    "swimlanesMilestones": "Milestones",
+    "swimlanesNone": "None",
+    "allMilestones": "All",
+    "milestoneFilter": "Filter by milestone",
+    "noMilestone": "No milestone",
+    "search": "Search tasks…",
+    "addTask": "Add task",
+    "taskTitlePlaceholder": "Task title",
+    "addMilestone": "+ Milestone",
+    "moveTo": "Move to",
+    "moveToMilestone": "Milestone",
+    "moveCard": "Move card",
+    "showAllDone": "Show all ({{count}})",
+    "showRecentDone": "Show recent only",
+    "emptyProject": "This project has no tasks yet. Add the first one below.",
+    "collapseLane": "Collapse lane",
+    "expandLane": "Expand lane",
+    "board": "Kanban board",
+    "dropHere": "Drop here",
+    "noMatches": "No tasks match your filters."
   }
 }

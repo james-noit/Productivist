@@ -2,11 +2,13 @@ import { Injectable, signal } from '@angular/core';
 import { localStorageSignal } from '../core/local-storage-signal';
 import type { EisenhowerQuadrant } from '../types/eisenhower';
 
-export type AppView = 'pomodoro' | 'projects' | 'admin';
+export type AppView = 'pomodoro' | 'projects' | 'project' | 'admin';
+/** How the project detail view shows its project. A union so later presentations extend it. */
+export type ProjectPresentation = 'kanban';
 export type ProjectsTab = 'projects' | 'matrix';
 export type ConfigSection = 'general' | 'account';
 
-const VIEWS: readonly AppView[] = ['pomodoro', 'projects', 'admin'];
+const VIEWS: readonly AppView[] = ['pomodoro', 'projects', 'project', 'admin'];
 
 /**
  * The Planning lab and Eisenhower views were folded into Projects. A stored value naming either
@@ -60,6 +62,10 @@ export class ViewService {
    */
   readonly focusQuadrant = signal<EisenhowerQuadrant | null>(null);
 
+  /** Project shown by the `project` view, and the presentation it uses. Both survive reloads. */
+  readonly activeProjectId = localStorageSignal<string | null>('productivist.activeProjectId', null);
+  readonly projectPresentation = localStorageSignal<ProjectPresentation>('productivist.projectPresentation', 'kanban');
+
   /** Open state of the Plan-my-day modal. Not persisted: the wizard's own stage is. */
   readonly planningOpen = signal(false);
 
@@ -88,6 +94,11 @@ export class ViewService {
     this.planningOpen.set(false);
   }
 
+  openProject(id: string): void {
+    this.activeProjectId.set(id);
+    this.setView('project');
+  }
+
   openPlanning(): void {
     this.planningOpen.set(true);
   }
@@ -104,6 +115,7 @@ export class ViewService {
 
   reset(): void {
     this.current.set('projects');
+    this.activeProjectId.set(null);
     this.projectsTab.set('projects');
     this.focusQuadrant.set(null);
     this.planningOpen.set(false);

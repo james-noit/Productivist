@@ -1,5 +1,8 @@
 export type Priority = 'low' | 'medium' | 'high'
 
+/** Workflow column of the project board. Absent means 'todo'; completion is the separate `done` flag. */
+export type TaskStatus = 'todo' | 'inProgress' | 'review'
+
 export interface Todo {
   id: string
   title: string
@@ -14,6 +17,7 @@ export interface Todo {
   projectId?: string
   milestoneId?: string
   pomodorosForTermination?: number
+  status?: TaskStatus
 }
 
 export interface TodoExport {

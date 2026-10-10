@@ -1,5 +1,5 @@
 import type { Milestone, Project } from '../types/project';
-import type { Priority, Todo } from '../types/todo';
+import type { Priority, TaskStatus, Todo } from '../types/todo';
 
 /**
  * Pure sync logic. The app's stores know nothing about syncing (no `updatedAt`, no tombstones), so a
@@ -168,6 +168,8 @@ export interface TodoWire extends WireRow {
   projectId: string | null;
   milestoneId: string | null;
   pomodorosForTermination: number | null;
+  /** Optional on the wire: absent or null means 'todo'. */
+  status?: TaskStatus | null;
 }
 
 type Content<W extends WireRow> = Omit<W, 'updatedAt' | 'deleted'>;
@@ -227,6 +229,8 @@ export const todoCodec = {
     projectId: t.projectId ?? null,
     milestoneId: t.milestoneId ?? null,
     pomodorosForTermination: t.pomodorosForTermination ?? null,
+    // Only when set: an always-present key would change every existing todo's content hash.
+    ...(t.status ? { status: t.status } : {}),
   }),
   fromWire: (w: TodoWire): Todo => {
     const todo: Todo = {
@@ -244,6 +248,7 @@ export const todoCodec = {
     if (w.projectId !== null) todo.projectId = w.projectId;
     if (w.milestoneId !== null) todo.milestoneId = w.milestoneId;
     if (w.pomodorosForTermination !== null) todo.pomodorosForTermination = w.pomodorosForTermination;
+    if (w.status) todo.status = w.status;
     return todo;
   },
   tombstone: (id: string): Content<TodoWire> => ({

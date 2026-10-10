@@ -11,6 +11,7 @@ import { TodoListComponent } from './components/todo-list/todo-list.component';
 import { MultitaskViewComponent } from './components/multitask-view/multitask-view.component';
 import { PlanningLabModalComponent } from './components/planning-lab-modal/planning-lab-modal.component';
 import { ConfigModalComponent } from './components/config-modal/config-modal.component';
+import { ProjectDetailViewComponent } from './components/project-detail-view/project-detail-view.component';
 import { ProjectsViewComponent } from './components/projects-view/projects-view.component';
 import { AdminViewComponent } from './components/admin-view/admin-view.component';
 import en from '../i18n/locales/en.json';
@@ -28,6 +29,7 @@ import en from '../i18n/locales/en.json';
     PlanningLabModalComponent,
     ConfigModalComponent,
     ProjectsViewComponent,
+    ProjectDetailViewComponent,
     AdminViewComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,

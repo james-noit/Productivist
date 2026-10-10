@@ -1,0 +1,180 @@
+<section class="kanban-board" [attr.aria-label]="'kanban.board' | translate">
+  <div class="kanban-board__toolbar">
+    <div class="kanban-board__group" role="group" [attr.aria-label]="'kanban.swimlanes' | translate">
+      <span class="kanban-board__group-label">{{ 'kanban.swimlanes' | translate }}</span>
+      <button
+        type="button"
+        class="kanban-board__chip"
+        [class.kanban-board__chip--active]="swimlanes() === 'milestones'"
+        [attr.aria-pressed]="swimlanes() === 'milestones'"
+        (click)="setSwimlanes('milestones')"
+      >
+        {{ 'kanban.swimlanesMilestones' | translate }}
+      </button>
+      <button
+        type="button"
+        class="kanban-board__chip"
+        [class.kanban-board__chip--active]="swimlanes() === 'none'"
+        [attr.aria-pressed]="swimlanes() === 'none'"
+        (click)="setSwimlanes('none')"
+      >
+        {{ 'kanban.swimlanesNone' | translate }}
+      </button>
+    </div>
+
+    <input
+      type="search"
+      class="kanban-board__search"
+      [ngModel]="search()"
+      (ngModelChange)="search.set($event)"
+      name="kanbanSearch"
+      [placeholder]="'kanban.search' | translate"
+      [attr.aria-label]="'kanban.search' | translate"
+    />
+
+    @if (addingMilestone()) {
+      <input
+        type="text"
+        class="kanban-board__milestone-input"
+        [ngModel]="newMilestoneName()"
+        (ngModelChange)="newMilestoneName.set($event)"
+        name="kanbanMilestone"
+        [placeholder]="'projects.milestoneNamePlaceholder' | translate"
+        [attr.aria-label]="'projects.milestoneNamePlaceholder' | translate"
+        (keydown.enter)="addMilestone()"
+        (keydown.escape)="cancelAddMilestone()"
+        (blur)="cancelAddMilestone()"
+      />
+    } @else {
+      <button type="button" class="kanban-board__chip kanban-board__add-milestone" (click)="startAddMilestone()">
+        {{ 'kanban.addMilestone' | translate }}
+      </button>
+    }
+  </div>
+
+  @if (milestones().length) {
+    <div class="kanban-board__filter" role="group" [attr.aria-label]="'kanban.milestoneFilter' | translate">
+      <button
+        type="button"
+        class="kanban-board__chip"
+        [class.kanban-board__chip--active]="!milestoneFilter()"
+        [attr.aria-pressed]="!milestoneFilter()"
+        (click)="setFilter(null)"
+      >
+        {{ 'kanban.allMilestones' | translate }}
+      </button>
+      @for (m of milestones(); track m.id) {
+        <button
+          type="button"
+          class="kanban-board__chip"
+          [class.kanban-board__chip--active]="milestoneFilter() === m.id"
+          [attr.aria-pressed]="milestoneFilter() === m.id"
+          (click)="setFilter(m.id)"
+        >
+          {{ m.name }}
+        </button>
+      }
+    </div>
+  }
+
+  @if (!projectHasTasks()) {
+    <p class="kanban-board__empty">{{ 'kanban.emptyProject' | translate }}</p>
+  } @else if (!board().totalTasks && search().trim()) {
+    <p class="kanban-board__empty">{{ 'kanban.noMatches' | translate }}</p>
+  }
+
+  <div class="kanban-board__scroll">
+    <div class="kanban-board__grid">
+      <div class="kanban-board__heads">
+        @for (col of columns; track col.key) {
+          <div class="kanban-board__head" [attr.data-column]="col.key">
+            <span class="kanban-board__head-name">{{ col.labelKey | translate }}</span>
+            <span class="kanban-board__head-count">{{ board().totals[col.key] }}</span>
+          </div>
+        }
+      </div>
+
+      @for (lane of board().lanes; track lane.key) {
+        @if (swimlanes() === 'milestones') {
+          <button
+            type="button"
+            class="kanban-board__lane-head"
+            [attr.aria-expanded]="!collapsed().has(lane.key)"
+            [attr.aria-label]="(collapsed().has(lane.key) ? 'kanban.expandLane' : 'kanban.collapseLane') | translate"
+            (click)="toggleLane(lane.key)"
+          >
+            <span class="kanban-board__chevron" [class.kanban-board__chevron--open]="!collapsed().has(lane.key)" aria-hidden="true">▸</span>
+            <span class="kanban-board__lane-name">{{ lane.milestone ? lane.milestone.name : ('kanban.noMilestone' | translate) }}</span>
+            <span class="kanban-board__lane-count">{{ lane.total }}</span>
+          </button>
+        }
+
+        @if (swimlanes() === 'none' || !collapsed().has(lane.key)) {
+          <div class="kanban-board__row">
+            @for (col of columns; track col.key) {
+              <div
+                class="kanban-board__cell"
+                [attr.data-column]="col.key"
+                [class.kanban-board__cell--over]="dragOverKey() === cellKey(lane, col.key)"
+                role="group"
+                [attr.aria-label]="col.labelKey | translate"
+                (dragover)="onCellDragOver($event, lane, col.key)"
+                (dragleave)="onCellDragLeave($event, lane, col.key)"
+                (drop)="onCellDrop($event, lane, col.key)"
+              >
+                @for (todo of lane.columns[col.key]; track todo.id) {
+                  <app-kanban-card
+                    [todo]="todo"
+                    [milestoneName]="milestoneNameOf(todo)"
+                    [moveMilestones]="swimlanes() === 'milestones' ? milestones() : []"
+                    (open)="detailId.set(todo.id)"
+                    (moveColumn)="moveColumn(todo, $event)"
+                    (moveMilestone)="moveMilestone(todo, $event)"
+                    (cardDrop)="onCellDrop($event, lane, col.key, todo.id)"
+                  />
+                }
+
+                @if (col.key === 'done' && lane.hiddenDone) {
+                  <button type="button" class="kanban-board__more" (click)="showAllDone.set(true)">
+                    {{ 'kanban.showAllDone' | translate: { count: lane.columns.done.length + lane.hiddenDone } }}
+                  </button>
+                }
+
+                @if (col.key === 'todo') {
+                  @if (addingLane() === lane.key) {
+                    <input
+                      type="text"
+                      class="kanban-board__quick-input"
+                      [ngModel]="newTaskTitle()"
+                      (ngModelChange)="newTaskTitle.set($event)"
+                      name="kanbanQuickAdd"
+                      [placeholder]="'kanban.taskTitlePlaceholder' | translate"
+                      [attr.aria-label]="'kanban.taskTitlePlaceholder' | translate"
+                      (keydown.enter)="addTask(lane)"
+                      (keydown.escape)="cancelAddTask()"
+                      (blur)="cancelAddTask()"
+                    />
+                  } @else {
+                    <button type="button" class="kanban-board__add" (click)="startAddTask(lane.key)">
+                      + {{ 'kanban.addTask' | translate }}
+                    </button>
+                  }
+                }
+              </div>
+            }
+          </div>
+        }
+      }
+    </div>
+  </div>
+
+  @if (doneOverLimit()) {
+    <button type="button" class="kanban-board__more kanban-board__more--collapse" (click)="showAllDone.set(false)">
+      {{ 'kanban.showRecentDone' | translate }}
+    </button>
+  }
+
+  @if (detailTodo(); as todo) {
+    <app-task-detail-modal [todo]="todo" (close)="detailId.set(null)" />
+  }
+</section>

@@ -1,0 +1,73 @@
+@if (project(); as project) {
+  <main class="project-detail">
+    <div class="project-detail__top">
+      <button type="button" class="project-detail__back" (click)="back()">{{ 'projectDetail.back' | translate }}</button>
+    </div>
+
+    <header class="project-detail__header">
+      <span class="project-detail__icon" aria-hidden="true"><app-icon [name]="project.icon" /></span>
+      <div class="project-detail__heading">
+        <h2>{{ project.name }}</h2>
+        @if (project.description) {
+          <p class="project-detail__description">{{ project.description }}</p>
+        }
+      </div>
+      <div class="project-detail__progress">
+        <span class="project-detail__progress-text">
+          {{ 'projectDetail.progress' | translate: { done: progress().done, total: progress().total } }}
+        </span>
+        <div
+          class="project-detail__bar"
+          role="progressbar"
+          aria-valuemin="0"
+          aria-valuemax="100"
+          [attr.aria-valuenow]="progress().percent"
+        >
+          <div class="project-detail__bar-fill" [style.width.%]="progress().percent"></div>
+        </div>
+      </div>
+      <div class="project-detail__actions">
+        <button type="button" [attr.aria-label]="'projectDetail.edit' | translate" [title]="'projectDetail.edit' | translate" (click)="editing.set(true)">✎</button>
+        <button
+          type="button"
+          class="project-detail__delete"
+          [attr.aria-label]="'projectDetail.delete' | translate"
+          [title]="'projectDetail.delete' | translate"
+          (click)="deleteProject()"
+        >
+          ✕
+        </button>
+      </div>
+    </header>
+
+    <div class="project-detail__tabs" role="tablist" [attr.aria-label]="'projectDetail.presentationsLabel' | translate" (keydown)="onTabKeydown($event)">
+      @for (tab of presentations; track tab.key) {
+        <button
+          type="button"
+          role="tab"
+          [attr.data-tab]="tab.key"
+          [attr.aria-selected]="view.projectPresentation() === tab.key"
+          [attr.tabindex]="view.projectPresentation() === tab.key ? 0 : -1"
+          [class.active]="view.projectPresentation() === tab.key"
+          (click)="selectPresentation(tab.key)"
+        >
+          {{ tab.labelKey | translate }}
+        </button>
+      }
+    </div>
+
+    @switch (view.projectPresentation()) {
+      @case ('kanban') {
+        @defer (on immediate) {
+          <app-kanban-board [project]="project" />
+        } @placeholder {
+          <div class="view-loading" aria-hidden="true"></div>
+        }
+      }
+    }
+
+    @if (editing()) {
+      <app-edit-project-modal [project]="project" (save)="saveEdit($event)" (close)="editing.set(false)" />
+    }
+  </main>
+}

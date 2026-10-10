@@ -9,7 +9,7 @@
     "importTodo": "Importar datos",
     "views": "Vistas",
     "pomodoro": "Pomodoro",
-    "projects": "Proyectos",
+    "projects": "Tareas y proyectos",
     "reset": "Reiniciar",
     "resetWarning": "Esto borrará tu lista de tareas, proyectos y ajustes, y reiniciará el reloj pomodoro.",
     "resetInstruction": "Escribe \"{{phrase}}\" abajo para confirmar.",
@@ -138,7 +138,7 @@
     "noResults": "Sin coincidencias"
   },
   "projects": {
-    "title": "Proyectos",
+    "title": "Tareas y proyectos",
     "newProject": "Nuevo proyecto",
     "editProject": "Editar proyecto",
     "edit": "Editar",
@@ -169,7 +169,8 @@
     "allOpenTasks": "tareas abiertas",
     "sortManual": "Orden manual",
     "sortUrgency": "Por urgencia",
-    "sortLabel": "Ordenar proyectos"
+    "sortLabel": "Ordenar proyectos",
+    "manage": "Gestionar proyecto"
   },
   "multitask": {
     "toggleLabel": "Multitarea",
@@ -356,5 +357,44 @@
       "japanese": "Cuaderno japonés",
       "nordic": "Gris nórdico"
     }
+  },
+  "projectDetail": {
+    "back": "← Tareas y proyectos",
+    "progress": "{{done}} de {{total}} tareas hechas",
+    "presentations": {
+      "kanban": "Kanban"
+    },
+    "presentationsLabel": "Vistas del proyecto",
+    "edit": "Editar proyecto",
+    "delete": "Eliminar proyecto"
+  },
+  "kanban": {
+    "columns": {
+      "todo": "Por hacer",
+      "inProgress": "En curso",
+      "review": "En revisión",
+      "done": "Hecho"
+    },
+    "swimlanes": "Carriles",
+    "swimlanesMilestones": "Hitos",
+    "swimlanesNone": "Ninguno",
+    "allMilestones": "Todos",
+    "milestoneFilter": "Filtrar por hito",
+    "noMilestone": "Sin hito",
+    "search": "Buscar tareas…",
+    "addTask": "Añadir tarea",
+    "taskTitlePlaceholder": "Título de la tarea",
+    "addMilestone": "+ Hito",
+    "moveTo": "Mover a",
+    "moveToMilestone": "Hito",
+    "moveCard": "Mover tarjeta",
+    "showAllDone": "Mostrar todas ({{count}})",
+    "showRecentDone": "Mostrar solo recientes",
+    "emptyProject": "Este proyecto aún no tiene tareas. Añade la primera abajo.",
+    "collapseLane": "Contraer carril",
+    "expandLane": "Expandir carril",
+    "board": "Tablero Kanban",
+    "dropHere": "Suelta aquí",
+    "noMatches": "Ninguna tarea coincide con los filtros."
   }
 }

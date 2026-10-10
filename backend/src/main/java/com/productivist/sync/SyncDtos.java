@@ -55,6 +55,7 @@ public final class SyncDtos {
             @Size(max = 64) String projectId,
             @Size(max = 64) String milestoneId,
             Integer pomodorosForTermination,
+            @Pattern(regexp = "todo|inProgress|review") String status,
             long updatedAt,
             boolean deleted) {}
 
