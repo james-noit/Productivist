@@ -68,6 +68,15 @@
             // under a CSP that forbids inline event handlers, and Angular's critical-CSS
             // inlining emits `<link media="print" onload="...">`, so it has to be off.
             "thunderbird": {
+              // Absolute API URL, generated from API_URL by scripts/write-thunderbird-environment.mjs.
+              // Replaces the production file directly, since an array option from a later configuration
+              // overrides rather than extends the earlier one.
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.thunderbird.ts"
+                }
+              ],
               "optimization": {
                 "scripts": true,
                 "styles": { "minify": true, "inlineCritical": false },

@@ -12,7 +12,7 @@ cd backend && mvn spring-boot:run
 ```
 
 Connection comes from `PGHOST`, `PGPORT`, `PGDATABASE`, `PGUSER`, `PGPASSWORD` (the variables Railway's
-Postgres plugin provides), defaulting to the container above. Other settings: `PORT`, `CORS_ALLOWED_ORIGINS`
+Postgres plugin provides), defaulting to the container above. Other settings: `PORT`, `SERVER_ADDRESS`, `CORS_ALLOWED_ORIGINS`
 (comma-separated origin patterns; defaults to `http://localhost:4200` and `moz-extension://*`).
 Schema is managed by Flyway (`src/main/resources/db/migration`).
 
@@ -41,5 +41,15 @@ Everything except login and health needs `Authorization: Bearer <token>`.
 
 ## Railway
 
-Deploy the `backend/` directory (it has a `Dockerfile`), attach a Postgres plugin, and set `CORS_ALLOWED_ORIGINS`
-to the deployed frontend origin plus `moz-extension://*`.
+Two services plus Postgres; only the frontend has a public domain.
+
+- **Postgres**: Railway database plugin.
+- **backend** (root directory `/backend`, no public domain): variables `PGHOST`, `PGPORT`, `PGDATABASE`, `PGUSER`,
+  `PGPASSWORD` as references to the database service (`${{Postgres.PGHOST}}` …), `PORT=8080`,
+  `CORS_ALLOWED_ORIGINS=moz-extension://*`. Healthcheck path `/actuator/health`. The Dockerfile binds `::` because
+  the private network is IPv6.
+- **frontend** (root directory `/`, root `Dockerfile`): generate a domain and set the healthcheck path `/healthz`.
+  `BACKEND_ORIGIN` defaults to `http://productivist-backend.railway.internal:8080`; set it if the backend service
+  has another name or port. nginx proxies `/api/` there and rate-limits it.
+- Thunderbird add-on: `API_URL=https://<frontend-domain> npm run build:tb`. Its requests carry a `moz-extension://`
+  origin, which is why the backend's CORS list keeps that entry.

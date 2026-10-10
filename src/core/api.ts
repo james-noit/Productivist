@@ -1,6 +1,6 @@
 import { environment } from '../environments/environment';
 
-export const API_ENABLED = environment.apiUrl !== '';
+export const API_ENABLED = environment.syncEnabled;
 
 export class ApiError extends Error {
   constructor(readonly status: number) {

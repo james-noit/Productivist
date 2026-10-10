@@ -1,14 +1,14 @@
 {
   "name": "productivist",
   "private": true,
-  "version": "0.9.18",
+  "version": "0.9.19",
   "scripts": {
     "ng": "ng",
     "dev": "ng serve",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "preview": "ng serve --configuration production",
-    "build:tb": "ng build --configuration production,thunderbird --base-href ./ && node scripts/package-thunderbird.mjs",
+    "build:tb": "node scripts/write-thunderbird-environment.mjs && ng build --configuration production,thunderbird --base-href ./ && node scripts/package-thunderbird.mjs",
     "tb:run": "web-ext run -t thunderbird -s dist/thunderbird",
     "tb:lint": "web-ext lint -s dist/thunderbird"
   },
