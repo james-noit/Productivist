@@ -16,20 +16,45 @@
   (focusin)="onFocusIn($event)"
 >
   <div class="flow-canvas__world" [style.transform]="worldTransform()" [style.--flow-k]="viewport().k">
-    @for (lane of lanes; track lane.key) {
+    @for (lane of laneViews(); track lane.key) {
       <div
         [class]="'flow-canvas__lane flow-canvas__lane--' + lane.key"
+        [class.flow-canvas__lane--collapsed]="lane.collapsed"
         [class.flow-canvas__lane--drop]="dropLane() === lane.key"
         [style.left.px]="lane.x"
-        [style.width.px]="laneWidth"
+        [style.width.px]="lane.width"
         [style.height.px]="worldHeight()"
       >
-        <div class="flow-canvas__lane-label">
-          <span class="flow-canvas__lane-name">{{ lane.label | translate }}</span>
-          @if (lane.span) {
+        @if (lane.collapsed) {
+          <button
+            type="button"
+            class="flow-canvas__strip"
+            aria-expanded="false"
+            [attr.aria-label]="'flow.lane.show' | translate: { name: (lane.label | translate), n: lane.count }"
+            [title]="'flow.lane.show' | translate: { name: (lane.label | translate), n: lane.count }"
+            (click)="showLane(lane.horizon!)"
+          >
+            <span class="flow-canvas__strip-name">{{ lane.label | translate }}</span>
+            <span class="flow-canvas__strip-count">{{ lane.count }}</span>
+          </button>
+        } @else {
+          <div class="flow-canvas__lane-label">
+            <span class="flow-canvas__lane-name">{{ lane.label | translate }}</span>
             <span class="flow-canvas__lane-span">{{ lane.span | translate }}</span>
+          </div>
+          @if (lane.horizon; as horizon) {
+            <button
+              type="button"
+              class="flow-canvas__lane-toggle"
+              aria-expanded="true"
+              [attr.aria-label]="'flow.lane.hide' | translate: { name: (lane.label | translate) }"
+              [title]="'flow.lane.hide' | translate: { name: (lane.label | translate) }"
+              (click)="hideLane(horizon)"
+            >
+              <app-ui-icon name="chevron-down" [size]="14" />
+            </button>
           }
-        </div>
+        }
       </div>
     }
 
@@ -88,36 +113,123 @@
       />
     }
 
-    @if (moreButton(); as more) {
-      <button
-        type="button"
-        class="flow-canvas__more"
-        aria-haspopup="dialog"
-        [attr.aria-expanded]="menuKey() !== null"
-        [style.transform]="'translate(' + more.x + 'px, ' + more.y + 'px) scale(calc(1 / var(--flow-k, 1)))'"
-        [attr.aria-label]="'flow.link.openShort' | translate"
-        [title]="'flow.link.openShort' | translate"
-        (mousedown)="$event.preventDefault()"
-        (click)="menuKey() ? closeMenu(true) : openMenu()"
-      >
-        ⋯
-      </button>
-    }
-
     @if (taskDrag(); as ghost) {
       <div class="flow-canvas__ghost" [style.transform]="'translate(' + (ghost.pos.x + 12) + 'px, ' + (ghost.pos.y + 12) + 'px)'">{{ ghost.title }}</div>
     }
   </div>
 
   @if (!graph().objectives.length) {
-    <p class="flow-canvas__hint">{{ 'flow.emptyHint' | translate }}</p>
+    <div class="flow-canvas__empty">
+      <div class="flow-canvas__empty-card" data-ui>
+        <p class="flow-canvas__empty-title">{{ 'flow.empty.title' | translate }}</p>
+        <button type="button" class="btn btn--primary" (click)="createObjective.emit({ horizon: 'short', y: null })">{{ 'flow.empty.add' | translate }}</button>
+        <p class="flow-canvas__empty-hint">{{ 'flow.empty.orDoubleClick' | translate }}</p>
+      </div>
+    </div>
+  }
+
+  @if (showTip()) {
+    <div class="flow-canvas__tip" data-ui>
+      <p>{{ 'flow.linkTip' | translate }}</p>
+      <button type="button" class="btn btn--ghost btn--icon btn--sm" [attr.aria-label]="'todo.close' | translate" [title]="'todo.close' | translate" (click)="dismissTip()">
+        <app-ui-icon name="x" />
+      </button>
+    </div>
+  }
+
+  @if (bar(); as bar) {
+    <app-flow-selection-bar
+      class="flow-canvas__bar"
+      [style.left.px]="bar.x"
+      [style.top.px]="bar.y"
+      [kind]="bar.kind"
+      [name]="barName()"
+      [achieved]="barAchieved()"
+      [collapsed]="barCollapsed()"
+      [menuOpen]="menuKey() !== null"
+      [confirm]="barConfirm()"
+      (action)="onBarAction($event)"
+      (confirmed)="onBarConfirmed()"
+      (cancelled)="cancelPending()"
+      (dismissed)="onBarDismissed()"
+    />
   }
 
   @if (menuSource(); as source) {
-    <app-flow-link-menu class="flow-canvas__menu" [source]="source" [label]="menuLabel()" (closed)="closeMenu($event)" />
+    <app-flow-link-menu
+      class="flow-canvas__menu"
+      [style.left.px]="menuPlace().left"
+      [style.top.px]="menuPlace().top"
+      [style.bottom.px]="menuPlace().bottom"
+      [style.right.px]="menuPlace().right"
+      [source]="source"
+      [label]="menuLabel()"
+      (closed)="closeMenu($event)"
+    />
   }
 
+  <div
+    #controlsRoot
+    class="flow-canvas__controls"
+    data-ui
+    role="group"
+    [attr.aria-label]="'flow.controls.label' | translate"
+    (keydown)="onControlsKeydown($event)"
+    (focusout)="onControlsFocusOut($event)"
+  >
+    <button type="button" class="flow-canvas__control" [attr.aria-label]="'flow.zoomIn' | translate" [title]="('flow.zoomIn' | translate) + ' (+)'" (click)="zoomIn()">
+      <app-ui-icon name="plus" [size]="16" />
+    </button>
+    <button
+      type="button"
+      class="flow-canvas__control flow-canvas__control--value"
+      [attr.aria-label]="'flow.controls.resetZoom' | translate"
+      [title]="('flow.controls.resetZoom' | translate) + ' (0)'"
+      (click)="resetZoom()"
+    >
+      {{ zoomPercent() }}%
+    </button>
+    <button type="button" class="flow-canvas__control" [attr.aria-label]="'flow.zoomOut' | translate" [title]="('flow.zoomOut' | translate) + ' (-)'" (click)="zoomOut()">
+      <app-ui-icon name="minus" [size]="16" />
+    </button>
+    <button type="button" class="flow-canvas__control" [attr.aria-label]="'flow.fit' | translate" [title]="('flow.fit' | translate) + ' (1)'" (click)="fit()">
+      <app-ui-icon name="frame" [size]="16" />
+    </button>
+    <button
+      #controlsMore
+      type="button"
+      class="flow-canvas__control"
+      aria-haspopup="menu"
+      [attr.aria-expanded]="controlsMenu()"
+      [attr.aria-label]="'flow.controls.more' | translate"
+      [title]="'flow.controls.more' | translate"
+      (click)="toggleControlsMenu()"
+    >
+      <app-ui-icon name="more" [size]="16" />
+    </button>
+
+    @if (controlsMenu()) {
+      <div class="flow-canvas__controls-menu" [attr.role]="tidyAsk() ? 'alertdialog' : 'menu'" [attr.aria-label]="tidyAsk() ? null : ('flow.controls.more' | translate)" [attr.aria-labelledby]="tidyAsk() ? 'flow-tidy-question' : null">
+        @if (tidyAsk()) {
+          <p class="confirm-bar__text" id="flow-tidy-question">{{ 'flow.tidyUpQuestion' | translate }}</p>
+          <div class="confirm-bar__actions">
+            <button type="button" class="btn btn--secondary btn--sm" (click)="cancelTidy()">{{ 'projects.cancel' | translate }}</button>
+            <button type="button" class="btn btn--danger btn--sm" data-confirm-first (click)="tidyUp()">{{ 'flow.tidyUp' | translate }}</button>
+          </div>
+        } @else {
+          <button type="button" role="menuitem" class="flow-canvas__menu-item" [title]="'flow.tidyUpHint' | translate" (click)="requestTidy()">
+            {{ 'flow.tidyUp' | translate }}
+          </button>
+          <button type="button" role="menuitem" class="flow-canvas__menu-item" (click)="onResetZoomItem()">
+            {{ 'flow.controls.resetZoom' | translate }}
+            <kbd class="flow-canvas__kbd" aria-hidden="true">0</kbd>
+          </button>
+        }
+      </div>
+    }
+  </div>
+
   @if (refusal(); as refused) {
-    <p class="flow-canvas__toast" role="status">{{ 'flow.refusals.' + refused.reason | translate }}</p>
+    <p class="flow-canvas__toast" [class.flow-canvas__toast--below-tip]="showTip()" role="status">{{ 'flow.refusals.' + refused.reason | translate }}</p>
   }
 </div>

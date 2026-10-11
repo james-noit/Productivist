@@ -9,7 +9,7 @@ import { RecurrenceService } from '../../../services/recurrence.service';
 import { TodosService } from '../../../services/todos.service';
 import { ViewService, type ProjectsTab } from '../../../services/view.service';
 import { EisenhowerViewComponent } from '../eisenhower-view/eisenhower-view.component';
-import { FabMenuComponent } from '../fab-menu/fab-menu.component';
+import { FabMenuComponent, type FabItem } from '../fab-menu/fab-menu.component';
 import { NewTaskModalComponent } from '../new-task-modal/new-task-modal.component';
 import { ProjectFormComponent } from '../project-form/project-form.component';
 import { ProjectsDashboardComponent } from '../projects-dashboard/projects-dashboard.component';
@@ -17,6 +17,13 @@ import { UiIconComponent } from '../ui-icon/ui-icon.component';
 import { ProjectsPageState } from './projects-page.state';
 
 const TABS: readonly ProjectsTab[] = ['projects', 'matrix'];
+
+/** The floating "+" menu: New task (N), New project (P) and New recurring task. */
+const FAB_ITEMS: readonly FabItem[] = [
+  { id: 'task', icon: 'check', labelKey: 'projects.fab.task', shortcut: 'N' },
+  { id: 'project', icon: 'folder', labelKey: 'projects.fab.project', shortcut: 'P' },
+  { id: 'recurring', icon: 'repeat', labelKey: 'projects.fab.recurring' },
+];
 
 /**
  * Tasks and projects: the page header (title, one-line summary, Recurring and Plan my day), the Projects | Matrix
@@ -54,6 +61,7 @@ export class ProjectsViewComponent {
   private readonly recurrences = inject(RecurrenceService);
 
   readonly activeRecurring = this.recurrences.activeCount;
+  protected readonly fabItems = FAB_ITEMS;
 
   /** True once the wizard holds anything worth coming back to, so the button reads "Resume". */
   readonly planInProgress = computed(() => this.dailyPlan.stage() !== 'prompt' || this.dailyPlan.hasAnyObjective());
@@ -81,6 +89,13 @@ export class ProjectsViewComponent {
         afterNextRender(() => this.newProjectPanel()?.nativeElement.querySelector<HTMLElement>('input[name="name"]')?.focus(), { injector: this.injector });
       }
     });
+  }
+
+  /** The floating button asked for something to be created; the focused control (the button, or whatever had focus for a shortcut) gets focus back afterwards. */
+  onFabPick(id: string): void {
+    if (id === 'task') this.state.openNewTask();
+    else if (id === 'project') this.state.openNewProject();
+    else this.view.openRecurring('new');
   }
 
   closeNewTask(): void {

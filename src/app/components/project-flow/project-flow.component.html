@@ -1,84 +1,80 @@
-<section class="project-flow" [attr.aria-label]="'flow.title' | translate">
-  <div class="project-flow__toolbar">
-    <div class="project-flow__group" role="group" [attr.aria-label]="'flow.view' | translate">
-      <span class="control-label">{{ 'flow.view' | translate }}</span>
-      <div class="segmented">
-        <button type="button" class="segmented__option" [attr.aria-pressed]="mode() === 'diagram'" (click)="mode.set('diagram')">
-          {{ 'flow.diagram' | translate }}
-        </button>
-        <button type="button" class="segmented__option" [attr.aria-pressed]="mode() === 'outline'" (click)="mode.set('outline')">
-          {{ 'flow.outline.title' | translate }}
-        </button>
-      </div>
-    </div>
+<section
+  #surface
+  class="project-flow"
+  [class.project-flow--focus]="focus()"
+  tabindex="-1"
+  [attr.role]="focus() ? 'dialog' : null"
+  [attr.aria-modal]="focus() ? 'true' : null"
+  [attr.aria-label]="'flow.title' | translate"
+  (keydown)="onSurfaceKeydown($event)"
+>
+  <div class="project-flow__bar">
+    @if (focus()) {
+      <span class="project-flow__name">{{ project().name }}</span>
+    }
 
-    <div class="project-flow__group" role="group" [attr.aria-label]="'flow.horizonFilter' | translate">
-      <span class="control-label">{{ 'flow.horizon' | translate }}</span>
-      <button type="button" class="filter-chip" [attr.aria-pressed]="!horizonFilter().size" (click)="horizonFilter.set(emptyHorizons)">
-        {{ 'kanban.allMilestones' | translate }}
+    <div class="segmented project-flow__modes" role="group" [attr.aria-label]="'flow.view' | translate">
+      <button type="button" class="segmented__option" [attr.aria-pressed]="mode() === 'diagram'" [attr.aria-label]="'flow.diagram' | translate" (click)="mode.set('diagram')">
+        <app-ui-icon name="diagram" [size]="16" />
+        <span class="project-flow__mode-text">{{ 'flow.diagram' | translate }}</span>
       </button>
-      @for (h of horizons; track h) {
-        <button type="button" class="filter-chip" [attr.aria-pressed]="horizonFilter().has(h)" (click)="toggleHorizon(h)">
-          {{ 'flow.horizons.' + h | translate }}
-        </button>
-      }
-    </div>
-
-    <div class="project-flow__group" role="group" [attr.aria-label]="'flow.statusFilter' | translate">
-      <span class="control-label">{{ 'flow.status' | translate }}</span>
-      <button type="button" class="filter-chip" [attr.aria-pressed]="!statusFilter().size" (click)="statusFilter.set(emptyStatuses)">
-        {{ 'kanban.allMilestones' | translate }}
+      <button type="button" class="segmented__option" [attr.aria-pressed]="mode() === 'outline'" [attr.aria-label]="'flow.outline.title' | translate" (click)="mode.set('outline')">
+        <app-ui-icon name="list" [size]="16" />
+        <span class="project-flow__mode-text">{{ 'flow.outline.title' | translate }}</span>
       </button>
-      @for (s of statuses; track s) {
-        <button type="button" class="filter-chip" [attr.aria-pressed]="statusFilter().has(s)" (click)="toggleStatus(s)">
-          {{ 'flow.statuses.' + s | translate }}
-        </button>
-      }
     </div>
 
-    <button type="button" class="switch" role="switch" [attr.aria-checked]="view.showDoneTasks()" (click)="toggleShowDone()">
-      <span class="switch__track" aria-hidden="true"></span>
-      {{ 'projectDetail.showDone' | translate }}
-    </button>
+    <div class="project-flow__tools">
+      <button
+        #filtersButton
+        type="button"
+        class="btn btn--secondary project-flow__filters"
+        aria-haspopup="dialog"
+        [attr.aria-expanded]="state.filtersOpen()"
+        [attr.aria-controls]="state.filtersOpen() ? 'flow-filters' : null"
+        [attr.aria-label]="(state.activeCount() ? 'projects.filters.buttonActive' : 'projects.filters.title') | translate: { n: state.activeCount() }"
+        (click)="state.openFilters(filtersButton)"
+      >
+        <app-ui-icon name="filter" [size]="16" />
+        <span class="project-flow__filters-text">{{ 'projects.filters.title' | translate }}</span>
+        @if (state.activeCount()) {
+          <span class="project-flow__badge" aria-hidden="true">{{ state.activeCount() }}</span>
+        }
+      </button>
+      <button
+        type="button"
+        class="btn btn--ghost btn--icon"
+        [attr.aria-pressed]="focus()"
+        [attr.aria-label]="'flow.focus.label' | translate"
+        [title]="'flow.focus.title' | translate"
+        (click)="toggleFocus()"
+      >
+        <app-ui-icon [name]="focus() ? 'minimize' : 'maximize'" />
+      </button>
+    </div>
   </div>
 
-  <div class="project-flow__toolbar">
-    <button type="button" class="button-ghost" (click)="newObjective()">+ {{ 'flow.addObjective' | translate }}</button>
-    @if (addingMilestone()) {
-      <input
-        type="text"
-        class="project-flow__milestone-input"
-        name="flowMilestoneName"
-        autocomplete="off"
-        [value]="milestoneName()"
-        [placeholder]="'projects.milestoneNamePlaceholder' | translate"
-        [attr.aria-label]="'flow.addMilestone' | translate"
-        (input)="milestoneName.set($any($event.target).value)"
-        (keydown.enter)="addMilestone()"
-        (keydown.escape)="cancelAddMilestone()"
-        (blur)="cancelAddMilestone()"
-      />
-    } @else {
-      <button type="button" class="button-ghost" (click)="startAddMilestone()">+ {{ 'flow.addMilestone' | translate }}</button>
-    }
-    @if (mode() === 'diagram') {
-      <button type="button" class="button-ghost" [title]="'flow.tidyUpHint' | translate" (click)="canvas()?.tidyUp()">{{ 'flow.tidyUp' | translate }}</button>
-      <button type="button" class="button-ghost" (click)="canvas()?.fit()">{{ 'flow.fit' | translate }}</button>
-
-      <div class="project-flow__zoom" role="group" [attr.aria-label]="'flow.zoom' | translate">
-        <button type="button" class="button-ghost" [attr.aria-label]="'flow.zoomOut' | translate" [title]="'flow.zoomOut' | translate" (click)="canvas()?.zoomOut()">−</button>
-        <span class="project-flow__zoom-value" aria-live="off">{{ canvas()?.zoomPercent() }}%</span>
-        <button type="button" class="button-ghost" [attr.aria-label]="'flow.zoomIn' | translate" [title]="'flow.zoomIn' | translate" (click)="canvas()?.zoomIn()">+</button>
-      </div>
-    }
-  </div>
+  @if (chips().length) {
+    <div class="project-flow__active" role="group" [attr.aria-label]="'projects.filters.active' | translate">
+      @for (chip of chips(); track chip.id) {
+        <button
+          type="button"
+          class="filter-chip project-flow__chip"
+          [attr.aria-label]="'projects.filters.remove' | translate: { name: (chip.labelKey | translate: { name: chip.nameKey ? (chip.nameKey | translate) : '' }) }"
+          (click)="removeChip(chip)"
+        >
+          {{ chip.labelKey | translate: { name: chip.nameKey ? (chip.nameKey | translate) : '' } }}
+          <app-ui-icon name="x" [size]="12" />
+        </button>
+      }
+      <button type="button" class="button-ghost project-flow__reset" (click)="state.reset()">{{ 'flow.filters.resetChips' | translate }}</button>
+    </div>
+  }
 
   @if (mode() === 'diagram') {
     <div class="project-flow__stage">
       <app-flow-canvas
         [project]="project()"
-        [horizons]="horizonFilter()"
-        [statuses]="statusFilter()"
         (editObjective)="editObjective($event)"
         (editMilestone)="datesId.set($event)"
         (editTask)="detailId.set($event)"
@@ -86,15 +82,20 @@
       />
     </div>
   } @else {
-    <app-flow-outline
-      [project]="project()"
-      [horizons]="horizonFilter()"
-      [statuses]="statusFilter()"
-      (editObjective)="editObjective($event)"
-      (editMilestone)="datesId.set($event)"
-      (editTask)="detailId.set($event)"
-    />
+    <div class="project-flow__outline">
+      <app-flow-outline
+        [project]="project()"
+        (addObjective)="newObjective()"
+        (editObjective)="editObjective($event)"
+        (editMilestone)="datesId.set($event)"
+        (editTask)="detailId.set($event)"
+      />
+    </div>
   }
+
+  <app-fab-menu [items]="fabItems" [contained]="focus()" (pick)="onFabPick($event)" />
+
+  <app-flow-filter-drawer />
 
   @if (editor(); as current) {
     @if (!current.id || editedObjective()) {
@@ -103,9 +104,51 @@
         [objective]="editedObjective()"
         [horizon]="current.horizon"
         (created)="onObjectiveCreated($event)"
-        (close)="editor.set(null)"
+        (close)="closeObjectiveEditor()"
       />
     }
+  }
+
+  @if (creatingTask()) {
+    <app-new-task-modal [projectId]="project().id" (close)="closeNewTask()" />
+  }
+
+  @if (addingMilestone()) {
+    <div class="modal-overlay" (click)="closeMilestoneOnBackdrop($event)" (keydown)="onMilestoneKeydown($event)">
+      <form
+        #milestonePanel
+        class="modal-panel project-flow__milestone"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="flow-new-milestone-title"
+        (submit)="$event.preventDefault(); createMilestone()"
+      >
+        <div class="project-flow__milestone-head">
+          <h3 id="flow-new-milestone-title">{{ 'flow.newMilestone' | translate }}</h3>
+          <button type="button" class="btn btn--ghost btn--icon btn--sm" [attr.aria-label]="'todo.close' | translate" (click)="closeMilestone()">
+            <app-ui-icon name="x" />
+          </button>
+        </div>
+        <div class="field">
+          <label class="field__label" for="flow-new-milestone-name">{{ 'projects.name' | translate }}</label>
+          <input
+            #milestoneInput
+            id="flow-new-milestone-name"
+            class="input"
+            type="text"
+            name="flowMilestoneName"
+            autocomplete="off"
+            [value]="milestoneName()"
+            [placeholder]="'projects.milestoneNamePlaceholder' | translate"
+            (input)="milestoneName.set($any($event.target).value)"
+          />
+        </div>
+        <div class="project-flow__milestone-actions">
+          <button type="button" class="btn btn--secondary" (click)="closeMilestone()">{{ 'projects.cancel' | translate }}</button>
+          <button type="submit" class="btn btn--primary" [disabled]="!milestoneName().trim()">{{ 'flow.createMilestone' | translate }}</button>
+        </div>
+      </form>
+    </div>
   }
 
   @if (detailTodo(); as todo) {

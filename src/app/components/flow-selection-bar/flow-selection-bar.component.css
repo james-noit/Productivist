@@ -1,0 +1,64 @@
+:host {
+  display: block;
+  cursor: default;
+}
+
+.flow-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.1rem;
+  padding: 0.2rem;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.08), 0 4px 12px rgb(0 0 0 / 0.14);
+  color: var(--color-text);
+  white-space: nowrap;
+}
+
+.flow-bar__button {
+  padding-inline: 0.55rem;
+}
+
+.flow-bar__button--icon {
+  width: 32px;
+  padding: 0;
+}
+
+.flow-bar__button[aria-expanded='true'] {
+  background-color: var(--color-surface-alt);
+}
+
+/* The question: wraps on a narrow canvas, the committing answer last. */
+.flow-bar--confirm {
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.4rem 0.9rem;
+  max-width: min(22rem, calc(100vw - 2rem));
+  padding: 0.5rem 0.6rem;
+  white-space: normal;
+}
+
+.flow-bar__text {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.flow-bar__actions {
+  display: flex;
+  gap: 0.4rem;
+  margin-left: auto;
+}
+
+/* Phones: icons only (every button keeps its aria-label and title). */
+@media (max-width: 599px) {
+  .flow-bar__label {
+    display: none;
+  }
+
+  .flow-bar__button {
+    width: 32px;
+    padding: 0;
+  }
+}

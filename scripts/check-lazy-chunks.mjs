@@ -31,6 +31,9 @@ const FLOW_ONLY = [
   component('objective-modal'),
   component('flow-outline'),
   component('flow-link-menu'),
+  component('flow-selection-bar'),
+  component('flow-filter-drawer'),
+  'src/app/components/project-flow/flow-view-state.ts',
   'src/lib/flow-layout.ts',
   'src/lib/flow-geometry.ts',
 ];
@@ -60,6 +63,8 @@ const NEVER_INITIAL_UI = [
   component('project-task-rows'),
   component('projects-filter-drawer'),
   component('fab-menu'),
+  component('side-drawer'),
+  'src/lib/scroll-lock.ts',
   'src/app/components/projects-view/projects-page.state.ts',
   component('inbox-card'),
   component('kebab-menu'),

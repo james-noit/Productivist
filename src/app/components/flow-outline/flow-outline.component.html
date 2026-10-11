@@ -1,6 +1,9 @@
-<div class="flow-outline">
+<div class="flow-outline" tabindex="-1">
   @if (!hasObjectives()) {
-    <p class="flow-outline__hint">{{ 'flow.outline.noObjectives' | translate }}</p>
+    <div class="flow-outline__empty">
+      <p class="flow-outline__hint">{{ 'flow.empty.title' | translate }}</p>
+      <button type="button" class="btn btn--primary" (click)="addObjective.emit()">{{ 'flow.empty.add' | translate }}</button>
+    </div>
   }
 
   @if (!rows().length) {
@@ -93,7 +96,14 @@
                 ⋯
               </button>
               @if (menuPath() === row.path) {
-                <app-flow-link-menu class="flow-outline__menu" [source]="row.source" [label]="row.title" (closed)="closeMenu(row.path, $event)" />
+                <app-flow-link-menu
+                  class="flow-outline__menu"
+                  [source]="row.source"
+                  [label]="row.title"
+                  [deletable]="row.kind === 'objective'"
+                  (deleted)="onObjectiveDeleted()"
+                  (closed)="closeMenu(row.path, $event)"
+                />
               }
             }
           </li>

@@ -138,6 +138,12 @@ body {
   }
 }
 
+/* The Flow focus mode (`project-flow`) is fixed over the whole app; the header's floating support pill would sit on
+   top of its canvas controls and "+", so it steps aside while the mode is on. */
+:root.flow-focus-mode .app-header__support {
+  display: none;
+}
+
 /* Set by the Plan-my-day modal while it is open. */
 body.planning-lab-open {
   overflow: hidden;

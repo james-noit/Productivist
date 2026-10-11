@@ -1,34 +1,51 @@
 <p class="flow-link-menu__title">{{ label() }}</p>
 
-@if (linked().length) {
-  <span class="flow-link-menu__heading">{{ 'flow.link.linkedTo' | translate }}</span>
-  @for (item of linked(); track item.linkId) {
-    <button
-      type="button"
-      class="flow-link-menu__item"
-      [attr.data-horizon]="item.horizon"
-      [attr.aria-label]="'flow.link.remove' | translate: { title: item.title }"
-      [title]="'flow.unlink' | translate"
-      (click)="unlink(item.linkId)"
-    >
+@if (confirming()) {
+  <div class="flow-link-menu__confirm confirm-bar" role="alertdialog" aria-labelledby="flow-link-menu-confirm">
+    <p class="confirm-bar__text" id="flow-link-menu-confirm">{{ 'flow.objective.deleteQuestion' | translate }}</p>
+    <div class="confirm-bar__actions">
+      <button type="button" class="btn btn--secondary btn--sm" (click)="keepObjective()">{{ 'flow.bar.keep' | translate }}</button>
+      <button type="button" class="btn btn--danger btn--sm" data-confirm-first (click)="deleteObjective()">{{ 'projects.delete' | translate }}</button>
+    </div>
+  </div>
+} @else {
+  @if (linked().length) {
+    <span class="flow-link-menu__heading">{{ 'flow.link.linkedTo' | translate }}</span>
+    @for (item of linked(); track item.linkId) {
+      <button
+        type="button"
+        class="flow-link-menu__item"
+        [attr.data-horizon]="item.horizon"
+        [attr.aria-label]="'flow.link.remove' | translate: { title: item.title }"
+        [title]="'flow.unlink' | translate"
+        (click)="unlink(item.linkId)"
+      >
+        <i class="flow-link-menu__swatch" aria-hidden="true"></i>
+        <span class="flow-link-menu__text">{{ item.title }}</span>
+        <span class="flow-link-menu__remove" aria-hidden="true">✕</span>
+      </button>
+    }
+  }
+
+  <span class="flow-link-menu__heading">{{ 'flow.link.linkTo' | translate }}</span>
+  @for (target of targets(); track target.id) {
+    <button type="button" class="flow-link-menu__item" [attr.data-horizon]="target.horizon" (click)="link(target.id)">
       <i class="flow-link-menu__swatch" aria-hidden="true"></i>
-      <span class="flow-link-menu__text">{{ item.title }}</span>
-      <span class="flow-link-menu__remove" aria-hidden="true">✕</span>
+      <span class="flow-link-menu__text">{{ target.title }}</span>
+      <span class="flow-link-menu__hint">{{ 'flow.horizons.' + target.horizon | translate }}</span>
+    </button>
+  } @empty {
+    <p class="flow-link-menu__empty">{{ 'flow.link.none' | translate }}</p>
+  }
+
+  @if (message()) {
+    <p class="flow-link-menu__empty" role="alert">{{ message() }}</p>
+  }
+
+  @if (deletable()) {
+    <button type="button" class="flow-link-menu__item flow-link-menu__item--danger" (click)="askDelete()">
+      <app-ui-icon name="trash" [size]="14" />
+      <span class="flow-link-menu__text">{{ 'flow.objective.deleteAction' | translate }}</span>
     </button>
   }
-}
-
-<span class="flow-link-menu__heading">{{ 'flow.link.linkTo' | translate }}</span>
-@for (target of targets(); track target.id) {
-  <button type="button" class="flow-link-menu__item" [attr.data-horizon]="target.horizon" (click)="link(target.id)">
-    <i class="flow-link-menu__swatch" aria-hidden="true"></i>
-    <span class="flow-link-menu__text">{{ target.title }}</span>
-    <span class="flow-link-menu__hint">{{ 'flow.horizons.' + target.horizon | translate }}</span>
-  </button>
-} @empty {
-  <p class="flow-link-menu__empty">{{ 'flow.link.none' | translate }}</p>
-}
-
-@if (message()) {
-  <p class="flow-link-menu__empty" role="alert">{{ message() }}</p>
 }

@@ -74,7 +74,7 @@
     <app-projects-dashboard [stats]="stats()" />
   }
 
-  <app-fab-menu />
+  <app-fab-menu [items]="fabItems" (pick)="onFabPick($event)" />
 
   @if (state.creatingTask()) {
     <app-new-task-modal (close)="closeNewTask()" />

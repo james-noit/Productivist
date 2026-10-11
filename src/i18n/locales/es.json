@@ -164,7 +164,6 @@
     "noMilestoneTasks": "Aún no hay tareas en este hito.",
     "noProjects": "Aún no hay proyectos. Crea uno para organizar tus tareas en hitos.",
     "unassign": "Quitar del hito",
-    "unassignedPool": "Tareas sin asignar",
     "noUnassigned": "No hay tareas sin asignar.",
     "tabProjects": "Proyectos",
     "tabMatrix": "Matriz",
@@ -193,7 +192,6 @@
       "priority": "Prioridad",
       "openMatrix": "Abrir la Matriz",
       "due": "Vencimiento",
-      "dueAny": "Cualquier fecha",
       "dueAnyShort": "Cualquiera",
       "dueWeek": "Vencen esta semana",
       "dueWeekShort": "Esta semana",
@@ -369,7 +367,6 @@
     "chooseFromProjects": "Elegir desde proyectos",
     "freestyle": "Hoy voy a improvisar",
     "freestyleComingSoon": "Próximamente",
-    "todaysObjectives": "Objetivos de hoy",
     "chooseProjectsPrompt": "Elige los proyectos implicados en estos objetivos.",
     "searchProjectsPlaceholder": "Buscar proyectos…",
     "noProjectsMatch": "Ningún proyecto coincide con tu búsqueda.",
@@ -406,7 +403,6 @@
     "moveLotUp": "Subir lote",
     "moveLotDown": "Bajar lote",
     "backToPlanning": "Volver a la planificación",
-    "plannedTasks": "Tareas planificadas",
     "plannedTasksEmptyTitle": "Aún no hay tareas planificadas.",
     "plannedTasksEmptyLink": "Planificar mi día →",
     "executionLots": "Lotes de ejecución",
@@ -523,7 +519,6 @@
     "collapseLane": "Contraer carril",
     "expandLane": "Expandir carril",
     "board": "Tablero Kanban",
-    "dropHere": "Suelta aquí",
     "noMatches": "Ninguna tarea coincide con los filtros.",
     "groupBy": "Agrupar por",
     "milestoneLabel": "Hito",
@@ -647,16 +642,9 @@
     "title": "Flujo",
     "view": "Vista",
     "diagram": "Diagrama",
-    "horizon": "Plazo",
-    "horizonFilter": "Filtrar por plazo",
-    "status": "Estado",
-    "statusFilter": "Filtrar por estado",
-    "addObjective": "Objetivo",
-    "addMilestone": "Hito",
     "tidyUp": "Ordenar",
     "tidyUpHint": "Olvidar las posiciones colocadas a mano y volver a ordenarlo todo",
     "fit": "Ajustar",
-    "zoom": "Zoom",
     "zoomIn": "Acercar",
     "zoomOut": "Alejar",
     "canvasLabel": "Diagrama de flujo. Arrastra el fondo para moverte, Ctrl + rueda o pellizca para hacer zoom, Alt + flechas para mover la tarjeta seleccionada, L para enlazarla.",
@@ -664,7 +652,6 @@
       "work": "Hitos y tareas",
       "workSpan": "El trabajo"
     },
-    "emptyHint": "Añade un objetivo con + Objetivo o con doble clic en una columna, y arrastra un puerto ● hasta él para enlazarle trabajo.",
     "refusals": {
       "missing": "Ese objetivo ya no existe.",
       "self": "Un objetivo no puede alimentarse a sí mismo.",
@@ -678,7 +665,6 @@
     "collapse": "Contraer",
     "expand": "Expandir",
     "progress": "{{done}} de {{total}} tareas hechas",
-    "horizonChangeConfirm": "Cambiar el plazo elimina los enlaces a objetivos que ya no quedarían más adelante. ¿Continuar?",
     "objective": {
       "newTitle": "Nuevo objetivo",
       "editTitle": "Editar objetivo",
@@ -688,8 +674,9 @@
       "status": "Estado",
       "targetDate": "Fecha objetivo",
       "progressHint": "El progreso sale del trabajo enlazado a este objetivo; nunca se marca a mano.",
-      "delete": "Eliminar",
-      "deleteConfirm": "¿Eliminar este objetivo y sus enlaces? Las tareas e hitos enlazados se conservan."
+      "deleteQuestion": "¿Eliminar este objetivo? Se quitan sus enlaces.",
+      "keep": "Conservar objetivo",
+      "deleteAction": "Eliminar objetivo"
     },
     "horizons": {
       "short": "Corto plazo",
@@ -706,12 +693,10 @@
       "achieved": "Logrado",
       "dropped": "Descartado"
     },
-    "tidyUpConfirm": "Ordenar olvida todas las posiciones colocadas a mano en el diagrama de este proyecto y no se puede deshacer. ¿Continuar?",
     "serves": "Sirve a: {{names}}",
     "outline": {
       "title": "Esquema",
       "label": "Objetivos y el trabajo que los alimenta",
-      "noObjectives": "Todavía no hay objetivos. Añade uno con + Objetivo y enlázale trabajo con el botón ⋯ de una tarea o un hito.",
       "empty": "Aún no hay nada que mostrar. Añade un hito o un objetivo.",
       "unlinked": "Sin enlazar a ningún objetivo",
       "edit": "Editar"
@@ -724,7 +709,55 @@
       "linkTo": "Enlazar a un objetivo",
       "remove": "Quitar el enlace a {{title}}",
       "none": "No hay ningún objetivo al que enlazar."
-    }
+    },
+    "lane": {
+      "show": "Mostrar {{name}} ({{n}})",
+      "hide": "Ocultar {{name}}"
+    },
+    "empty": {
+      "title": "Los objetivos son los resultados para los que sirve tu trabajo.",
+      "add": "Añadir un objetivo",
+      "orDoubleClick": "o haz doble clic en una columna"
+    },
+    "linkTip": "Arrastra desde ● hasta un objetivo para enlazarlos, o selecciona algo y pulsa L.",
+    "controls": {
+      "label": "Controles del diagrama",
+      "resetZoom": "Restablecer el zoom al 100 %",
+      "more": "Más acciones del diagrama"
+    },
+    "tidyUpQuestion": "¿Olvidar las posiciones colocadas a mano?",
+    "bar": {
+      "label": "Acciones de {{name}}",
+      "link": "Enlazar…",
+      "markAchieved": "Marcar como logrado",
+      "markActive": "Marcar como activo",
+      "open": "Abrir",
+      "keep": "Conservar",
+      "horizonQuestion": "¿Cambiar el plazo? Se quitan los enlaces a objetivos que ya no quedarían más adelante.",
+      "changeHorizon": "Cambiar plazo"
+    },
+    "filters": {
+      "horizons": "Plazos",
+      "horizonsHint": "Al desactivar uno se contrae su columna en el diagrama y se ocultan sus objetivos en el Esquema.",
+      "objectives": "Objetivos",
+      "showAchieved": "Mostrar logrados",
+      "showDropped": "Mostrar descartados",
+      "tasks": "Tareas",
+      "reset": "Restablecer valores",
+      "resetChips": "Restablecer filtros"
+    },
+    "focus": {
+      "label": "Modo concentración",
+      "title": "Modo concentración (F)"
+    },
+    "chips": {
+      "horizonHidden": "{{name}} oculto",
+      "achievedHidden": "Logrados ocultos",
+      "droppedShown": "Descartados visibles",
+      "doneShown": "Tareas hechas visibles"
+    },
+    "newMilestone": "Nuevo hito",
+    "createMilestone": "Crear hito"
   },
   "taskDetail": {
     "titleLabel": "Título de la tarea",

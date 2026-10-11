@@ -24,7 +24,14 @@ export type UiIconName =
   | 'filter'
   | 'grid'
   | 'list'
-  | 'folder';
+  | 'folder'
+  | 'diagram'
+  | 'maximize'
+  | 'minimize'
+  | 'target'
+  | 'frame'
+  | 'link'
+  | 'undo';
 
 /**
  * Interface icons (close, delete, add, ...) as inline SVGs on a 24px grid: 1.75 stroke, round caps and

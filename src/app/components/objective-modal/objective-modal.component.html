@@ -1,72 +1,102 @@
-<div class="modal-overlay" (click)="closeOnBackdrop($event)">
-  <form
-    class="modal-panel objective-modal"
-    role="dialog"
-    aria-modal="true"
-    [attr.aria-label]="(editing() ? 'flow.objective.editTitle' : 'flow.objective.newTitle') | translate"
-    (ngSubmit)="save()"
-  >
-    <div class="objective-modal__header">
-      <h3>{{ (editing() ? 'flow.objective.editTitle' : 'flow.objective.newTitle') | translate }}</h3>
-      <button type="button" class="objective-modal__close" [attr.aria-label]="'todo.close' | translate" (click)="close.emit()">✕</button>
+<div class="modal-overlay" (mousedown)="onBackdropDown($event)" (click)="onBackdropClick($event)" (keydown)="onKeydown($event)">
+  <div #panel class="modal-panel om" role="dialog" aria-modal="true" tabindex="-1" [attr.aria-labelledby]="uid + '-heading'">
+    <header class="om__header">
+      <h3 class="om__heading" [id]="uid + '-heading'">{{ (editing() ? 'flow.objective.editTitle' : 'flow.objective.newTitle') | translate }}</h3>
+      <button type="button" class="btn btn--ghost btn--icon" [attr.aria-label]="'todo.close' | translate" [title]="'todo.close' | translate" (click)="requestClose()">
+        <app-ui-icon name="x" />
+      </button>
+    </header>
+
+    <div class="om__body">
+      <div class="field">
+        <label class="field__label" [for]="uid + '-title'">{{ 'flow.objective.title' | translate }}</label>
+        <input
+          class="input"
+          type="text"
+          maxlength="1000"
+          autocomplete="off"
+          [id]="uid + '-title'"
+          [value]="draft().title"
+          [attr.aria-invalid]="titleValid() ? null : 'true'"
+          [placeholder]="'flow.objective.titlePlaceholder' | translate"
+          (input)="edit({ title: $any($event.target).value })"
+        />
+      </div>
+
+      <div class="field">
+        <label class="field__label" [for]="uid + '-description'">{{ 'todo.description' | translate }}</label>
+        <textarea
+          class="textarea"
+          rows="3"
+          [id]="uid + '-description'"
+          [value]="draft().description"
+          [placeholder]="'todo.descriptionPlaceholder' | translate"
+          (input)="edit({ description: $any($event.target).value })"
+        ></textarea>
+      </div>
+
+      <div class="om__row">
+        <div class="field">
+          <label class="field__label" [for]="uid + '-horizon'">{{ 'flow.objective.horizon' | translate }}</label>
+          <select class="select" [id]="uid + '-horizon'" [value]="draft().horizon" (change)="edit({ horizon: $any($event.target).value })">
+            @for (h of horizons; track h) {
+              <option [value]="h" [selected]="draft().horizon === h">{{ 'flow.horizons.' + h | translate }}</option>
+            }
+          </select>
+        </div>
+        <div class="field">
+          <label class="field__label" [for]="uid + '-status'">{{ 'flow.objective.status' | translate }}</label>
+          <select class="select" [id]="uid + '-status'" [value]="draft().status" (change)="edit({ status: $any($event.target).value })">
+            @for (s of statuses; track s) {
+              <option [value]="s" [selected]="draft().status === s">{{ 'flow.statuses.' + s | translate }}</option>
+            }
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="field__label" [for]="uid + '-target'">{{ 'flow.objective.targetDate' | translate }}</label>
+        <input class="input" type="date" [id]="uid + '-target'" [value]="draft().targetDate" (change)="editDate($any($event.target).value)" />
+      </div>
+
+      <p class="om__hint">{{ 'flow.objective.progressHint' | translate }}</p>
     </div>
 
-    <label class="objective-modal__field">
-      {{ 'flow.objective.title' | translate }}
-      <input
-        type="text"
-        name="title"
-        maxlength="1000"
-        [ngModel]="title()"
-        (ngModelChange)="title.set($event)"
-        [placeholder]="'flow.objective.titlePlaceholder' | translate"
-      />
-    </label>
-
-    <label class="objective-modal__field">
-      {{ 'todo.description' | translate }}
-      <textarea
-        name="description"
-        rows="3"
-        [ngModel]="description()"
-        (ngModelChange)="description.set($event)"
-        [placeholder]="'todo.descriptionPlaceholder' | translate"
-      ></textarea>
-    </label>
-
-    <div class="objective-modal__row">
-      <label class="objective-modal__field">
-        {{ 'flow.objective.horizon' | translate }}
-        <select name="horizon" [ngModel]="draftHorizon()" (ngModelChange)="draftHorizon.set($event)">
-          @for (h of horizons; track h) {
-            <option [value]="h">{{ 'flow.horizons.' + h | translate }} ({{ 'flow.horizonSpans.' + h | translate }})</option>
+    <footer class="om__footer">
+      @switch (confirm()) {
+        @case ('discard') {
+          <div class="confirm-bar" role="alertdialog" [attr.aria-labelledby]="uid + '-confirm'">
+            <p class="confirm-bar__text" [id]="uid + '-confirm'">{{ 'taskDetail.discardQuestion' | translate }}</p>
+            <div class="confirm-bar__actions">
+              <button #confirmFocus type="button" class="btn btn--secondary" (click)="dismissConfirm()">{{ 'taskDetail.keepEditing' | translate }}</button>
+              <button type="button" class="btn btn--danger" (click)="discard()">{{ 'taskDetail.discard' | translate }}</button>
+            </div>
+          </div>
+        }
+        @case ('delete') {
+          <div class="confirm-bar" role="alertdialog" [attr.aria-labelledby]="uid + '-confirm'">
+            <p class="confirm-bar__text" [id]="uid + '-confirm'">{{ 'flow.objective.deleteQuestion' | translate }}</p>
+            <div class="confirm-bar__actions">
+              <button type="button" class="btn btn--secondary" (click)="dismissConfirm()">{{ 'flow.objective.keep' | translate }}</button>
+              <button #confirmFocus type="button" class="btn btn--danger" (click)="remove()">{{ 'flow.objective.deleteAction' | translate }}</button>
+            </div>
+          </div>
+        }
+        @default {
+          @if (editing()) {
+            <button #deleteButton type="button" class="btn btn--danger btn--ghost" (click)="askDelete()">
+              <app-ui-icon name="trash" />
+              {{ 'todo.delete' | translate }}
+            </button>
           }
-        </select>
-      </label>
-      <label class="objective-modal__field">
-        {{ 'flow.objective.status' | translate }}
-        <select name="status" [ngModel]="status()" (ngModelChange)="status.set($event)">
-          @for (s of statuses; track s) {
-            <option [value]="s">{{ 'flow.statuses.' + s | translate }}</option>
-          }
-        </select>
-      </label>
-    </div>
-
-    <label class="objective-modal__field">
-      {{ 'flow.objective.targetDate' | translate }}
-      <input type="date" name="targetDate" [ngModel]="targetDate()" (ngModelChange)="targetDate.set($event)" />
-    </label>
-
-    <p class="objective-modal__hint">{{ 'flow.objective.progressHint' | translate }}</p>
-
-    <div class="objective-modal__actions">
-      @if (editing()) {
-        <button type="button" class="objective-modal__delete" (click)="remove()">{{ 'flow.objective.delete' | translate }}</button>
+          <div class="om__footer-actions">
+            <button type="button" class="btn btn--secondary" (click)="requestClose()">{{ 'taskDetail.cancel' | translate }}</button>
+            <button type="button" class="btn btn--primary" [disabled]="!canSave()" [title]="'taskDetail.saveHint' | translate" (click)="save()">
+              {{ 'taskDetail.save' | translate }}
+            </button>
+          </div>
+        }
       }
-      <span class="objective-modal__spacer"></span>
-      <button type="button" class="objective-modal__cancel" (click)="close.emit()">{{ 'projects.cancel' | translate }}</button>
-      <button type="submit" class="objective-modal__save" [disabled]="!canSave()">{{ 'projects.save' | translate }}</button>
-    </div>
-  </form>
+    </footer>
+  </div>
 </div>

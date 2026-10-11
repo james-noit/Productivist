@@ -7,6 +7,12 @@
   z-index: 15;
 }
 
+/* Inside the Flow focus surface: anchored to it rather than to the viewport, and no support pill to clear there. */
+:host(.fab-menu--contained) {
+  position: absolute;
+  bottom: max(1rem, env(safe-area-inset-bottom));
+}
+
 .fab {
   display: flex;
   flex-direction: column;

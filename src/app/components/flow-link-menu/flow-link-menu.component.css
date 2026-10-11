@@ -107,3 +107,14 @@
   padding: 0.4rem 0.5rem;
   color: var(--color-text-muted);
 }
+
+.flow-link-menu__item--danger {
+  margin-top: 0.2rem;
+  border-top: 1px solid var(--color-border);
+  border-radius: 0 0 4px 4px;
+  color: var(--color-high);
+}
+
+.flow-link-menu__confirm {
+  padding: 0.4rem 0.5rem 0.3rem;
+}

@@ -1,0 +1,34 @@
+@if (confirm(); as question) {
+  <div class="flow-bar flow-bar--confirm" role="alertdialog" [attr.aria-labelledby]="uid + '-question'">
+    <p class="flow-bar__text" [id]="uid + '-question'">{{ (question === 'delete' ? 'flow.objective.deleteQuestion' : 'flow.bar.horizonQuestion') | translate }}</p>
+    <div class="flow-bar__actions">
+      <button type="button" class="btn btn--secondary btn--sm" (click)="cancelled.emit()">
+        {{ (question === 'delete' ? 'flow.bar.keep' : 'projects.cancel') | translate }}
+      </button>
+      <button #confirmButton type="button" class="btn btn--danger btn--sm" (click)="confirmed.emit()">
+        {{ (question === 'delete' ? 'projects.delete' : 'flow.bar.changeHorizon') | translate }}
+      </button>
+    </div>
+  </div>
+} @else {
+  <div class="flow-bar" role="toolbar" [attr.aria-label]="'flow.bar.label' | translate: { name: name() }">
+    @for (button of buttons(); track button.id) {
+      <button
+        type="button"
+        class="btn btn--ghost btn--sm flow-bar__button"
+        [class.btn--danger]="button.danger"
+        [class.flow-bar__button--icon]="button.iconOnly"
+        [attr.aria-label]="button.labelKey | translate"
+        [attr.aria-haspopup]="button.popup ? 'dialog' : null"
+        [attr.aria-expanded]="button.popup ? menuOpen() : null"
+        [title]="(button.labelKey | translate) + (button.key ? ' (' + button.key + ')' : '')"
+        (click)="action.emit(button.id)"
+      >
+        <app-ui-icon [name]="button.icon" [size]="16" />
+        @if (!button.iconOnly) {
+          <span class="flow-bar__label">{{ button.labelKey | translate }}</span>
+        }
+      </button>
+    }
+  </div>
+}

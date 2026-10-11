@@ -1,0 +1,46 @@
+<app-side-drawer ariaId="flow-filters" titleKey="projects.filters.title" [open]="state.filtersOpen()" [returnFocus]="state.filtersOpener" (closed)="state.closeFilters()">
+  <section class="drawer__section" aria-labelledby="flow-filters-horizons">
+    <h4 class="field__label" id="flow-filters-horizons">{{ 'flow.filters.horizons' | translate }}</h4>
+    @for (horizon of horizons; track horizon; let first = $first) {
+      <button
+        type="button"
+        role="switch"
+        class="switch flow-filters__switch"
+        [attr.data-horizon]="horizon"
+        [attr.data-first]="first ? '' : null"
+        [attr.aria-checked]="!state.hiddenHorizons().has(horizon)"
+        (click)="state.toggleHorizon(horizon)"
+      >
+        <span class="switch__track" aria-hidden="true"></span>
+        <i class="flow-filters__swatch" aria-hidden="true"></i>
+        {{ 'flow.horizons.' + horizon | translate }}
+      </button>
+    }
+    <p class="flow-filters__hint">{{ 'flow.filters.horizonsHint' | translate }}</p>
+  </section>
+
+  <section class="drawer__section" aria-labelledby="flow-filters-objectives">
+    <h4 class="field__label" id="flow-filters-objectives">{{ 'flow.filters.objectives' | translate }}</h4>
+    <button type="button" role="switch" class="switch" [attr.aria-checked]="state.showAchieved() !== false" (click)="state.showAchieved.set(state.showAchieved() === false)">
+      <span class="switch__track" aria-hidden="true"></span>
+      {{ 'flow.filters.showAchieved' | translate }}
+    </button>
+    <button type="button" role="switch" class="switch" [attr.aria-checked]="state.showDropped() === true" (click)="state.showDropped.set(state.showDropped() !== true)">
+      <span class="switch__track" aria-hidden="true"></span>
+      {{ 'flow.filters.showDropped' | translate }}
+    </button>
+  </section>
+
+  <section class="drawer__section" aria-labelledby="flow-filters-tasks">
+    <h4 class="field__label" id="flow-filters-tasks">{{ 'flow.filters.tasks' | translate }}</h4>
+    <button type="button" role="switch" class="switch" [attr.aria-checked]="state.showDone()" (click)="state.showDone.set(!state.showDone())">
+      <span class="switch__track" aria-hidden="true"></span>
+      {{ 'projectDetail.showDone' | translate }}
+    </button>
+  </section>
+
+  <button drawerFooter type="button" class="btn btn--ghost" [disabled]="!state.activeCount()" (click)="state.reset()">
+    {{ 'flow.filters.reset' | translate }}
+  </button>
+  <button drawerFooter type="button" class="btn btn--primary" (click)="state.closeFilters()">{{ 'kanban.columns.done' | translate }}</button>
+</app-side-drawer>

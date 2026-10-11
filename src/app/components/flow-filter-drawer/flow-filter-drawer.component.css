@@ -1,0 +1,52 @@
+:host {
+  display: contents;
+}
+
+/* A section of the drawer body: an uppercase label, then its controls. */
+.drawer__section {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.6rem;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+.drawer__section .field__label {
+  margin: 0;
+  padding: 0;
+}
+
+.flow-filters__switch {
+  --horizon: var(--color-text-muted);
+}
+
+.flow-filters__switch[data-horizon='short'] {
+  --horizon: var(--color-horizon-short);
+}
+
+.flow-filters__switch[data-horizon='medium'] {
+  --horizon: var(--color-horizon-medium);
+}
+
+.flow-filters__switch[data-horizon='long'] {
+  --horizon: var(--color-horizon-long);
+}
+
+/* The horizon's colour, as in the lane header and the objective card stripe. */
+.flow-filters__swatch {
+  flex: none;
+  width: 0.6rem;
+  height: 0.6rem;
+  margin-right: -0.15rem;
+  border-radius: 50%;
+  background-color: var(--horizon);
+}
+
+.flow-filters__hint {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}

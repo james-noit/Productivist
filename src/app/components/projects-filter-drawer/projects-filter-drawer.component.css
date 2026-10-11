@@ -2,76 +2,7 @@
   display: contents;
 }
 
-/* The shared modal backdrop, with the panel pinned to its right edge. */
-.drawer__scrim {
-  --modal-z: 30;
-  align-items: stretch;
-  justify-content: flex-end;
-  padding: 0;
-}
-
-.drawer {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  max-width: 360px;
-  height: 100%;
-  background-color: var(--color-surface);
-  border-left: 1px solid var(--color-border);
-  box-shadow: -1px 0 2px rgb(0 0 0 / 0.06);
-  animation: drawer-in 0.18s ease-out;
-}
-
-.drawer:focus {
-  outline: none;
-}
-
-@keyframes drawer-in {
-  from {
-    transform: translateX(24px);
-    opacity: 0;
-  }
-  to {
-    transform: none;
-    opacity: 1;
-  }
-}
-
-.drawer__head,
-.drawer__foot {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  flex: none;
-  padding: 0.85rem 1.25rem;
-}
-
-.drawer__head {
-  border-bottom: 1px solid var(--color-border);
-}
-
-.drawer__foot {
-  border-top: 1px solid var(--color-border);
-  padding-bottom: max(0.85rem, env(safe-area-inset-bottom));
-}
-
-.drawer__title {
-  margin: 0;
-  font-size: 1.1rem;
-  font-weight: 600;
-}
-
-.drawer__body {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-  min-height: 0;
-  padding: 1.25rem;
-  overflow-y: auto;
-}
-
+/* A section of the drawer body: an uppercase label, then its controls. */
 .drawer__section {
   display: flex;
   flex-direction: column;
@@ -240,18 +171,7 @@
   outline-offset: 2px;
 }
 
-@media (max-width: 599px) {
-  .drawer {
-    max-width: none;
-    border-left: none;
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .drawer {
-    animation: none;
-  }
-
   .tile {
     transition: none;
   }

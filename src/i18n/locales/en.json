@@ -164,7 +164,6 @@
     "noMilestoneTasks": "No tasks in this milestone yet.",
     "noProjects": "No projects yet. Create one to organize your tasks into milestones.",
     "unassign": "Remove from milestone",
-    "unassignedPool": "Unassigned tasks",
     "noUnassigned": "No unassigned tasks.",
     "tabProjects": "Projects",
     "tabMatrix": "Matrix",
@@ -193,7 +192,6 @@
       "priority": "Priority",
       "openMatrix": "Open the Matrix",
       "due": "Due",
-      "dueAny": "Any time",
       "dueAnyShort": "Any time",
       "dueWeek": "Due this week",
       "dueWeekShort": "This week",
@@ -369,7 +367,6 @@
     "chooseFromProjects": "Choose from projects",
     "freestyle": "Today I'm freestyling",
     "freestyleComingSoon": "Coming soon",
-    "todaysObjectives": "Today's objectives",
     "chooseProjectsPrompt": "Choose the projects involved in these objectives.",
     "searchProjectsPlaceholder": "Search projects…",
     "noProjectsMatch": "No projects match your search.",
@@ -406,7 +403,6 @@
     "moveLotUp": "Move lot up",
     "moveLotDown": "Move lot down",
     "backToPlanning": "Back to planning",
-    "plannedTasks": "Planned tasks",
     "plannedTasksEmptyTitle": "No planned tasks yet.",
     "plannedTasksEmptyLink": "Plan my day →",
     "executionLots": "Execution lots",
@@ -523,7 +519,6 @@
     "collapseLane": "Collapse lane",
     "expandLane": "Expand lane",
     "board": "Kanban board",
-    "dropHere": "Drop here",
     "noMatches": "No tasks match your filters.",
     "groupBy": "Group by",
     "milestoneLabel": "Milestone",
@@ -647,16 +642,9 @@
     "title": "Flow",
     "view": "View",
     "diagram": "Diagram",
-    "horizon": "Horizon",
-    "horizonFilter": "Filter by horizon",
-    "status": "Status",
-    "statusFilter": "Filter by status",
-    "addObjective": "Objective",
-    "addMilestone": "Milestone",
     "tidyUp": "Tidy up",
     "tidyUpHint": "Forget the hand-placed positions and lay everything out again",
     "fit": "Fit",
-    "zoom": "Zoom",
     "zoomIn": "Zoom in",
     "zoomOut": "Zoom out",
     "canvasLabel": "Flow diagram. Drag the background to pan, Ctrl + wheel or pinch to zoom, Alt + arrows to move the selected card, L to link it.",
@@ -664,7 +652,6 @@
       "work": "Milestones and tasks",
       "workSpan": "The work"
     },
-    "emptyHint": "Add an objective with + Objective or by double-clicking a lane, then drag a ● port onto it to link work to it.",
     "refusals": {
       "missing": "That objective no longer exists.",
       "self": "An objective cannot feed itself.",
@@ -678,7 +665,6 @@
     "collapse": "Collapse",
     "expand": "Expand",
     "progress": "{{done}} of {{total}} tasks done",
-    "horizonChangeConfirm": "Changing the horizon removes the links to objectives that would no longer be further ahead. Continue?",
     "objective": {
       "newTitle": "New objective",
       "editTitle": "Edit objective",
@@ -688,8 +674,9 @@
       "status": "Status",
       "targetDate": "Target date",
       "progressHint": "Progress comes from the work linked to this objective; it is never ticked off by hand.",
-      "delete": "Delete",
-      "deleteConfirm": "Delete this objective and its links? The tasks and milestones linked to it are kept."
+      "deleteQuestion": "Delete this objective? Its links are removed.",
+      "keep": "Keep objective",
+      "deleteAction": "Delete objective"
     },
     "horizons": {
       "short": "Short term",
@@ -706,12 +693,10 @@
       "achieved": "Achieved",
       "dropped": "Dropped"
     },
-    "tidyUpConfirm": "Tidy up forgets every hand-placed position of this project's diagram, and there is no undo. Continue?",
     "serves": "Serves: {{names}}",
     "outline": {
       "title": "Outline",
       "label": "Objectives and the work that feeds them",
-      "noObjectives": "No objectives yet. Add one with + Objective, then link work to it with the ⋯ button of a task or milestone.",
       "empty": "Nothing to show yet. Add a milestone or an objective.",
       "unlinked": "Not linked to any objective",
       "edit": "Edit"
@@ -724,7 +709,55 @@
       "linkTo": "Link to objective",
       "remove": "Remove link to {{title}}",
       "none": "No objective available to link to."
-    }
+    },
+    "lane": {
+      "show": "Show {{name}} ({{n}})",
+      "hide": "Hide {{name}}"
+    },
+    "empty": {
+      "title": "Objectives are the outcomes your work is for.",
+      "add": "Add an objective",
+      "orDoubleClick": "or double-click a column"
+    },
+    "linkTip": "Drag from ● onto an objective to link them — or select something and press L.",
+    "controls": {
+      "label": "Diagram controls",
+      "resetZoom": "Reset zoom to 100%",
+      "more": "More diagram actions"
+    },
+    "tidyUpQuestion": "Forget hand-placed positions?",
+    "bar": {
+      "label": "Actions for {{name}}",
+      "link": "Link…",
+      "markAchieved": "Mark achieved",
+      "markActive": "Mark active",
+      "open": "Open",
+      "keep": "Keep",
+      "horizonQuestion": "Change the horizon? Links to objectives that would no longer be further ahead are removed.",
+      "changeHorizon": "Change horizon"
+    },
+    "filters": {
+      "horizons": "Horizons",
+      "horizonsHint": "Turning one off collapses its column in the diagram and hides its objectives in the Outline.",
+      "objectives": "Objectives",
+      "showAchieved": "Show achieved",
+      "showDropped": "Show dropped",
+      "tasks": "Tasks",
+      "reset": "Reset to defaults",
+      "resetChips": "Reset filters"
+    },
+    "focus": {
+      "label": "Focus mode",
+      "title": "Focus mode (F)"
+    },
+    "chips": {
+      "horizonHidden": "{{name}} hidden",
+      "achievedHidden": "Achieved hidden",
+      "droppedShown": "Dropped shown",
+      "doneShown": "Done tasks shown"
+    },
+    "newMilestone": "New milestone",
+    "createMilestone": "Create milestone"
   },
   "taskDetail": {
     "titleLabel": "Task title",

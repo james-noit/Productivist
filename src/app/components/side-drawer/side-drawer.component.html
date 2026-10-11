@@ -1,0 +1,20 @@
+@if (open()) {
+  <div class="modal-overlay drawer__scrim" (click)="closeOnScrim($event)" (keydown)="onKeydown($event)">
+    <aside #panel [id]="ariaId()" class="drawer" role="dialog" aria-modal="true" [attr.aria-labelledby]="ariaId() + '-title'" tabindex="-1">
+      <header class="drawer__head">
+        <h3 class="drawer__title" [id]="ariaId() + '-title'">{{ titleKey() | translate }}</h3>
+        <button type="button" class="btn btn--ghost btn--icon btn--sm" [attr.aria-label]="'todo.close' | translate" (click)="closed.emit()">
+          <app-ui-icon name="x" />
+        </button>
+      </header>
+
+      <div class="drawer__body">
+        <ng-content />
+      </div>
+
+      <footer class="drawer__foot">
+        <ng-content select="[drawerFooter]" />
+      </footer>
+    </aside>
+  </div>
+}

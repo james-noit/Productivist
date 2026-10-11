@@ -14,14 +14,13 @@ import {
   untracked,
   viewChild,
 } from '@angular/core';
-import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { TranslatePipe } from '@ngx-translate/core';
 import { localStorageSignal } from '../../../core/local-storage-signal';
 import {
   CARD_GAP,
   HEADER_HEIGHT,
   LANES,
   LANE_TOP,
-  LANE_WIDTH,
   OBJECTIVE_HEIGHT,
   OBJECTIVE_WIDTH,
   ROW_HEIGHT,
@@ -31,7 +30,8 @@ import {
   fitViewport,
   headerPort,
   laneAt,
-  laneX,
+  laneLayout,
+  lanesWidth,
   linkMid,
   linkPath,
   objectiveInPort,
@@ -46,6 +46,7 @@ import {
   zoomAround,
   type LaneKey,
   type Point,
+  type Rect,
   type Viewport,
 } from '../../../lib/flow-geometry';
 import { buildFlowGraph, chainOf, milestoneKey, objectiveKey, taskKey, type Progress, type WorkCard } from '../../../lib/flow-graph';
@@ -55,11 +56,19 @@ import { FlowService } from '../../../services/flow.service';
 import { ProjectsService } from '../../../services/projects.service';
 import { TodosService } from '../../../services/todos.service';
 import { ViewService } from '../../../services/view.service';
-import type { Horizon, Objective, ObjectiveStatus } from '../../../types/flow';
+import type { Horizon, Objective } from '../../../types/flow';
 import type { Project } from '../../../types/project';
 import { FlowLinkMenuComponent } from '../flow-link-menu/flow-link-menu.component';
 import { FlowMilestoneNodeComponent } from '../flow-milestone-node/flow-milestone-node.component';
 import { FlowObjectiveNodeComponent } from '../flow-objective-node/flow-objective-node.component';
+import {
+  FlowSelectionBarComponent,
+  type BarAction,
+  type BarConfirm,
+  type BarKind,
+} from '../flow-selection-bar/flow-selection-bar.component';
+import { FlowViewState } from '../project-flow/flow-view-state';
+import { UiIconComponent } from '../ui-icon/ui-icon.component';
 
 type Selection = { kind: 'node'; key: string } | { kind: 'link'; id: string } | null;
 
@@ -76,12 +85,31 @@ type Gesture =
   | { kind: 'task'; pointerId: number; startX: number; startY: number; moved: boolean; taskId: string }
   | { kind: 'link'; pointerId: number; startX: number; startY: number; moved: boolean; source: FlowSource; from: Point };
 
-const LANE_LABELS: readonly { key: LaneKey; x: number; label: string; span: string | null }[] = LANES.map((key) => ({
-  key,
-  x: laneX(key),
-  label: key === 'work' ? 'flow.lanes.work' : `flow.horizons.${key}`,
-  span: key === 'work' ? 'flow.lanes.workSpan' : `flow.horizonSpans.${key}`,
-}));
+/** The label of each lane, by key; the geometry (x, width, collapsed) comes from `laneLayout`. */
+const LANE_TEXT: Readonly<Record<LaneKey, { label: string; span: string }>> = Object.fromEntries(
+  LANES.map((key) => [
+    key,
+    { label: key === 'work' ? 'flow.lanes.work' : `flow.horizons.${key}`, span: key === 'work' ? 'flow.lanes.workSpan' : `flow.horizonSpans.${key}` },
+  ]),
+) as Record<LaneKey, { label: string; span: string }>;
+
+interface LaneView {
+  key: LaneKey;
+  x: number;
+  width: number;
+  collapsed: boolean;
+  label: string;
+  span: string;
+  /** The horizon a lane toggle hides or shows; null for Work, which cannot be collapsed. */
+  horizon: Horizon | null;
+  /** Objectives in a collapsed lane (those the status filters let through). */
+  count: number;
+}
+
+/** A question waiting for an answer next to the selected objective. */
+type Pending =
+  | { kind: 'delete'; key: string }
+  | { kind: 'horizon'; key: string; horizon: Horizon; pos: Point };
 
 /** Pointer travel before a press becomes a drag (and a click stays a click). */
 const DRAG_THRESHOLD = 4;
@@ -92,6 +120,16 @@ const BUTTON_ZOOM = 1.2;
 const KEY_PAN = 80;
 /** Alt + arrow moves the selected card by this many world pixels (times 4 with Shift). */
 const KEY_MOVE = 8;
+/** Gap between the selected node and its toolbar, and the margin the toolbar keeps from the canvas edge (screen px). */
+const BAR_GAP = 8;
+const BAR_EDGE = 8;
+const BAR_HEIGHT = 40;
+const CONFIRM_HEIGHT = 80;
+const COMPACT = '(max-width: 599px)';
+/** Rough width of the selection toolbar by kind, with labels and icon-only, used to keep it inside the canvas. */
+const BAR_WIDTH: Readonly<Record<BarKind, readonly [number, number]>> = { objective: [330, 140], milestone: [270, 108], nomilestone: [120, 44], task: [190, 76] };
+const MENU_WIDTH = 272;
+const MENU_HEIGHT = 288;
 /** A press this close (screen px) to a port counts as a press on it, wherever the DOM says it landed. */
 const PORT_REACH = 14;
 /** A first fit made while the canvas is narrower than this is repeated once it grows. */
@@ -113,7 +151,7 @@ const NO_PROGRESS: Progress = { done: 0, total: 0, percent: 0 };
 @Component({
   selector: 'app-flow-canvas',
   standalone: true,
-  imports: [TranslatePipe, FlowObjectiveNodeComponent, FlowMilestoneNodeComponent, FlowLinkMenuComponent],
+  imports: [TranslatePipe, FlowObjectiveNodeComponent, FlowMilestoneNodeComponent, FlowLinkMenuComponent, FlowSelectionBarComponent, UiIconComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './flow-canvas.component.html',
   styleUrl: './flow-canvas.component.css',
@@ -122,24 +160,21 @@ export class FlowCanvasComponent {
   private readonly flow = inject(FlowService);
   private readonly todos = inject(TodosService);
   private readonly projects = inject(ProjectsService);
-  private readonly translate = inject(TranslateService);
+  private readonly state = inject(FlowViewState);
   readonly view = inject(ViewService);
   private readonly injector = inject(Injector);
   private readonly viewportEl = viewChild.required<ElementRef<HTMLElement>>('viewportEl');
 
   readonly project = input.required<Project>();
-  /** Horizons and statuses to show; an empty set means all. */
-  readonly horizons = input<ReadonlySet<Horizon>>(new Set());
-  readonly statuses = input<ReadonlySet<ObjectiveStatus>>(new Set());
 
   readonly editObjective = output<string>();
   readonly editMilestone = output<string>();
   readonly editTask = output<string>();
-  /** Double-click on an empty spot of a horizon lane; `y` is the world y for the new card's top. */
-  readonly createObjective = output<{ horizon: Horizon; y: number }>();
+  /** Double-click on an empty spot of a horizon lane (`y` is the world y for the new card's top), or the empty state's button (`y` null: wherever it fits). */
+  readonly createObjective = output<{ horizon: Horizon; y: number | null }>();
 
-  readonly lanes = LANE_LABELS;
-  protected readonly laneWidth = LANE_WIDTH;
+  /** The lane bands: a hidden horizon is a 36px strip and the lanes after it move left. */
+  protected readonly lanes = computed(() => laneLayout(this.state.hiddenHorizons()));
 
   // ---- data ------------------------------------------------------------------------------------------------
 
@@ -173,13 +208,21 @@ export class FlowCanvasComponent {
   private readonly storedLayout = computed(() => this.flow.layoutsByProject().get(this.projectId()));
   private readonly collapsedKeys = computed(() => new Set(this.storedLayout()?.collapsed ?? []));
 
-  /** The objectives that pass the horizon and status filters. */
-  readonly objectives = computed(() => {
-    const horizons = this.horizons();
-    const statuses = this.statuses();
-    return this.graph().objectives.filter(
-      (o) => (!horizons.size || horizons.has(o.horizon)) && (!statuses.size || statuses.has(o.status)),
-    );
+  /** The objectives that pass the horizon and status filters (the ones in a collapsed lane are not drawn). */
+  readonly objectives = computed(() => this.graph().objectives.filter((o) => this.state.shows(o)));
+
+  /** The lane bands with their labels and, for a collapsed horizon, how many objectives it is holding back. */
+  protected readonly laneViews = computed<LaneView[]>(() => {
+    const objectives = this.graph().objectives;
+    return this.lanes().map((box) => {
+      const horizon = box.key === 'work' ? null : box.key;
+      return {
+        ...box,
+        ...LANE_TEXT[box.key],
+        horizon,
+        count: box.collapsed ? objectives.filter((o) => o.horizon === horizon && this.state.statusShown(o)).length : 0,
+      };
+    });
   });
 
   private readonly visibleObjectiveIds = computed(() => new Set(this.objectives().map((o) => o.id)));
@@ -199,6 +242,7 @@ export class FlowCanvasComponent {
         .filter((l) => visible.has(l.toObjectiveId))
         .map((l) => ({ from: `${l.fromKind}:${l.fromId}`, to: objectiveKey(l.toObjectiveId) })),
       stored: this.storedLayout()?.positions ?? {},
+      lanes: this.lanes(),
     });
   });
 
@@ -230,6 +274,7 @@ export class FlowCanvasComponent {
   protected readonly linkPreview = signal<{ from: Point; to: Point; hover: string | null } | null>(null);
   protected readonly refusal = signal<{ id: string; reason: LinkRefusal } | null>(null);
   protected readonly panning = signal(false);
+  protected readonly pinching = signal(false);
   private gesture: Gesture | null = null;
   /** Fingers currently down (client coordinates), for the two-finger pinch. */
   private readonly touches = new Map<number, Point>();
@@ -265,32 +310,101 @@ export class FlowCanvasComponent {
 
   protected readonly menuLabel = computed(() => {
     const key = this.menuKey();
-    if (!key) return '';
+    return key ? this.labelOf(key) : '';
+  });
+
+  /** The name of a node, for the toolbar and the link menu. */
+  private labelOf(key: string): string {
     const id = key.slice(key.indexOf(':') + 1);
     if (key.startsWith('objective:')) return this.graph().objectives.find((o) => o.id === id)?.title ?? '';
     if (key.startsWith('task:')) return this.projectTodos().find((t) => t.id === id)?.title ?? '';
     return this.graph().cards.find((c) => c.key === key)?.milestone?.name ?? '';
+  }
+
+  /** A question asked next to the selected objective (delete it, or change its horizon and lose some links). */
+  protected readonly pending = signal<Pending | null>(null);
+  protected readonly barConfirm = computed<BarConfirm | null>(() => {
+    const pending = this.pending();
+    return pending && pending.key === this.selectedKey() ? pending.kind : null;
   });
 
-  /** The ⋯ button next to the selected node: world position of its top-right corner, null when the node cannot be linked or is not on show. */
-  protected readonly moreButton = computed(() => {
-    const key = this.selectedKey();
-    if (!key || !this.sourceOf(key)) return null;
+  /** A gesture is running: the toolbar steps aside until it ends. */
+  private readonly busy = computed(
+    () => this.drag() !== null || this.taskDrag() !== null || this.linkSource() !== null || this.panning() || this.pinching(),
+  );
+
+  /** The selected node's rect in world units, or null when it is not on show (a row of a collapsed card, a vanished node). */
+  private nodeRect(key: string): Rect | null {
     const graph = this.graph();
-    if (key.startsWith('objective:')) {
-      const pos = this.posOf(key);
-      return { x: pos.x + OBJECTIVE_WIDTH - 8, y: pos.y + 6 };
-    }
+    if (key.startsWith('objective:')) return objectiveRect(this.posOf(key));
     if (key.startsWith('task:')) {
-      const id = key.slice(5);
+      const id = key.slice('task:'.length);
       const cardKey = graph.cardOfTask.get(id);
       const row = graph.rowOfTask.get(id);
       if (cardKey === undefined || row === undefined || this.collapsedKeys().has(cardKey)) return null;
       const pos = this.posOf(cardKey);
-      return { x: pos.x + WORK_CARD_WIDTH - 22, y: pos.y + HEADER_HEIGHT + row * ROW_HEIGHT + 3 };
+      return { x: pos.x, y: pos.y + HEADER_HEIGHT + row * ROW_HEIGHT, w: WORK_CARD_WIDTH, h: ROW_HEIGHT };
     }
-    const pos = this.posOf(key);
-    return { x: pos.x + WORK_CARD_WIDTH - 64, y: pos.y + 8 };
+    const card = graph.cards.find((c) => c.key === key);
+    return card ? workCardRect(this.posOf(key), this.heightOf(card)) : null;
+  }
+
+  private static kindOf(key: string): BarKind {
+    return key.startsWith('objective:') ? 'objective' : key.startsWith('task:') ? 'task' : key.startsWith('milestone:') ? 'milestone' : 'nomilestone';
+  }
+
+  private readonly compact = signal(typeof matchMedia === 'function' && matchMedia(COMPACT).matches);
+
+  /**
+   * The selection toolbar: which node, and where it goes on screen. Above the node, horizontally centred and kept
+   * inside the canvas; below it when there is no room above. One computed from the node's world rect and the
+   * viewport, so it follows pan and zoom; null while a gesture runs or nothing linkable is selected.
+   */
+  protected readonly bar = computed(() => {
+    if (this.busy()) return null;
+    const key = this.selectedKey();
+    if (!key) return null;
+    const rect = this.nodeRect(key);
+    if (!rect) return null;
+    const kind = FlowCanvasComponent.kindOf(key);
+    const confirming = this.barConfirm() !== null;
+    const v = this.viewport();
+    const size = this.viewSize();
+    const left = rect.x * v.k + v.x;
+    const top = rect.y * v.k + v.y;
+    const right = left + rect.w * v.k;
+    const bottom = top + rect.h * v.k;
+    const width = confirming ? Math.min(352, Math.max(0, size.w - BAR_EDGE * 2)) : BAR_WIDTH[kind][this.compact() ? 1 : 0];
+    const height = confirming ? CONFIRM_HEIGHT : BAR_HEIGHT;
+    const above = top - height - BAR_GAP >= BAR_EDGE;
+    const y = Math.min(Math.max(above ? top - height - BAR_GAP : bottom + BAR_GAP, BAR_EDGE), Math.max(BAR_EDGE, size.h - height - BAR_EDGE));
+    const half = width / 2;
+    const x = size.w > width + BAR_EDGE * 2 ? Math.min(Math.max((left + right) / 2, half + BAR_EDGE), size.w - half - BAR_EDGE) : size.w / 2;
+    return { key, kind, x, y, height, above, nodeBottom: bottom };
+  });
+
+  protected readonly barName = computed(() => {
+    const key = this.selectedKey();
+    return key ? this.labelOf(key) : '';
+  });
+  protected readonly barAchieved = computed(() => {
+    const key = this.selectedKey();
+    return !!key && this.graph().objectives.find((o) => `objective:${o.id}` === key)?.status === 'achieved';
+  });
+  protected readonly barCollapsed = computed(() => {
+    const key = this.selectedKey();
+    return !!key && this.collapsedKeys().has(key);
+  });
+
+  /** Where the link menu opens: next to the toolbar, on whichever side has room; the canvas corner when the toolbar is hidden. */
+  protected readonly menuPlace = computed(() => {
+    const bar = this.bar();
+    const size = this.viewSize();
+    if (!bar || !size.w) return { left: null, top: 12, bottom: null, right: 12 };
+    const left = Math.min(Math.max(bar.x - MENU_WIDTH / 2, BAR_EDGE), Math.max(BAR_EDGE, size.w - MENU_WIDTH - BAR_EDGE));
+    if (bar.above && bar.y - BAR_GAP >= MENU_HEIGHT) return { left, top: null, bottom: size.h - bar.y + 4, right: null };
+    const top = bar.above ? bar.nodeBottom + BAR_GAP : bar.y + bar.height + 4;
+    return { left, top: Math.min(top, Math.max(BAR_EDGE, size.h - MENU_HEIGHT - BAR_EDGE)), bottom: null, right: null };
   });
 
   /** What the selected node serves and what feeds it; null when no node is selected. */
@@ -310,9 +424,14 @@ export class FlowCanvasComponent {
   protected readonly dropLane = computed(() => {
     const drag = this.drag();
     if (!drag?.key.startsWith('objective:')) return null;
-    const lane = laneAt(drag.pos.x + OBJECTIVE_WIDTH / 2);
-    return lane && lane !== 'work' ? lane : null;
+    return this.horizonAt(drag.pos.x + OBJECTIVE_WIDTH / 2);
   });
+
+  /** The open horizon lane under a world x; Work, a collapsed strip (not a drop target) and the outside give null. */
+  private horizonAt(worldX: number): Horizon | null {
+    const lane = laneAt(worldX, this.lanes());
+    return lane && lane !== 'work' && !this.lanes().find((l) => l.key === lane)?.collapsed ? lane : null;
+  }
 
   // ---- rendering lists -------------------------------------------------------------------------------------
 
@@ -353,7 +472,11 @@ export class FlowCanvasComponent {
   /** Where a card is: its live drag position, else the placement. */
   protected posOf(key: string): Point {
     const drag = this.drag();
-    return drag?.key === key ? drag.pos : (this.placement().positions.get(key) ?? ORIGIN);
+    if (drag?.key === key) return drag.pos;
+    // An objective dropped into another horizon waits for its answer where it was dropped.
+    const pending = this.pending();
+    if (pending?.kind === 'horizon' && pending.key === key) return pending.pos;
+    return this.placement().positions.get(key) ?? ORIGIN;
   }
 
   protected heightOf(card: WorkCard): number {
@@ -440,20 +563,27 @@ export class FlowCanvasComponent {
           : sel.key.startsWith('task:')
             ? graph.cardOfTask.has(sel.key.slice(5))
             : sel.key.startsWith('objective:')
-              ? graph.objectives.some((o) => o.id === sel.key.slice(10))
+              ? this.visibleObjectiveIds().has(sel.key.slice('objective:'.length))
               : graph.cards.some((c) => c.key === sel.key);
       if (!alive) untracked(() => this.selection.set(null));
     });
 
-    // The link menu belongs to the selected node: selecting something else (or nothing) closes it.
+    // The link menu and the toolbar's question belong to the selected node: selecting something else (or nothing) closes them.
     effect(() => {
       const selected = this.selectedKey();
       untracked(() => {
         if (this.menuKey() !== null && this.menuKey() !== selected) this.menuKey.set(null);
+        if (this.pending() !== null && this.pending()!.key !== selected) this.pending.set(null);
       });
     });
 
     const destroyRef = inject(DestroyRef);
+    if (typeof matchMedia === 'function') {
+      const query = matchMedia(COMPACT);
+      const onChange = () => this.compact.set(query.matches);
+      query.addEventListener('change', onChange);
+      destroyRef.onDestroy(() => query.removeEventListener('change', onChange));
+    }
     afterNextRender(
       () => {
         const el = this.viewportEl().nativeElement;
@@ -523,25 +653,104 @@ export class FlowCanvasComponent {
   }
 
   /**
-   * Shows the whole diagram: all four lanes, down to the lowest card. `auto` is the first-open fit of a
+   * Shows the whole diagram: every lane as it is now (a collapsed one is a thin strip), down to the lowest visible
+   * card. `auto` is the first-open fit of a
    * project with no stored viewport: applied but not remembered, so a fit made at a bad size never sticks.
    */
   fit(auto = false): void {
     const el = this.viewportEl().nativeElement;
     if (!el.clientWidth || !el.clientHeight) return;
-    const bounds = { x: 0, y: 0, w: LANES.length * LANE_WIDTH, h: this.placement().bottom + CARD_GAP };
-    const viewport = fitViewport(bounds, el.clientWidth, el.clientHeight, 16);
+    const bounds = { x: 0, y: 0, w: lanesWidth(this.lanes()), h: this.placement().bottom + CARD_GAP };
+    // Keep the fitted diagram clear of the controls cluster floating over the bottom-left corner.
+    const controls = el.parentElement?.querySelector<HTMLElement>('.flow-canvas__controls');
+    const insetLeft = controls ? controls.getBoundingClientRect().right - el.getBoundingClientRect().left : 0;
+    const viewport = fitViewport(bounds, el.clientWidth, el.clientHeight, 16, Math.max(0, insetLeft));
     if (auto) this.viewport.set(viewport);
     else this.setViewport(viewport);
   }
 
-  /** Forgets the hand-placed positions (the toolbar's Tidy up) and fits the result. Asks first: there is no undo. */
-  tidyUp(): void {
+  /** Back to 100%, around the middle of the canvas. */
+  resetZoom(): void {
+    this.zoomBy(1 / this.viewport().k);
+  }
+
+  // ---- the controls cluster ----------------------------------------------------------------------------------
+
+  /** The cluster's ⋯ menu (Tidy up, Reset zoom) is open. */
+  protected readonly controlsMenu = signal(false);
+  /** Tidy up is asking before it forgets hand-placed positions (there is no undo). */
+  protected readonly tidyAsk = signal(false);
+  private readonly controlsMore = viewChild<ElementRef<HTMLElement>>('controlsMore');
+  private readonly controlsRoot = viewChild<ElementRef<HTMLElement>>('controlsRoot');
+
+  protected toggleControlsMenu(): void {
+    if (this.controlsMenu()) {
+      this.closeControlsMenu(true);
+      return;
+    }
+    this.tidyAsk.set(false);
+    this.controlsMenu.set(true);
+    afterNextRender(() => this.controlsRoot()?.nativeElement.querySelector<HTMLElement>('[role="menuitem"]')?.focus({ preventScroll: true }), { injector: this.injector });
+  }
+
+  protected closeControlsMenu(restoreFocus: boolean): void {
+    if (!this.controlsMenu()) return;
+    this.controlsMenu.set(false);
+    this.tidyAsk.set(false);
+    if (restoreFocus) this.controlsMore()?.nativeElement.focus({ preventScroll: true });
+  }
+
+  /** Tidy up from the menu: asks inline first when there is something to forget, else just does it. */
+  protected requestTidy(): void {
     const positions = this.storedLayout()?.positions;
-    if (positions && Object.keys(positions).length && !window.confirm(this.translate.instant('flow.tidyUpConfirm'))) return;
+    if (positions && Object.keys(positions).length) {
+      this.tidyAsk.set(true);
+      afterNextRender(() => this.controlsRoot()?.nativeElement.querySelector<HTMLElement>('[data-confirm-first]')?.focus({ preventScroll: true }), { injector: this.injector });
+    } else {
+      this.tidyUp();
+    }
+  }
+
+  protected cancelTidy(): void {
+    this.tidyAsk.set(false);
+    afterNextRender(() => this.controlsRoot()?.nativeElement.querySelector<HTMLElement>('[role="menuitem"]')?.focus({ preventScroll: true }), { injector: this.injector });
+  }
+
+  /** Forgets the hand-placed positions and fits the result. */
+  protected tidyUp(): void {
     this.flow.clearPositions(this.projectId());
     this.drag.set(null);
+    this.pending.set(null);
     this.fit();
+    this.closeControlsMenu(true);
+  }
+
+  protected onResetZoomItem(): void {
+    this.resetZoom();
+    this.closeControlsMenu(true);
+  }
+
+  protected onControlsKeydown(event: KeyboardEvent): void {
+    if (event.key === 'Escape' && this.controlsMenu()) {
+      // One question or menu at a time, and never the project view's "back".
+      event.preventDefault();
+      event.stopPropagation();
+      if (this.tidyAsk()) this.cancelTidy();
+      else this.closeControlsMenu(true);
+      return;
+    }
+    if (!this.controlsMenu() || (event.key !== 'ArrowDown' && event.key !== 'ArrowUp')) return;
+    const items = Array.from((event.currentTarget as HTMLElement).querySelectorAll<HTMLElement>('[role="menuitem"]'));
+    if (!items.length) return;
+    event.preventDefault();
+    const index = items.indexOf(document.activeElement as HTMLElement);
+    items[(index + (event.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length].focus();
+  }
+
+  /** Tabbing or clicking out of the cluster closes its menu. */
+  protected onControlsFocusOut(event: FocusEvent): void {
+    const next = event.relatedTarget as Node | null;
+    if (this.controlsMenu() && next && !this.controlsRoot()?.nativeElement.contains(next)) this.closeControlsMenu(false);
   }
 
   // ---- pointer gestures ------------------------------------------------------------------------------------
@@ -565,8 +774,8 @@ export class FlowCanvasComponent {
     if (event.pointerType === 'mouse' && event.button !== 0) return;
     const target = event.target as Element;
     if (target.closest('[data-unlink]')) return;
-    // Buttons, the quick-add input inside a card and the link menu keep their normal behaviour.
-    if (target.closest('button, input, textarea, select, a, [data-menu]')) return;
+    // Buttons, the quick-add input inside a card, the link menu and the floating controls keep their normal behaviour.
+    if (target.closest('button, input, textarea, select, a, [data-menu], [data-ui]')) return;
 
     // Keep keyboard focus on the canvas (Delete, Enter, arrows) and avoid text selection.
     event.preventDefault();
@@ -701,7 +910,10 @@ export class FlowCanvasComponent {
   private releaseTouch(pointerId: number): void {
     this.touches.delete(pointerId);
     // The finger left over after a pinch does nothing until it lifts: it has no gesture to continue.
-    if (this.pinch && this.touches.size < 2) this.pinch = null;
+    if (this.pinch && this.touches.size < 2) {
+      this.pinch = null;
+      this.pinching.set(false);
+    }
   }
 
   /** Two fingers down: drop the one-finger gesture and remember the starting distance, midpoint and viewport. */
@@ -709,6 +921,7 @@ export class FlowCanvasComponent {
     const [a, b] = [...this.touches.values()];
     this.cancelGesture();
     this.pinch = { dist: Math.hypot(a.x - b.x, a.y - b.y) || 1, mid: this.toLocal({ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }), origin: this.viewport() };
+    this.pinching.set(true);
   }
 
   /** Zooms by the change in finger distance around the midpoint, and pans with the midpoint. */
@@ -780,33 +993,44 @@ export class FlowCanvasComponent {
     return this.graph().cards.find((c) => rectContains(workCardRect(this.posOf(c.key), this.heightOf(c)), world));
   }
 
-  /** Drops a card at `pos`: Work cards keep their lane; an objective dropped in another horizon lane changes horizon. */
+  /**
+   * Drops a card at `pos`: Work cards keep their lane; an objective dropped in another (open) horizon lane
+   * changes horizon. When that would drop objective links the card waits where it was dropped and the toolbar
+   * asks first (`pending`); a collapsed lane is not a drop target.
+   */
   private commitMove(key: string, pos: Point): void {
     const projectId = this.projectId();
+    const lanes = this.lanes();
     if (!key.startsWith('objective:')) {
-      this.flow.setPosition(projectId, key, cardX('work'), pos.y);
+      this.flow.setPosition(projectId, key, cardX('work', lanes), pos.y);
       return;
     }
     const id = key.slice('objective:'.length);
     const objective = this.graph().objectives.find((o) => o.id === id);
     if (!objective) return;
-    const lane = laneAt(pos.x + OBJECTIVE_WIDTH / 2);
-    let horizon = lane && lane !== 'work' ? lane : objective.horizon;
-    if (horizon !== objective.horizon && !this.confirmHorizonChange(objective, horizon)) horizon = objective.horizon;
-    if (horizon !== objective.horizon) this.flow.updateObjective(id, { horizon });
-    this.flow.setPosition(projectId, key, cardX(horizon), pos.y);
+    const horizon = this.horizonAt(pos.x + OBJECTIVE_WIDTH / 2) ?? objective.horizon;
+    if (horizon !== objective.horizon && this.horizonChangeBreaksLinks(objective, horizon)) {
+      this.selection.set({ kind: 'node', key });
+      this.pending.set({ kind: 'horizon', key, horizon, pos: { x: cardX(horizon, lanes), y: pos.y } });
+      return;
+    }
+    this.applyMove(objective, horizon, pos.y);
   }
 
-  /** A new horizon drops the objective links that would no longer point to a longer horizon; ask first. */
-  private confirmHorizonChange(objective: Objective, horizon: Horizon): boolean {
+  private applyMove(objective: Objective, horizon: Horizon, y: number): void {
+    if (horizon !== objective.horizon) this.flow.updateObjective(objective.id, { horizon });
+    this.flow.setPosition(this.projectId(), objectiveKey(objective.id), cardX(horizon, this.lanes()), y);
+  }
+
+  /** A new horizon drops the objective links that would no longer point to a longer horizon. */
+  private horizonChangeBreaksLinks(objective: Objective, horizon: Horizon): boolean {
     const byId = new Map(this.graph().objectives.map((o) => [o.id, o]));
-    const breaks = this.graph().links.some((l) => {
+    return this.graph().links.some((l) => {
       if (l.fromKind !== 'objective') return false;
       if (l.fromId === objective.id) return !isLongerHorizon(horizon, byId.get(l.toObjectiveId)!.horizon);
       if (l.toObjectiveId === objective.id) return !isLongerHorizon(byId.get(l.fromId)!.horizon, horizon);
       return false;
     });
-    return !breaks || window.confirm(this.translate.instant('flow.horizonChangeConfirm'));
   }
 
   private commitTaskMove(taskId: string, cardKey: string): void {
@@ -825,8 +1049,8 @@ export class FlowCanvasComponent {
   // ---- wheel, double-click, keyboard -----------------------------------------------------------------------
 
   protected onWheel(event: WheelEvent): void {
-    // The link menu scrolls itself.
-    if ((event.target as Element).closest('[data-menu]')) return;
+    // The link menu scrolls itself; the floating controls and toolbar are not part of the diagram.
+    if ((event.target as Element).closest('[data-menu], [data-ui]')) return;
     event.preventDefault();
     const unit = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? 400 : 1;
     const v = this.viewport();
@@ -846,17 +1070,15 @@ export class FlowCanvasComponent {
 
   protected onDblClick(event: MouseEvent): void {
     const target = event.target as Element;
-    if (target.closest('button, input, textarea, select, [data-port], [data-unlink], [data-link-id], [data-menu]')) return;
+    if (target.closest('button, input, textarea, select, [data-port], [data-unlink], [data-link-id], [data-menu], [data-ui]')) return;
     const key = target.closest<HTMLElement>('[data-key]')?.dataset['key'];
     if (key) {
       this.openEditor(key);
       return;
     }
     const world = this.toWorld(event);
-    const lane = laneAt(world.x);
-    if (lane && lane !== 'work') {
-      this.createObjective.emit({ horizon: lane, y: Math.max(LANE_TOP, world.y - OBJECTIVE_HEIGHT / 2) });
-    }
+    const horizon = this.horizonAt(world.x);
+    if (horizon) this.createObjective.emit({ horizon, y: Math.max(LANE_TOP, world.y - OBJECTIVE_HEIGHT / 2) });
   }
 
   private openEditor(key: string): void {
@@ -877,8 +1099,13 @@ export class FlowCanvasComponent {
 
   protected onKeydown(event: KeyboardEvent): void {
     const target = event.target as Element;
-    if (target.closest('input, textarea, select, [data-menu]')) return;
+    // The link menu, the toolbar and the floating controls run their own keys.
+    if (target.closest('input, textarea, select, [data-menu], [data-ui]')) return;
     const viewportEl = this.viewportEl().nativeElement;
+    // A dialog opened over the canvas (a shortcut, the FAB) may leave focus here for a moment; its keys are not
+    // ours. Focus mode is itself an aria-modal that contains the canvas, so it does not count.
+    if (Array.from(document.querySelectorAll('[aria-modal="true"]')).some((el) => !el.contains(viewportEl))) return;
+    const plain = !event.ctrlKey && !event.metaKey && !event.altKey;
     if (event.altKey && !event.ctrlKey && !event.metaKey && event.key.startsWith('Arrow')) {
       // Alt + arrows move the selected card. Alt + Left is also the detail view's "back", so a handled key must not reach it.
       const key = target.closest<HTMLElement>('[data-key]')?.dataset['key'] ?? this.selectedKey();
@@ -902,10 +1129,31 @@ export class FlowCanvasComponent {
       case 'Delete':
       case 'Backspace': {
         const id = this.selectedLinkId();
+        const key = this.selectedKey();
         if (id) {
           event.preventDefault();
           this.unlink(id);
+        } else if (key?.startsWith('objective:') && plain && !target.closest('button')) {
+          // Never deletes straight away: the toolbar asks first.
+          event.preventDefault();
+          this.askDeleteObjective(key);
         }
+        break;
+      }
+      case 'e':
+      case 'E': {
+        const key = this.selectedKey();
+        if (!key || !plain || target.closest('button')) return;
+        event.preventDefault();
+        this.openEditor(key);
+        break;
+      }
+      case 'a':
+      case 'A': {
+        const key = this.selectedKey();
+        if (!key?.startsWith('objective:') || !plain || target.closest('button')) return;
+        event.preventDefault();
+        this.toggleAchieved(key);
         break;
       }
       case 'Enter': {
@@ -918,8 +1166,12 @@ export class FlowCanvasComponent {
         break;
       }
       case 'Escape':
-        // Only swallow it when it cancels something, so a bare Escape still leaves the project.
-        if (this.gesture || this.selection()) {
+        // Only swallow it when it cancels something, so a bare Escape still leaves the project. A question goes
+        // first, then the selection.
+        if (this.pending()) {
+          event.preventDefault();
+          this.cancelPending();
+        } else if (this.gesture || this.selection()) {
           event.preventDefault();
           this.cancelGesture();
           this.selection.set(null);
@@ -947,6 +1199,18 @@ export class FlowCanvasComponent {
       case '-':
         if (target === viewportEl) this.zoomOut();
         break;
+      case '0':
+        if (plain && !target.closest('button')) {
+          event.preventDefault();
+          this.resetZoom();
+        }
+        break;
+      case '1':
+        if (plain && !target.closest('button')) {
+          event.preventDefault();
+          this.fit();
+        }
+        break;
     }
   }
 
@@ -954,7 +1218,7 @@ export class FlowCanvasComponent {
 
   /**
    * Alt + arrow on a card: up and down step its y by 8 world pixels (32 with Shift); an objective's left and
-   * right jump to the neighbouring horizon lane (a lane is 380 wide, so pixel steps there would do nothing).
+   * right jump to the neighbouring open horizon lane (a lane is 380 wide, so pixel steps there would do nothing).
    * Work cards never leave their lane. Each press commits like a finished drag.
    */
   private moveByKey(key: string, arrow: string, big: boolean): void {
@@ -967,8 +1231,12 @@ export class FlowCanvasComponent {
     if (!key.startsWith('objective:')) return;
     const objective = this.graph().objectives.find((o) => o.id === key.slice('objective:'.length));
     if (!objective) return;
-    const index = HORIZONS.indexOf(objective.horizon) + (arrow === 'ArrowLeft' ? -1 : 1);
-    if (index >= 0 && index < HORIZONS.length) this.commitMove(key, { x: cardX(HORIZONS[index]), y: pos.y });
+    // The neighbouring horizon that is open: a collapsed strip is skipped, not a place to drop into.
+    const direction = arrow === 'ArrowLeft' ? -1 : 1;
+    const open = (h: Horizon) => !this.lanes().find((l) => l.key === h)?.collapsed;
+    let index = HORIZONS.indexOf(objective.horizon) + direction;
+    while (index >= 0 && index < HORIZONS.length && !open(HORIZONS[index])) index += direction;
+    if (index >= 0 && index < HORIZONS.length) this.commitMove(key, { x: cardX(HORIZONS[index], this.lanes()), y: pos.y });
   }
 
   /** Opens the link menu for the selected node. Returns false when there is nothing linkable selected. */
@@ -983,12 +1251,100 @@ export class FlowCanvasComponent {
     const key = this.menuKey();
     if (key === null) return;
     this.menuKey.set(null);
-    if (!restoreFocus) return;
-    // Back to the card when it is focusable (a task row is not), else to the canvas.
+    if (restoreFocus) this.focusNode(key);
+  }
+
+  /** Focus goes back to the card when it is focusable (a task row is not), else to the canvas. */
+  private focusNode(key: string): void {
     const viewportEl = this.viewportEl().nativeElement;
     const card = Array.from(viewportEl.querySelectorAll<HTMLElement>('[data-key][tabindex]')).find((el) => el.dataset['key'] === key);
     (card ?? viewportEl).focus({ preventScroll: true });
   }
+
+  // ---- the selection toolbar -----------------------------------------------------------------------------------
+
+  protected onBarAction(action: BarAction): void {
+    const key = this.selectedKey();
+    if (!key) return;
+    switch (action) {
+      case 'edit':
+      case 'open':
+        this.openEditor(key);
+        break;
+      case 'link':
+        if (this.menuKey()) this.closeMenu(true);
+        else this.openMenu();
+        break;
+      case 'status':
+        this.toggleAchieved(key);
+        break;
+      case 'collapse': {
+        const card = this.graph().cards.find((c) => c.key === key);
+        if (card) this.toggleCollapse(card);
+        break;
+      }
+      case 'delete':
+        this.askDeleteObjective(key);
+        break;
+    }
+  }
+
+  /** The committing answer of the toolbar's question. */
+  protected onBarConfirmed(): void {
+    const pending = this.pending();
+    if (!pending) return;
+    this.pending.set(null);
+    const id = pending.key.slice('objective:'.length);
+    const objective = this.graph().objectives.find((o) => o.id === id);
+    if (pending.kind === 'delete') {
+      this.flow.removeObjective(id);
+      this.selection.set(null);
+      this.viewportEl().nativeElement.focus({ preventScroll: true });
+    } else if (objective) {
+      this.applyMove(objective, pending.horizon, pending.pos.y);
+      this.focusNode(pending.key);
+    }
+  }
+
+  /** The safe answer: the card goes back where it was and the question closes. */
+  protected cancelPending(): void {
+    const pending = this.pending();
+    if (!pending) return;
+    this.pending.set(null);
+    this.focusNode(pending.key);
+  }
+
+  protected onBarDismissed(): void {
+    this.selection.set(null);
+    this.viewportEl().nativeElement.focus({ preventScroll: true });
+  }
+
+  private askDeleteObjective(key: string): void {
+    this.closeMenu(false);
+    this.pending.set({ kind: 'delete', key });
+  }
+
+  private toggleAchieved(key: string): void {
+    const objective = this.graph().objectives.find((o) => objectiveKey(o.id) === key);
+    if (objective) this.flow.updateObjective(objective.id, { status: objective.status === 'achieved' ? 'active' : 'achieved' });
+  }
+
+  protected hideLane(horizon: Horizon): void {
+    this.state.setHorizonHidden(horizon, true);
+  }
+
+  protected showLane(horizon: Horizon): void {
+    this.state.setHorizonHidden(horizon, false);
+  }
+
+  protected dismissTip(): void {
+    this.state.linkTipDismissed.set(true);
+  }
+
+  /** Links exist in the project: the "drag from the port" tip has done its job. */
+  protected readonly showTip = computed(
+    () => this.graph().objectives.length > 0 && (this.flow.linksByProject().get(this.projectId())?.length ?? 0) === 0 && this.state.linkTipDismissed() !== true,
+  );
 
   // ---- card actions ----------------------------------------------------------------------------------------
 

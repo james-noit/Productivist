@@ -12,6 +12,7 @@ import type { Horizon, Objective, ObjectiveStatus } from '../../../types/flow';
 import type { Project } from '../../../types/project';
 import type { Todo } from '../../../types/todo';
 import { FlowLinkMenuComponent } from '../flow-link-menu/flow-link-menu.component';
+import { FlowViewState } from '../project-flow/flow-view-state';
 
 type RowKind = 'objective' | 'milestone' | 'card' | 'task' | 'section';
 
@@ -59,11 +60,12 @@ export class FlowOutlineComponent {
   private readonly view = inject(ViewService);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
 
-  readonly project = input.required<Project>();
-  /** Horizons and statuses to show; an empty set means all. */
-  readonly horizons = input<ReadonlySet<Horizon>>(new Set());
-  readonly statuses = input<ReadonlySet<ObjectiveStatus>>(new Set());
+  private readonly state = inject(FlowViewState);
 
+  readonly project = input.required<Project>();
+
+  /** The empty state's button: start the first objective (Short term). */
+  readonly addObjective = output<void>();
   readonly editObjective = output<string>();
   readonly editMilestone = output<string>();
   readonly editTask = output<string>();
@@ -101,8 +103,6 @@ export class FlowOutlineComponent {
     const flipped = this.flipped();
     const format = this.dateFormat();
     const today = todayIso();
-    const horizons = this.horizons();
-    const statuses = this.statuses();
     const out: OutlineRow[] = [];
 
     const isOpen = (path: string, byDefault: boolean) => byDefault !== flipped.has(path);
@@ -111,9 +111,7 @@ export class FlowOutlineComponent {
     for (const card of graph.cards) for (const t of card.rows) taskById.set(t.id, t);
 
     const visible = new Map<string, Objective>();
-    for (const o of graph.objectives) {
-      if ((!horizons.size || horizons.has(o.horizon)) && (!statuses.size || statuses.has(o.status))) visible.set(o.id, o);
-    }
+    for (const o of graph.objectives) if (this.state.shows(o)) visible.set(o.id, o);
     const byRank = (a: Objective, b: Objective) => horizonRank(b.horizon) - horizonRank(a.horizon) || a.order - b.order;
 
     const cardProgress = (card: WorkCard): Progress => ({
@@ -206,7 +204,7 @@ export class FlowOutlineComponent {
     const unlinkedTasks = new Map<string, Todo[]>();
     let unlinkedCount = 0;
     for (const card of graph.cards) {
-      const list = card.rows.filter((t) => ![...chainOf(graph, taskKey(t.id)).nodes].some((k) => k.startsWith('objective:')));
+      const list = card.rows.filter((t) => ![...chainOf(graph, taskKey(t.id)).nodes].some((k) => k.startsWith('objective:') && visible.has(k.slice('objective:'.length))));
       unlinkedTasks.set(card.key, list);
       unlinkedCount += list.length;
     }
@@ -248,6 +246,12 @@ export class FlowOutlineComponent {
 
   protected toggleMenu(row: OutlineRow): void {
     this.menuPath.update((path) => (path === row.path ? null : row.path));
+  }
+
+  /** The row is gone with its objective, so there is no trigger to go back to: focus lands on the list. */
+  protected onObjectiveDeleted(): void {
+    this.menuPath.set(null);
+    queueMicrotask(() => this.host.nativeElement.querySelector<HTMLElement>('.flow-outline')?.focus({ preventScroll: true }));
   }
 
   protected closeMenu(path: string, restoreFocus: boolean): void {

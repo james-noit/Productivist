@@ -9,6 +9,8 @@
   height: 100%;
   min-height: 20rem;
   overflow: hidden;
+  /* Clip, not just hide: a hidden box can still be scrolled by focusing something inside it, which would shift the whole diagram. */
+  overflow: clip;
   border: 1px solid var(--color-border);
   border-radius: 8px;
   background-color: var(--color-surface);
@@ -71,6 +73,91 @@
 /* The horizon an objective would join if dropped now. */
 .flow-canvas__lane--drop {
   background-color: color-mix(in srgb, var(--lane-tint) 18%, transparent);
+}
+
+/* A collapsed horizon: a thin strip with its name written vertically; the whole strip brings the lane back. */
+.flow-canvas__lane--collapsed {
+  background-color: color-mix(in srgb, var(--lane-tint) 9%, transparent);
+  border-right-style: solid;
+}
+
+.flow-canvas__strip {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.9rem 0 0;
+  background: none;
+  border: none;
+  border-left: 3px solid var(--lane-tint);
+  color: var(--color-text-muted);
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.flow-canvas__strip:hover {
+  background-color: color-mix(in srgb, var(--lane-tint) 14%, transparent);
+  color: var(--color-text);
+}
+
+.flow-canvas__strip:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -3px;
+}
+
+.flow-canvas__strip-name {
+  writing-mode: vertical-rl;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--lane-tint);
+  white-space: nowrap;
+}
+
+.flow-canvas__strip-count {
+  min-width: 1.4rem;
+  padding: 0.05rem 0.3rem;
+  border-radius: 999px;
+  background-color: color-mix(in srgb, var(--lane-tint) 18%, var(--color-surface));
+  font-size: 0.7rem;
+  font-weight: 700;
+  line-height: 1.4;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+/* The chevron in a lane header: always 24 screen pixels, wherever the zoom is. Anchored by its top-right corner. */
+.flow-canvas__lane-toggle {
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transform: scale(calc(1 / var(--flow-k, 1)));
+  transform-origin: 100% 0;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.flow-canvas__lane-toggle:hover {
+  background-color: var(--color-surface);
+  border-color: var(--color-border);
+  color: var(--color-text);
+}
+
+.flow-canvas__lane-toggle:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 1px;
 }
 
 .flow-canvas__lane-label {
@@ -177,44 +264,16 @@
   outline: none;
 }
 
-/* The selected node's link button: always 24 screen pixels, wherever the zoom is. Anchored by its top-right corner. */
-.flow-canvas__more {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 24px;
-  height: 24px;
-  margin-left: -24px;
-  padding: 0;
-  transform-origin: 100% 0;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  border: 1px solid var(--color-primary);
-  background-color: var(--color-surface);
-  color: var(--color-primary);
-  font-size: 14px;
-  line-height: 1;
-  cursor: pointer;
-  z-index: 15;
-}
-
-.flow-canvas__more:hover,
-.flow-canvas__more[aria-expanded='true'] {
-  background-color: var(--color-primary);
-  color: var(--color-primary-contrast);
-}
-
-.flow-canvas__more:focus-visible {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 2px;
-}
-
 .flow-canvas__menu {
   position: absolute;
-  top: 0.75rem;
-  right: 0.75rem;
+  z-index: 30;
+}
+
+/* The selection toolbar: centred on `left`, above or below the selected node (see `bar` in the component). */
+.flow-canvas__bar {
+  position: absolute;
+  z-index: 16;
+  transform: translateX(-50%);
 }
 
 .flow-canvas__ghost {
@@ -235,20 +294,66 @@
   z-index: 20;
 }
 
-.flow-canvas__hint {
+/* No objectives yet: what they are for, and the way to the first one. Over the lanes, which stay double-clickable around it. */
+.flow-canvas__empty {
   position: absolute;
-  left: 50%;
-  bottom: 1rem;
-  transform: translateX(-50%);
-  max-width: 90%;
-  margin: 0;
-  padding: 0.4rem 0.9rem;
-  border-radius: 999px;
-  background-color: var(--color-surface-alt);
-  color: var(--color-text);
-  font-size: 0.85rem;
-  text-align: center;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
   pointer-events: none;
+}
+
+.flow-canvas__empty-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  max-width: 22rem;
+  padding: 1.5rem 1.75rem;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.06), 0 4px 12px rgb(0 0 0 / 0.1);
+  text-align: center;
+  cursor: default;
+  pointer-events: auto;
+}
+
+.flow-canvas__empty-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.flow-canvas__empty-hint {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
+/* The one-time "how to link" tip. */
+.flow-canvas__tip {
+  position: absolute;
+  top: 0.75rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 14;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  max-width: calc(100% - 1.5rem);
+  padding: 0.25rem 0.3rem 0.25rem 0.9rem;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.06), 0 4px 12px rgb(0 0 0 / 0.1);
+  font-size: 0.85rem;
+  cursor: default;
+}
+
+.flow-canvas__tip p {
+  margin: 0;
 }
 
 .flow-canvas__toast {
@@ -256,6 +361,7 @@
   left: 50%;
   top: 0.75rem;
   transform: translateX(-50%);
+  z-index: 15;
   max-width: 90%;
   margin: 0;
   padding: 0.4rem 0.9rem;
@@ -268,8 +374,141 @@
   pointer-events: none;
 }
 
+/* Under the tip when both show. */
+.flow-canvas__toast--below-tip {
+  top: 3.75rem;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .flow-canvas__lane {
     transition: none;
+  }
+}
+
+/* The controls cluster: zoom, fit and the ⋯ menu, bottom left. */
+.flow-canvas__controls {
+  position: absolute;
+  left: 0.75rem;
+  bottom: 0.75rem;
+  z-index: 14;
+  display: flex;
+  flex-direction: column;
+  padding: 2px;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.06), 0 2px 8px rgb(0 0 0 / 0.08);
+  cursor: default;
+}
+
+.flow-canvas__control {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  background: none;
+  border: none;
+  border-radius: 8px;
+  color: var(--color-text);
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.flow-canvas__control:hover,
+.flow-canvas__control[aria-expanded='true'] {
+  background-color: var(--color-surface-alt);
+}
+
+.flow-canvas__control:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
+}
+
+.flow-canvas__control--value {
+  font-size: 0.72rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-muted);
+}
+
+.flow-canvas__controls-menu {
+  position: absolute;
+  left: calc(100% + 6px);
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 13rem;
+  padding: 0.25rem;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.06), 0 4px 12px rgb(0 0 0 / 0.14);
+}
+
+.flow-canvas__controls-menu .confirm-bar__text,
+.flow-canvas__controls-menu .confirm-bar__actions {
+  padding: 0.25rem 0.4rem 0;
+}
+
+.flow-canvas__controls-menu .confirm-bar__actions {
+  padding-bottom: 0.25rem;
+}
+
+.flow-canvas__menu-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: 100%;
+  min-height: 36px;
+  padding: 0.3rem 0.65rem;
+  background: none;
+  border: none;
+  border-radius: 7px;
+  color: var(--color-text);
+  font-family: inherit;
+  font-size: 0.9rem;
+  text-align: left;
+}
+
+.flow-canvas__menu-item:hover,
+.flow-canvas__menu-item:focus-visible {
+  background-color: var(--color-surface-alt);
+}
+
+.flow-canvas__menu-item:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
+}
+
+.flow-canvas__kbd {
+  min-width: 1.4rem;
+  padding: 0.05rem 0.4rem;
+  border: 1px solid var(--color-border);
+  border-radius: 5px;
+  background-color: var(--color-surface-alt);
+  color: var(--color-text-muted);
+  font-family: inherit;
+  font-size: 0.72rem;
+  line-height: 1.5;
+  text-align: center;
+}
+
+@media (max-width: 599px) {
+  .flow-canvas__control {
+    width: 32px;
+    height: 32px;
+  }
+
+  .flow-canvas__controls {
+    left: 0.5rem;
+    bottom: 0.5rem;
+  }
+
+  .flow-canvas__kbd {
+    display: none;
   }
 }

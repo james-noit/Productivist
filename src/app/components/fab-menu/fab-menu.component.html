@@ -1,8 +1,8 @@
 <div class="fab">
   @if (open()) {
-    <div id="projects-fab-menu" class="fab__menu" role="menu" [attr.aria-label]="'projects.fab.label' | translate" (keydown)="onMenuKeydown($event)">
-      @for (item of items; track item.action) {
-        <button type="button" role="menuitem" class="fab__item" (click)="choose(item.action)">
+    <div [id]="menuId" class="fab__menu" role="menu" [attr.aria-label]="'projects.fab.label' | translate" (keydown)="onMenuKeydown($event)">
+      @for (item of items(); track item.id) {
+        <button type="button" role="menuitem" class="fab__item" (click)="choose(item.id)">
           <app-ui-icon [name]="item.icon" [size]="16" />
           <span class="fab__item-label">{{ item.labelKey | translate }}</span>
           @if (item.shortcut) {
@@ -19,7 +19,7 @@
     [class.fab__button--open]="open()"
     aria-haspopup="menu"
     [attr.aria-expanded]="open()"
-    [attr.aria-controls]="open() ? 'projects-fab-menu' : null"
+    [attr.aria-controls]="open() ? menuId : null"
     [attr.aria-label]="'projects.fab.label' | translate"
     [title]="'projects.fab.label' | translate"
     (click)="toggleMenu()"

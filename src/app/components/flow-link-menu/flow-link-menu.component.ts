@@ -3,17 +3,20 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { horizonRank, validTargets, type FlowSource } from '../../../lib/flow-rules';
 import { FlowService } from '../../../services/flow.service';
 import type { Horizon } from '../../../types/flow';
+import { UiIconComponent } from '../ui-icon/ui-icon.component';
 
 /**
  * The keyboard and touch way to link: the objectives a task, milestone or objective may feed, and the
  * links it already has (each removable), as a small panel of buttons. The Outline rows and the diagram's
  * selected node both open it. It changes the store itself, closes after a change, and reports whether focus
- * should go back to what opened it (Escape and a finished action yes, focus simply leaving no).
+ * should go back to what opened it (Escape and a finished action yes, focus simply leaving no). For an objective
+ * the Outline also passes `deletable`: a last *Delete objective* entry that asks inline ("Delete this objective? Its
+ * links are removed.") before `deleted` is emitted; the store removes the objective and its links.
  */
 @Component({
   selector: 'app-flow-link-menu',
   standalone: true,
-  imports: [TranslatePipe],
+  imports: [TranslatePipe, UiIconComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './flow-link-menu.component.html',
   styleUrl: './flow-link-menu.component.css',
@@ -32,14 +35,20 @@ export class FlowLinkMenuComponent {
   private readonly flow = inject(FlowService);
   private readonly translate = inject(TranslateService);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+  private readonly injector = inject(Injector);
 
   readonly source = input.required<FlowSource>();
   /** Name of the thing being linked, for the heading. */
   readonly label = input.required<string>();
+  /** Offers deleting the source objective (the Outline's rows; the diagram has its own toolbar for it). */
+  readonly deletable = input(false);
   /** `true` when focus should return to whatever opened the menu. */
   readonly closed = output<boolean>();
+  /** The objective was deleted from the inline question. */
+  readonly deleted = output<void>();
 
   protected readonly message = signal('');
+  protected readonly confirming = signal(false);
 
   protected readonly title = computed(() => this.translate.instant('flow.link.title', { name: this.label() }));
 
@@ -68,7 +77,7 @@ export class FlowLinkMenuComponent {
         const first = this.items()[0];
         (first ?? this.host.nativeElement).focus();
       },
-      { injector: inject(Injector) },
+      { injector: this.injector },
     );
   }
 
@@ -87,12 +96,35 @@ export class FlowLinkMenuComponent {
     this.closed.emit(true);
   }
 
+  /** Swaps the list for the inline question; focus stays inside the panel so its focusout does not close it. */
+  protected askDelete(): void {
+    this.host.nativeElement.focus();
+    this.confirming.set(true);
+    afterNextRender(() => this.host.nativeElement.querySelector<HTMLElement>('[data-confirm-first]')?.focus(), { injector: this.injector });
+  }
+
+  protected keepObjective(): void {
+    this.host.nativeElement.focus();
+    this.confirming.set(false);
+    afterNextRender(() => this.items()[0]?.focus(), { injector: this.injector });
+  }
+
+  protected deleteObjective(): void {
+    const { kind, id } = this.source();
+    if (kind !== 'objective') return;
+    this.flow.removeObjective(id);
+    this.deleted.emit();
+    this.closed.emit(true);
+  }
+
   protected onKeydown(event: KeyboardEvent): void {
     if (event.key === 'Escape') {
       // Must not also leave the project (the detail view's Escape handler) or clear the diagram selection.
       event.preventDefault();
       event.stopPropagation();
-      this.closed.emit(true);
+      // An open question is answered "keep" first; the menu itself closes on the next Escape.
+      if (this.confirming()) this.keepObjective();
+      else this.closed.emit(true);
       return;
     }
     const items = this.items();

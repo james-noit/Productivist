@@ -55,24 +55,61 @@ export const PORT_RADIUS = 6;
 export const MIN_ZOOM = 0.25;
 export const MAX_ZOOM = 2;
 
+/** Width of a collapsed horizon lane: just a strip with its name written vertically. */
+export const COLLAPSED_LANE_WIDTH = 36;
+
+/** One lane band of the diagram: where it starts, how wide it is, and whether it is only a strip. */
+export interface LaneBox {
+  key: LaneKey;
+  x: number;
+  width: number;
+  collapsed: boolean;
+}
+
+/**
+ * The lane bands for a set of hidden horizons: Work is always open; a hidden horizon shrinks to
+ * `COLLAPSED_LANE_WIDTH` and the lanes after it move left. The lane x (and so the x of the cards in it) is a
+ * function of this, never stored: collapsing a lane rewrites no card position.
+ */
+export function laneLayout(hidden: ReadonlySet<Horizon> | readonly Horizon[] = []): LaneBox[] {
+  const set = new Set<Horizon>(hidden);
+  let x = 0;
+  return LANES.map((key) => {
+    const collapsed = key !== 'work' && set.has(key);
+    const width = collapsed ? COLLAPSED_LANE_WIDTH : LANE_WIDTH;
+    const box = { key, x, width, collapsed };
+    x += width;
+    return box;
+  });
+}
+
+/** Every lane open: what the geometry functions assume when no layout is passed. */
+export const DEFAULT_LANES: readonly LaneBox[] = laneLayout();
+
+/** Total width of the lane bands. */
+export function lanesWidth(lanes: readonly LaneBox[] = DEFAULT_LANES): number {
+  const last = lanes[lanes.length - 1];
+  return last ? last.x + last.width : 0;
+}
+
 export function laneIndex(lane: LaneKey): number {
   return LANES.indexOf(lane);
 }
 
 /** Left edge of a lane's band. */
-export function laneX(lane: LaneKey): number {
-  return laneIndex(lane) * LANE_WIDTH;
+export function laneX(lane: LaneKey, lanes: readonly LaneBox[] = DEFAULT_LANES): number {
+  return lanes.find((l) => l.key === lane)?.x ?? laneIndex(lane) * LANE_WIDTH;
 }
 
 /** X of the cards in a lane. */
-export function cardX(lane: LaneKey): number {
-  return laneX(lane) + CARD_INSET;
+export function cardX(lane: LaneKey, lanes: readonly LaneBox[] = DEFAULT_LANES): number {
+  return laneX(lane, lanes) + CARD_INSET;
 }
 
-/** The lane a world x falls in, or null outside the four bands. */
-export function laneAt(worldX: number): LaneKey | null {
-  if (worldX < 0 || worldX >= LANES.length * LANE_WIDTH) return null;
-  return LANES[Math.floor(worldX / LANE_WIDTH)];
+/** The lane a world x falls in (a collapsed strip included: the caller decides what that means), or null outside the bands. */
+export function laneAt(worldX: number, lanes: readonly LaneBox[] = DEFAULT_LANES): LaneKey | null {
+  if (worldX < 0) return null;
+  return lanes.find((l) => worldX >= l.x && worldX < l.x + l.width)?.key ?? null;
 }
 
 /** Height of a milestone (or "No milestone") card showing `rows` task rows. A collapsed card is its header only. */
@@ -164,13 +201,16 @@ export function zoomAround(viewport: Viewport, factor: number, cx: number, cy: n
   return { x: cx - (cx - viewport.x) * ratio, y: cy - (cy - viewport.y) * ratio, k };
 }
 
-/** The viewport that shows `bounds` entirely, centred, never zoomed in past 100%. */
-export function fitViewport(bounds: Rect, width: number, height: number, padding = 32): Viewport {
-  const availW = Math.max(1, width - padding * 2);
+/**
+ * The viewport that shows `bounds` entirely, centred, never zoomed in past 100%. `insetLeft` is screen space on the
+ * left that something floats over (the controls cluster), so the content is centred in what remains.
+ */
+export function fitViewport(bounds: Rect, width: number, height: number, padding = 32, insetLeft = 0): Viewport {
+  const availW = Math.max(1, width - insetLeft - padding * 2);
   const availH = Math.max(1, height - padding * 2);
   const k = clampZoom(Math.min(availW / Math.max(bounds.w, 1), availH / Math.max(bounds.h, 1), 1));
   return {
-    x: (width - bounds.w * k) / 2 - bounds.x * k,
+    x: insetLeft + (width - insetLeft - bounds.w * k) / 2 - bounds.x * k,
     y: (height - bounds.h * k) / 2 - bounds.y * k,
     k,
   };

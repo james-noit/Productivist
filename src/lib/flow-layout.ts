@@ -1,11 +1,13 @@
 import {
   CARD_GAP,
+  DEFAULT_LANES,
   LANE_TOP,
   OBJECTIVE_HEIGHT,
   cardX,
   headerPort,
   rowPort,
   workCardHeight,
+  type LaneBox,
   type Point,
 } from './flow-geometry';
 import type { FlowPosition, Horizon } from '../types/flow';
@@ -40,6 +42,8 @@ export interface LayoutInput {
   edges: readonly { from: string; to: string }[];
   /** Stored positions by node key; only their y is used, the x always comes from the lane. */
   stored: Readonly<Record<string, FlowPosition>>;
+  /** The lane bands (a collapsed horizon moves the lanes after it); every lane open when absent. Objectives of a collapsed lane are simply not passed. */
+  lanes?: readonly LaneBox[];
 }
 
 export interface Placement {
@@ -82,7 +86,8 @@ export function layoutFlow(input: LayoutInput): Placement {
   let bottom = LANE_TOP;
 
   // ---- Work lane: stored cards stay where they are, the rest stack in order.
-  const workX = cardX('work');
+  const lanes = input.lanes ?? DEFAULT_LANES;
+  const workX = cardX('work', lanes);
   const workTaken: Interval[] = [];
   const cardIndex = new Map(input.cards.map((c) => [c.key, c]));
   for (const card of input.cards) {
@@ -129,7 +134,7 @@ export function layoutFlow(input: LayoutInput): Placement {
   }
   for (const horizon of ['short', 'medium', 'long'] as const) {
     const lane = input.objectives.filter((o) => o.horizon === horizon);
-    const x = cardX(horizon);
+    const x = cardX(horizon, lanes);
     const taken: Interval[] = [];
     const loose: { objective: LayoutObjective; wanted: number | undefined }[] = [];
     for (const objective of lane) {
