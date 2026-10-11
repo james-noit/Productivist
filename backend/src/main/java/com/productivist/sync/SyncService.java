@@ -367,7 +367,7 @@ public class SyncService {
         m.put("mode", r.mode());
         m.put("startDate", r.startDate());
         m.put("endDate", r.endDate());
-        m.put("paused", r.paused());
+        m.put("paused", Boolean.TRUE.equals(r.paused()));
         m.put("lastDate", r.lastDate());
         m.put("order", r.order());
         m.put("createdAt", r.createdAt());

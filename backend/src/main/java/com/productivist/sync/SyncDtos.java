@@ -90,7 +90,9 @@ public final class SyncDtos {
             @Pattern(regexp = "schedule|afterCompletion") String mode,
             @Pattern(regexp = DATE) String startDate,
             @Pattern(regexp = DATE) String endDate,
-            boolean paused,
+            // A wrapper, not a primitive: the client only sends `paused` when it is true, and Jackson 3 rejects an
+            // absent primitive record component (FAIL_ON_NULL_FOR_PRIMITIVES is on by default). Absent = not paused.
+            Boolean paused,
             @Pattern(regexp = DATE) String lastDate,
             double order,
             long createdAt,
