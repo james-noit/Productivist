@@ -57,3 +57,10 @@
     <app-config-modal />
   }
 }
+
+<!-- Global like the two above, so Task Details' "Edit series" and the header's Recurring button open it anywhere. -->
+@if (view.recurringOpen()) {
+  @defer (on immediate) {
+    <app-recurring-tasks-modal />
+  }
+}

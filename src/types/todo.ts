@@ -21,6 +21,8 @@ export interface Todo {
   /** Local calendar days as 'YYYY-MM-DD' (see lib/dates.ts); never epoch values, which shift across timezones. */
   startDate?: string
   dueDate?: string
+  /** The recurring series this task is an occurrence of (see types/recurrence.ts); absent for ordinary tasks. */
+  recurrenceId?: string
 }
 
 export interface TodoExport {

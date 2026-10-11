@@ -12,6 +12,7 @@ import {
   objectiveCodec,
   pendingRows,
   projectCodec,
+  recurrenceCodec,
   reconcileLocal,
   todoCodec,
   type FlowLayoutWire,
@@ -19,6 +20,7 @@ import {
   type MilestoneWire,
   type ObjectiveWire,
   type ProjectWire,
+  type RecurrenceWire,
   type RowMeta,
   type RowMetaMap,
   type TodoWire,
@@ -28,10 +30,12 @@ import { DailyPlanService, type DailyPlanStage } from './daily-plan.service';
 import { FlowService } from './flow.service';
 import { MultitaskService } from './multitask.service';
 import { ProjectsService } from './projects.service';
+import { RecurrenceService } from './recurrence.service';
 import { SettingsService } from './settings.service';
 import { TodosService } from './todos.service';
 import type { FlowLayout, FlowLink, Objective } from '../types/flow';
 import type { Milestone, Project } from '../types/project';
+import type { Recurrence } from '../types/recurrence';
 import type { Todo } from '../types/todo';
 
 export type SyncStatus = 'idle' | 'syncing' | 'error';
@@ -57,6 +61,8 @@ interface PullResponse {
   objectives?: ObjectiveWire[];
   flowLinks?: FlowLinkWire[];
   flowLayouts?: FlowLayoutWire[];
+  /** Absent when talking to a backend older than recurring tasks. */
+  recurrences?: RecurrenceWire[];
   state: StateWire | null;
 }
 
@@ -71,6 +77,7 @@ interface SyncMeta {
   objectives?: RowMetaMap;
   flowLinks?: RowMetaMap;
   flowLayouts?: RowMetaMap;
+  recurrences?: RowMetaMap;
   /** Null until the first sync decided whether the server's state or the local one wins. */
   state: RowMeta | null;
 }
@@ -84,6 +91,7 @@ const emptyMeta = (email: string | null): SyncMeta => ({
   objectives: {},
   flowLinks: {},
   flowLayouts: {},
+  recurrences: {},
   state: null,
 });
 
@@ -104,6 +112,7 @@ export class SyncService {
   private readonly dailyPlan = inject(DailyPlanService);
   private readonly multitask = inject(MultitaskService);
   private readonly flow = inject(FlowService);
+  private readonly recurrences = inject(RecurrenceService);
 
   readonly status = signal<SyncStatus>('idle');
   readonly errorKind = signal<SyncErrorKind | null>(null);
@@ -127,6 +136,7 @@ export class SyncService {
       this.flow.objectives();
       this.flow.links();
       this.flow.layouts();
+      this.recurrences.recurrences();
       this.stateBlob();
       untracked(() => this.schedule());
     });
@@ -211,6 +221,7 @@ export class SyncService {
       objectives: reconcileLocal(this.flow.objectives(), m.objectives ?? {}, hashWith(objectiveCodec.toWire), now),
       flowLinks: reconcileLocal(this.flow.links(), m.flowLinks ?? {}, hashWith(flowLinkCodec.toWire), now),
       flowLayouts: reconcileLocal(this.flow.layouts(), m.flowLayouts ?? {}, hashWith(flowLayoutCodec.toWire), now),
+      recurrences: reconcileLocal(this.recurrences.recurrences(), m.recurrences ?? {}, hashWith(recurrenceCodec.toWire), now),
       state: m.state && m.state.h !== stateHash ? { h: stateHash, u: now, p: false } : m.state,
     }));
   }
@@ -225,6 +236,7 @@ export class SyncService {
       pending(m.objectives ?? {}) ||
       pending(m.flowLinks ?? {}) ||
       pending(m.flowLayouts ?? {}) ||
+      pending(m.recurrences ?? {}) ||
       (m.state !== null && !m.state.p)
     );
   }
@@ -240,12 +252,14 @@ export class SyncService {
     const objectives = applyPulled(this.flow.objectives(), m.objectives ?? {}, pulled.objectives ?? [], objectiveCodec.fromWire, hashWith(objectiveCodec.toWire));
     const flowLinks = applyPulled(this.flow.links(), m.flowLinks ?? {}, pulled.flowLinks ?? [], flowLinkCodec.fromWire, hashWith(flowLinkCodec.toWire));
     const flowLayouts = applyPulled(this.flow.layouts(), m.flowLayouts ?? {}, pulled.flowLayouts ?? [], flowLayoutCodec.fromWire, hashWith(flowLayoutCodec.toWire));
+    const recurrences = applyPulled(this.recurrences.recurrences(), m.recurrences ?? {}, pulled.recurrences ?? [], recurrenceCodec.fromWire, hashWith(recurrenceCodec.toWire));
     if (projects.items !== this.projects.projects()) this.projects.projects.set(projects.items);
     if (milestones.items !== this.projects.milestones()) this.projects.milestones.set(milestones.items);
     if (todos.items !== this.todos.todos()) this.todos.todos.set(todos.items);
     if (objectives.items !== this.flow.objectives()) this.flow.objectives.set(objectives.items);
     if (flowLinks.items !== this.flow.links()) this.flow.links.set(flowLinks.items);
     if (flowLayouts.items !== this.flow.layouts()) this.flow.layouts.set(flowLayouts.items);
+    if (recurrences.items !== this.recurrences.recurrences()) this.recurrences.recurrences.set(recurrences.items);
 
     let state = m.state;
     const remote = pulled.state;
@@ -270,10 +284,14 @@ export class SyncService {
       objectives: objectives.meta,
       flowLinks: flowLinks.meta,
       flowLayouts: flowLayouts.meta,
+      recurrences: recurrences.meta,
       state,
     });
     // Rows another device deleted may leave links behind; the next reconcile turns the sweep into tombstones.
     this.projects.sweepFlow();
+    // Occurrences or series pulled from another device may have made one due here (idempotent: both devices
+    // produce the same deterministic occurrence id).
+    this.recurrences.materialize();
   }
 
   // ---- metadata → server --------------------------------------------------------------------------------------
@@ -286,6 +304,7 @@ export class SyncService {
     const objectives = pendingRows<Objective, ObjectiveWire>(this.flow.objectives(), m.objectives ?? {}, objectiveCodec.toWire, objectiveCodec.tombstone);
     const flowLinks = pendingRows<FlowLink, FlowLinkWire>(this.flow.links(), m.flowLinks ?? {}, flowLinkCodec.toWire, flowLinkCodec.tombstone);
     const flowLayouts = pendingRows<FlowLayout, FlowLayoutWire>(this.flow.layouts(), m.flowLayouts ?? {}, flowLayoutCodec.toWire, flowLayoutCodec.tombstone);
+    const recurrences = pendingRows<Recurrence, RecurrenceWire>(this.recurrences.recurrences(), m.recurrences ?? {}, recurrenceCodec.toWire, recurrenceCodec.tombstone);
     const state = m.state && !m.state.p ? { ...this.stateBlob(), updatedAt: m.state.u } : undefined;
 
     if (
@@ -295,6 +314,7 @@ export class SyncService {
       !objectives.rows.length &&
       !flowLinks.rows.length &&
       !flowLayouts.rows.length &&
+      !recurrences.rows.length &&
       !state
     ) {
       return;
@@ -309,6 +329,7 @@ export class SyncService {
         objectives: objectives.rows,
         flowLinks: flowLinks.rows,
         flowLayouts: flowLayouts.rows,
+        recurrences: recurrences.rows,
         state,
       },
     });
@@ -321,6 +342,7 @@ export class SyncService {
       objectives: markPushed(current.objectives ?? {}, objectives.sent),
       flowLinks: markPushed(current.flowLinks ?? {}, flowLinks.sent),
       flowLayouts: markPushed(current.flowLayouts ?? {}, flowLayouts.sent),
+      recurrences: markPushed(current.recurrences ?? {}, recurrences.sent),
       state:
         current.state && state && current.state.u === state.updatedAt && !current.state.p
           ? { ...current.state, p: true }

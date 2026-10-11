@@ -1,100 +1,236 @@
-<div class="modal-overlay task-detail__overlay" (click)="closeOnBackdrop($event)">
-  <div class="modal-panel task-detail__modal" role="dialog" aria-modal="true" [attr.aria-label]="'eisenhower.taskDetail' | translate">
-    <div class="task-detail__header">
-      <h3>{{ 'eisenhower.taskDetail' | translate }}</h3>
-      <button type="button" class="task-detail__close" [attr.aria-label]="'todo.close' | translate" (click)="close.emit()">✕</button>
+<div class="modal-overlay td__overlay" (mousedown)="onBackdropDown($event)" (click)="onBackdropClick($event)" (keydown)="onKeydown($event)">
+  <div #panel class="modal-panel td" role="dialog" aria-modal="true" tabindex="-1" [attr.aria-labelledby]="uid + '-title-label'">
+    <header class="td__header">
+      <button
+        type="button"
+        class="td__check"
+        role="checkbox"
+        [attr.aria-checked]="draft().done"
+        [attr.aria-label]="'eisenhower.markDone' | translate"
+        [title]="'eisenhower.markDone' | translate"
+        (click)="edit({ done: !draft().done })"
+      >
+        @if (draft().done) {
+          <app-ui-icon name="check" [size]="14" />
+        }
+      </button>
+
+      <div class="td__heading">
+        <label class="visually-hidden" [id]="uid + '-title-label'" [for]="uid + '-title'">{{ 'taskDetail.titleLabel' | translate }}</label>
+        <input
+          class="td__title"
+          [class.td__title--done]="draft().done"
+          [id]="uid + '-title'"
+          type="text"
+          [value]="draft().title"
+          [attr.aria-invalid]="titleValid() ? null : 'true'"
+          [placeholder]="'todo.addPlaceholder' | translate"
+          autocomplete="off"
+          (input)="edit({ title: $any($event.target).value })"
+        />
+        <p class="td__meta">
+          @if (meta().project; as project) {
+            <span class="td__place">
+              {{ project }}
+              @if (meta().milestone; as milestone) {
+                <app-ui-icon name="chevron-right" [size]="12" />
+                {{ milestone }}
+              }
+            </span>
+          }
+          @if (meta().repeat; as repeat) {
+            <span class="td__repeat-meta">
+              <app-ui-icon name="repeat" [size]="12" />
+              {{ repeat }}
+            </span>
+          }
+          @if (meta().doneDay; as day) {
+            <span>{{ 'taskDetail.doneOn' | translate: { date: day } }}</span>
+          } @else {
+            <span>{{ meta().statusKey | translate }}</span>
+          }
+        </p>
+      </div>
+
+      <button type="button" class="btn btn--ghost btn--icon" [attr.aria-label]="'todo.close' | translate" [title]="'todo.close' | translate" (click)="requestClose()">
+        <app-ui-icon name="x" />
+      </button>
+    </header>
+
+    <div class="td__body">
+      <div class="td__main">
+        <div class="field">
+          <label class="field__label" [for]="uid + '-description'">{{ 'todo.description' | translate }}</label>
+          <textarea
+            class="textarea"
+            appAutoGrow="12"
+            rows="4"
+            [id]="uid + '-description'"
+            [value]="draft().description"
+            [placeholder]="'todo.descriptionPlaceholder' | translate"
+            (input)="edit({ description: $any($event.target).value })"
+          ></textarea>
+        </div>
+
+        <div class="field">
+          <label class="field__label" [for]="uid + '-tags'">{{ 'todo.tags' | translate }}</label>
+          <app-tag-input
+            [tags]="draft().tags"
+            (tagsChange)="edit({ tags: $event })"
+            [inputId]="uid + '-tags'"
+            [placeholder]="'taskDetail.addTag' | translate"
+          />
+        </div>
+      </div>
+
+      <div class="td__side">
+        <div class="field">
+          <span class="field__label" [id]="uid + '-status'">{{ 'taskDetail.status' | translate }}</span>
+          <div class="segmented td__segmented" role="group" [attr.aria-labelledby]="uid + '-status'">
+            @for (status of statuses; track status) {
+              <button type="button" class="segmented__option" [attr.aria-pressed]="!draft().done && draft().status === status" (click)="pickStatus(status)">
+                {{ 'kanban.columns.' + status | translate }}
+              </button>
+            }
+          </div>
+        </div>
+
+        <app-project-milestone-picker
+          [projectRef]="draft().projectRef"
+          (projectRefChange)="edit({ projectRef: $event })"
+          [milestoneRef]="draft().milestoneRef"
+          (milestoneRefChange)="edit({ milestoneRef: $event })"
+          [showInlineCreateButtons]="false"
+          (projectPicked)="onProjectPicked()"
+          (createProject)="save()"
+          (createMilestone)="save()"
+        />
+
+        <div class="field">
+          <span class="field__label" [id]="uid + '-importance'">{{ 'todo.importance' | translate }}</span>
+          <div class="segmented td__segmented" role="group" [attr.aria-labelledby]="uid + '-importance'">
+            @for (level of priorities; track level) {
+              <button type="button" class="segmented__option" [attr.aria-pressed]="draft().importance === level" (click)="edit({ importance: level })">
+                {{ 'todo.' + level | translate }}
+              </button>
+            }
+          </div>
+        </div>
+
+        <div class="field">
+          <span class="field__label" [id]="uid + '-urgency'">{{ 'todo.urgency' | translate }}</span>
+          <div class="segmented td__segmented" role="group" [attr.aria-labelledby]="uid + '-urgency'">
+            @for (level of priorities; track level) {
+              <button type="button" class="segmented__option" [attr.aria-pressed]="draft().urgency === level" (click)="edit({ urgency: level })">
+                {{ 'todo.' + level | translate }}
+              </button>
+            }
+          </div>
+        </div>
+
+        <div class="td__dates">
+          <div class="field">
+            <label class="field__label" [for]="uid + '-start'">{{ 'taskDetail.start' | translate }}</label>
+            <input class="input" type="date" [id]="uid + '-start'" [value]="draft().startDate" (change)="editDates('startDate', $any($event.target).value)" />
+          </div>
+          <div class="field">
+            <label class="field__label" [for]="uid + '-due'">{{ 'taskDetail.due' | translate }}</label>
+            <input class="input" type="date" [id]="uid + '-due'" [value]="draft().dueDate" (change)="editDates('dueDate', $any($event.target).value)" />
+          </div>
+        </div>
+
+        <div class="field td__pomodoros">
+          <span class="field__label" [id]="uid + '-pomodoros'">{{ 'todo.pomodorosForTermination' | translate }}</span>
+          <app-number-stepper
+            [value]="draft().pomodoros"
+            (valueChange)="edit({ pomodoros: $event })"
+            [emptyText]="'taskDetail.noEstimate' | translate"
+            [decreaseLabel]="'taskDetail.pomodorosDecrease' | translate"
+            [increaseLabel]="'taskDetail.pomodorosIncrease' | translate"
+          />
+        </div>
+
+        <div class="field td__repeat">
+          <span class="field__label" [id]="uid + '-repeat'">{{ 'recurrence.field' | translate }}</span>
+          @if (seriesInfo(); as info) {
+            <div class="td__repeat-box" role="group" [attr.aria-labelledby]="uid + '-repeat'">
+              <p class="td__repeat-rule">
+                <app-ui-icon name="repeat" [size]="14" />
+                <span>{{ info.rule }}</span>
+              </p>
+              @if (info.paused) {
+                <p class="td__repeat-note">{{ 'recurrence.paused' | translate }}</p>
+              }
+              <p class="td__repeat-note">{{ info.nextKey | translate: { date: info.nextDate } }}</p>
+              <div class="td__repeat-actions">
+                <button type="button" class="btn btn--secondary btn--sm" (click)="editSeries()">{{ 'recurrence.editSeries' | translate }}</button>
+                <button #stopButton type="button" class="btn btn--ghost btn--sm" (click)="askStop()">{{ 'recurrence.stopRepeating' | translate }}</button>
+              </div>
+            </div>
+          } @else {
+            @if (draft().repeat; as rule) {
+              <div class="td__repeat-box" role="group" [attr.aria-labelledby]="uid + '-repeat'">
+                <app-recurrence-editor [rule]="rule" (ruleChange)="edit({ repeat: $event })" [lastDate]="repeatAfter()" />
+                <div class="td__repeat-actions">
+                  <button type="button" class="btn btn--ghost btn--sm" (click)="edit({ repeat: null })">{{ 'recurrence.dontRepeat' | translate }}</button>
+                </div>
+              </div>
+            } @else {
+              <div class="td__repeat-none">
+                <span>{{ 'recurrence.doesNotRepeat' | translate }}</span>
+                <button type="button" class="btn btn--secondary btn--sm" (click)="startRepeat()">
+                  <app-ui-icon name="repeat" [size]="14" />
+                  {{ 'recurrence.repeatButton' | translate }}
+                </button>
+              </div>
+            }
+          }
+        </div>
+      </div>
     </div>
 
-    <label class="task-detail__done">
-      <input type="checkbox" [checked]="todo().done" (change)="todos.toggleDone(todo().id)" />
-      {{ 'eisenhower.markDone' | translate }}
-    </label>
-
-    <input
-      [ngModel]="title()"
-      (ngModelChange)="title.set($event)"
-      name="title"
-      type="text"
-      class="task-detail__title"
-      (change)="commitTitle()"
-    />
-
-    <label class="task-detail__description-label">
-      {{ 'todo.description' | translate }}
-      <textarea
-        [ngModel]="description()"
-        (ngModelChange)="description.set($event)"
-        name="description"
-        rows="2"
-        [placeholder]="'todo.descriptionPlaceholder' | translate"
-        (change)="commitDescription()"
-      ></textarea>
-    </label>
-
-    <app-project-milestone-picker
-      [(projectRef)]="projectRef"
-      [(milestoneRef)]="milestoneRef"
-      (projectPicked)="onProjectSelect()"
-      (milestonePicked)="onMilestoneSelect()"
-      (createProject)="submitNewProject($event)"
-      (createMilestone)="submitNewMilestone($event)"
-    />
-
-    <div class="task-detail__row">
-      <label>
-        {{ 'todo.importance' | translate }}
-        <select [ngModel]="importance()" (ngModelChange)="importance.set($event)" name="importance" (change)="commitImportance()">
-          <option value="low">{{ 'todo.low' | translate }}</option>
-          <option value="medium">{{ 'todo.medium' | translate }}</option>
-          <option value="high">{{ 'todo.high' | translate }}</option>
-        </select>
-      </label>
-      <label>
-        {{ 'todo.urgency' | translate }}
-        <select [ngModel]="urgency()" (ngModelChange)="urgency.set($event)" name="urgency" (change)="commitUrgency()">
-          <option value="low">{{ 'todo.low' | translate }}</option>
-          <option value="medium">{{ 'todo.medium' | translate }}</option>
-          <option value="high">{{ 'todo.high' | translate }}</option>
-        </select>
-      </label>
-    </div>
-
-    <div class="task-detail__row">
-      <label>
-        {{ 'todo.startDate' | translate }}
-        <input type="date" name="startDate" [ngModel]="startDate()" (ngModelChange)="startDate.set($event)" (change)="commitDates()" />
-      </label>
-      <label>
-        {{ 'todo.dueDate' | translate }}
-        <input type="date" name="dueDate" [ngModel]="dueDate()" (ngModelChange)="dueDate.set($event)" (change)="commitDates()" />
-      </label>
-    </div>
-
-    <label class="task-detail__tags-label">
-      {{ 'todo.tags' | translate }}
-      <input
-        [ngModel]="tagsInput()"
-        (ngModelChange)="tagsInput.set($event)"
-        name="tagsInput"
-        type="text"
-        [placeholder]="'todo.tagsPlaceholder' | translate"
-        (change)="commitTags()"
-      />
-    </label>
-
-    <label class="task-detail__tags-label">
-      {{ 'todo.pomodorosForTermination' | translate }}
-      <input
-        [ngModel]="pomodorosForTermination()"
-        (ngModelChange)="pomodorosForTermination.set($event)"
-        name="pomodorosForTermination"
-        type="number"
-        min="1"
-        [placeholder]="'todo.pomodorosForTerminationPlaceholder' | translate"
-        (change)="commitPomodorosForTermination()"
-      />
-    </label>
-
-    <button type="button" class="task-detail__delete" (click)="remove()">{{ 'todo.delete' | translate }}</button>
+    <footer class="td__footer">
+      @switch (confirm()) {
+        @case ('discard') {
+          <div class="confirm-bar" role="alertdialog" [attr.aria-labelledby]="uid + '-confirm'">
+            <p class="confirm-bar__text" [id]="uid + '-confirm'">{{ 'taskDetail.discardQuestion' | translate }}</p>
+            <div class="confirm-bar__actions">
+              <button #confirmFocus type="button" class="btn btn--secondary" (click)="dismissConfirm()">{{ 'taskDetail.keepEditing' | translate }}</button>
+              <button type="button" class="btn btn--danger" (click)="discard()">{{ 'taskDetail.discard' | translate }}</button>
+            </div>
+          </div>
+        }
+        @case ('stop') {
+          <div class="confirm-bar" role="alertdialog" [attr.aria-labelledby]="uid + '-confirm'">
+            <p class="confirm-bar__text" [id]="uid + '-confirm'">{{ 'recurrence.stopQuestion' | translate }}</p>
+            <div class="confirm-bar__actions">
+              <button type="button" class="btn btn--secondary" (click)="dismissConfirm()">{{ 'recurrence.keepRepeating' | translate }}</button>
+              <button #confirmFocus type="button" class="btn btn--danger" (click)="stopRepeating()">{{ 'recurrence.stopRepeating' | translate }}</button>
+            </div>
+          </div>
+        }
+        @case ('delete') {
+          <div class="confirm-bar" role="alertdialog" [attr.aria-labelledby]="uid + '-confirm'">
+            <p class="confirm-bar__text" [id]="uid + '-confirm'">{{ 'taskDetail.deleteQuestion' | translate }}</p>
+            <div class="confirm-bar__actions">
+              <button type="button" class="btn btn--secondary" (click)="dismissConfirm()">{{ 'taskDetail.keepTask' | translate }}</button>
+              <button #confirmFocus type="button" class="btn btn--danger" (click)="remove()">{{ 'taskDetail.deleteTask' | translate }}</button>
+            </div>
+          </div>
+        }
+        @default {
+          <button #deleteButton type="button" class="btn btn--danger btn--ghost" (click)="askDelete()">
+            <app-ui-icon name="trash" />
+            {{ 'todo.delete' | translate }}
+          </button>
+          <div class="td__footer-actions">
+            <button type="button" class="btn btn--secondary" (click)="requestClose()">{{ 'taskDetail.cancel' | translate }}</button>
+            <button type="button" class="btn btn--primary" [disabled]="!canSave()" [title]="'taskDetail.saveHint' | translate" (click)="save()">
+              {{ 'taskDetail.save' | translate }}
+            </button>
+          </div>
+        }
+      }
+    </footer>
   </div>
 </div>

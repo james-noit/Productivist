@@ -7,6 +7,9 @@
 .projects-panel__toolbar {
   display: flex;
   justify-content: flex-end;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
 }
 
 .projects-panel__new {
@@ -17,6 +20,14 @@
   padding: 0.5rem 1.25rem;
 }
 
+/* The form itself is flat (it also sits inside modals), so the inline use gives it the card. */
+.projects-panel__form {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 1rem;
+}
+
 .projects-panel__empty {
   color: var(--color-text-muted);
 }
@@ -25,52 +36,4 @@
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-}
-
-.projects-panel__summary {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 0.6rem;
-  padding: 0.6rem 0.9rem;
-  background-color: var(--color-surface-alt);
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
-}
-
-.projects-panel__summary-total {
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-}
-
-.projects-panel__summary-label {
-  color: var(--color-text-muted);
-  font-size: 0.85rem;
-}
-
-.projects-panel__toolbar {
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-}
-
-.projects-panel__sort {
-  display: flex;
-  gap: 0.35rem;
-  margin-right: auto;
-}
-
-.projects-panel__sort button {
-  background: none;
-  border: 1px solid var(--color-border);
-  border-radius: 999px;
-  color: var(--color-text-muted);
-  padding: 0.3rem 0.85rem;
-  font-size: 0.85rem;
-}
-
-.projects-panel__sort button.active {
-  background-color: var(--color-primary);
-  color: var(--color-primary-contrast);
-  border-color: var(--color-primary);
 }

@@ -1,0 +1,121 @@
+<div class="dash">
+  <div class="dash__tiles" role="group" [attr.aria-label]="'projects.tiles.label' | translate">
+    @for (tile of tiles(); track tile.key) {
+      <button type="button" class="tile" [attr.data-q]="tile.css" [title]="('projects.tiles.openMatrix' | translate) + ' · ' + (tile.hintKey | translate)" (click)="view.openProjectsTab('matrix', tile.key)">
+        <span class="tile__label"><span class="tile__dot" aria-hidden="true"></span>{{ tile.labelKey | translate }}</span>
+        <span class="tile__value">{{ tile.count }}</span>
+      </button>
+    }
+    <button type="button" class="tile tile--filter" [attr.aria-pressed]="filter() === 'week'" (click)="toggleFilter('week')">
+      <span class="tile__label"><app-ui-icon name="calendar" [size]="14" />{{ 'projects.tiles.dueWeek' | translate }}</span>
+      <span class="tile__value">{{ stats().dueWeek }}</span>
+    </button>
+    <button type="button" class="tile tile--filter tile--overdue" [attr.aria-pressed]="filter() === 'overdue'" (click)="toggleFilter('overdue')">
+      <span class="tile__label"><app-ui-icon name="alert" [size]="14" />{{ 'projects.tiles.overdue' | translate }}</span>
+      <span class="tile__value" [class.tile__value--alert]="stats().overdue > 0">{{ stats().overdue }}</span>
+    </button>
+  </div>
+
+  <div class="dash__toolbar">
+    <div class="dash__search">
+      <app-ui-icon name="search" [size]="16" class="dash__search-icon" />
+      <input
+        class="input dash__search-input"
+        type="text"
+        [value]="query()"
+        (input)="query.set($any($event.target).value)"
+        (keydown)="onSearchKeydown($event)"
+        [placeholder]="'projects.search.placeholder' | translate"
+        [attr.aria-label]="'projects.search.label' | translate"
+        autocomplete="off"
+        spellcheck="false"
+      />
+      @if (query()) {
+        <button type="button" class="btn btn--ghost btn--icon btn--sm dash__search-clear" [attr.aria-label]="'projects.search.clear' | translate" (click)="query.set('')">
+          <app-ui-icon name="x" [size]="16" />
+        </button>
+      }
+    </div>
+
+    <div class="dash__sort">
+      <span class="control-label" id="projects-sort-label">{{ 'projects.sort.label' | translate }}</span>
+      <div class="segmented" role="group" aria-labelledby="projects-sort-label">
+        @for (option of sorts; track option) {
+          <button type="button" class="segmented__option" [attr.aria-pressed]="activeSort() === option" (click)="sort.set(option)">
+            {{ 'projects.sort.' + option | translate }}
+          </button>
+        }
+      </div>
+    </div>
+
+    <div class="dash__actions">
+      <button type="button" class="btn btn--secondary" (click)="creatingTask.set(true)">
+        <app-ui-icon name="plus" [size]="16" />{{ 'projects.toolbar.task' | translate }}
+      </button>
+      <button type="button" class="btn btn--secondary" (click)="openNewProject()">
+        <app-ui-icon name="plus" [size]="16" />{{ 'projects.toolbar.project' | translate }}
+      </button>
+    </div>
+  </div>
+
+  @if (showInbox()) {
+    <app-inbox-card [rows]="inboxRows()" [total]="stats().inbox.length" [filtering]="filtering()" (openTask)="detailId.set($event)" />
+  }
+
+  @if (noResults()) {
+    <div class="dash__empty" role="status">
+      <p>
+        @if (normalized()) {
+          {{ 'projects.empty.noResults' | translate: { query: query().trim() } }}
+        } @else {
+          {{ 'projects.empty.noFilterResults' | translate }}
+        }
+      </p>
+      <button type="button" class="btn btn--secondary btn--sm" (click)="clearFilters()">
+        {{ (normalized() ? 'projects.search.clearAction' : 'projects.empty.clearFilter') | translate }}
+      </button>
+    </div>
+  } @else if (noProjects()) {
+    <div class="dash__empty">
+      <p>{{ 'projects.empty.noProjects' | translate }}</p>
+      <button type="button" class="btn btn--primary btn--sm" (click)="openNewProject()">{{ 'projects.empty.create' | translate }}</button>
+    </div>
+  } @else {
+    <div class="dash__grid">
+      @for (card of cards(); track card.project.id) {
+        <app-project-card [view]="card" (edit)="editingProjectId.set(card.project.id)" (openTask)="detailId.set($event)" />
+      }
+      @if (!filtering()) {
+        <button type="button" class="dash__new" (click)="openNewProject()">
+          <app-ui-icon name="plus" [size]="18" />{{ 'projects.newProject' | translate }}
+        </button>
+      }
+    </div>
+  }
+
+  @if (creatingProject()) {
+    <div class="modal-overlay" (click)="closeOnBackdrop($event)" (keydown)="onNewProjectKeydown($event)">
+      <div #newProjectPanel class="modal-panel dash__modal" role="dialog" aria-modal="true" aria-labelledby="new-project-title" tabindex="-1">
+        <div class="dash__modal-head">
+          <h3 id="new-project-title">{{ 'projects.newProject' | translate }}</h3>
+          <button type="button" class="btn btn--ghost btn--icon btn--sm" [attr.aria-label]="'todo.close' | translate" (click)="closeNewProject()">
+            <app-ui-icon name="x" />
+          </button>
+        </div>
+        <app-project-form (save)="createProject($event)" (cancel)="closeNewProject()" />
+      </div>
+    </div>
+  }
+
+  @if (creatingTask()) {
+    <app-new-task-modal (close)="creatingTask.set(false)" />
+  }
+
+  @if (editingProject(); as project) {
+    <app-edit-project-modal [project]="project" (save)="saveProject(project.id, $event)" (close)="editingProjectId.set(null)" />
+  }
+
+  @if (detailTodo(); as todo) {
+    <app-task-detail-modal [todo]="todo" (close)="detailId.set(null)" />
+  }
+</div>

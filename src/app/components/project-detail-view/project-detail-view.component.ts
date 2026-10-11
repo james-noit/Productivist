@@ -5,6 +5,7 @@ import { TodosService } from '../../../services/todos.service';
 import { ViewService, type ProjectPresentation } from '../../../services/view.service';
 import { EditProjectModalComponent } from '../edit-project-modal/edit-project-modal.component';
 import { IconComponent } from '../icon/icon.component';
+import { UiIconComponent } from '../ui-icon/ui-icon.component';
 import { KanbanBoardComponent } from '../kanban-board/kanban-board.component';
 import { EisenhowerViewComponent } from '../eisenhower-view/eisenhower-view.component';
 import { ProjectTaskListComponent } from '../project-task-list/project-task-list.component';
@@ -35,7 +36,7 @@ const PRESENTATIONS: readonly PresentationTab[] = [
   selector: 'app-project-detail-view',
   standalone: true,
   // The presentations are only used inside @defer blocks, so each gets its own chunk.
-  imports: [TranslatePipe, IconComponent, EditProjectModalComponent, KanbanBoardComponent, ProjectOverviewComponent, ProjectTaskListComponent, EisenhowerViewComponent, ProjectRoadmapComponent, ProjectCalendarComponent, ProjectFlowComponent],
+  imports: [TranslatePipe, IconComponent, UiIconComponent, EditProjectModalComponent, KanbanBoardComponent, ProjectOverviewComponent, ProjectTaskListComponent, EisenhowerViewComponent, ProjectRoadmapComponent, ProjectCalendarComponent, ProjectFlowComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './project-detail-view.component.html',
   styleUrl: './project-detail-view.component.css',

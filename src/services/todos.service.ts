@@ -30,6 +30,7 @@ export type TodoPatch = Partial<
     | 'status'
     | 'startDate'
     | 'dueDate'
+    | 'recurrenceId'
   >
 >;
 
@@ -131,6 +132,20 @@ export class TodosService {
       ...(input.dueDate ? { dueDate: input.dueDate } : {}),
     };
     this.todos.update((list) => [...list, todo]);
+  }
+
+  /**
+   * Adds ready-made todos (recurring occurrences, which carry their deterministic ids) in one write, at the end
+   * of the order. A todo whose id already exists is skipped, so replaying it is harmless.
+   */
+  insertTodos(items: readonly Todo[]): void {
+    if (!items.length) return;
+    this.todos.update((list) => {
+      const known = new Set(list.map((t) => t.id));
+      let order = list.reduce((max, t) => Math.max(max, t.order), -1) + 1;
+      const added = items.filter((t) => !known.has(t.id)).map((t) => ({ ...t, order: order++ }));
+      return added.length ? [...list, ...added] : list;
+    });
   }
 
   private patchTodo(id: string, patch: Partial<Todo>): void {
@@ -321,7 +336,16 @@ export class TodosService {
     if (!data || data.version !== 1 || !Array.isArray(data.todos)) {
       throw new Error('Invalid Productivist to-do file');
     }
-    this.todos.set(data.todos.map(sanitizeDates));
+    this.todos.set(
+      data.todos.map((todo) => {
+        const clean = sanitizeDates(todo);
+        // A series link must be a plain id; anything else would be rejected by the backend and wedge sync.
+        const id: unknown = clean.recurrenceId;
+        if (id === undefined || (typeof id === 'string' && id.length > 0 && id.length <= 64)) return clean;
+        const { recurrenceId: _dropped, ...rest } = clean;
+        return rest;
+      }),
+    );
   }
 
   reset(): void {

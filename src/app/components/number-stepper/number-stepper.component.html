@@ -1,0 +1,11 @@
+<div class="number-stepper" role="group">
+  <button type="button" class="btn btn--secondary btn--icon" [attr.aria-label]="decreaseLabel()" [disabled]="!canDecrease()" (click)="decrease()">
+    <app-ui-icon name="minus" />
+  </button>
+  <output class="number-stepper__value" [class.number-stepper__value--empty]="value() === null" aria-live="polite">
+    {{ value() ?? emptyText() }}
+  </output>
+  <button type="button" class="btn btn--secondary btn--icon" [attr.aria-label]="increaseLabel()" [disabled]="!canIncrease()" (click)="increase()">
+    <app-ui-icon name="plus" />
+  </button>
+</div>

@@ -34,7 +34,7 @@
         </div>
       </div>
       <div class="project-detail__actions">
-        <button type="button" [attr.aria-label]="'projectDetail.edit' | translate" [title]="'projectDetail.edit' | translate" (click)="editing.set(true)">✎</button>
+        <button type="button" [attr.aria-label]="'projectDetail.edit' | translate" [title]="'projectDetail.edit' | translate" (click)="editing.set(true)"><app-ui-icon name="edit" /></button>
         <button
           type="button"
           class="project-detail__delete"
@@ -42,20 +42,20 @@
           [title]="'projectDetail.delete' | translate"
           (click)="deleteProject()"
         >
-          ✕
+          <app-ui-icon name="trash" />
         </button>
       </div>
     </header>
 
-    <div class="project-detail__tabs" role="tablist" [attr.aria-label]="'projectDetail.presentationsLabel' | translate" (keydown)="onTabKeydown($event)">
+    <div class="tabs" role="tablist" [attr.aria-label]="'projectDetail.presentationsLabel' | translate" (keydown)="onTabKeydown($event)">
       @for (tab of presentations; track tab.key) {
         <button
           type="button"
           role="tab"
+          class="tabs__tab"
           [attr.data-tab]="tab.key"
           [attr.aria-selected]="view.projectPresentation() === tab.key"
           [attr.tabindex]="view.projectPresentation() === tab.key ? 0 : -1"
-          [class.active]="view.projectPresentation() === tab.key"
           (click)="selectPresentation(tab.key)"
         >
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">

@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { TranslatePipe } from '@ngx-translate/core';
+import { RepeatMarkComponent } from '../repeat-mark/repeat-mark.component';
 import type { Todo } from '../../../types/todo';
 
 /**
@@ -8,11 +9,13 @@ import type { Todo } from '../../../types/todo';
  * The host is `display: contents`, so the chips remain direct children of whatever
  * flex or grid container the caller puts this in — several call sites lay the badges
  * out as siblings of a title rather than inside a wrapper of their own.
+ *
+ * An occurrence of a recurring task gets the ↻ marker first, so every view that shows badges shows it.
  */
 @Component({
   selector: 'app-task-badges',
   standalone: true,
-  imports: [TranslatePipe],
+  imports: [TranslatePipe, RepeatMarkComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './task-badges.component.html',
   styleUrl: './task-badges.component.css',

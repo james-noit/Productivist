@@ -1,5 +1,4 @@
 import { ChangeDetectionStrategy, Component, computed, ElementRef, HostListener, inject, isDevMode, signal, viewChild } from '@angular/core';
-import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '@ngx-translate/core';
 import { TodosService } from '../../../services/todos.service';
 import { SettingsService } from '../../../services/settings.service';
@@ -9,13 +8,14 @@ import { ProjectsService } from '../../../services/projects.service';
 import { AccountService } from '../../../services/account.service';
 import { DailyPlanService } from '../../../services/daily-plan.service';
 import { FlowService } from '../../../services/flow.service';
+import { RecurrenceService } from '../../../services/recurrence.service';
 
 const RESET_PHRASE = 'confirm reset';
 
 @Component({
   selector: 'app-app-menu',
   standalone: true,
-  imports: [FormsModule, TranslatePipe],
+  imports: [TranslatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './app-menu.component.html',
   styleUrl: './app-menu.component.css',
@@ -29,6 +29,7 @@ export class AppMenuComponent {
   private readonly projects = inject(ProjectsService);
   private readonly dailyPlan = inject(DailyPlanService);
   private readonly flow = inject(FlowService);
+  private readonly recurrences = inject(RecurrenceService);
 
   readonly resetPhrase = RESET_PHRASE;
   readonly isDev = isDevMode();
@@ -68,12 +69,14 @@ export class AppMenuComponent {
   exportTodo(): void {
     const data = {
       // 3 added optional startDate/dueDate on todos and milestones; 4 added objectives, flowLinks and
-      // flowLayouts. 2 to 4 import the same way (missing arrays are empty).
-      version: 4,
+      // flowLayouts; 5 added recurrences (and Todo.recurrenceId). 2 to 5 import the same way (missing arrays
+      // are empty).
+      version: 5,
       todos: this.todos.todos(),
       projects: this.projects.projects(),
       milestones: this.projects.milestones(),
       ...this.flow.exportFlow(),
+      ...this.recurrences.exportRecurrences(),
     };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
@@ -98,12 +101,15 @@ export class AppMenuComponent {
     const text = await file.text();
     try {
       const parsed = JSON.parse(text);
-      if (typeof parsed.version === 'number' && parsed.version > 4) throw new Error('Unsupported export version');
+      if (typeof parsed.version === 'number' && parsed.version > 5) throw new Error('Unsupported export version');
       this.todos.importTodos({ version: 1, todos: parsed.todos ?? [] });
       this.projects.importProjects({ projects: parsed.projects ?? [], milestones: parsed.milestones ?? [] });
       this.flow.importFlow(parsed);
+      this.recurrences.importRecurrences(parsed);
       // Drops links to tasks and milestones the file does not contain.
       this.projects.sweepFlow();
+      // Creates what the imported series are due for (the sweep above also drops dangling project refs).
+      this.recurrences.materialize();
     } catch (error) {
       console.error('Failed to import to-do file', error);
     }
@@ -132,6 +138,7 @@ export class AppMenuComponent {
     this.view.reset();
     this.projects.reset();
     this.flow.reset();
+    this.recurrences.reset();
     this.dailyPlan.reset();
     this.resetModalOpen.set(false);
     this.resetConfirmText.set('');

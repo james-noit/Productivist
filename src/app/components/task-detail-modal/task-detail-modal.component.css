@@ -1,94 +1,274 @@
-
-.task-detail__modal {
-  --modal-max-height: 85vh;
+/* Header and footer stay put, only the body scrolls. */
+.td {
+  --modal-max-width: 860px;
+  --modal-max-height: min(90vh, 760px);
+  --modal-radius: 12px;
+  --modal-padding: 0;
+  --modal-gap: 0;
+  overflow: hidden;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.06);
 }
 
-.task-detail__header {
+.td:focus {
+  outline: none;
+}
+
+.td__header {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 1rem 1rem 0.85rem 1.25rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+/* A real checkbox in a round skin: the ring is the control, the tick appears when done. */
+.td__check {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  margin-top: 0.2rem;
+  padding: 0;
+  border: 2px solid var(--color-text-muted);
+  border-radius: 50%;
+  background: none;
+  color: var(--color-primary-contrast);
+}
+
+.td__check:hover {
+  border-color: var(--color-primary);
+}
+
+.td__check[aria-checked='true'] {
+  border-color: var(--color-primary);
+  background-color: var(--color-primary);
+}
+
+.td__check:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.td__heading {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.td__title {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 0.15rem 0.4rem;
+  margin-left: -0.4rem;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: none;
+  color: var(--color-text);
+  font-family: inherit;
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1.3;
+  text-overflow: ellipsis;
+}
+
+.td__title:hover {
+  border-color: var(--color-border);
+}
+
+.td__title:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 0;
+  border-color: transparent;
+}
+
+.td__title--done {
+  color: var(--color-text-muted);
+  text-decoration: line-through;
+}
+
+.td__title[aria-invalid='true'] {
+  border-color: var(--color-high);
+}
+
+.td__title::placeholder {
+  color: var(--color-text-muted);
+  font-weight: 400;
+}
+
+.td__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  margin: 0.15rem 0 0;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.td__meta > span + span::before {
+  content: '\00b7';
+  margin: 0 0.45rem;
+}
+
+.td__place {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.td__repeat-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.td__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.td__main,
+.td__side {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.25rem;
+  min-width: 0;
+}
+
+.td__side {
+  border-top: 1px solid var(--color-border);
+  background-color: color-mix(in srgb, var(--color-surface-alt) 30%, var(--color-surface));
+}
+
+.td__segmented {
+  display: flex;
+}
+
+.td__segmented .segmented__option {
+  /* Labels stay on one line ("In progress"); the control sizes itself and the options share what is left. */
+  flex: 1 1 auto;
+  min-height: 34px;
+  padding: 0.3rem 0.55rem;
+  white-space: nowrap;
+}
+
+/* Wide enough for "dd/mm/yyyy" and the picker icon: two columns only when each gets 11rem, else stacked. */
+.td__dates {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: 1rem 0.75rem;
+}
+
+.td__pomodoros {
+  align-items: flex-start;
+}
+
+.td__repeat-box {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background-color: var(--color-surface);
+}
+
+.td__repeat-none {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
 }
 
-.task-detail__header h3 {
-  margin: 0;
-}
-
-.task-detail__close {
-  background: none;
-  border: 1px solid var(--color-border);
-  border-radius: 4px;
-  color: var(--color-text);
-  padding: 0.2rem 0.5rem;
-}
-
-.task-detail__done {
+.td__repeat-rule {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  font-size: 0.85rem;
-  color: var(--color-text-muted);
-}
-
-.task-detail__done input {
-  width: 1.05rem;
-  height: 1.05rem;
-}
-
-.task-detail__title,
-.task-detail__row select,
-.task-detail__tags-label input,
-.task-detail__description-label textarea,
-.task-detail__description-label {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  font-size: 0.8rem;
-  color: var(--color-text-muted);
-}
-
-.task-detail__description-label textarea {
-  width: 100%;
-  resize: vertical;
-}
-
-.task-detail__title {
-  width: 100%;
-  font-size: 1rem;
+  gap: 0.4rem;
+  margin: 0;
+  font-size: 0.9rem;
   font-weight: 600;
 }
 
-.task-detail__row {
+.td__repeat-note {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.td__repeat-actions {
   display: flex;
-  gap: 1rem;
   flex-wrap: wrap;
+  gap: 0.4rem;
 }
 
-.task-detail__row label {
+.td__footer {
+  flex: none;
   display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  font-size: 0.8rem;
-  color: var(--color-text-muted);
-  flex: 1 1 120px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  min-height: 4rem;
+  padding: 0.75rem 1.25rem;
+  border-top: 1px solid var(--color-border);
+  background-color: var(--color-surface);
 }
 
-.task-detail__tags-label {
+.td__footer-actions {
   display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  font-size: 0.8rem;
-  color: var(--color-text-muted);
+  gap: 0.5rem;
+  margin-left: auto;
 }
 
-.task-detail__delete {
-  align-self: flex-start;
-  background: none;
-  border: 1px solid var(--color-border);
-  border-radius: 6px;
-  color: var(--color-text);
-  padding: 0.5rem 1.25rem;
+@media (min-width: 720px) {
+  .td__body {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 23rem);
+  }
+
+  .td__side {
+    border-top: none;
+    border-left: 1px solid var(--color-border);
+  }
 }
 
-.task-detail__delete:hover {
-  background-color: var(--color-surface-alt);
+/* Phones: the dialog is the whole screen, the footer stays at the bottom. */
+@media (max-width: 599px) {
+  .td__overlay {
+    padding: 0;
+  }
+
+  .td {
+    --modal-max-width: none;
+    --modal-max-height: none;
+    --modal-radius: 0;
+    height: 100dvh;
+    border: none;
+  }
+
+  .td__header {
+    padding: 0.75rem 0.75rem 0.75rem 1rem;
+  }
+
+  .td__main,
+  .td__side {
+    padding: 1rem;
+  }
+
+  .td__footer {
+    padding: 0.75rem 1rem;
+  }
+}
+
+/* The height follows the text (appAutoGrow), so a manual resize handle would only fight it. */
+.td__main .textarea {
+  resize: none;
 }

@@ -3,6 +3,8 @@ package com.productivist.sync;
 import java.util.List;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
@@ -62,6 +64,36 @@ public final class SyncDtos {
             @Pattern(regexp = "todo|inProgress|review") String status,
             @Pattern(regexp = DATE) String startDate,
             @Pattern(regexp = DATE) String dueDate,
+            // Optional (null for ordinary tasks and for clients older than recurring tasks): the series this
+            // occurrence belongs to.
+            @Size(max = 64) String recurrenceId,
+            long updatedAt,
+            boolean deleted) {}
+
+    /**
+     * A recurring task: a template (title ... pomodorosForTermination) plus a rule (every/unit/weekdays/mode and
+     * the dates), mirroring src/types/recurrence.ts. Occurrences are ordinary todos carrying this row's id.
+     */
+    public record RecurrenceDto(
+            @NotBlank @Size(max = 64) String id,
+            @Size(max = 1000) String title,
+            @Size(max = 100_000) String description,
+            @Pattern(regexp = PRIORITY) String importance,
+            @Pattern(regexp = PRIORITY) String urgency,
+            @Size(max = 100) List<@Size(max = 100) String> tags,
+            @Size(max = 64) String projectId,
+            @Size(max = 64) String milestoneId,
+            Integer pomodorosForTermination,
+            @Min(1) @Max(365) Integer every,
+            @Pattern(regexp = "day|week|month|year") String unit,
+            @Size(max = 7) List<@Min(1) @Max(7) Integer> weekdays,
+            @Pattern(regexp = "schedule|afterCompletion") String mode,
+            @Pattern(regexp = DATE) String startDate,
+            @Pattern(regexp = DATE) String endDate,
+            boolean paused,
+            @Pattern(regexp = DATE) String lastDate,
+            double order,
+            long createdAt,
             long updatedAt,
             boolean deleted) {}
 
@@ -119,6 +151,8 @@ public final class SyncDtos {
             @Valid List<@Valid ObjectiveDto> objectives,
             @Valid List<@Valid FlowLinkDto> flowLinks,
             @Valid List<@Valid FlowLayoutDto> flowLayouts,
+            // Nullable as well, for clients older than recurring tasks.
+            @Valid List<@Valid RecurrenceDto> recurrences,
             @Valid StateDto state) {}
 
     public record PushResponse(long cursor) {}
@@ -132,5 +166,6 @@ public final class SyncDtos {
             List<ObjectiveDto> objectives,
             List<FlowLinkDto> flowLinks,
             List<FlowLayoutDto> flowLayouts,
+            List<RecurrenceDto> recurrences,
             StateDto state) {}
 }

@@ -111,8 +111,8 @@
         <p>{{ 'menu.resetWarning' | translate }}</p>
         <p class="app-menu__reset-instruction">{{ 'menu.resetInstruction' | translate: { phrase: resetPhrase } }}</p>
         <input
-          [ngModel]="resetConfirmText()"
-          (ngModelChange)="resetConfirmText.set($event)"
+          [value]="resetConfirmText()"
+          (input)="resetConfirmText.set($any($event.target).value)"
           name="resetConfirmText"
           type="text"
           class="app-menu__reset-input"

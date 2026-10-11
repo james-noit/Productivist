@@ -27,12 +27,13 @@
         class="login__popover"
         role="dialog"
         [attr.aria-label]="'login.button' | translate"
-        (ngSubmit)="submit()"
+        novalidate
+        (submit)="$event.preventDefault(); submit()"
       >
         <input
           #emailInput
-          [ngModel]="email()"
-          (ngModelChange)="email.set($event)"
+          [value]="email()"
+          (input)="email.set($any($event.target).value)"
           name="email"
           type="email"
           class="login__input"
@@ -41,8 +42,8 @@
           autocomplete="email"
         />
         <input
-          [ngModel]="password()"
-          (ngModelChange)="password.set($event)"
+          [value]="password()"
+          (input)="password.set($any($event.target).value)"
           name="password"
           type="password"
           class="login__input"
@@ -53,8 +54,8 @@
         @if (mode() === 'signup') {
           <div class="login__extra">
             <input
-              [ngModel]="repeat()"
-              (ngModelChange)="repeat.set($event)"
+              [value]="repeat()"
+              (input)="repeat.set($any($event.target).value)"
               name="repeat"
               type="password"
               class="login__input"

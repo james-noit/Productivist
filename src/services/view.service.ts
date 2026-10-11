@@ -105,6 +105,24 @@ export class ViewService {
   readonly configOpen = signal(false);
   readonly configSection = signal<ConfigSection>('general');
 
+  /**
+   * Recurring-tasks modal. Global like the Configuration modal, so the Tasks and projects header, the menu and
+   * Task Details' "Edit series" can open it over any view. `recurringSeriesId` is the series to select
+   * (null = the list; 'new' starts a new one).
+   */
+  readonly recurringOpen = signal(false);
+  readonly recurringSeriesId = signal<string | null>(null);
+
+  openRecurring(seriesId: string | null = null): void {
+    this.recurringSeriesId.set(seriesId);
+    this.recurringOpen.set(true);
+  }
+
+  closeRecurring(): void {
+    this.recurringOpen.set(false);
+    this.recurringSeriesId.set(null);
+  }
+
   openConfiguration(section: ConfigSection = 'general'): void {
     this.configSection.set(section);
     this.configOpen.set(true);
@@ -153,5 +171,6 @@ export class ViewService {
     this.focusQuadrant.set(null);
     this.planningOpen.set(false);
     this.configOpen.set(false);
+    this.closeRecurring();
   }
 }

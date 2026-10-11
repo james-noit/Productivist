@@ -41,6 +41,29 @@ const FLOW_ONLY = [
  */
 const NEVER_INITIAL = ['src/lib/flow-graph.ts', component('objective-chip')];
 
+/**
+ * The recurring-tasks modal (rendered by AppComponent behind `@defer`) and the rule form it shares with Task
+ * Details, plus the text side of recurrences (rule summaries, weekday names, previews). `RecurrenceService` and
+ * `lib/recurrence.ts` are deliberately in the initial bundle, these are not. The Tasks and projects page (and
+ * the pieces only it uses: cards, inbox, kebab menu, page maths) and the shared form widgets stay out of it too.
+ */
+const NEVER_INITIAL_UI = [
+  component('recurring-tasks-modal'),
+  component('recurrence-editor'),
+  'src/lib/recurrence-format.ts',
+  'src/services/recurrence-format.service.ts',
+  component('projects-view'),
+  component('projects-dashboard'),
+  component('project-card'),
+  component('inbox-card'),
+  component('kebab-menu'),
+  component('ui-icon'),
+  component('tag-input'),
+  component('number-stepper'),
+  component('task-detail-modal'),
+  'src/lib/project-cards.ts',
+];
+
 const inputsOf = (output) => Object.keys(output.inputs ?? {});
 const names = Object.keys(outputs).filter((name) => name.endsWith('.js'));
 
@@ -63,7 +86,7 @@ for (const queue = [entry]; queue.length; ) {
 const problems = [];
 for (const name of initial) {
   const inputs = inputsOf(outputs[name]);
-  for (const file of [...PRESENTATIONS, ...FLOW_ONLY, ...NEVER_INITIAL]) {
+  for (const file of [...PRESENTATIONS, ...FLOW_ONLY, ...NEVER_INITIAL, ...NEVER_INITIAL_UI]) {
     if (inputs.includes(file)) problems.push(`${file} is in the initial chunk ${name}`);
   }
 }

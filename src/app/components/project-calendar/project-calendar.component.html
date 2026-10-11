@@ -22,6 +22,7 @@
     >
       <span class="project-calendar__dot" aria-hidden="true"></span>
       <span class="project-calendar__chip-text">{{ todo.title }}</span>
+      <app-repeat-mark [todo]="todo" [size]="12" />
     </span>
     <button
       type="button"

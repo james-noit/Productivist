@@ -8,29 +8,35 @@
   <form class="modal-panel new-task__modal" (submit)="$event.preventDefault(); handleSubmit()">
     <div class="new-task__header">
       <h3>{{ modalTitle }}</h3>
-      <button type="button" class="new-task__close" aria-label="Close" (click)="close.emit()">✕</button>
+      <button type="button" class="btn btn--ghost btn--icon btn--sm" [attr.aria-label]="'todo.close' | translate" (click)="close.emit()">
+        <app-ui-icon name="x" />
+      </button>
     </div>
 
-    <div class="new-task__priority">
-      <span>{{ importanceLabel() }}</span>
-      <span>·</span>
-      <span>{{ urgencyLabel() }}</span>
-    </div>
+    @if (quadrant()) {
+      <div class="new-task__priority">
+        <span>{{ importanceLabel() }}</span>
+        <span>·</span>
+        <span>{{ urgencyLabel() }}</span>
+      </div>
+    }
 
-    <label class="new-task__field new-task__field--title">
+    <label class="field new-task__field--title">
       <input
+        #titleInput
+        class="input"
         [ngModel]="title()"
         (ngModelChange)="title.set($event)"
         name="title"
         type="text"
         [placeholder]="'todo.addPlaceholder' | translate"
-        autofocus
         required
       />
     </label>
 
-    <label class="new-task__field">
+    <label class="field">
       <textarea
+        class="textarea"
         [ngModel]="description()"
         (ngModelChange)="description.set($event)"
         name="description"
@@ -39,9 +45,10 @@
       ></textarea>
     </label>
 
-    <label class="new-task__field new-task__field--pomodoros">
-      {{ 'todo.pomodorosForTermination' | translate }}
+    <label class="field">
+      <span class="field__label">{{ 'todo.pomodorosForTermination' | translate }}</span>
       <input
+        class="input"
         [ngModel]="pomodorosForTermination()"
         (ngModelChange)="pomodorosForTermination.set($event)"
         name="pomodorosForTermination"
@@ -52,15 +59,39 @@
     </label>
 
     <app-project-milestone-picker
-      class="new-task__picker"
       [(projectRef)]="projectRef"
       [(milestoneRef)]="milestoneRef"
       [showInlineCreateButtons]="false"
     />
 
+    @if (!quadrant()) {
+      <div class="new-task__levels">
+        <div class="field">
+          <span class="field__label" id="new-task-importance">{{ 'todo.importance' | translate }}</span>
+          <div class="segmented" role="group" aria-labelledby="new-task-importance">
+            @for (level of priorities; track level) {
+              <button type="button" class="segmented__option" [attr.aria-pressed]="importance() === level" (click)="importance.set(level)">
+                {{ 'todo.' + level | translate }}
+              </button>
+            }
+          </div>
+        </div>
+        <div class="field">
+          <span class="field__label" id="new-task-urgency">{{ 'todo.urgency' | translate }}</span>
+          <div class="segmented" role="group" aria-labelledby="new-task-urgency">
+            @for (level of priorities; track level) {
+              <button type="button" class="segmented__option" [attr.aria-pressed]="urgency() === level" (click)="urgency.set(level)">
+                {{ 'todo.' + level | translate }}
+              </button>
+            }
+          </div>
+        </div>
+      </div>
+    }
+
     <div class="new-task__actions">
-      <button type="button" (click)="close.emit()">{{ 'projects.cancel' | translate }}</button>
-      <button type="submit" class="new-task__save">{{ 'eisenhower.createTask.save' | translate }}</button>
+      <button type="button" class="btn btn--secondary" (click)="close.emit()">{{ 'projects.cancel' | translate }}</button>
+      <button type="submit" class="btn btn--primary">{{ 'eisenhower.createTask.save' | translate }}</button>
     </div>
   </form>
 </div>

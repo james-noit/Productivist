@@ -1,0 +1,87 @@
+<section class="inbox" [class.inbox--empty]="!total()" aria-labelledby="inbox-title">
+  <header class="inbox__head">
+    <span class="inbox__icon" aria-hidden="true"><app-ui-icon name="inbox" [size]="18" /></span>
+    <h3 class="inbox__title" id="inbox-title">{{ 'projects.inbox.title' | translate }}</h3>
+    @if (total()) {
+      <span class="inbox__hint">{{ 'projects.inbox.hint' | translate }}</span>
+      <span class="inbox__count">{{ filtering() ? rows().length + ' / ' + total() : total() }}</span>
+    } @else {
+      <span class="inbox__empty">{{ 'projects.inbox.empty' | translate }}</span>
+    }
+  </header>
+
+  @if (total()) {
+    <ul class="inbox__rows">
+      @for (row of visible(); track row.todo.id) {
+        <li class="irow" [class.irow--confirming]="confirmId() === row.todo.id">
+          @if (confirmId() === row.todo.id) {
+            <div class="confirm-bar" role="alertdialog" [attr.aria-labelledby]="'inbox-confirm-' + row.todo.id">
+              <p class="confirm-bar__text" [id]="'inbox-confirm-' + row.todo.id">{{ 'projects.inbox.deleteQuestion' | translate: { title: row.todo.title } }}</p>
+              <div class="confirm-bar__actions">
+                <button #keepButton type="button" class="btn btn--secondary btn--sm" (click)="confirmId.set(null)">{{ 'projects.card.keep' | translate }}</button>
+                <button type="button" class="btn btn--danger btn--sm" (click)="deleteTask(row.todo.id)">{{ 'projects.inbox.deleteTask' | translate }}</button>
+              </div>
+            </div>
+          } @else {
+            <button type="button" class="irow__check" role="checkbox" aria-checked="false" [attr.aria-label]="('eisenhower.markDone' | translate) + ': ' + row.todo.title" (click)="complete(row.todo.id)"></button>
+            <button type="button" class="irow__title" (click)="openTask.emit(row.todo.id)">{{ row.todo.title }}</button>
+            <span class="irow__chips">
+              <app-task-badges [todo]="row.todo" />
+              @if (row.due) {
+                <span class="irow__due" [class.irow__due--overdue]="row.overdue">{{ row.due }}</span>
+              }
+            </span>
+            <app-kebab-menu #menu="kebabMenu" [label]="'projects.inbox.menu' | translate: { title: row.todo.title }" (closed)="movingId.set(null)">
+              @if (movingId() === row.todo.id) {
+                <button type="button" role="menuitem" class="menu-item menu-item--back" (click)="movingId.set(null); menu.focusFirst()">
+                  <app-ui-icon name="chevron-right" [size]="16" class="irow__flip" /> {{ 'projects.inbox.back' | translate }}
+                </button>
+                <div class="menu-heading">{{ 'projects.inbox.moveTo' | translate }}</div>
+                @for (project of projects.sortedProjects(); track project.id) {
+                  <button type="button" role="menuitem" class="menu-item" (click)="moveTo(row.todo.id, project.id); menu.close()">
+                    <span class="menu-item__label">{{ project.name }}</span>
+                  </button>
+                } @empty {
+                  <p class="menu-heading">{{ 'projects.inbox.noProjects' | translate }}</p>
+                }
+              } @else {
+                <button type="button" role="menuitem" class="menu-item" (click)="movingId.set(row.todo.id); menu.focusFirst()">
+                  <app-ui-icon name="open" [size]="16" /> {{ 'projects.inbox.move' | translate }}
+                </button>
+                <button type="button" role="menuitem" class="menu-item" (click)="menu.close(); openTask.emit(row.todo.id)">
+                  <app-ui-icon name="edit" [size]="16" /> {{ 'projects.edit' | translate }}
+                </button>
+                <button type="button" role="menuitem" class="menu-item menu-item--danger" (click)="menu.close(); askDelete(row.todo.id)">
+                  <app-ui-icon name="trash" [size]="16" /> {{ 'projects.delete' | translate }}
+                </button>
+              }
+            </app-kebab-menu>
+          }
+        </li>
+      }
+    </ul>
+
+    @if (hiddenCount() > 0) {
+      <button type="button" class="btn btn--ghost btn--sm inbox__more" [attr.aria-expanded]="showAll()" (click)="showAll.set(!showAll())">
+        @if (showAll()) {
+          {{ 'projects.inbox.showFewer' | translate }}
+        } @else {
+          {{ 'projects.inbox.showAll' | translate: { n: rows().length } }}
+        }
+      </button>
+    }
+
+    <form class="inbox__add" (submit)="$event.preventDefault(); add()">
+      <app-ui-icon name="plus" [size]="16" />
+      <input
+        class="inbox__add-input"
+        type="text"
+        maxlength="1000"
+        [value]="draft()"
+        (input)="draft.set($any($event.target).value)"
+        [placeholder]="'projects.inbox.addPlaceholder' | translate"
+        [attr.aria-label]="'projects.inbox.addPlaceholder' | translate"
+      />
+    </form>
+  }
+</section>

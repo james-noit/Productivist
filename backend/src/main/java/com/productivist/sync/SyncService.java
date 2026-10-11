@@ -3,6 +3,7 @@ package com.productivist.sync;
 import java.sql.Array;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -14,6 +15,7 @@ import com.productivist.sync.SyncDtos.ObjectiveDto;
 import com.productivist.sync.SyncDtos.ProjectDto;
 import com.productivist.sync.SyncDtos.PullResponse;
 import com.productivist.sync.SyncDtos.PushRequest;
+import com.productivist.sync.SyncDtos.RecurrenceDto;
 import com.productivist.sync.SyncDtos.StateDto;
 import com.productivist.sync.SyncDtos.TodoDto;
 
@@ -58,8 +60,9 @@ public class SyncService {
         List<ObjectiveDto> objectives = orEmpty(request.objectives());
         List<FlowLinkDto> flowLinks = orEmpty(request.flowLinks());
         List<FlowLayoutDto> flowLayouts = orEmpty(request.flowLayouts());
+        List<RecurrenceDto> recurrences = orEmpty(request.recurrences());
         int rows = projects.size() + milestones.size() + todos.size()
-                + objectives.size() + flowLinks.size() + flowLayouts.size();
+                + objectives.size() + flowLinks.size() + flowLayouts.size() + recurrences.size();
         if (rows > maxBatchSize) {
             throw new ResponseStatusException(HttpStatus.CONTENT_TOO_LARGE, "Batch exceeds " + maxBatchSize + " rows");
         }
@@ -69,6 +72,7 @@ public class SyncService {
         objectives.forEach(o -> upsertObjective(userId, o));
         flowLinks.forEach(l -> upsertFlowLink(userId, l));
         flowLayouts.forEach(l -> upsertFlowLayout(userId, l));
+        recurrences.forEach(r -> upsertRecurrence(userId, r));
         if (request.state() != null) upsertState(userId, request.state());
         return currentCursor(userId);
     }
@@ -104,7 +108,7 @@ public class SyncService {
         List<TodoDto> todos = jdbc.sql("""
                         SELECT id, title, description, importance, urgency, tags, done, sort_order, created_at,
                                completed_at, project_id, milestone_id, pomodoros_for_termination, status, start_date, due_date,
-                               updated_at, deleted
+                               recurrence_id, updated_at, deleted
                         FROM todos WHERE user_id = :u AND seq > :since AND seq <= :cursor ORDER BY seq
                         """)
                 .param("u", userId).param("since", since).param("cursor", cursor)
@@ -141,6 +145,15 @@ public class SyncService {
                         rs.getString("id"), json.readTree(rs.getString("positions")),
                         json.readTree(rs.getString("collapsed")), rs.getLong("updated_at"), rs.getBoolean("deleted")))
                 .list();
+        List<RecurrenceDto> recurrences = jdbc.sql("""
+                        SELECT id, title, description, importance, urgency, tags, project_id, milestone_id,
+                               pomodoros_for_termination, every, unit, weekdays::text AS weekdays, mode, start_date,
+                               end_date, paused, last_date, sort_order, created_at, updated_at, deleted
+                        FROM recurrences WHERE user_id = :u AND seq > :since AND seq <= :cursor ORDER BY seq
+                        """)
+                .param("u", userId).param("since", since).param("cursor", cursor)
+                .query((rs, i) -> mapRecurrence(rs))
+                .list();
         StateDto state = jdbc.sql("""
                         SELECT settings::text AS settings, daily_plan::text AS daily_plan, multitask::text AS multitask,
                                current_task_id, has_custom_order, updated_at
@@ -152,7 +165,7 @@ public class SyncService {
                         json.readTree(rs.getString("multitask")), rs.getString("current_task_id"),
                         rs.getBoolean("has_custom_order"), rs.getLong("updated_at")))
                 .optional().orElse(null);
-        return new PullResponse(cursor, projects, milestones, todos, objectives, flowLinks, flowLayouts, state);
+        return new PullResponse(cursor, projects, milestones, todos, objectives, flowLinks, flowLayouts, recurrences, state);
     }
 
     private long currentCursor(long userId) {
@@ -164,6 +177,7 @@ public class SyncService {
                             (SELECT COALESCE(MAX(seq), 0) FROM objectives WHERE user_id = :u),
                             (SELECT COALESCE(MAX(seq), 0) FROM flow_links WHERE user_id = :u),
                             (SELECT COALESCE(MAX(seq), 0) FROM flow_layouts WHERE user_id = :u),
+                            (SELECT COALESCE(MAX(seq), 0) FROM recurrences WHERE user_id = :u),
                             (SELECT COALESCE(MAX(seq), 0) FROM user_state WHERE user_id = :u))
                         """)
                 .param("u", userId)
@@ -230,11 +244,11 @@ public class SyncService {
         jdbc.sql("""
                         INSERT INTO todos (user_id, id, title, description, importance, urgency, tags, done, sort_order,
                                            created_at, completed_at, project_id, milestone_id, pomodoros_for_termination,
-                                           status, start_date, due_date, updated_at, deleted)
+                                           status, start_date, due_date, recurrence_id, updated_at, deleted)
                         VALUES (:u, :id, :title, :description, :importance, :urgency,
                                 ARRAY(SELECT jsonb_array_elements_text(CAST(:tags AS jsonb))), :done, :order,
                                 :createdAt, :completedAt, :projectId, :milestoneId, :pomodoros, :status, :startDate, :dueDate,
-                                :updatedAt, :deleted)
+                                :recurrenceId, :updatedAt, :deleted)
                         ON CONFLICT (user_id, id) DO UPDATE SET
                             title = EXCLUDED.title, description = EXCLUDED.description, importance = EXCLUDED.importance,
                             urgency = EXCLUDED.urgency, tags = EXCLUDED.tags, done = EXCLUDED.done,
@@ -243,6 +257,7 @@ public class SyncService {
                             milestone_id = EXCLUDED.milestone_id,
                             pomodoros_for_termination = EXCLUDED.pomodoros_for_termination,
                             status = EXCLUDED.status, start_date = EXCLUDED.start_date, due_date = EXCLUDED.due_date,
+                            recurrence_id = EXCLUDED.recurrence_id,
                             updated_at = EXCLUDED.updated_at, deleted = EXCLUDED.deleted, seq = nextval('sync_seq')
                         WHERE todos.updated_at <= EXCLUDED.updated_at
                         """)
@@ -319,6 +334,67 @@ public class SyncService {
                         """)
                 .param("u", userId).param("id", l.id()).param("positions", positions).param("collapsed", collapsed)
                 .param("updatedAt", l.updatedAt()).param("deleted", l.deleted())
+                .update();
+    }
+
+    private void upsertRecurrence(long userId, RecurrenceDto r) {
+        if (r.deleted()) {
+            tombstone("recurrences", "title, importance, urgency, every, unit, mode, start_date, created_at",
+                    "'', 'medium', 'medium', 1, 'day', 'schedule', '1970-01-01', 0", userId, r.id(), r.updatedAt());
+            return;
+        }
+        requireText(r.title(), "recurrence title");
+        requireText(r.unit(), "recurrence unit");
+        requireText(r.mode(), "recurrence mode");
+        requireText(r.startDate(), "recurrence startDate");
+        if (r.every() == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Missing recurrence every");
+        // Only a weekly series has weekdays; an empty list means none.
+        List<Integer> days = r.weekdays() == null || r.weekdays().isEmpty() || !"week".equals(r.unit()) ? null : r.weekdays();
+        Map<String, Object> m = new HashMap<>();
+        m.put("u", userId);
+        m.put("id", r.id());
+        m.put("title", r.title());
+        m.put("description", r.description());
+        m.put("importance", r.importance() == null ? "medium" : r.importance());
+        m.put("urgency", r.urgency() == null ? "medium" : r.urgency());
+        m.put("tags", json.writeValueAsString(r.tags() == null ? List.of() : r.tags()));
+        m.put("projectId", r.projectId());
+        m.put("milestoneId", r.milestoneId());
+        m.put("pomodoros", r.pomodorosForTermination());
+        m.put("every", r.every());
+        m.put("unit", r.unit());
+        m.put("weekdays", days == null ? null : json.writeValueAsString(days));
+        m.put("mode", r.mode());
+        m.put("startDate", r.startDate());
+        m.put("endDate", r.endDate());
+        m.put("paused", r.paused());
+        m.put("lastDate", r.lastDate());
+        m.put("order", r.order());
+        m.put("createdAt", r.createdAt());
+        m.put("updatedAt", r.updatedAt());
+        m.put("deleted", r.deleted());
+        jdbc.sql("""
+                        INSERT INTO recurrences (user_id, id, title, description, importance, urgency, tags, project_id,
+                                                 milestone_id, pomodoros_for_termination, every, unit, weekdays, mode,
+                                                 start_date, end_date, paused, last_date, sort_order, created_at,
+                                                 updated_at, deleted)
+                        VALUES (:u, :id, :title, :description, :importance, :urgency,
+                                ARRAY(SELECT jsonb_array_elements_text(CAST(:tags AS jsonb))), :projectId,
+                                :milestoneId, :pomodoros, :every, :unit, CAST(:weekdays AS jsonb), :mode,
+                                :startDate, :endDate, :paused, :lastDate, :order, :createdAt, :updatedAt, :deleted)
+                        ON CONFLICT (user_id, id) DO UPDATE SET
+                            title = EXCLUDED.title, description = EXCLUDED.description,
+                            importance = EXCLUDED.importance, urgency = EXCLUDED.urgency, tags = EXCLUDED.tags,
+                            project_id = EXCLUDED.project_id, milestone_id = EXCLUDED.milestone_id,
+                            pomodoros_for_termination = EXCLUDED.pomodoros_for_termination,
+                            every = EXCLUDED.every, unit = EXCLUDED.unit, weekdays = EXCLUDED.weekdays,
+                            mode = EXCLUDED.mode, start_date = EXCLUDED.start_date, end_date = EXCLUDED.end_date,
+                            paused = EXCLUDED.paused, last_date = EXCLUDED.last_date,
+                            sort_order = EXCLUDED.sort_order, created_at = EXCLUDED.created_at,
+                            updated_at = EXCLUDED.updated_at, deleted = EXCLUDED.deleted, seq = nextval('sync_seq')
+                        WHERE recurrences.updated_at <= EXCLUDED.updated_at
+                        """)
+                .params(m)
                 .update();
     }
 
@@ -411,6 +487,7 @@ public class SyncService {
         m.put("status", t.status());
         m.put("startDate", t.startDate());
         m.put("dueDate", t.dueDate());
+        m.put("recurrenceId", t.recurrenceId());
         m.put("updatedAt", t.updatedAt());
         m.put("deleted", t.deleted());
         return m;
@@ -458,6 +535,26 @@ public class SyncService {
                 rs.getString("project_id"), rs.getString("milestone_id"),
                 rs.getObject("pomodoros_for_termination", Integer.class),
                 rs.getString("status"), rs.getString("start_date"), rs.getString("due_date"),
+                rs.getString("recurrence_id"), rs.getLong("updated_at"), rs.getBoolean("deleted"));
+    }
+
+    private RecurrenceDto mapRecurrence(ResultSet rs) throws SQLException {
+        Array tagArray = rs.getArray("tags");
+        List<String> tags = tagArray == null ? List.of() : List.of((String[]) tagArray.getArray());
+        String weekdaysJson = rs.getString("weekdays");
+        List<Integer> weekdays = null;
+        if (weekdaysJson != null) {
+            weekdays = new ArrayList<>();
+            for (JsonNode day : json.readTree(weekdaysJson)) weekdays.add(day.asInt());
+        }
+        return new RecurrenceDto(
+                rs.getString("id"), rs.getString("title"), rs.getString("description"),
+                rs.getString("importance"), rs.getString("urgency"), tags,
+                rs.getString("project_id"), rs.getString("milestone_id"),
+                rs.getObject("pomodoros_for_termination", Integer.class),
+                rs.getInt("every"), rs.getString("unit"), weekdays, rs.getString("mode"),
+                rs.getString("start_date"), rs.getString("end_date"), rs.getBoolean("paused"),
+                rs.getString("last_date"), rs.getDouble("sort_order"), rs.getLong("created_at"),
                 rs.getLong("updated_at"), rs.getBoolean("deleted"));
     }
 

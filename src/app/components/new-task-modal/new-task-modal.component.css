@@ -5,6 +5,10 @@
 
 .new-task__modal {
   --modal-max-height: 85vh;
+  --modal-radius: 12px;
+  --modal-padding: 1.25rem;
+  --modal-gap: 1rem;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.06);
 }
 
 .new-task__header {
@@ -16,101 +20,40 @@
 .new-task__header h3 {
   margin: 0;
   font-size: 1.1rem;
-}
-
-.new-task__close {
-  background: none;
-  border: 1px solid var(--color-border);
-  border-radius: 4px;
-  color: var(--color-text);
-  padding: 0.2rem 0.5rem;
-  cursor: pointer;
-}
-
-.new-task__close:focus {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 2px;
+  font-weight: 600;
 }
 
 .new-task__quadrant {
   margin: 0;
   font-size: 0.85rem;
   color: var(--color-text-muted);
-  font-style: italic;
 }
 
 .new-task__priority {
   display: flex;
   align-items: center;
   gap: 0.3rem;
-  font-size: 0.75rem;
-  color: var(--color-text-muted);
-  padding: 0.2rem 0;
-}
-
-.new-task__field {
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   color: var(--color-text-muted);
 }
 
-.new-task__field input,
-.new-task__field textarea {
-  background-color: var(--color-surface);
-  color: var(--color-text);
-  border: 1px solid var(--color-border);
-  border-radius: 4px;
-  padding: 0.4rem 0.6rem;
-  font-family: inherit;
-}
-
-.new-task__field textarea {
-  width: 100%;
-  resize: vertical;
-}
-
-.new-task__field--title input {
-  width: 100%;
+.new-task__field--title .input {
   font-size: 1rem;
   font-weight: 500;
 }
 
-.new-task__field--title input:focus,
 .new-task__actions {
   display: flex;
   gap: 0.5rem;
   justify-content: flex-end;
-  margin-top: 0.25rem;
 }
 
-.new-task__actions button {
-  border-radius: 6px;
-  padding: 0.5rem 1.25rem;
-  font-family: inherit;
-  font-size: 0.9rem;
-  cursor: pointer;
+.new-task__levels {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.5rem;
 }
 
-.new-task__actions button:focus {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 2px;
-}
-
-.new-task__actions button:first-child {
-  background: none;
-  border: 1px solid var(--color-border);
-  color: var(--color-text);
-}
-
-.new-task__save {
-  background-color: var(--color-primary);
-  color: var(--color-primary-contrast);
-  border: none;
-}
-
-/* The picker's selects are a touch smaller here than in task-detail-modal. */
-.new-task__picker {
-  --picker-select-font-size: 0.9rem;
+.new-task__levels .segmented {
+  align-self: flex-start;
 }

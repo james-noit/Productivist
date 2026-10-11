@@ -11,11 +11,3 @@
 .edit-project-modal__header h3 {
   margin: 0;
 }
-
-.edit-project-modal__close {
-  background: none;
-  border: 1px solid var(--color-border);
-  border-radius: 4px;
-  color: var(--color-text);
-  padding: 0.2rem 0.5rem;
-}

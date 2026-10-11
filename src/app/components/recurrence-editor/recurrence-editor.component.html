@@ -1,0 +1,129 @@
+<div class="rec">
+  <div class="field">
+    <label class="field__label" [for]="uid + '-every'">{{ 'recurrence.editor.repeatEvery' | translate }}</label>
+    <div class="rec__inline">
+      <input
+        class="input rec__number"
+        type="number"
+        inputmode="numeric"
+        min="1"
+        [max]="maxEvery"
+        step="1"
+        [id]="uid + '-every'"
+        [value]="rule().every ?? ''"
+        [attr.aria-invalid]="everyInvalid() ? 'true' : null"
+        [attr.aria-describedby]="everyInvalid() ? uid + '-every-error' : null"
+        (input)="setEvery($any($event.target).value)"
+      />
+      <select class="select" [attr.aria-label]="'recurrence.editor.unit' | translate" (change)="setUnit($any($event.target).value)">
+        @for (unit of units; track unit) {
+          <option [value]="unit" [selected]="rule().unit === unit">{{ 'recurrence.units.' + unit + (rule().every === 1 ? '.one' : '.other') | translate }}</option>
+        }
+      </select>
+    </div>
+    @if (everyInvalid()) {
+      <p class="rec__error" role="alert" [id]="uid + '-every-error'">{{ 'recurrence.editor.everyInvalid' | translate: { max: maxEvery } }}</p>
+    }
+  </div>
+
+  @if (rule().mode === 'schedule') {
+    @if (rule().unit === 'week') {
+      <div class="field">
+        <span class="field__label" [id]="uid + '-on'">{{ 'recurrence.editor.on' | translate }}</span>
+        <div class="rec__days" role="group" [attr.aria-labelledby]="uid + '-on'">
+          @for (day of weekdays; track day) {
+            <button
+              type="button"
+              class="rec__day"
+              [attr.aria-pressed]="activeDays().includes(day)"
+              [attr.aria-label]="longNames()[day - 1]"
+              [title]="longNames()[day - 1]"
+              (click)="toggleDay(day)"
+            >
+              {{ narrowNames()[day - 1] }}
+            </button>
+          }
+        </div>
+      </div>
+    } @else {
+      @if (hint(); as h) {
+        <p class="rec__hint">{{ h.key | translate: h.params }}</p>
+      }
+    }
+  }
+
+  <div class="rec__dates">
+    <div class="field">
+      <label class="field__label" [for]="uid + '-start'">{{ 'recurrence.editor.starts' | translate }}</label>
+      <input
+        class="input"
+        type="date"
+        [id]="uid + '-start'"
+        [value]="rule().startDate"
+        [attr.aria-invalid]="startMissing() ? 'true' : null"
+        (change)="setDate('startDate', $any($event.target).value)"
+      />
+    </div>
+    <div class="field">
+      <span class="field__label" [id]="uid + '-ends'">{{ 'recurrence.editor.ends' | translate }}</span>
+      <div class="rec__ends" role="radiogroup" [attr.aria-labelledby]="uid + '-ends'">
+        <label class="rec__choice">
+          <input type="radio" [name]="uid + '-ends'" [checked]="!rule().endDate" (change)="setNever(true)" />
+          {{ 'recurrence.editor.endsNever' | translate }}
+        </label>
+        <label class="rec__choice">
+          <input type="radio" [name]="uid + '-ends'" [checked]="!!rule().endDate" (change)="setNever(false)" />
+          {{ 'recurrence.editor.endsOn' | translate }}
+        </label>
+        @if (rule().endDate) {
+          <input
+            class="input rec__end-date"
+            type="date"
+            [attr.aria-label]="'recurrence.editor.endDate' | translate"
+            [value]="rule().endDate"
+            [attr.aria-invalid]="endBeforeStart() ? 'true' : null"
+            (change)="setDate('endDate', $any($event.target).value)"
+          />
+        }
+      </div>
+    </div>
+  </div>
+  @if (endBeforeStart()) {
+    <p class="rec__error" role="alert">{{ 'recurrence.editor.endBeforeStart' | translate }}</p>
+  }
+
+  <div class="field">
+    <span class="field__label" [id]="uid + '-next'">{{ 'recurrence.editor.next' | translate }}</span>
+    <div class="rec__modes" role="radiogroup" [attr.aria-labelledby]="uid + '-next'">
+      <label class="rec__choice">
+        <input type="radio" [name]="uid + '-next'" [checked]="rule().mode === 'schedule'" (change)="edit({ mode: 'schedule' })" />
+        {{ 'recurrence.editor.nextSchedule' | translate }}
+      </label>
+      <label class="rec__choice">
+        <input type="radio" [name]="uid + '-next'" [checked]="rule().mode === 'afterCompletion'" (change)="edit({ mode: 'afterCompletion' })" />
+        {{ 'recurrence.editor.nextAfter' | translate: { interval: interval() } }}
+      </label>
+    </div>
+  </div>
+
+  <div class="field">
+    <span class="field__label">{{ 'recurrence.editor.preview' | translate }}</span>
+    @if (rule().mode === 'afterCompletion') {
+      <p class="rec__preview">
+        @if (startMissing()) {
+          —
+        } @else {
+          {{ 'recurrence.editor.previewAfter' | translate: { date: firstDate(), interval: interval() } }}
+        }
+      </p>
+    } @else if (preview().length) {
+      <p class="rec__preview" aria-live="polite">
+        @for (date of preview(); track $index) {
+          <span class="rec__date">{{ date }}</span>
+        }
+      </p>
+    } @else {
+      <p class="rec__preview rec__preview--none">{{ 'recurrence.editor.previewNone' | translate }}</p>
+    }
+  </div>
+</div>

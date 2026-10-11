@@ -1,0 +1,370 @@
+.rt__overlay {
+  /* Above Task Details when "Edit series" opens this on top of it. */
+  --modal-z: 40;
+}
+
+.rt {
+  --modal-max-width: 1040px;
+  --modal-max-height: min(90vh, 780px);
+  --modal-radius: 12px;
+  --modal-padding: 0;
+  --modal-gap: 0;
+  height: min(90vh, 780px);
+  overflow: hidden;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.06);
+}
+
+.rt:focus {
+  outline: none;
+}
+
+.rt__header {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem 0.85rem 1.25rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.rt__title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.rt__toolbar {
+  flex: none;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem 0.75rem;
+  padding: 0.75rem 1.25rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.rt__search {
+  position: relative;
+  flex: 1 1 14rem;
+  max-width: 22rem;
+  display: flex;
+  align-items: center;
+  color: var(--color-text-muted);
+}
+
+.rt__search app-ui-icon {
+  position: absolute;
+  left: 0.65rem;
+  pointer-events: none;
+}
+
+.rt__search-input {
+  padding-left: 2.1rem;
+}
+
+.rt__chips {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.rt__new {
+  margin-left: auto;
+}
+
+/* Below 900px the list and the editor take turns; from 900px they sit side by side. */
+.rt__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.rt__list {
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.rt__editor {
+  min-height: 0;
+  min-width: 0;
+  display: none;
+  flex-direction: column;
+  background-color: color-mix(in srgb, var(--color-surface-alt) 30%, var(--color-surface));
+}
+
+.rt--editing .rt__list {
+  display: none;
+}
+
+/* The list's search and filters make no sense while the editor has the whole dialog. */
+.rt--editing .rt__toolbar {
+  display: none;
+}
+
+.rt--editing .rt__editor {
+  display: flex;
+}
+
+@media (min-width: 900px) {
+  .rt__body {
+    grid-template-columns: minmax(280px, 22rem) minmax(0, 1fr);
+  }
+
+  .rt--editing .rt__toolbar {
+    display: flex;
+  }
+
+  .rt--editing .rt__list,
+  .rt__list {
+    display: flex;
+    border-right: 1px solid var(--color-border);
+  }
+
+  .rt__editor {
+    display: flex;
+  }
+
+  .rt__back {
+    display: none;
+  }
+}
+
+.rt__row {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  width: 100%;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: none;
+  color: var(--color-text);
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.rt__row:hover {
+  background-color: var(--color-surface-alt);
+}
+
+.rt__row[aria-current='true'] {
+  border-color: var(--color-primary);
+  background-color: color-mix(in srgb, var(--color-primary) 10%, var(--color-surface));
+}
+
+.rt__row:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
+}
+
+.rt__row-icon {
+  flex: none;
+  display: inline-flex;
+  color: var(--color-text-muted);
+}
+
+.rt__row[aria-current='true'] .rt__row-icon {
+  color: var(--color-primary);
+}
+
+.rt__row-main {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.rt__row-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.rt__row--paused .rt__row-title {
+  color: var(--color-text-muted);
+}
+
+.rt__row-sub {
+  display: flex;
+  flex-wrap: wrap;
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.rt__row-sub > span + span::before {
+  content: '\00b7';
+  margin: 0 0.4rem;
+}
+
+.rt__row-project {
+  flex: none;
+  max-width: 7rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 0.1rem 0.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+}
+
+.rt__empty-list {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.6rem;
+  padding: 1rem 0.7rem;
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+}
+
+.rt__empty-list p {
+  margin: 0;
+}
+
+.rt__placeholder {
+  margin: auto;
+  padding: 1rem;
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+}
+
+.rt__editor-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.25rem;
+}
+
+.rt__back {
+  align-self: flex-start;
+  margin: -0.4rem 0 -0.2rem -0.5rem;
+}
+
+.rt__back-icon {
+  transform: rotate(180deg);
+}
+
+.rt__pair {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: 1rem;
+}
+
+.rt__segmented {
+  display: flex;
+}
+
+.rt__segmented .segmented__option {
+  flex: 1 1 auto;
+  min-height: 34px;
+  padding: 0.3rem 0.55rem;
+  white-space: nowrap;
+}
+
+.rt__description {
+  resize: none;
+}
+
+.rt__rule {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--color-border);
+}
+
+.rt__section {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.rt__check {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.rt__check input {
+  margin: 0;
+  accent-color: var(--color-primary);
+}
+
+.rt__check input:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.rt__footer {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  min-height: 4rem;
+  padding: 0.75rem 1.25rem;
+  border-top: 1px solid var(--color-border);
+  background-color: var(--color-surface);
+}
+
+.rt__footer-left {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.rt__footer-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-left: auto;
+}
+
+.rt__confirm-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+/* Phones: the dialog is the whole screen. */
+@media (max-width: 599px) {
+  .rt__overlay {
+    padding: 0;
+  }
+
+  .rt {
+    --modal-max-width: none;
+    --modal-max-height: none;
+    --modal-radius: 0;
+    width: 100%;
+    height: 100dvh;
+    border: none;
+  }
+
+  .rt__header,
+  .rt__toolbar,
+  .rt__footer {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .rt__editor-body {
+    padding: 1rem;
+  }
+}

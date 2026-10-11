@@ -18,10 +18,10 @@ export interface NewProjectInput {
  * and "new milestone" forms. Shared by new-task-modal and task-detail-modal, which had
  * identical copies of the ICONS list, the four derivations below and the whole markup.
  *
- * It owns the *derivations* only, not the commit semantics: task-detail-modal writes each
- * change straight to the todo, while new-task-modal defers everything to submit. So the
- * refs are two-way models and the actual writes are left to the parent, which either acts
- * on (projectPicked)/(createProject) as they happen or reads the draft state at submit.
+ * It owns the *derivations* only, not the commit semantics: both modals keep a draft and write on
+ * submit/Save. So the refs are two-way models and the actual writes are left to the parent, which
+ * reads the draft state (refs, and `projectName`/`milestoneName`/`chosenIcon` for the inline forms)
+ * when it commits. The controls are styled by the shared `.select`/`.input`/`.field__label`/`.btn`.
  */
 @Component({
   selector: 'app-project-milestone-picker',
@@ -40,6 +40,9 @@ export class ProjectMilestonePickerComponent {
 
   /** new-task-modal creates on submit instead, so it hides the inline Save buttons. */
   readonly showInlineCreateButtons = input(true);
+
+  /** False hides the "New project…" / "New milestone…" options, for forms that can only pick existing ones. */
+  readonly allowNew = input(true);
 
   readonly projectPicked = output<void>();
   readonly milestonePicked = output<void>();
@@ -64,7 +67,7 @@ export class ProjectMilestonePickerComponent {
   readonly projectSelectOptions = computed(() => [
     { value: '', label: this.translate.instant('eisenhower.createTask.noProject') },
     ...this.projects.sortedProjects().map((p) => ({ value: p.id, label: p.name })),
-    { value: NEW_REF, label: this.translate.instant('eisenhower.createTask.newProject') },
+    ...(this.allowNew() ? [{ value: NEW_REF, label: this.translate.instant('eisenhower.createTask.newProject') }] : []),
   ]);
 
   readonly milestoneOptions = computed(() => {
@@ -73,7 +76,7 @@ export class ProjectMilestonePickerComponent {
     return [
       { value: '', label: this.translate.instant('eisenhower.createTask.noMilestone') },
       ...this.projects.milestonesForProject(projectId).map((m) => ({ value: m.id, label: m.name })),
-      { value: NEW_REF, label: this.translate.instant('eisenhower.createTask.newMilestone') },
+      ...(this.allowNew() ? [{ value: NEW_REF, label: this.translate.instant('eisenhower.createTask.newMilestone') }] : []),
     ];
   });
 

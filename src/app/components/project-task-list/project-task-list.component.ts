@@ -12,6 +12,7 @@ import { TodosService } from '../../../services/todos.service';
 import { ViewService } from '../../../services/view.service';
 import { ObjectiveChipComponent } from '../objective-chip/objective-chip.component';
 import { PrioritySelectComponent } from '../priority-select/priority-select.component';
+import { RepeatMarkComponent } from '../repeat-mark/repeat-mark.component';
 import { TaskDetailModalComponent } from '../task-detail-modal/task-detail-modal.component';
 import type { Milestone, Project } from '../../../types/project';
 import type { Priority, Todo } from '../../../types/todo';
@@ -67,7 +68,7 @@ interface Group {
 @Component({
   selector: 'app-project-task-list',
   standalone: true,
-  imports: [FormsModule, TranslatePipe, ObjectiveChipComponent, PrioritySelectComponent, TaskDetailModalComponent],
+  imports: [FormsModule, TranslatePipe, ObjectiveChipComponent, PrioritySelectComponent, RepeatMarkComponent, TaskDetailModalComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './project-task-list.component.html',
   styleUrl: './project-task-list.component.css',

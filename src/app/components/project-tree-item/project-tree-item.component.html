@@ -1,39 +1,14 @@
 <div class="project-tree">
   <div class="project-tree__header">
     <button type="button" class="project-tree__toggle" (click)="expanded.set(!expanded())">
-      <span class="project-tree__chevron" [class.project-tree__chevron--open]="expanded()" aria-hidden="true">▸</span>
+      <span class="project-tree__chevron" [class.project-tree__chevron--open]="expanded()" aria-hidden="true"><app-ui-icon name="chevron-right" [size]="16" /></span>
       <span class="project-tree__icon" aria-hidden="true"><app-icon [name]="project().icon" /></span>
       <span class="project-tree__name">{{ project().name }}</span>
     </button>
-    @if (quadrantCounts(); as counts) {
-      <app-quadrant-count-badges class="project-tree__badges" [counts]="counts" />
-    } @else {
-      <span class="project-tree__count">{{ taskCount() }}</span>
-    }
+    <span class="project-tree__count">{{ taskCount() }}</span>
     <div class="project-tree__actions">
-      @if (manageable()) {
-        <button
-          type="button"
-          class="project-tree__manage"
-          [attr.aria-label]="'projects.manage' | translate"
-          [title]="'projects.manage' | translate"
-          (click)="manageProject()"
-        >
-          <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
-            <path
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.8"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              d="M4 5h4v14H4zM10 5h4v9h-4zM16 5h4v6h-4z"
-            />
-          </svg>
-          <span class="project-tree__manage-label">{{ 'projects.manage' | translate }}</span>
-        </button>
-      }
-      <button type="button" [attr.aria-label]="'projects.edit' | translate" [title]="'projects.edit' | translate" (click)="editing.set(!editing())">✎</button>
-      <button type="button" class="project-tree__delete" [attr.aria-label]="'projects.delete' | translate" [title]="'projects.delete' | translate" (click)="deleteProject()">✕</button>
+      <button type="button" [attr.aria-label]="'projects.edit' | translate" [title]="'projects.edit' | translate" (click)="editing.set(!editing())"><app-ui-icon name="edit" [size]="16" /></button>
+      <button type="button" class="project-tree__delete" [attr.aria-label]="'projects.delete' | translate" [title]="'projects.delete' | translate" (click)="deleteProject()"><app-ui-icon name="trash" [size]="16" /></button>
     </div>
   </div>
 

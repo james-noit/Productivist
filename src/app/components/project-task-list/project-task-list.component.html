@@ -195,6 +195,7 @@
                 } @else {
                   <button type="button" class="task-list__title" [title]="'taskList.editTitle' | translate" (click)="startEditTitle(row.todo)">
                     {{ row.todo.title }}
+                    <app-repeat-mark [todo]="row.todo" />
                   </button>
                   <app-objective-chip [titles]="servedBy().get(row.todo.id) ?? noObjectives" />
                 }

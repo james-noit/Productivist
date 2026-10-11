@@ -13,6 +13,8 @@ export interface AdminUser {
   projects: number;
   /** Flow objectives; no admin UI shows it yet. */
   objectives?: number;
+  /** Recurring series; no admin UI shows it yet. */
+  recurrences?: number;
 }
 
 export interface AdminStats {
@@ -23,6 +25,8 @@ export interface AdminStats {
   projects: number;
   /** Flow objectives; no admin UI shows it yet. */
   objectives?: number;
+  /** Recurring series; no admin UI shows it yet. */
+  recurrences?: number;
 }
 
 interface UserPage {

@@ -5,6 +5,7 @@ import { MultitaskService } from '../services/multitask.service';
 import { ViewService } from '../services/view.service';
 import { SyncService } from '../services/sync.service';
 import { ProjectsService } from '../services/projects.service';
+import { RecurrenceService } from '../services/recurrence.service';
 import { AccountService } from '../services/account.service';
 import { AppHeaderComponent } from './components/app-header/app-header.component';
 import { PomodoroClockComponent } from './components/pomodoro-clock/pomodoro-clock.component';
@@ -12,6 +13,7 @@ import { TodoListComponent } from './components/todo-list/todo-list.component';
 import { MultitaskViewComponent } from './components/multitask-view/multitask-view.component';
 import { PlanningLabModalComponent } from './components/planning-lab-modal/planning-lab-modal.component';
 import { ConfigModalComponent } from './components/config-modal/config-modal.component';
+import { RecurringTasksModalComponent } from './components/recurring-tasks-modal/recurring-tasks-modal.component';
 import { ProjectDetailViewComponent } from './components/project-detail-view/project-detail-view.component';
 import { ProjectsViewComponent } from './components/projects-view/projects-view.component';
 import { AdminViewComponent } from './components/admin-view/admin-view.component';
@@ -29,6 +31,7 @@ import en from '../i18n/locales/en.json';
     MultitaskViewComponent,
     PlanningLabModalComponent,
     ConfigModalComponent,
+    RecurringTasksModalComponent,
     ProjectsViewComponent,
     ProjectDetailViewComponent,
     AdminViewComponent,
@@ -53,6 +56,10 @@ export class AppComponent {
     // Flow links left pointing at tasks, milestones or projects that were removed while this code did not
     // run (older versions, another device) are dropped once at startup.
     inject(ProjectsService).sweepFlow();
+
+    // Creates the occurrences that came due while the app was closed, and keeps doing so (date change, tab
+    // focus, completed occurrences). Instantiated here so it runs without anyone opening the modal.
+    inject(RecurrenceService);
 
     // English is the default and the fallback, so it is bundled. Every other locale is
     // fetched on demand — shipping them all eagerly cost ~11 kB for a language most

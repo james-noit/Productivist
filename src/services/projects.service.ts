@@ -3,6 +3,7 @@ import { localStorageSignal } from '../core/local-storage-signal';
 import { sanitizeDates } from '../lib/dates';
 import { createId } from '../core/create-id';
 import { FlowService } from './flow.service';
+import { RecurrenceService } from './recurrence.service';
 import { TodosService } from './todos.service';
 import type { Milestone, Project, ProjectExport } from '../types/project';
 
@@ -11,6 +12,7 @@ import type { Milestone, Project, ProjectExport } from '../types/project';
 export class ProjectsService {
   private readonly todos = inject(TodosService);
   private readonly flow = inject(FlowService);
+  private readonly recurrences = inject(RecurrenceService);
 
   readonly projects = localStorageSignal<Project[]>('productivist.projects', []);
   readonly milestones = localStorageSignal<Milestone[]>('productivist.milestones', []);
@@ -51,6 +53,7 @@ export class ProjectsService {
     this.todos.clearProjectRefs(id);
     for (const milestoneId of removedMilestoneIds) this.todos.clearMilestoneRefs(milestoneId);
     this.flow.removeForProject(id);
+    this.recurrences.clearProjectRefs(id);
   }
 
   addMilestone(projectId: string, name: string): Milestone {
@@ -76,19 +79,24 @@ export class ProjectsService {
     this.milestones.update((list) => list.filter((m) => m.id !== id));
     this.todos.clearMilestoneRefs(id);
     this.flow.removeLinksFrom('milestone', id);
+    this.recurrences.clearMilestoneRefs(new Set([id]));
   }
 
   /**
-   * Drops Flow data that points at a project, milestone or task that no longer exists (or a task that moved
+   * Drops Flow data (and recurring-series references) that points at a project, milestone or task that no longer exists (or a task that moved
    * to another project). Called on startup, after a sync pull and after an import. Lives here because this
    * service already sees all three stores while FlowService depends on none of them.
    */
   sweepFlow(): void {
+    const projectIds = new Set(this.projects().map((p) => p.id));
+    const milestoneProjects = new Map(this.milestones().map((m) => [m.id, m.projectId]));
     this.flow.sweep({
-      projectIds: new Set(this.projects().map((p) => p.id)),
-      milestoneProjects: new Map(this.milestones().map((m) => [m.id, m.projectId])),
+      projectIds,
+      milestoneProjects,
       taskProjects: new Map(this.todos.todos().map((t) => [t.id, t.projectId])),
     });
+    // Same moment, same reason: recurring series must not point at a project or milestone that is gone.
+    this.recurrences.sweep(projectIds, milestoneProjects);
   }
 
   exportProjects(): ProjectExport {

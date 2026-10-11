@@ -58,10 +58,6 @@
   padding: 0.05rem 0.45rem;
 }
 
-.project-tree__badges {
-  flex-shrink: 0;
-}
-
 .project-tree__actions {
   display: flex;
   justify-content: flex-end;
@@ -81,21 +77,6 @@
   border-radius: 4px;
   color: var(--color-text);
   padding: 0.2rem 0.5rem;
-}
-
-.project-tree__manage {
-  gap: 0.4rem;
-}
-
-/* Icon-only below 600px; the aria-label carries the name. */
-.project-tree__manage-label {
-  display: none;
-}
-
-@media (min-width: 600px) {
-  .project-tree__manage-label {
-    display: inline;
-  }
 }
 
 .project-tree__delete {

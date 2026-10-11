@@ -1,0 +1,213 @@
+<div class="modal-overlay rt__overlay" (mousedown)="onBackdropDown($event)" (click)="onBackdropClick($event)" (keydown)="onKeydown($event)">
+  <div #panel class="modal-panel rt" [class.rt--editing]="editing()" role="dialog" aria-modal="true" tabindex="-1" [attr.aria-labelledby]="uid + '-title'">
+    <header class="rt__header">
+      <h2 class="rt__title" [id]="uid + '-title'">{{ 'recurrence.modal.title' | translate }}</h2>
+      <button type="button" class="btn btn--ghost btn--icon" [attr.aria-label]="'todo.close' | translate" [title]="'todo.close' | translate" (click)="requestClose()">
+        <app-ui-icon name="x" />
+      </button>
+    </header>
+
+    <div class="rt__toolbar">
+      <div class="rt__search">
+        <app-ui-icon name="search" [size]="16" />
+        <input
+          class="input rt__search-input"
+          type="search"
+          [value]="search()"
+          [attr.aria-label]="'recurrence.modal.search' | translate"
+          [placeholder]="'recurrence.modal.search' | translate"
+          autocomplete="off"
+          (input)="search.set($any($event.target).value)"
+        />
+      </div>
+      <div class="rt__chips" role="group" [attr.aria-label]="'recurrence.modal.filter' | translate">
+        <button type="button" class="filter-chip" [attr.aria-pressed]="filter() === 'active'" (click)="setFilter('active')">{{ 'recurrence.modal.active' | translate }}</button>
+        <button type="button" class="filter-chip" [attr.aria-pressed]="filter() === 'paused'" (click)="setFilter('paused')">{{ 'recurrence.modal.pausedFilter' | translate }}</button>
+      </div>
+      <button type="button" class="btn btn--primary btn--sm rt__new" (click)="leave(NEW)">
+        <app-ui-icon name="plus" [size]="16" />
+        {{ 'recurrence.modal.new' | translate }}
+      </button>
+    </div>
+
+    <div class="rt__body">
+      <nav class="rt__list" [attr.aria-label]="'recurrence.modal.title' | translate">
+        @for (row of rows(); track row.rec.id) {
+          <button type="button" class="rt__row" [class.rt__row--paused]="row.rec.paused" [attr.aria-current]="selection() === row.rec.id ? 'true' : null" (click)="leave(row.rec.id)">
+            <span class="rt__row-icon"><app-ui-icon [name]="row.rec.paused ? 'pause' : 'repeat'" [size]="16" /></span>
+            <span class="rt__row-main">
+              <span class="rt__row-title">{{ row.rec.title }}</span>
+              <span class="rt__row-sub">
+                <span>{{ row.rule }}</span>
+                <span>{{ row.nextKey | translate: { date: row.nextDate } }}</span>
+              </span>
+            </span>
+            @if (row.project) {
+              <span class="rt__row-project" [title]="row.project">{{ row.project }}</span>
+            }
+          </button>
+        } @empty {
+          <div class="rt__empty-list">
+            @if (recurrences.count() === 0) {
+              <p>{{ 'recurrence.modal.empty' | translate }}</p>
+              <button type="button" class="btn btn--secondary btn--sm" (click)="leave(NEW)">{{ 'recurrence.modal.new' | translate }}</button>
+            } @else {
+              <p>{{ 'recurrence.modal.noMatch' | translate }}</p>
+            }
+          </div>
+        }
+      </nav>
+
+      <section class="rt__editor" [attr.aria-label]="'recurrence.modal.editor' | translate">
+        @if (editing()) {
+          <div class="rt__editor-body">
+            <button type="button" class="btn btn--ghost btn--sm rt__back" (click)="leave(null)">
+              <app-ui-icon name="chevron-right" [size]="16" class="rt__back-icon" />
+              {{ 'recurrence.modal.back' | translate }}
+            </button>
+
+            <div class="field">
+              <label class="field__label" [for]="uid + '-name'">{{ 'recurrence.modal.name' | translate }}</label>
+              <input
+                class="input"
+                type="text"
+                [id]="uid + '-name'"
+                [value]="draft().title"
+                [attr.aria-invalid]="titleValid() ? null : 'true'"
+                [placeholder]="'todo.addPlaceholder' | translate"
+                autocomplete="off"
+                (input)="edit({ title: $any($event.target).value })"
+              />
+            </div>
+
+            <div class="field">
+              <label class="field__label" [for]="uid + '-description'">{{ 'todo.description' | translate }}</label>
+              <textarea
+                class="textarea rt__description"
+                appAutoGrow="8"
+                rows="2"
+                [id]="uid + '-description'"
+                [value]="draft().description"
+                [placeholder]="'todo.descriptionPlaceholder' | translate"
+                (input)="edit({ description: $any($event.target).value })"
+              ></textarea>
+            </div>
+
+            <div class="rt__pair">
+              <app-project-milestone-picker
+                [projectRef]="draft().projectRef"
+                (projectRefChange)="edit({ projectRef: $event })"
+                [milestoneRef]="draft().milestoneRef"
+                (milestoneRefChange)="edit({ milestoneRef: $event })"
+                [showInlineCreateButtons]="false"
+                [allowNew]="false"
+                (projectPicked)="edit({ milestoneRef: '' })"
+              />
+            </div>
+
+            <div class="rt__pair">
+              <div class="field">
+                <span class="field__label" [id]="uid + '-importance'">{{ 'todo.importance' | translate }}</span>
+                <div class="segmented rt__segmented" role="group" [attr.aria-labelledby]="uid + '-importance'">
+                  @for (level of priorities; track level) {
+                    <button type="button" class="segmented__option" [attr.aria-pressed]="draft().importance === level" (click)="edit({ importance: level })">{{ 'todo.' + level | translate }}</button>
+                  }
+                </div>
+              </div>
+              <div class="field">
+                <span class="field__label" [id]="uid + '-urgency'">{{ 'todo.urgency' | translate }}</span>
+                <div class="segmented rt__segmented" role="group" [attr.aria-labelledby]="uid + '-urgency'">
+                  @for (level of priorities; track level) {
+                    <button type="button" class="segmented__option" [attr.aria-pressed]="draft().urgency === level" (click)="edit({ urgency: level })">{{ 'todo.' + level | translate }}</button>
+                  }
+                </div>
+              </div>
+            </div>
+
+            <div class="rt__pair">
+              <div class="field">
+                <label class="field__label" [for]="uid + '-tags'">{{ 'todo.tags' | translate }}</label>
+                <app-tag-input [tags]="draft().tags" (tagsChange)="edit({ tags: $event })" [inputId]="uid + '-tags'" [placeholder]="'taskDetail.addTag' | translate" />
+              </div>
+              <div class="field">
+                <span class="field__label">{{ 'todo.pomodorosForTermination' | translate }}</span>
+                <app-number-stepper
+                  [value]="draft().pomodoros"
+                  (valueChange)="edit({ pomodoros: $event })"
+                  [emptyText]="'taskDetail.noEstimate' | translate"
+                  [decreaseLabel]="'taskDetail.pomodorosDecrease' | translate"
+                  [increaseLabel]="'taskDetail.pomodorosIncrease' | translate"
+                />
+              </div>
+            </div>
+
+            <div class="rt__rule">
+              <h3 class="rt__section">{{ 'recurrence.field' | translate }}</h3>
+              <app-recurrence-editor [rule]="draft().rule" (ruleChange)="edit({ rule: $event })" [lastDate]="selected()?.lastDate" />
+            </div>
+
+            @if (selected() && openOccurrence()) {
+              <label class="rt__check">
+                <input type="checkbox" [checked]="alsoUpdateOpen()" (change)="alsoUpdateOpen.set($any($event.target).checked)" />
+                {{ 'recurrence.modal.alsoUpdate' | translate }}
+              </label>
+            }
+          </div>
+
+          <footer class="rt__footer">
+            @switch (confirm()) {
+              @case ('discard') {
+                <div class="confirm-bar" role="alertdialog" [attr.aria-labelledby]="uid + '-confirm'">
+                  <p class="confirm-bar__text" [id]="uid + '-confirm'">{{ 'taskDetail.discardQuestion' | translate }}</p>
+                  <div class="confirm-bar__actions">
+                    <button #confirmFocus type="button" class="btn btn--secondary" (click)="dismissConfirm()">{{ 'taskDetail.keepEditing' | translate }}</button>
+                    <button type="button" class="btn btn--danger" (click)="discard()">{{ 'taskDetail.discard' | translate }}</button>
+                  </div>
+                </div>
+              }
+              @case ('delete') {
+                <div class="confirm-bar" role="alertdialog" [attr.aria-labelledby]="uid + '-confirm'">
+                  <div class="rt__confirm-text">
+                    <p class="confirm-bar__text" [id]="uid + '-confirm'">{{ 'recurrence.modal.deleteQuestion' | translate }}</p>
+                    @if (openOccurrence()) {
+                      <label class="rt__check">
+                        <input type="checkbox" [checked]="alsoDeleteOpen()" (change)="alsoDeleteOpen.set($any($event.target).checked)" />
+                        {{ 'recurrence.modal.alsoDelete' | translate }}
+                      </label>
+                    }
+                  </div>
+                  <div class="confirm-bar__actions">
+                    <button type="button" class="btn btn--secondary" (click)="dismissConfirm()">{{ 'recurrence.modal.keep' | translate }}</button>
+                    <button #confirmFocus type="button" class="btn btn--danger" (click)="remove()">{{ 'recurrence.modal.delete' | translate }}</button>
+                  </div>
+                </div>
+              }
+              @default {
+                <div class="rt__footer-left">
+                  @if (selected(); as rec) {
+                    <button #deleteButton type="button" class="btn btn--danger btn--ghost" (click)="askDelete()">
+                      <app-ui-icon name="trash" />
+                      {{ 'todo.delete' | translate }}
+                    </button>
+                    <button type="button" class="btn btn--ghost" (click)="togglePause()">
+                      <app-ui-icon [name]="rec.paused ? 'play' : 'pause'" />
+                      {{ (rec.paused ? 'recurrence.modal.resume' : 'recurrence.modal.pause') | translate }}
+                    </button>
+                  }
+                </div>
+                <div class="rt__footer-actions">
+                  <button type="button" class="btn btn--secondary" (click)="leave(null)">{{ 'taskDetail.cancel' | translate }}</button>
+                  <button type="button" class="btn btn--primary" [disabled]="!canSave()" [title]="'taskDetail.saveHint' | translate" (click)="save()">
+                    {{ (isNew() ? 'recurrence.modal.create' : 'taskDetail.save') | translate }}
+                  </button>
+                </div>
+              }
+            }
+          </footer>
+        } @else {
+          <p class="rt__placeholder">{{ 'recurrence.modal.select' | translate }}</p>
+        }
+      </section>
+    </div>
+  </div>
+</div>

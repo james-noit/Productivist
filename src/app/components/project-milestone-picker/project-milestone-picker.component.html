@@ -1,7 +1,7 @@
 <div class="picker__group">
-  <div class="picker__label">{{ 'eisenhower.createTask.project' | translate }}</div>
+  <div class="picker__label field__label">{{ 'eisenhower.createTask.project' | translate }}</div>
   <div class="picker__wrapper">
-    <select [ngModel]="projectRef()" (ngModelChange)="projectRef.set($event)" name="projectRef" (change)="onProjectSelect()">
+    <select class="select" [ngModel]="projectRef()" (ngModelChange)="projectRef.set($event)" name="projectRef" (change)="onProjectSelect()">
       @for (opt of projectSelectOptions(); track opt.value || 'none') {
         <option [value]="opt.value">{{ opt.label }}</option>
       }
@@ -22,6 +22,7 @@
         }
       </div>
       <input
+        class="input"
         [ngModel]="projectName()"
         (ngModelChange)="projectName.set($event)"
         name="projectName"
@@ -30,7 +31,7 @@
         (keydown.enter)="$event.preventDefault(); submitNewProject()"
       />
       @if (showInlineCreateButtons()) {
-        <button type="button" class="picker__inline-create-submit" (click)="submitNewProject()">
+        <button type="button" class="picker__inline-create-submit btn btn--secondary btn--sm" (click)="submitNewProject()">
           {{ 'eisenhower.createTask.save' | translate }}
         </button>
       }
@@ -39,10 +40,10 @@
 </div>
 
 <div class="picker__group">
-  <div class="picker__label">{{ 'eisenhower.createTask.milestone' | translate }}</div>
+  <div class="picker__label field__label">{{ 'eisenhower.createTask.milestone' | translate }}</div>
   @if (showMilestones()) {
     <div class="picker__wrapper">
-      <select [ngModel]="milestoneRef()" (ngModelChange)="milestoneRef.set($event)" name="milestoneRef" (change)="onMilestoneSelect()">
+      <select class="select" [ngModel]="milestoneRef()" (ngModelChange)="milestoneRef.set($event)" name="milestoneRef" (change)="onMilestoneSelect()">
         @for (opt of milestoneOptions(); track opt.value || 'none') {
           <option [value]="opt.value">{{ opt.label }}</option>
         }
@@ -51,6 +52,7 @@
     @if (milestoneRef() === '__new__') {
       <div class="picker__inline-create">
         <input
+          class="input"
           [ngModel]="milestoneName()"
           (ngModelChange)="milestoneName.set($event)"
           name="milestoneName"
@@ -59,7 +61,7 @@
           (keydown.enter)="$event.preventDefault(); submitNewMilestone()"
         />
         @if (showInlineCreateButtons()) {
-          <button type="button" class="picker__inline-create-submit" (click)="submitNewMilestone()">
+          <button type="button" class="picker__inline-create-submit btn btn--secondary btn--sm" (click)="submitNewMilestone()">
             {{ 'eisenhower.createTask.save' | translate }}
           </button>
         }

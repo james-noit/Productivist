@@ -10,6 +10,7 @@ import { SettingsService } from '../../../services/settings.service';
 import { TodosService } from '../../../services/todos.service';
 import { ViewService } from '../../../services/view.service';
 import { MilestoneDatesModalComponent } from '../milestone-dates-modal/milestone-dates-modal.component';
+import { RepeatMarkComponent } from '../repeat-mark/repeat-mark.component';
 import { TaskDetailModalComponent } from '../task-detail-modal/task-detail-modal.component';
 import type { Milestone, Project } from '../../../types/project';
 import type { Todo } from '../../../types/todo';
@@ -42,7 +43,7 @@ interface Cell {
 @Component({
   selector: 'app-project-calendar',
   standalone: true,
-  imports: [NgTemplateOutlet, FormsModule, TranslatePipe, MilestoneDatesModalComponent, TaskDetailModalComponent],
+  imports: [NgTemplateOutlet, FormsModule, TranslatePipe, MilestoneDatesModalComponent, RepeatMarkComponent, TaskDetailModalComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './project-calendar.component.html',
   styleUrl: './project-calendar.component.css',

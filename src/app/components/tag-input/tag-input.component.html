@@ -1,0 +1,21 @@
+<div class="tag-input" (click)="focusBox($event)">
+  @for (tag of tags(); track tag) {
+    <span class="tag-input__chip">
+      {{ tag }}
+      <button type="button" class="tag-input__remove" [attr.aria-label]="'taskDetail.removeTag' | translate: { tag }" (click)="remove(tag)">
+        <app-ui-icon name="x" [size]="12" />
+      </button>
+    </span>
+  }
+  <input
+    #box
+    class="tag-input__box"
+    type="text"
+    [id]="inputId() || null"
+    [placeholder]="placeholder()"
+    autocomplete="off"
+    (input)="onInput()"
+    (keydown)="onKeydown($event)"
+    (blur)="commitPending()"
+  />
+</div>

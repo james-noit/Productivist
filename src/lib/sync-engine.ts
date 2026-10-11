@@ -1,5 +1,6 @@
 import type { FlowLayout, FlowLink, FlowLinkKind, FlowPosition, Horizon, Objective, ObjectiveStatus } from '../types/flow';
 import type { Milestone, Project } from '../types/project';
+import type { Recurrence, RecurrenceMode, RecurrenceUnit } from '../types/recurrence';
 import type { Priority, TaskStatus, Todo } from '../types/todo';
 
 /**
@@ -176,6 +177,8 @@ export interface TodoWire extends WireRow {
   status?: TaskStatus | null;
   startDate?: string | null;
   dueDate?: string | null;
+  /** Optional on the wire: the recurring series this task is an occurrence of. */
+  recurrenceId?: string | null;
 }
 
 export interface ObjectiveWire extends WireRow {
@@ -202,6 +205,28 @@ export interface FlowLinkWire extends WireRow {
 export interface FlowLayoutWire extends WireRow {
   positions: Record<string, FlowPosition>;
   collapsed: string[];
+}
+
+export interface RecurrenceWire extends WireRow {
+  title: string;
+  importance: Priority;
+  urgency: Priority;
+  tags: string[];
+  every: number;
+  unit: RecurrenceUnit;
+  mode: RecurrenceMode;
+  startDate: string;
+  order: number;
+  createdAt: number;
+  /** Optional on the wire: absent or null means none (the backend also sends `paused: false`). */
+  description?: string | null;
+  projectId?: string | null;
+  milestoneId?: string | null;
+  pomodorosForTermination?: number | null;
+  weekdays?: number[] | null;
+  endDate?: string | null;
+  paused?: boolean | null;
+  lastDate?: string | null;
 }
 
 type Content<W extends WireRow> = Omit<W, 'updatedAt' | 'deleted'>;
@@ -273,6 +298,7 @@ export const todoCodec = {
     ...(t.status ? { status: t.status } : {}),
     ...(t.startDate ? { startDate: t.startDate } : {}),
     ...(t.dueDate ? { dueDate: t.dueDate } : {}),
+    ...(t.recurrenceId ? { recurrenceId: t.recurrenceId } : {}),
   }),
   fromWire: (w: TodoWire): Todo => {
     const todo: Todo = {
@@ -293,6 +319,7 @@ export const todoCodec = {
     if (w.status) todo.status = w.status;
     if (w.startDate) todo.startDate = w.startDate;
     if (w.dueDate) todo.dueDate = w.dueDate;
+    if (w.recurrenceId) todo.recurrenceId = w.recurrenceId;
     return todo;
   },
   tombstone: (id: string): Content<TodoWire> => ({
@@ -390,6 +417,68 @@ export const flowLayoutCodec = {
     collapsed: w.collapsed ?? [],
   }),
   tombstone: (id: string): Content<FlowLayoutWire> => ({ id, positions: {}, collapsed: [] }),
+};
+
+export const recurrenceCodec = {
+  toWire: (r: Recurrence): Content<RecurrenceWire> => ({
+    id: r.id,
+    title: r.title,
+    importance: r.importance,
+    urgency: r.urgency,
+    tags: r.tags,
+    every: r.every,
+    unit: r.unit,
+    mode: r.mode,
+    startDate: r.startDate,
+    order: r.order,
+    createdAt: r.createdAt,
+    // Only when set, like Todo.status: an always-present key would change the hash of every row.
+    ...(r.description ? { description: r.description } : {}),
+    ...(r.projectId ? { projectId: r.projectId } : {}),
+    ...(r.milestoneId ? { milestoneId: r.milestoneId } : {}),
+    ...(r.pomodorosForTermination ? { pomodorosForTermination: r.pomodorosForTermination } : {}),
+    ...(r.weekdays?.length ? { weekdays: r.weekdays } : {}),
+    ...(r.endDate ? { endDate: r.endDate } : {}),
+    ...(r.paused ? { paused: true } : {}),
+    ...(r.lastDate ? { lastDate: r.lastDate } : {}),
+  }),
+  fromWire: (w: RecurrenceWire): Recurrence => {
+    const rec: Recurrence = {
+      id: w.id,
+      title: w.title,
+      importance: w.importance,
+      urgency: w.urgency,
+      tags: w.tags ?? [],
+      every: w.every,
+      unit: w.unit,
+      mode: w.mode,
+      startDate: w.startDate,
+      order: w.order,
+      createdAt: w.createdAt,
+    };
+    if (w.description) rec.description = w.description;
+    if (w.projectId) rec.projectId = w.projectId;
+    if (w.milestoneId) rec.milestoneId = w.milestoneId;
+    if (w.pomodorosForTermination) rec.pomodorosForTermination = w.pomodorosForTermination;
+    if (w.weekdays?.length) rec.weekdays = w.weekdays;
+    if (w.endDate) rec.endDate = w.endDate;
+    if (w.paused) rec.paused = true;
+    if (w.lastDate) rec.lastDate = w.lastDate;
+    return rec;
+  },
+  tombstone: (id: string): Content<RecurrenceWire> => ({
+    id,
+    title: '',
+    importance: 'medium',
+    urgency: 'medium',
+    tags: [],
+    every: 1,
+    unit: 'day',
+    mode: 'schedule',
+    startDate: '1970-01-01',
+    order: 0,
+    createdAt: 0,
+  }),
 };
 
 /** Content hash of a row, independent of key order and of null-vs-absent optional fields. */

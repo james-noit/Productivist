@@ -168,11 +168,92 @@
     "noUnassigned": "No unassigned tasks.",
     "tabProjects": "Projects",
     "tabMatrix": "Matrix",
-    "allOpenTasks": "open tasks",
-    "sortManual": "Manual order",
-    "sortUrgency": "By urgency",
-    "sortLabel": "Sort projects",
-    "manage": "Manage project"
+    "tabsLabel": "Tasks and projects sections",
+    "summary": {
+      "tasks": {
+        "one": "{{n}} open task",
+        "other": "{{n}} open tasks"
+      },
+      "projects": {
+        "one": "{{n}} project",
+        "other": "{{n}} projects"
+      },
+      "overdue": "{{n}} overdue"
+    },
+    "recurring": {
+      "button": "Recurring",
+      "label": "Recurring tasks, {{n}} active"
+    },
+    "tiles": {
+      "label": "Open tasks at a glance",
+      "dueWeek": "Due this week",
+      "overdue": "Overdue",
+      "openMatrix": "Open in the Matrix"
+    },
+    "search": {
+      "label": "Search projects and tasks",
+      "placeholder": "Search projects and tasks",
+      "clear": "Clear search",
+      "clearAction": "Clear search"
+    },
+    "sort": {
+      "label": "Sort",
+      "manual": "Manual",
+      "urgency": "Urgency",
+      "due": "Due date",
+      "name": "Name"
+    },
+    "toolbar": {
+      "task": "Task",
+      "project": "Project"
+    },
+    "empty": {
+      "noProjects": "Projects group your tasks into milestones and goals.",
+      "create": "Create a project",
+      "noResults": "No projects or tasks match “{{query}}”.",
+      "noFilterResults": "No open tasks match this filter.",
+      "clearFilter": "Clear filter"
+    },
+    "inbox": {
+      "title": "Inbox",
+      "hint": "Tasks without a project",
+      "empty": "Inbox is empty",
+      "menu": "Actions for “{{title}}”",
+      "move": "Move to project…",
+      "moveTo": "Move to",
+      "back": "Back",
+      "noProjects": "No projects yet",
+      "deleteQuestion": "Delete “{{title}}”? This can't be undone.",
+      "deleteTask": "Delete task",
+      "showAll": "Show all ({{n}})",
+      "showFewer": "Show fewer",
+      "addPlaceholder": "Add a task to the inbox…"
+    },
+    "card": {
+      "menu": "Actions for {{name}}",
+      "open": "Open",
+      "newMilestone": "New milestone",
+      "progress": "{{done}} of {{total}} · {{percent}}%",
+      "progressLabel": "Tasks completed",
+      "noTasks": "No tasks yet",
+      "quadrantsLabel": "Open tasks by quadrant",
+      "nextUp": "Next up",
+      "matching": "Matching tasks",
+      "allDone": "All tasks are done.",
+      "deleteQuestion": "Delete project? Its tasks move to the Inbox.",
+      "keep": "Keep",
+      "deleteProject": "Delete project",
+      "milestones": {
+        "one": "{{n}} milestone",
+        "other": "{{n}} milestones"
+      },
+      "objectives": {
+        "one": "{{n}} objective",
+        "other": "{{n}} objectives"
+      },
+      "overdue": "{{n}} overdue",
+      "noMilestones": "No milestones yet"
+    }
   },
   "multitask": {
     "toggleLabel": "Multitask",
@@ -604,6 +685,125 @@
       "linkTo": "Link to objective",
       "remove": "Remove link to {{title}}",
       "none": "No objective available to link to."
+    }
+  },
+  "taskDetail": {
+    "titleLabel": "Task title",
+    "status": "Status",
+    "start": "Start",
+    "due": "Due",
+    "save": "Save changes",
+    "saveHint": "Save changes (Ctrl+Enter)",
+    "cancel": "Cancel",
+    "discardQuestion": "Discard your changes?",
+    "keepEditing": "Keep editing",
+    "discard": "Discard",
+    "deleteQuestion": "Delete this task? This can't be undone.",
+    "keepTask": "Keep task",
+    "deleteTask": "Delete task",
+    "doneOn": "Done on {{date}}",
+    "addTag": "Add a tag",
+    "removeTag": "Remove tag {{tag}}",
+    "noEstimate": "No estimate",
+    "pomodorosDecrease": "Fewer pomodoros",
+    "pomodorosIncrease": "More pomodoros"
+  },
+  "recurrence": {
+    "field": "Repeat",
+    "doesNotRepeat": "Does not repeat",
+    "repeatButton": "Repeat…",
+    "dontRepeat": "Don't repeat",
+    "editSeries": "Edit series",
+    "stopRepeating": "Stop repeating",
+    "keepRepeating": "Keep repeating",
+    "stopQuestion": "Stop repeating? This task stays, but no new ones are created.",
+    "paused": "This series is paused.",
+    "nextAfterThis": "Next after this one: {{date}}",
+    "nextDate": "Next: {{date}}",
+    "nextOnCompletion": "The next one is created after you complete this one.",
+    "ended": "This series has ended.",
+    "rule": {
+      "every": {
+        "day": "Every day",
+        "week": "Every week",
+        "month": "Every month",
+        "year": "Every year"
+      },
+      "everyN": {
+        "day": "Every {{n}} days",
+        "week": "Every {{n}} weeks",
+        "month": "Every {{n}} months",
+        "year": "Every {{n}} years"
+      },
+      "onDays": "{{rule}} on {{days}}",
+      "afterCompletion": "{{rule}}, counted from completion"
+    },
+    "units": {
+      "day": {
+        "one": "day",
+        "other": "days"
+      },
+      "week": {
+        "one": "week",
+        "other": "weeks"
+      },
+      "month": {
+        "one": "month",
+        "other": "months"
+      },
+      "year": {
+        "one": "year",
+        "other": "years"
+      }
+    },
+    "editor": {
+      "repeatEvery": "Repeat every",
+      "unit": "Unit",
+      "everyInvalid": "Enter a whole number from 1 to {{max}}.",
+      "on": "On",
+      "starts": "Starts",
+      "ends": "Ends",
+      "endsNever": "Never",
+      "endsOn": "On",
+      "endDate": "End date",
+      "endBeforeStart": "The end date is before the start date.",
+      "next": "Next one",
+      "nextSchedule": "On a fixed schedule",
+      "nextAfter": "{{interval}} after I complete it",
+      "preview": "Preview",
+      "previewAfter": "First on {{date}}, then {{interval}} after each one is completed.",
+      "previewNone": "No upcoming dates.",
+      "monthHint": "On day {{day}} of the month",
+      "monthHintClamp": "On day {{day}} of the month (the last day in shorter months)",
+      "yearHint": "Every year on {{date}}"
+    },
+    "modal": {
+      "title": "Recurring tasks",
+      "search": "Search recurring tasks",
+      "filter": "Filter by state",
+      "active": "Active",
+      "pausedFilter": "Paused",
+      "new": "New recurring task",
+      "empty": "No recurring tasks yet. Create one here, or turn any task into one with Repeat… in its details.",
+      "noMatch": "No recurring task matches.",
+      "editor": "Recurring task editor",
+      "select": "Select a recurring task, or create a new one.",
+      "back": "All recurring tasks",
+      "name": "Task title",
+      "alsoUpdate": "Also update the open occurrence",
+      "alsoDelete": "Also delete the open occurrence",
+      "deleteQuestion": "Delete this recurring task? No new ones will be created.",
+      "keep": "Keep",
+      "delete": "Delete recurring task",
+      "pause": "Pause",
+      "resume": "Resume",
+      "create": "Create"
+    },
+    "row": {
+      "paused": "Paused",
+      "next": "Next {{date}}",
+      "afterCompletion": "Next after completion",
+      "ended": "Ended"
     }
   }
 }

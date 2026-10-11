@@ -10,7 +10,6 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
-import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '@ngx-translate/core';
 import { ApiError } from '../../../core/api';
 import { AccountService } from '../../../services/account.service';
@@ -33,7 +32,7 @@ const MAX_PASSWORD_BYTES = 72;
 @Component({
   selector: 'app-login-popover',
   standalone: true,
-  imports: [FormsModule, TranslatePipe],
+  imports: [TranslatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './login-popover.component.html',
   styleUrl: './login-popover.component.css',

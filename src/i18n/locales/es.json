@@ -168,11 +168,92 @@
     "noUnassigned": "No hay tareas sin asignar.",
     "tabProjects": "Proyectos",
     "tabMatrix": "Matriz",
-    "allOpenTasks": "tareas abiertas",
-    "sortManual": "Orden manual",
-    "sortUrgency": "Por urgencia",
-    "sortLabel": "Ordenar proyectos",
-    "manage": "Gestionar proyecto"
+    "tabsLabel": "Secciones de Tareas y proyectos",
+    "summary": {
+      "tasks": {
+        "one": "{{n}} tarea abierta",
+        "other": "{{n}} tareas abiertas"
+      },
+      "projects": {
+        "one": "{{n}} proyecto",
+        "other": "{{n}} proyectos"
+      },
+      "overdue": "{{n}} vencidas"
+    },
+    "recurring": {
+      "button": "Recurrentes",
+      "label": "Tareas recurrentes, {{n}} activas"
+    },
+    "tiles": {
+      "label": "Tareas abiertas de un vistazo",
+      "dueWeek": "Vencen esta semana",
+      "overdue": "Vencidas",
+      "openMatrix": "Abrir en la Matriz"
+    },
+    "search": {
+      "label": "Buscar proyectos y tareas",
+      "placeholder": "Buscar proyectos y tareas",
+      "clear": "Borrar búsqueda",
+      "clearAction": "Borrar búsqueda"
+    },
+    "sort": {
+      "label": "Ordenar",
+      "manual": "Manual",
+      "urgency": "Urgencia",
+      "due": "Vencimiento",
+      "name": "Nombre"
+    },
+    "toolbar": {
+      "task": "Tarea",
+      "project": "Proyecto"
+    },
+    "empty": {
+      "noProjects": "Los proyectos agrupan tus tareas en hitos y objetivos.",
+      "create": "Crear un proyecto",
+      "noResults": "Ningún proyecto ni tarea coincide con “{{query}}”.",
+      "noFilterResults": "Ninguna tarea abierta coincide con este filtro.",
+      "clearFilter": "Quitar filtro"
+    },
+    "inbox": {
+      "title": "Bandeja de entrada",
+      "hint": "Tareas sin proyecto",
+      "empty": "La bandeja de entrada está vacía",
+      "menu": "Acciones para “{{title}}”",
+      "move": "Mover a un proyecto…",
+      "moveTo": "Mover a",
+      "back": "Atrás",
+      "noProjects": "Aún no hay proyectos",
+      "deleteQuestion": "¿Eliminar “{{title}}”? No se puede deshacer.",
+      "deleteTask": "Eliminar tarea",
+      "showAll": "Ver todas ({{n}})",
+      "showFewer": "Ver menos",
+      "addPlaceholder": "Añade una tarea a la bandeja de entrada…"
+    },
+    "card": {
+      "menu": "Acciones de {{name}}",
+      "open": "Abrir",
+      "newMilestone": "Nuevo hito",
+      "progress": "{{done}} de {{total}} · {{percent}}%",
+      "progressLabel": "Tareas completadas",
+      "noTasks": "Aún no hay tareas",
+      "quadrantsLabel": "Tareas abiertas por cuadrante",
+      "nextUp": "Siguientes",
+      "matching": "Tareas que coinciden",
+      "allDone": "Todas las tareas están hechas.",
+      "deleteQuestion": "¿Eliminar el proyecto? Sus tareas pasan a la bandeja de entrada.",
+      "keep": "Conservar",
+      "deleteProject": "Eliminar proyecto",
+      "milestones": {
+        "one": "{{n}} hito",
+        "other": "{{n}} hitos"
+      },
+      "objectives": {
+        "one": "{{n}} objetivo",
+        "other": "{{n}} objetivos"
+      },
+      "overdue": "{{n}} vencidas",
+      "noMilestones": "Aún no hay hitos"
+    }
   },
   "multitask": {
     "toggleLabel": "Multitarea",
@@ -604,6 +685,125 @@
       "linkTo": "Enlazar a un objetivo",
       "remove": "Quitar el enlace a {{title}}",
       "none": "No hay ningún objetivo al que enlazar."
+    }
+  },
+  "taskDetail": {
+    "titleLabel": "Título de la tarea",
+    "status": "Estado",
+    "start": "Inicio",
+    "due": "Fecha límite",
+    "save": "Guardar cambios",
+    "saveHint": "Guardar cambios (Ctrl+Intro)",
+    "cancel": "Cancelar",
+    "discardQuestion": "¿Descartar los cambios?",
+    "keepEditing": "Seguir editando",
+    "discard": "Descartar",
+    "deleteQuestion": "¿Eliminar esta tarea? No se puede deshacer.",
+    "keepTask": "Conservar tarea",
+    "deleteTask": "Eliminar tarea",
+    "doneOn": "Completada el {{date}}",
+    "addTag": "Añadir etiqueta",
+    "removeTag": "Quitar la etiqueta {{tag}}",
+    "noEstimate": "Sin estimación",
+    "pomodorosDecrease": "Menos pomodoros",
+    "pomodorosIncrease": "Más pomodoros"
+  },
+  "recurrence": {
+    "field": "Repetición",
+    "doesNotRepeat": "No se repite",
+    "repeatButton": "Repetir…",
+    "dontRepeat": "No repetir",
+    "editSeries": "Editar serie",
+    "stopRepeating": "Dejar de repetir",
+    "keepRepeating": "Seguir repitiendo",
+    "stopQuestion": "¿Dejar de repetir? Esta tarea se queda, pero no se crearán más.",
+    "paused": "Esta serie está en pausa.",
+    "nextAfterThis": "Siguiente tras esta: {{date}}",
+    "nextDate": "Siguiente: {{date}}",
+    "nextOnCompletion": "La siguiente se crea cuando completes esta.",
+    "ended": "Esta serie ha terminado.",
+    "rule": {
+      "every": {
+        "day": "Cada día",
+        "week": "Cada semana",
+        "month": "Cada mes",
+        "year": "Cada año"
+      },
+      "everyN": {
+        "day": "Cada {{n}} días",
+        "week": "Cada {{n}} semanas",
+        "month": "Cada {{n}} meses",
+        "year": "Cada {{n}} años"
+      },
+      "onDays": "{{rule}}: {{days}}",
+      "afterCompletion": "{{rule}}, desde que se completa"
+    },
+    "units": {
+      "day": {
+        "one": "día",
+        "other": "días"
+      },
+      "week": {
+        "one": "semana",
+        "other": "semanas"
+      },
+      "month": {
+        "one": "mes",
+        "other": "meses"
+      },
+      "year": {
+        "one": "año",
+        "other": "años"
+      }
+    },
+    "editor": {
+      "repeatEvery": "Repetir cada",
+      "unit": "Unidad",
+      "everyInvalid": "Introduce un número entero de 1 a {{max}}.",
+      "on": "Los días",
+      "starts": "Empieza",
+      "ends": "Termina",
+      "endsNever": "Nunca",
+      "endsOn": "El",
+      "endDate": "Fecha de fin",
+      "endBeforeStart": "La fecha de fin es anterior a la de inicio.",
+      "next": "La siguiente",
+      "nextSchedule": "En un calendario fijo",
+      "nextAfter": "{{interval}} después de completarla",
+      "preview": "Vista previa",
+      "previewAfter": "La primera el {{date}}, y luego {{interval}} después de completar cada una.",
+      "previewNone": "No hay fechas próximas.",
+      "monthHint": "El día {{day}} del mes",
+      "monthHintClamp": "El día {{day}} del mes (el último día en los meses más cortos)",
+      "yearHint": "Cada año el {{date}}"
+    },
+    "modal": {
+      "title": "Tareas recurrentes",
+      "search": "Buscar tareas recurrentes",
+      "filter": "Filtrar por estado",
+      "active": "Activas",
+      "pausedFilter": "En pausa",
+      "new": "Nueva tarea recurrente",
+      "empty": "Aún no hay tareas recurrentes. Crea una aquí, o convierte cualquier tarea en recurrente con Repetir… en sus detalles.",
+      "noMatch": "Ninguna tarea recurrente coincide.",
+      "editor": "Editor de tarea recurrente",
+      "select": "Elige una tarea recurrente o crea una nueva.",
+      "back": "Todas las tareas recurrentes",
+      "name": "Título de la tarea",
+      "alsoUpdate": "Actualizar también la ocurrencia abierta",
+      "alsoDelete": "Eliminar también la ocurrencia abierta",
+      "deleteQuestion": "¿Eliminar esta tarea recurrente? No se crearán más.",
+      "keep": "Conservar",
+      "delete": "Eliminar tarea recurrente",
+      "pause": "Pausar",
+      "resume": "Reanudar",
+      "create": "Crear"
+    },
+    "row": {
+      "paused": "En pausa",
+      "next": "Siguiente: {{date}}",
+      "afterCompletion": "Siguiente al completarla",
+      "ended": "Terminada"
     }
   }
 }
