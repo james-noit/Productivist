@@ -1,0 +1,101 @@
+:host {
+  position: fixed;
+  right: max(1rem, env(safe-area-inset-right));
+  /* Above the header's floating support pill on phones (--floating-bottom-offset is 0 elsewhere). */
+  bottom: calc(max(1rem, env(safe-area-inset-bottom)) + var(--floating-bottom-offset, 0px));
+  /* Below the modal overlays (30), above the cards' own raised controls. */
+  z-index: 15;
+}
+
+.fab {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.6rem;
+}
+
+.fab__button {
+  width: 56px;
+  height: 56px;
+  min-height: 56px;
+  padding: 0;
+  border-radius: 50%;
+  /* The one floating element: a single soft shadow, no glow. */
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.18), 0 4px 12px rgb(0 0 0 / 0.16);
+}
+
+.fab__button app-ui-icon {
+  transition: transform 0.18s;
+}
+
+.fab__button--open app-ui-icon {
+  transform: rotate(45deg);
+}
+
+.fab__menu {
+  display: flex;
+  flex-direction: column;
+  min-width: 13.5rem;
+  padding: 0.25rem;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.06), 0 4px 12px rgb(0 0 0 / 0.1);
+}
+
+.fab__item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  min-height: 40px;
+  padding: 0.3rem 0.65rem;
+  background: none;
+  border: none;
+  border-radius: 7px;
+  color: var(--color-text);
+  font-family: inherit;
+  font-size: 0.92rem;
+  text-align: left;
+}
+
+.fab__item:hover,
+.fab__item:focus-visible {
+  background-color: var(--color-surface-alt);
+}
+
+.fab__item:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
+}
+
+.fab__item-label {
+  flex: 1;
+  min-width: 0;
+}
+
+.fab__kbd {
+  min-width: 1.4rem;
+  padding: 0.05rem 0.4rem;
+  border: 1px solid var(--color-border);
+  border-radius: 5px;
+  background-color: var(--color-surface-alt);
+  color: var(--color-text-muted);
+  font-family: inherit;
+  font-size: 0.72rem;
+  line-height: 1.5;
+  text-align: center;
+}
+
+/* No shortcuts to advertise on a touch phone. */
+@media (hover: none) and (pointer: coarse) {
+  .fab__kbd {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fab__button app-ui-icon {
+    transition: none;
+  }
+}

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, effect, inject } from '@angular/core';
 import { ViewService } from '../../../services/view.service';
 import { localStorageSignal } from '../../../core/local-storage-signal';
 import { AppMenuComponent } from '../app-menu/app-menu.component';
@@ -18,4 +18,11 @@ export class AppHeaderComponent {
   readonly view = inject(ViewService);
   readonly appVersion = APP_VERSION;
   readonly coffeeDismissed = localStorageSignal<boolean>('productivist.coffeeDismissed', false);
+
+  constructor() {
+    // On phones the support pill floats at the bottom of the screen. This class lets `style.css` publish how much
+    // room it takes (`--floating-bottom-offset`), so other floating controls, like the "+" of Tasks and projects,
+    // stack above it instead of on top of it.
+    effect(() => document.documentElement.classList.toggle('support-floating', !this.coffeeDismissed()));
+  }
 }

@@ -1,0 +1,76 @@
+<div class="modal-overlay drawer__scrim" (click)="closeOnScrim($event)" (keydown)="onKeydown($event)">
+  <aside #panel id="projects-filters" class="drawer" role="dialog" aria-modal="true" aria-labelledby="projects-filters-title" tabindex="-1">
+    <header class="drawer__head">
+      <h3 class="drawer__title" id="projects-filters-title">{{ 'projects.filters.title' | translate }}</h3>
+      <button type="button" class="btn btn--ghost btn--icon btn--sm" [attr.aria-label]="'todo.close' | translate" (click)="close()">
+        <app-ui-icon name="x" />
+      </button>
+    </header>
+
+    <div class="drawer__body">
+      <section class="drawer__section" aria-labelledby="filters-priority">
+        <h4 class="field__label" id="filters-priority">{{ 'projects.filters.priority' | translate }}</h4>
+        <div class="drawer__tiles" role="group" aria-labelledby="filters-priority">
+          @for (tile of tiles(); track tile.key; let first = $first) {
+            <button
+              type="button"
+              class="tile"
+              [attr.data-q]="tile.css"
+              [attr.data-first]="first ? '' : null"
+              [attr.aria-pressed]="tile.pressed"
+              [title]="tile.hintKey | translate"
+              (click)="state.toggleQuadrant(tile.key)"
+            >
+              <span class="tile__label"><span class="tile__dot" aria-hidden="true"></span>{{ tile.labelKey | translate }}</span>
+              <span class="tile__value">{{ tile.count }}</span>
+            </button>
+          }
+        </div>
+        <button type="button" class="button-ghost drawer__matrix" (click)="openMatrix()">
+          {{ 'projects.filters.openMatrix' | translate }}
+          <app-ui-icon name="chevron-right" [size]="14" />
+        </button>
+      </section>
+
+      <section class="drawer__section" aria-labelledby="filters-due">
+        <h4 class="field__label" id="filters-due">{{ 'projects.filters.due' | translate }}</h4>
+        <div class="segmented drawer__due" role="group" aria-labelledby="filters-due">
+          @for (option of dues; track option.labelKey) {
+            <button type="button" class="segmented__option" [attr.aria-pressed]="state.due() === option.value" (click)="state.setDue(option.value)">
+              {{ option.labelKey | translate }}@if (dueCount(option.value) !== null) {
+                · {{ dueCount(option.value) }}
+              }
+            </button>
+          }
+        </div>
+      </section>
+
+      <fieldset class="drawer__section drawer__sort">
+        <legend class="field__label">{{ 'projects.filters.sort' | translate }}</legend>
+        @for (option of sorts; track option) {
+          <label class="drawer__radio" [class.drawer__radio--on]="state.activeSort() === option">
+            <input type="radio" name="projects-sort" [value]="option" [checked]="state.activeSort() === option" (change)="setSort(option)" />
+            <span>{{ 'projects.sort.' + option | translate }}</span>
+          </label>
+        }
+      </fieldset>
+
+      <section class="drawer__section" aria-labelledby="filters-show">
+        <h4 class="field__label" id="filters-show">{{ 'projects.filters.show' | translate }}</h4>
+        <button type="button" role="switch" class="switch" [attr.aria-checked]="state.inboxVisible()" (click)="state.showInbox.set(!state.inboxVisible())">
+          <span class="switch__track" aria-hidden="true"></span>
+          {{ 'projects.filters.showInbox' | translate }}
+        </button>
+      </section>
+    </div>
+
+    <footer class="drawer__foot">
+      <button type="button" class="btn btn--ghost" [disabled]="!state.activeCount()" (click)="state.clearFilters()">
+        {{ 'projects.filters.clearAll' | translate }}
+      </button>
+      <button type="button" class="btn btn--primary" (click)="close()">
+        {{ 'projects.filters.results.' + (results() === 1 ? 'one' : 'other') | translate: { n: results() } }}
+      </button>
+    </footer>
+  </aside>
+</div>

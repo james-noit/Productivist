@@ -1,0 +1,258 @@
+:host {
+  display: contents;
+}
+
+/* The shared modal backdrop, with the panel pinned to its right edge. */
+.drawer__scrim {
+  --modal-z: 30;
+  align-items: stretch;
+  justify-content: flex-end;
+  padding: 0;
+}
+
+.drawer {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 360px;
+  height: 100%;
+  background-color: var(--color-surface);
+  border-left: 1px solid var(--color-border);
+  box-shadow: -1px 0 2px rgb(0 0 0 / 0.06);
+  animation: drawer-in 0.18s ease-out;
+}
+
+.drawer:focus {
+  outline: none;
+}
+
+@keyframes drawer-in {
+  from {
+    transform: translateX(24px);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+.drawer__head,
+.drawer__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex: none;
+  padding: 0.85rem 1.25rem;
+}
+
+.drawer__head {
+  border-bottom: 1px solid var(--color-border);
+}
+
+.drawer__foot {
+  border-top: 1px solid var(--color-border);
+  padding-bottom: max(0.85rem, env(safe-area-inset-bottom));
+}
+
+.drawer__title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.drawer__body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  min-height: 0;
+  padding: 1.25rem;
+  overflow-y: auto;
+}
+
+.drawer__section {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.6rem;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+.drawer__section .field__label {
+  margin: 0;
+  padding: 0;
+}
+
+/* Priority: the four quadrants as multi-select toggles -------------------------------------------------------- */
+
+.drawer__tiles {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem;
+  width: 100%;
+}
+
+.tile {
+  --accent: var(--color-text-muted);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.2rem;
+  min-width: 0;
+  padding: 0.55rem 0.75rem 0.65rem;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-top: 3px solid var(--accent);
+  border-radius: 10px;
+  color: var(--color-text);
+  font-family: inherit;
+  text-align: left;
+  transition: border-color 0.12s, background-color 0.12s;
+}
+
+.tile[data-q='do-first'] {
+  --accent: var(--color-quadrant-do-first);
+}
+
+.tile[data-q='schedule'] {
+  --accent: var(--color-quadrant-schedule);
+}
+
+.tile[data-q='delegate'] {
+  --accent: var(--color-quadrant-delegate);
+}
+
+.tile[data-q='eliminate'] {
+  --accent: var(--color-quadrant-eliminate);
+}
+
+.tile:hover {
+  background-color: var(--color-surface-alt);
+}
+
+.tile:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* A quadrant is pressed when it is narrowing the page behind the drawer. */
+.tile[aria-pressed='true'] {
+  background-color: color-mix(in srgb, var(--color-primary) 12%, var(--color-surface));
+  border-color: var(--color-primary);
+  border-top-color: var(--accent);
+}
+
+.tile__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  max-width: 100%;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tile__dot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--accent);
+}
+
+.tile__value {
+  font-size: 1.4rem;
+  font-weight: 600;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.drawer__matrix {
+  margin-left: -0.5rem;
+}
+
+/* Due ------------------------------------------------------------------------------------------------------- */
+
+.drawer__due {
+  display: flex;
+  width: 100%;
+}
+
+.drawer__due .segmented__option {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 36px;
+  padding-inline: 0.4rem;
+  font-size: 0.8rem;
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* Sort: real radios laid out as rows ---------------------------------------------------------------------------- */
+
+.drawer__sort {
+  gap: 0.4rem;
+}
+
+.drawer__sort .field__label {
+  margin-bottom: 0.2rem;
+}
+
+.drawer__radio {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  width: 100%;
+  min-height: 38px;
+  padding: 0.3rem 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.drawer__radio:hover {
+  background-color: var(--color-surface-alt);
+}
+
+.drawer__radio--on {
+  border-color: var(--color-primary);
+  background-color: color-mix(in srgb, var(--color-primary) 10%, var(--color-surface));
+}
+
+.drawer__radio input {
+  margin: 0;
+  accent-color: var(--color-primary);
+}
+
+.drawer__radio:has(input:focus-visible) {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+@media (max-width: 599px) {
+  .drawer {
+    max-width: none;
+    border-left: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .drawer {
+    animation: none;
+  }
+
+  .tile {
+    transition: none;
+  }
+}

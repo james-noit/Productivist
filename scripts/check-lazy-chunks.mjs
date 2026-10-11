@@ -45,7 +45,7 @@ const NEVER_INITIAL = ['src/lib/flow-graph.ts', component('objective-chip')];
  * The recurring-tasks modal (rendered by AppComponent behind `@defer`) and the rule form it shares with Task
  * Details, plus the text side of recurrences (rule summaries, weekday names, previews). `RecurrenceService` and
  * `lib/recurrence.ts` are deliberately in the initial bundle, these are not. The Tasks and projects page (and
- * the pieces only it uses: cards, inbox, kebab menu, page maths) and the shared form widgets stay out of it too.
+ * the pieces only it uses: cards, rows, drawer, floating button, inbox, kebab menu, page maths) and the shared form widgets stay out of it too.
  */
 const NEVER_INITIAL_UI = [
   component('recurring-tasks-modal'),
@@ -55,6 +55,12 @@ const NEVER_INITIAL_UI = [
   component('projects-view'),
   component('projects-dashboard'),
   component('project-card'),
+  component('project-row'),
+  component('project-actions-menu'),
+  component('project-task-rows'),
+  component('projects-filter-drawer'),
+  component('fab-menu'),
+  'src/app/components/projects-view/projects-page.state.ts',
   component('inbox-card'),
   component('kebab-menu'),
   component('ui-icon'),

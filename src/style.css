@@ -124,6 +124,20 @@ body {
   padding: 0;
 }
 
+/* How far above the bottom edge floating controls (the "+" of Tasks and projects) must sit to clear the header's
+   floating support pill. The header adds `support-floating` to <html> while the pill is shown; the pill only floats
+   below 800px (see app-header.component.css): bottom 1.5rem + height (2.15rem logo + 0.7rem padding + 2px border)
+   + a 0.75rem gap, minus the 1rem a floating control already keeps from the edge. */
+:root {
+  --floating-bottom-offset: 0px;
+}
+
+@media (max-width: 799px) {
+  :root.support-floating {
+    --floating-bottom-offset: calc(1.5rem + 2.85rem + 2px + 0.75rem - 1rem);
+  }
+}
+
 /* Set by the Plan-my-day modal while it is open. */
 body.planning-lab-open {
   overflow: hidden;

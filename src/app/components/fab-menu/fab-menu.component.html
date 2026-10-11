@@ -1,0 +1,30 @@
+<div class="fab">
+  @if (open()) {
+    <div id="projects-fab-menu" class="fab__menu" role="menu" [attr.aria-label]="'projects.fab.label' | translate" (keydown)="onMenuKeydown($event)">
+      @for (item of items; track item.action) {
+        <button type="button" role="menuitem" class="fab__item" (click)="choose(item.action)">
+          <app-ui-icon [name]="item.icon" [size]="16" />
+          <span class="fab__item-label">{{ item.labelKey | translate }}</span>
+          @if (item.shortcut) {
+            <kbd class="fab__kbd" aria-hidden="true">{{ item.shortcut }}</kbd>
+          }
+        </button>
+      }
+    </div>
+  }
+  <button
+    #toggle
+    type="button"
+    class="btn btn--primary fab__button"
+    [class.fab__button--open]="open()"
+    aria-haspopup="menu"
+    [attr.aria-expanded]="open()"
+    [attr.aria-controls]="open() ? 'projects-fab-menu' : null"
+    [attr.aria-label]="'projects.fab.label' | translate"
+    [title]="'projects.fab.label' | translate"
+    (click)="toggleMenu()"
+    (keydown)="onToggleKeydown($event)"
+  >
+    <app-ui-icon name="plus" [size]="26" />
+  </button>
+</div>

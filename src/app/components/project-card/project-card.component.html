@@ -1,7 +1,7 @@
 @let v = view();
 @let p = v.project;
 @let s = v.stats;
-<article class="pcard" [attr.data-tint]="tint()" [class.pcard--confirming]="confirming()">
+<article class="pcard" [style.--tint]="tint()" [class.pcard--confirming]="confirming()">
   <header class="pcard__head">
     <span class="pcard__icon" aria-hidden="true"><app-icon [name]="p.icon" /></span>
     <div class="pcard__titles">
@@ -12,40 +12,7 @@
         <p class="pcard__description">{{ p.description }}</p>
       }
     </div>
-    <app-kebab-menu #menu="kebabMenu" class="pcard__menu" [label]="'projects.card.menu' | translate: { name: p.name }" (closed)="resetMenu()">
-      @if (addingMilestone()) {
-        <form class="menu-form" (submit)="$event.preventDefault(); submitMilestone(menu)">
-          <label class="field">
-            <span class="field__label">{{ 'projects.card.newMilestone' | translate }}</span>
-            <input
-              #milestoneInput
-              class="input"
-              type="text"
-              maxlength="200"
-              [value]="milestoneName()"
-              (input)="milestoneName.set($any($event.target).value)"
-              [placeholder]="'projects.milestoneNamePlaceholder' | translate"
-            />
-          </label>
-          <button type="submit" class="btn btn--primary btn--sm" [disabled]="!milestoneName().trim()">
-            {{ 'projects.addMilestone' | translate }}
-          </button>
-        </form>
-      } @else {
-        <button type="button" role="menuitem" class="menu-item" (click)="menu.close(); open()">
-          <app-ui-icon name="open" [size]="16" /> {{ 'projects.card.open' | translate }}
-        </button>
-        <button type="button" role="menuitem" class="menu-item" (click)="menu.close(); edit.emit()">
-          <app-ui-icon name="edit" [size]="16" /> {{ 'projects.edit' | translate }}
-        </button>
-        <button type="button" role="menuitem" class="menu-item" (click)="startMilestone()">
-          <app-ui-icon name="plus" [size]="16" /> {{ 'projects.card.newMilestone' | translate }}
-        </button>
-        <button type="button" role="menuitem" class="menu-item menu-item--danger" (click)="menu.close(); askDelete()">
-          <app-ui-icon name="trash" [size]="16" /> {{ 'projects.delete' | translate }}
-        </button>
-      }
-    </app-kebab-menu>
+    <app-project-actions-menu class="pcard__menu" [project]="p" (edit)="edit.emit()" (deleteRequested)="askDelete()" />
   </header>
 
   <div class="pcard__progress">
@@ -76,21 +43,7 @@
   }
 
   @if (v.rows.length) {
-    <section class="pcard__tasks">
-      <h4 class="pcard__label">{{ (v.matching ? 'projects.card.matching' : 'projects.card.nextUp') | translate }}</h4>
-      <ul class="pcard__rows">
-        @for (row of v.rows; track row.todo.id) {
-          <li class="trow">
-            <button type="button" class="trow__check" role="checkbox" aria-checked="false" [attr.aria-label]="('eisenhower.markDone' | translate) + ': ' + row.todo.title" (click)="complete(row.todo.id)"></button>
-            <button type="button" class="trow__title" (click)="openTask.emit(row.todo.id)">{{ row.todo.title }}</button>
-            <app-repeat-mark [todo]="row.todo" />
-            @if (row.due) {
-              <span class="trow__due" [class.trow__due--overdue]="row.overdue">{{ row.due }}</span>
-            }
-          </li>
-        }
-      </ul>
-    </section>
+    <app-project-task-rows [rows]="v.rows" [matching]="v.matching" (openTask)="openTask.emit($event)" />
   } @else if (s.total && !s.open) {
     <p class="pcard__quiet">{{ 'projects.card.allDone' | translate }}</p>
   }

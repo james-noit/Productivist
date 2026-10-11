@@ -10,109 +10,12 @@
   min-width: 0;
 }
 
-/* Stat tiles ---------------------------------------------------------------------------------------------- */
-
-.dash__tiles {
-  display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: 0.75rem;
-}
-
-.tile {
-  --accent: var(--color-text-muted);
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.35rem;
-  min-width: 0;
-  padding: 0.7rem 0.9rem 0.8rem;
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-top: 3px solid var(--accent);
-  border-radius: 10px;
-  color: var(--color-text);
-  font-family: inherit;
-  text-align: left;
-  transition: border-color 0.12s, background-color 0.12s;
-}
-
-.tile[data-q='do-first'] {
-  --accent: var(--color-quadrant-do-first);
-}
-
-.tile[data-q='schedule'] {
-  --accent: var(--color-quadrant-schedule);
-}
-
-.tile[data-q='delegate'] {
-  --accent: var(--color-quadrant-delegate);
-}
-
-.tile[data-q='eliminate'] {
-  --accent: var(--color-quadrant-eliminate);
-}
-
-.tile--overdue {
-  --accent: var(--color-high);
-}
-
-.tile:hover {
-  background-color: var(--color-surface-alt);
-}
-
-.tile:focus-visible {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 2px;
-}
-
-/* A filter tile is pressed when it is narrowing the list below. */
-.tile[aria-pressed='true'] {
-  background-color: color-mix(in srgb, var(--color-primary) 12%, var(--color-surface));
-  border-color: var(--color-primary);
-  border-top-color: var(--accent);
-}
-
-.tile__label {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  max-width: 100%;
-  font-size: 0.72rem;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--color-text-muted);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.tile__dot {
-  flex: none;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background-color: var(--accent);
-}
-
-.tile__value {
-  font-size: 1.6rem;
-  font-weight: 600;
-  line-height: 1.1;
-  font-variant-numeric: tabular-nums;
-}
-
-.tile__value--alert {
-  color: var(--color-high);
-}
-
-/* Toolbar ------------------------------------------------------------------------------------------------- */
+/* Toolbar: search, Filters, layout ----------------------------------------------------------------------------- */
 
 .dash__toolbar {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  gap: 0.75rem 1rem;
+  gap: 0.75rem;
 }
 
 .dash__search {
@@ -142,56 +45,75 @@
   right: 2px;
 }
 
-.dash__sort {
+.dash__tools {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-}
-
-.dash__sort .segmented__option {
-  min-height: 34px;
-  padding-inline: 0.8rem;
-}
-
-.dash__actions {
-  display: flex;
   gap: 0.5rem;
   margin-left: auto;
 }
 
-/* Cards --------------------------------------------------------------------------------------------------- */
+.dash__badge {
+  min-width: 1.35rem;
+  padding: 0.05rem 0.4rem;
+  border-radius: 999px;
+  background-color: var(--color-primary);
+  color: var(--color-primary-contrast);
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.3;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Icon-only options, as tall as the other 36px controls of the row. */
+.dash__layout .segmented__option {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  min-height: 34px;
+  padding: 0;
+}
+
+/* Active-filter summary ------------------------------------------------------------------------------------------ */
+
+.dash__summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 0.5rem;
+  margin-top: -0.25rem;
+}
+
+/* A chip that is already on: it removes itself, so it wears the "on" look without the shared check mark. */
+.dash__chip {
+  background-color: color-mix(in srgb, var(--color-primary) 15%, transparent);
+  border-color: var(--color-primary);
+  color: var(--color-text);
+  padding-block: 0.15rem;
+}
+
+.dash__chip:hover {
+  border-color: var(--color-primary);
+  background-color: color-mix(in srgb, var(--color-primary) 24%, transparent);
+}
+
+.dash__sorted {
+  padding-inline: 0.25rem;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+.dash__clear {
+  padding-block: 0.15rem;
+}
+
+/* Cards --------------------------------------------------------------------------------------------------------- */
 
 .dash__grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 1rem;
-}
-
-.dash__new {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  min-height: 7rem;
-  padding: 1rem;
-  background: none;
-  border: 1px dashed var(--color-border);
-  border-radius: 12px;
-  color: var(--color-text-muted);
-  font-family: inherit;
-  font-size: 0.95rem;
-  font-weight: 600;
-  transition: border-color 0.12s, color 0.12s;
-}
-
-.dash__new:hover {
-  border-color: var(--color-text-muted);
-  color: var(--color-text);
-}
-
-.dash__new:focus-visible {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 2px;
 }
 
 .dash__empty {
@@ -211,80 +133,87 @@
   color: var(--color-text-muted);
 }
 
-/* New project modal ---------------------------------------------------------------------------------------- */
+/* List ---------------------------------------------------------------------------------------------------------- */
 
-.dash__modal {
-  --modal-max-width: 480px;
-  --modal-radius: 12px;
-  --modal-padding: 1.25rem;
-  --modal-gap: 1rem;
-  box-shadow: 0 1px 2px rgb(0 0 0 / 0.06);
+.plist {
+  --plist-columns: 1.75rem minmax(0, 1fr) 8.5rem 5.5rem 5.5rem 2.75rem 2.25rem;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  min-width: 0;
 }
 
-.dash__modal:focus {
-  outline: none;
-}
-
-.dash__modal-head {
-  display: flex;
+.plist__head {
+  display: grid;
+  grid-template-columns: var(--plist-columns);
+  column-gap: 0.75rem;
   align-items: center;
-  justify-content: space-between;
-}
-
-.dash__modal-head h3 {
-  margin: 0;
-  font-size: 1.1rem;
+  padding: 0.5rem 0.5rem;
+  border-bottom: 1px solid var(--color-border);
+  font-size: 0.72rem;
   font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  white-space: nowrap;
 }
 
-/* Phones --------------------------------------------------------------------------------------------------- */
-
-@media (max-width: 899px) {
-  /* Tiles scroll sideways instead of wrapping into a tall block. */
-  .dash__tiles {
-    display: flex;
-    overflow-x: auto;
-    scroll-snap-type: x proximity;
-    scroll-padding-inline: 1rem;
-    scrollbar-width: thin;
-    margin-inline: -1rem;
-    padding: 0 1rem 0.25rem;
-  }
-
-  .tile {
-    flex: 0 0 8.5rem;
-    scroll-snap-align: start;
-  }
+.plist__head span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
+
+.plist__open {
+  text-align: right;
+}
+
+.plist__rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.plist__row + .plist__row {
+  border-top: 1px solid var(--color-border);
+}
+
+/* The row paints its own hover background, so the last one needs the container's rounded corners. */
+.plist__row:last-child > app-project-row {
+  border-radius: 0 0 11px 11px;
+}
+
+/* Phones --------------------------------------------------------------------------------------------------------- */
 
 @media (max-width: 599px) {
   .dash__search {
-    flex-basis: 100%;
-    max-width: none;
+    flex-basis: 0;
   }
 
-  .dash__sort {
-    flex-wrap: wrap;
-    flex: 1 1 100%;
+  /* One row: the Filters button keeps its icon and count, the name goes (the aria-label carries it). */
+  .dash__filters-text {
+    display: none;
   }
 
-  .dash__actions {
-    flex: 1 1 100%;
-    margin-left: 0;
-  }
-
-  .dash__actions .btn {
-    flex: 1;
+  .dash__filters {
+    padding-inline: 0.7rem;
   }
 
   .dash__grid {
     grid-template-columns: minmax(0, 1fr);
   }
-}
 
-@media (prefers-reduced-motion: reduce) {
-  .tile,
-  .dash__new {
-    transition: none;
+  .plist {
+    --plist-columns: 1.75rem minmax(0, 1fr) 4.75rem 2.25rem 2.25rem;
+  }
+
+  .plist__priority,
+  .plist__due {
+    display: none;
+  }
+
+  .plist__head {
+    column-gap: 0.5rem;
+    padding-inline: 0.25rem;
   }
 }

@@ -1,0 +1,101 @@
+@let v = view();
+@let p = v.project;
+@let s = v.stats;
+<article class="prow" [style.--tint]="tint()">
+  <div class="prow__main">
+    @if (v.rows.length) {
+      <button
+        type="button"
+        class="btn btn--ghost btn--icon btn--sm prow__chevron"
+        [class.prow__chevron--open]="expanded()"
+        [attr.aria-expanded]="expanded()"
+        [attr.aria-controls]="'prow-tasks-' + p.id"
+        [attr.aria-label]="'projects.list.toggleTasks' | translate: { name: p.name }"
+        (click)="toggleExpanded.emit()"
+      >
+        <app-ui-icon name="chevron-right" [size]="16" />
+      </button>
+    } @else {
+      <span class="prow__chevron" aria-hidden="true"></span>
+    }
+
+    <div class="prow__name">
+      <span class="prow__icon" aria-hidden="true"><app-icon [name]="p.icon" /></span>
+      <div class="prow__titles">
+        <h3 class="prow__title">
+          <button type="button" class="prow__open" (click)="open()">{{ p.name }}</button>
+        </h3>
+        @if (p.description) {
+          <p class="prow__sub prow__desc">{{ p.description }}</p>
+        }
+        <p class="prow__sub prow__frac">
+          @if (s.total) {
+            {{ s.done }}/{{ s.total }}
+          } @else {
+            {{ 'projects.card.noTasks' | translate }}
+          }
+        </p>
+      </div>
+    </div>
+
+    <div class="prow__progress">
+      <div class="prow__bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" [attr.aria-valuenow]="s.percent" [attr.aria-label]="'projects.card.progressLabel' | translate">
+        <div class="prow__bar-fill" [style.width.%]="s.percent"></div>
+      </div>
+      <span class="prow__fraction">
+        @if (s.total) {
+          {{ s.done }}/{{ s.total }}
+        } @else {
+          &mdash;
+        }
+      </span>
+    </div>
+
+    <div class="prow__priority">
+      @if (segments().length) {
+        <div class="prow__quad" aria-hidden="true">
+          @for (seg of segments(); track seg.key) {
+            <span class="prow__quad-seg" [attr.data-q]="seg.css" [style.flex-grow]="seg.count" [title]="seg.count + ' · ' + (seg.labelKey | translate)"></span>
+          }
+        </div>
+        <p class="visually-hidden">
+          {{ 'projects.card.quadrantsLabel' | translate }}:
+          @for (seg of segments(); track seg.key) {
+            {{ seg.count }} {{ seg.labelKey | translate }}{{ $last ? '' : ',' }}
+          }
+        </p>
+      } @else {
+        <span class="prow__none" aria-hidden="true">&mdash;</span>
+      }
+    </div>
+
+    <div class="prow__due">
+      @if (v.nextDue) {
+        <span class="prow__due-date" [class.prow__due-date--overdue]="s.overdue > 0">
+          @if (s.overdue > 0) {
+            <app-ui-icon name="alert" [size]="13" />
+          }
+          {{ v.nextDue }}
+        </span>
+        @if (s.overdue > 0) {
+          <span class="prow__due-overdue">{{ 'projects.card.overdue' | translate: { n: s.overdue } }}</span>
+        }
+      } @else {
+        <span class="prow__none" aria-hidden="true">&mdash;</span>
+      }
+    </div>
+
+    <div class="prow__count">
+      <span aria-hidden="true">{{ s.open }}</span>
+      <span class="visually-hidden">{{ 'projects.list.openTasks' | translate: { n: s.open } }}</span>
+    </div>
+
+    <app-project-actions-menu class="prow__menu" [project]="p" [inlineConfirm]="true" (edit)="edit.emit()" />
+  </div>
+
+  @if (expanded() && v.rows.length) {
+    <div class="prow__tasks" [id]="'prow-tasks-' + p.id">
+      <app-project-task-rows [rows]="v.rows" [matching]="v.matching" (openTask)="openTask.emit($event)" />
+    </div>
+  }
+</article>

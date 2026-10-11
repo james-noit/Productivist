@@ -184,11 +184,55 @@
       "button": "Recurrentes",
       "label": "Tareas recurrentes, {{n}} activas"
     },
-    "tiles": {
-      "label": "Tareas abiertas de un vistazo",
+    "filters": {
+      "title": "Filtros",
+      "buttonActive": "Filtros, {{n}} activos",
+      "active": "Filtros activos",
+      "remove": "Quitar filtro: {{name}}",
+      "clearAll": "Quitar todos",
+      "priority": "Prioridad",
+      "openMatrix": "Abrir la Matriz",
+      "due": "Vencimiento",
+      "dueAny": "Cualquier fecha",
+      "dueAnyShort": "Cualquiera",
       "dueWeek": "Vencen esta semana",
-      "overdue": "Vencidas",
-      "openMatrix": "Abrir en la Matriz"
+      "dueWeekShort": "Esta semana",
+      "dueOverdue": "Vencidas",
+      "sort": "Ordenar",
+      "show": "Mostrar",
+      "showInbox": "Mostrar la bandeja de entrada",
+      "inboxHidden": "Bandeja oculta",
+      "results": {
+        "one": "Mostrar {{n}} resultado",
+        "other": "Mostrar {{n}} resultados"
+      },
+      "sortedBy": {
+        "urgency": "Ordenado por urgencia",
+        "due": "Ordenado por vencimiento",
+        "name": "Ordenado por nombre"
+      }
+    },
+    "layout": {
+      "label": "Vista",
+      "cards": "Tarjetas",
+      "list": "Lista"
+    },
+    "list": {
+      "columns": {
+        "project": "Proyecto",
+        "progress": "Progreso",
+        "priority": "Prioridad",
+        "due": "Próx. vencimiento",
+        "open": "Abiertas"
+      },
+      "toggleTasks": "Mostrar las siguientes tareas de {{name}}",
+      "openTasks": "{{n}} abiertas"
+    },
+    "fab": {
+      "label": "Crear",
+      "task": "Nueva tarea",
+      "project": "Nuevo proyecto",
+      "recurring": "Nueva tarea recurrente"
     },
     "search": {
       "label": "Buscar proyectos y tareas",
@@ -197,22 +241,17 @@
       "clearAction": "Borrar búsqueda"
     },
     "sort": {
-      "label": "Ordenar",
       "manual": "Manual",
       "urgency": "Urgencia",
       "due": "Vencimiento",
       "name": "Nombre"
-    },
-    "toolbar": {
-      "task": "Tarea",
-      "project": "Proyecto"
     },
     "empty": {
       "noProjects": "Los proyectos agrupan tus tareas en hitos y objetivos.",
       "create": "Crear un proyecto",
       "noResults": "Ningún proyecto ni tarea coincide con “{{query}}”.",
       "noFilterResults": "Ninguna tarea abierta coincide con este filtro.",
-      "clearFilter": "Quitar filtro"
+      "clearFilters": "Quitar filtros"
     },
     "inbox": {
       "title": "Bandeja de entrada",

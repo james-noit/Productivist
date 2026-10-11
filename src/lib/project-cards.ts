@@ -1,12 +1,13 @@
 import { addDays } from './dates';
-import { classify, comparePriority, type QuadrantCounts } from './eisenhower';
+import { QUADRANTS, classify, comparePriority, type QuadrantCounts } from './eisenhower';
+import type { EisenhowerQuadrant } from '../types/eisenhower';
 import type { Objective } from '../types/flow';
 import type { Milestone, Project } from '../types/project';
 import type { Todo } from '../types/todo';
 
 /**
  * The numbers behind the Tasks and projects page, all pure. One pass over the todos produces everything a
- * project card (and the stat tiles) shows, keyed by project id, so the view does not re-scan the list per card.
+ * project card (and the filters drawer's counts) shows, keyed by project id, so the view does not re-scan the list per card.
  * Only the lazy projects view imports this file.
  */
 
@@ -14,6 +15,7 @@ export type ProjectsSort = 'manual' | 'urgency' | 'due' | 'name';
 /** `productivist.projectsSort` held 'manual' | 'urgency' before; both stay valid. Anything else falls back to manual. */
 export const PROJECTS_SORTS: readonly ProjectsSort[] = ['manual', 'urgency', 'due', 'name'];
 
+/** The drawer's due filter (null = any time). */
 export type TaskFilter = 'week' | 'overdue';
 
 /** How many tasks a card lists under "Next up". */
@@ -40,7 +42,7 @@ export interface PageStats {
   byProject: Map<string, ProjectStats>;
   /** Open tasks with no project, in the app's usual order (the inbox). */
   inbox: Todo[];
-  /** Every open task of each project in "next up" order: what the search and tile filters look through. */
+  /** Every open task of each project in "next up" order: what the search and the drawer filters look through. */
   openByProject: Map<string, Todo[]>;
   quadrants: QuadrantCounts;
   open: number;
@@ -145,8 +147,18 @@ export function normalizeQuery(text: string): string {
   return text.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase().trim();
 }
 
-/** Whether an open task shows under the active tile filter and search text (both may be off). */
-export function taskMatches(todo: Todo, query: string, filter: TaskFilter | null, today: string): boolean {
+/**
+ * Whether an open task shows under the page's filters: the search text, the due filter and the chosen quadrants
+ * (all may be off; no quadrants means every quadrant).
+ */
+export function taskMatches(
+  todo: Todo,
+  query: string,
+  filter: TaskFilter | null,
+  quadrants: readonly EisenhowerQuadrant[],
+  today: string,
+): boolean {
+  if (quadrants.length && !quadrants.includes(classify(todo))) return false;
   if (filter === 'overdue' && !(todo.dueDate && todo.dueDate < today)) return false;
   if (filter === 'week' && !(todo.dueDate && todo.dueDate >= today && todo.dueDate <= addDays(today, WEEK_DAYS - 1))) return false;
   if (!query) return true;
@@ -180,14 +192,26 @@ export function sortCards<T extends { project: Project; stats: ProjectStats }>(
 }
 
 /**
- * A stable colour slot (0 to TINTS - 1) for a project, from a hash of its id. The page maps the slot to a theme
- * token (`data-tint`), so projects look different without a new data field and every theme keeps its palette.
+ * A stable colour for a project, from a hash of its id: one of `TINTS`, as a CSS `var()` of a theme token, set on the
+ * card or row as `--tint`. Projects look different without a new data field and every theme keeps its own palette.
  */
-export const TINTS = 6;
-export function tintOf(id: string): number {
+const TINTS = [
+  'var(--color-primary)',
+  'var(--color-quadrant-schedule)',
+  'var(--color-capacity-safe)',
+  'var(--color-quadrant-delegate)',
+  'var(--color-quadrant-eliminate)',
+  'var(--color-quadrant-do-first)',
+] as const;
+export function tintOf(id: string): string {
   let hash = 0;
   for (let i = 0; i < id.length; i++) hash = (Math.imul(hash, 31) + id.charCodeAt(i)) | 0;
-  return Math.abs(hash) % TINTS;
+  return TINTS[Math.abs(hash) % TINTS.length];
+}
+
+/** The quadrants that have open tasks, in the Eisenhower order: the segments of a project's share bar. */
+export function quadrantSegments(counts: QuadrantCounts): { key: EisenhowerQuadrant; css: string; labelKey: string; count: number }[] {
+  return QUADRANTS.map((q) => ({ key: q.key, css: q.cssKey, labelKey: q.labelKey, count: counts[q.key] })).filter((s) => s.count > 0);
 }
 
 /** A task as a card or the inbox lists it: the todo plus its due date already formatted for display. */
@@ -198,11 +222,16 @@ export interface TaskRow {
   overdue: boolean;
 }
 
-/** One project card: the project, its numbers, and the tasks listed on it (next up, or the ones matching the filters). */
+/**
+ * One project card or list row: the project, its numbers, and the tasks listed on it (next up, or the ones matching
+ * the filters).
+ */
 export interface ProjectCardView {
   project: Project;
   stats: ProjectStats;
+  /** `stats.nextDue` formatted for display, or null. */
+  nextDue: string | null;
   rows: TaskRow[];
-  /** True when `rows` are the tasks matching the search / tile filter instead of the plain "next up". */
+  /** True when `rows` are the tasks matching the search / drawer filters instead of the plain "next up". */
   matching: boolean;
 }

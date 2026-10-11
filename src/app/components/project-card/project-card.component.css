@@ -3,31 +3,6 @@
   min-width: 0;
 }
 
-/* One slot of the theme's own colours per project (from a hash of its id), so cards are told apart in every theme. */
-.pcard {
-  --tint: var(--color-primary);
-}
-
-.pcard[data-tint='1'] {
-  --tint: var(--color-quadrant-schedule);
-}
-
-.pcard[data-tint='2'] {
-  --tint: var(--color-capacity-safe);
-}
-
-.pcard[data-tint='3'] {
-  --tint: var(--color-quadrant-delegate);
-}
-
-.pcard[data-tint='4'] {
-  --tint: var(--color-quadrant-eliminate);
-}
-
-.pcard[data-tint='5'] {
-  --tint: var(--color-quadrant-do-first);
-}
-
 .pcard {
   position: relative;
   display: flex;
@@ -177,119 +152,10 @@
   background-color: var(--color-quadrant-delegate);
 }
 
-.pcard__tasks {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.pcard__label {
-  margin: 0;
-  font-size: 0.72rem;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--color-text-muted);
-}
-
-.pcard__rows {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-}
-
 .pcard__quiet {
   margin: 0;
   font-size: 0.85rem;
   color: var(--color-text-muted);
-}
-
-.trow {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  min-height: 32px;
-  min-width: 0;
-}
-
-/* A 24px target around a 16px circle. */
-.trow__check {
-  position: relative;
-  z-index: 1;
-  flex: none;
-  width: 24px;
-  height: 24px;
-  padding: 0;
-  background: none;
-  border: none;
-  border-radius: 50%;
-  color: var(--color-capacity-safe);
-}
-
-.trow__check::before {
-  content: '';
-  position: absolute;
-  inset: 4px;
-  border: 1.5px solid var(--color-text-muted);
-  border-radius: 50%;
-  transition: border-color 0.12s, background-color 0.12s;
-}
-
-.trow__check:hover::before {
-  border-color: var(--color-capacity-safe);
-  background-color: color-mix(in srgb, var(--color-capacity-safe) 22%, transparent);
-}
-
-.trow__check:focus-visible {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 1px;
-}
-
-/* Only as wide as its text, so the empty space to its right still opens the project. */
-.trow__title {
-  position: relative;
-  z-index: 1;
-  flex: 0 1 auto;
-  min-width: 0;
-  padding: 0.15rem 0.2rem;
-  background: none;
-  border: none;
-  border-radius: 4px;
-  color: var(--color-text);
-  font: inherit;
-  font-size: 0.9rem;
-  text-align: left;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.trow__title:hover {
-  text-decoration: underline;
-  text-decoration-color: var(--color-border);
-  text-underline-offset: 3px;
-}
-
-.trow__title:focus-visible {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 1px;
-}
-
-.trow__due {
-  flex: none;
-  margin-left: auto;
-  padding-left: 0.5rem;
-  font-size: 0.78rem;
-  color: var(--color-text-muted);
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-}
-
-.trow__due--overdue {
-  color: var(--color-high);
-  font-weight: 600;
 }
 
 .pcard__foot {
@@ -315,8 +181,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .pcard,
-  .trow__check::before {
+  .pcard {
     transition: none;
   }
 }

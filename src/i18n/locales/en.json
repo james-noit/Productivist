@@ -184,11 +184,55 @@
       "button": "Recurring",
       "label": "Recurring tasks, {{n}} active"
     },
-    "tiles": {
-      "label": "Open tasks at a glance",
+    "filters": {
+      "title": "Filters",
+      "buttonActive": "Filters, {{n}} active",
+      "active": "Active filters",
+      "remove": "Remove filter: {{name}}",
+      "clearAll": "Clear all",
+      "priority": "Priority",
+      "openMatrix": "Open the Matrix",
+      "due": "Due",
+      "dueAny": "Any time",
+      "dueAnyShort": "Any time",
       "dueWeek": "Due this week",
-      "overdue": "Overdue",
-      "openMatrix": "Open in the Matrix"
+      "dueWeekShort": "This week",
+      "dueOverdue": "Overdue",
+      "sort": "Sort",
+      "show": "Show",
+      "showInbox": "Show the Inbox",
+      "inboxHidden": "Inbox hidden",
+      "results": {
+        "one": "Show {{n}} result",
+        "other": "Show {{n}} results"
+      },
+      "sortedBy": {
+        "urgency": "Sorted by urgency",
+        "due": "Sorted by due date",
+        "name": "Sorted by name"
+      }
+    },
+    "layout": {
+      "label": "Layout",
+      "cards": "Cards",
+      "list": "List"
+    },
+    "list": {
+      "columns": {
+        "project": "Project",
+        "progress": "Progress",
+        "priority": "Priority",
+        "due": "Next due",
+        "open": "Open"
+      },
+      "toggleTasks": "Show the next tasks of {{name}}",
+      "openTasks": "{{n}} open"
+    },
+    "fab": {
+      "label": "Create",
+      "task": "New task",
+      "project": "New project",
+      "recurring": "New recurring task"
     },
     "search": {
       "label": "Search projects and tasks",
@@ -197,22 +241,17 @@
       "clearAction": "Clear search"
     },
     "sort": {
-      "label": "Sort",
       "manual": "Manual",
       "urgency": "Urgency",
       "due": "Due date",
       "name": "Name"
-    },
-    "toolbar": {
-      "task": "Task",
-      "project": "Project"
     },
     "empty": {
       "noProjects": "Projects group your tasks into milestones and goals.",
       "create": "Create a project",
       "noResults": "No projects or tasks match “{{query}}”.",
       "noFilterResults": "No open tasks match this filter.",
-      "clearFilter": "Clear filter"
+      "clearFilters": "Clear filters"
     },
     "inbox": {
       "title": "Inbox",

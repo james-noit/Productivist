@@ -1,0 +1,15 @@
+<section class="tasks">
+  <h4 class="tasks__label">{{ (matching() ? 'projects.card.matching' : 'projects.card.nextUp') | translate }}</h4>
+  <ul class="tasks__rows">
+    @for (row of rows(); track row.todo.id) {
+      <li class="trow">
+        <button type="button" class="trow__check" role="checkbox" aria-checked="false" [attr.aria-label]="('eisenhower.markDone' | translate) + ': ' + row.todo.title" (click)="complete(row.todo.id)"></button>
+        <button type="button" class="trow__title" (click)="openTask.emit(row.todo.id)">{{ row.todo.title }}</button>
+        <app-repeat-mark [todo]="row.todo" />
+        @if (row.due) {
+          <span class="trow__due" [class.trow__due--overdue]="row.overdue">{{ row.due }}</span>
+        }
+      </li>
+    }
+  </ul>
+</section>

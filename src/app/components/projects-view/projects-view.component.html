@@ -73,4 +73,24 @@
   } @else {
     <app-projects-dashboard [stats]="stats()" />
   }
+
+  <app-fab-menu />
+
+  @if (state.creatingTask()) {
+    <app-new-task-modal (close)="closeNewTask()" />
+  }
+
+  @if (state.creatingProject()) {
+    <div class="modal-overlay" (click)="closeOnBackdrop($event)" (keydown)="onNewProjectKeydown($event)">
+      <div #newProjectPanel class="modal-panel projects-view__modal" role="dialog" aria-modal="true" aria-labelledby="new-project-title" tabindex="-1">
+        <div class="projects-view__modal-head">
+          <h3 id="new-project-title">{{ 'projects.newProject' | translate }}</h3>
+          <button type="button" class="btn btn--ghost btn--icon btn--sm" [attr.aria-label]="'todo.close' | translate" (click)="closeNewProject()">
+            <app-ui-icon name="x" />
+          </button>
+        </div>
+        <app-project-form (save)="createProject($event)" (cancel)="closeNewProject()" />
+      </div>
+    </div>
+  }
 </main>

@@ -1,0 +1,43 @@
+@let p = project();
+<app-kebab-menu #menu="kebabMenu" [label]="'projects.card.menu' | translate: { name: p.name }" (closed)="resetMenu()">
+  @if (addingMilestone()) {
+    <form class="menu-form" (submit)="$event.preventDefault(); submitMilestone(menu)">
+      <label class="field">
+        <span class="field__label">{{ 'projects.card.newMilestone' | translate }}</span>
+        <input
+          #milestoneInput
+          class="input"
+          type="text"
+          maxlength="200"
+          [value]="milestoneName()"
+          (input)="milestoneName.set($any($event.target).value)"
+          [placeholder]="'projects.milestoneNamePlaceholder' | translate"
+        />
+      </label>
+      <button type="submit" class="btn btn--primary btn--sm" [disabled]="!milestoneName().trim()">
+        {{ 'projects.addMilestone' | translate }}
+      </button>
+    </form>
+  } @else if (confirming()) {
+    <p class="confirm-text">{{ 'projects.card.deleteQuestion' | translate }}</p>
+    <button type="button" role="menuitem" class="menu-item" (click)="confirming.set(false); menu.focusFirst()">
+      {{ 'projects.card.keep' | translate }}
+    </button>
+    <button type="button" role="menuitem" class="menu-item menu-item--danger" (click)="menu.close(); deleteProject()">
+      <app-ui-icon name="trash" [size]="16" /> {{ 'projects.card.deleteProject' | translate }}
+    </button>
+  } @else {
+    <button type="button" role="menuitem" class="menu-item" (click)="menu.close(); open()">
+      <app-ui-icon name="open" [size]="16" /> {{ 'projects.card.open' | translate }}
+    </button>
+    <button type="button" role="menuitem" class="menu-item" (click)="menu.close(); edit.emit()">
+      <app-ui-icon name="edit" [size]="16" /> {{ 'projects.edit' | translate }}
+    </button>
+    <button type="button" role="menuitem" class="menu-item" (click)="startMilestone()">
+      <app-ui-icon name="plus" [size]="16" /> {{ 'projects.card.newMilestone' | translate }}
+    </button>
+    <button type="button" role="menuitem" class="menu-item menu-item--danger" (click)="askDelete(menu)">
+      <app-ui-icon name="trash" [size]="16" /> {{ 'projects.delete' | translate }}
+    </button>
+  }
+</app-kebab-menu>
