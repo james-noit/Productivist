@@ -90,7 +90,7 @@
       "siren": "Siren",
       "buzzer": "Buzzer"
     },
-    "bellLoop": "Keep ringing until stopped",
+    "keepRinging": "Keep ringing until stopped",
     "stopAlarm": "Stop alarm",
     "clockStyle": "Clock style",
     "clockStyles": {
@@ -106,6 +106,7 @@
     "changeTask": "Change task",
     "finished": "Finished!",
     "timeUp": "Time's up",
+    "breakOver": "Break's over",
     "timeUpFocusTitle": "Focus session complete",
     "timeUpBreakTitle": "Break complete",
     "startBreakPrompt": "Start your break now?",
@@ -147,6 +148,20 @@
     "startDate": "Start date",
     "dueDate": "Due date"
   },
+  "picker": {
+    "title": "Choose a task",
+    "search": "Search tasks, tags or projects",
+    "all": "All",
+    "planned": "Planned today",
+    "dueWeek": "Due this week",
+    "high": "High priority",
+    "create": "Create “{{title}}” in Inbox",
+    "noMatch": "No tasks match.",
+    "empty": "No open tasks yet. Type a title to create one.",
+    "more": "Show {{n}} more",
+    "current": "Current",
+    "overdue": "Overdue"
+  },
   "projects": {
     "title": "Tasks and projects",
     "newProject": "New project",
@@ -174,7 +189,7 @@
     "unassign": "Remove from milestone",
     "noUnassigned": "No unassigned tasks.",
     "tabProjects": "Projects",
-    "tabMatrix": "Matrix",
+    "tabMatrix": "Eisenhower Matrix",
     "tabsLabel": "Tasks and projects sections",
     "summary": {
       "tasks": {
@@ -198,7 +213,7 @@
       "remove": "Remove filter: {{name}}",
       "clearAll": "Clear all",
       "priority": "Priority",
-      "openMatrix": "Open the Matrix",
+      "openMatrix": "Open the Eisenhower Matrix",
       "due": "Due",
       "dueAnyShort": "Any time",
       "dueWeek": "Due this week",
@@ -499,7 +514,7 @@
       "kanban": "Kanban",
       "overview": "Overview",
       "list": "List",
-      "matrix": "Matrix",
+      "matrix": "Eisenhower Matrix",
       "roadmap": "Roadmap",
       "calendar": "Calendar",
       "flow": "Flow"
@@ -567,7 +582,7 @@
     },
     "quadrants": {
       "title": "Open tasks by priority",
-      "open": "Open the Matrix"
+      "open": "Open the Eisenhower Matrix"
     },
     "age": {
       "title": "Age of open tasks",
@@ -867,8 +882,23 @@
     },
     "modal": {
       "title": "Recurring tasks",
+      "filters": "Filters",
+      "filtersActive": "Filters, {{n}} active",
+      "project": "Project",
+      "allProjects": "All projects",
+      "noProject": "No project",
+      "status": "Status",
+      "repeats": "Repeats",
+      "any": "Any",
+      "daily": "Daily",
+      "weekly": "Weekly",
+      "monthly": "Monthly",
+      "yearly": "Yearly",
+      "type": "Type",
+      "scheduled": "On a schedule",
+      "afterCompletion": "After completion",
+      "noMatchFilters": "No recurring tasks match these filters.",
       "search": "Search recurring tasks",
-      "filter": "Filter by state",
       "active": "Active",
       "pausedFilter": "Paused",
       "new": "New recurring task",

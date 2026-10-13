@@ -54,6 +54,8 @@ const NEVER_INITIAL_UI = [
   'src/lib/multitask-research.ts',
   'src/lib/bell-sounds.ts',
   component('lot-editor'),
+  component('alarm-modal'),
+  component('task-picker'),
   component('recurring-tasks-modal'),
   component('recurrence-editor'),
   'src/lib/recurrence-format.ts',

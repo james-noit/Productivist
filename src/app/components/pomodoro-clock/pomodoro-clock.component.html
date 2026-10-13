@@ -190,7 +190,7 @@
   </div>
 
   @if (taskModalOpen()) {
-    <app-task-picker (select)="selectTask($event)" (close)="taskModalOpen.set(false)" />
+    <app-task-picker (pick)="selectTask($event)" (close)="taskModalOpen.set(false)" />
   }
 
   @if (clock.sessionModalOpen()) {

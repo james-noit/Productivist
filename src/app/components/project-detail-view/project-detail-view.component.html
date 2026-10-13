@@ -34,6 +34,19 @@
         </div>
       </div>
       <div class="project-detail__actions">
+        @if (recurring().total) {
+          <button
+            type="button"
+            class="btn btn--secondary btn--sm project-detail__recurring"
+            [attr.aria-label]="'projects.recurring.label' | translate: { n: recurring().active }"
+            [title]="'projects.recurring.button' | translate"
+            (click)="openRecurring()"
+          >
+            <app-ui-icon name="repeat" [size]="16" />
+            <span class="project-detail__recurring-text">{{ 'projects.recurring.button' | translate }}</span>
+            <span class="project-detail__count" aria-hidden="true">{{ recurring().active }}</span>
+          </button>
+        }
         <button type="button" [attr.aria-label]="'projectDetail.edit' | translate" [title]="'projectDetail.edit' | translate" (click)="editing.set(true)"><app-ui-icon name="edit" /></button>
         <button
           type="button"
@@ -47,7 +60,7 @@
       </div>
     </header>
 
-    <div class="tabs" role="tablist" [attr.aria-label]="'projectDetail.presentationsLabel' | translate" (keydown)="onTabKeydown($event)">
+    <div #tablist class="tabs" role="tablist" [attr.aria-label]="'projectDetail.presentationsLabel' | translate" (keydown)="onTabKeydown($event)">
       @for (tab of presentations; track tab.key) {
         <button
           type="button"

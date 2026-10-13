@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, effect, inject } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
 import { SettingsService, type Language } from '../services/settings.service';
+import { ClockService } from '../services/clock.service';
 import { MultitaskService } from '../services/multitask.service';
 import { ViewService } from '../services/view.service';
 import { SyncService } from '../services/sync.service';
@@ -13,6 +14,7 @@ import { TodoListComponent } from './components/todo-list/todo-list.component';
 import { MultitaskViewComponent } from './components/multitask-view/multitask-view.component';
 import { PlanningLabModalComponent } from './components/planning-lab-modal/planning-lab-modal.component';
 import { ConfigModalComponent } from './components/config-modal/config-modal.component';
+import { AlarmModalComponent } from './components/alarm-modal/alarm-modal.component';
 import { RecurringTasksModalComponent } from './components/recurring-tasks-modal/recurring-tasks-modal.component';
 import { ProjectDetailViewComponent } from './components/project-detail-view/project-detail-view.component';
 import { ProjectsViewComponent } from './components/projects-view/projects-view.component';
@@ -32,6 +34,7 @@ import en from '../i18n/locales/en.json';
     PlanningLabModalComponent,
     ConfigModalComponent,
     RecurringTasksModalComponent,
+    AlarmModalComponent,
     ProjectsViewComponent,
     ProjectDetailViewComponent,
     AdminViewComponent,
@@ -44,6 +47,7 @@ export class AppComponent {
   private readonly settings = inject(SettingsService);
   readonly multitask = inject(MultitaskService);
   readonly view = inject(ViewService);
+  readonly clock = inject(ClockService);
   readonly accounts = inject(AccountService);
   private readonly translate = inject(TranslateService);
 

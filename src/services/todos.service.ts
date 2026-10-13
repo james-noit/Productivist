@@ -112,7 +112,7 @@ export class TodosService {
     status?: TaskStatus;
     startDate?: string;
     dueDate?: string;
-  }): void {
+  }): string {
     const maxOrder = this.todos().reduce((max, t) => Math.max(max, t.order), -1);
     const todo: Todo = {
       id: createId(),
@@ -132,6 +132,7 @@ export class TodosService {
       ...(input.dueDate ? { dueDate: input.dueDate } : {}),
     };
     this.todos.update((list) => [...list, todo]);
+    return todo.id;
   }
 
   /**

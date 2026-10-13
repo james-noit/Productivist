@@ -26,7 +26,7 @@ const FAB_ITEMS: readonly FabItem[] = [
 ];
 
 /**
- * Tasks and projects: the page header (title, one-line summary, Recurring and Plan my day), the Projects | Matrix
+ * Tasks and projects: the page header (title, one-line summary, Recurring and Plan my day), the Projects | Eisenhower Matrix
  * tabs, the tab bodies, the floating "+" and the dialogs it opens (New task, New project), so both tabs can create.
  * The summary and the dashboard share one `stats` computed (a single pass over the todos). `ProjectsPageState`
  * (search, filters, sort, layout, create requests) is provided here, for the dashboard, the filters drawer and

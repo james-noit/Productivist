@@ -1,0 +1,28 @@
+<div class="modal-overlay alarm-overlay">
+  <div
+    #panel
+    class="modal-panel alarm"
+    role="alertdialog"
+    aria-modal="true"
+    aria-labelledby="alarm-title"
+    tabindex="-1"
+  >
+    <div class="alarm__clock">
+      <span class="alarm__arc alarm__arc--left alarm__arc--1" aria-hidden="true"></span>
+      <span class="alarm__arc alarm__arc--left alarm__arc--2" aria-hidden="true"></span>
+      <span class="alarm__arc alarm__arc--left alarm__arc--3" aria-hidden="true"></span>
+      <span class="alarm__arc alarm__arc--right alarm__arc--1" aria-hidden="true"></span>
+      <span class="alarm__arc alarm__arc--right alarm__arc--2" aria-hidden="true"></span>
+      <span class="alarm__arc alarm__arc--right alarm__arc--3" aria-hidden="true"></span>
+      <div class="alarm__shaker">
+        <img class="alarm__body" src="alarm/alarm-clock.png" width="160" height="160" [alt]="titleKey() | translate" />
+        <img class="alarm__hammer" src="alarm/alarm-clock-hammer.png" width="160" height="160" alt="" />
+      </div>
+    </div>
+    <h2 id="alarm-title" class="alarm__title">{{ titleKey() | translate }}</h2>
+    <p class="alarm__time">{{ time() }}</p>
+    <button #stopBtn type="button" class="btn btn--primary alarm__stop" (click)="stop()">
+      {{ 'clock.stopAlarm' | translate }}
+    </button>
+  </div>
+</div>

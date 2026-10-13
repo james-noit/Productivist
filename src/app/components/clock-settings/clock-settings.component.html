@@ -54,11 +54,11 @@
           type="button"
           class="switch"
           role="switch"
-          [attr.aria-checked]="settings.bellLoop()"
-          (click)="settings.setBellLoop(!settings.bellLoop())"
+          [attr.aria-checked]="settings.keepRinging()"
+          (click)="settings.setKeepRinging(!settings.keepRinging())"
         >
           <span class="switch__track" aria-hidden="true"></span>
-          {{ 'clock.bellLoop' | translate }}
+          {{ 'clock.keepRinging' | translate }}
         </button>
         <ul class="clock-settings__list">
           @for (sound of bellSounds; track sound.id) {

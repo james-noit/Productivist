@@ -33,7 +33,7 @@ import {
 } from '../recurrence-editor/recurrence-editor.component';
 import { TagInputComponent } from '../tag-input/tag-input.component';
 import { UiIconComponent } from '../ui-icon/ui-icon.component';
-import type { Recurrence, RecurrenceDraftFields } from '../../../types/recurrence';
+import type { Recurrence, RecurrenceDraftFields, RecurrenceMode, RecurrenceUnit } from '../../../types/recurrence';
 import type { Priority } from '../../../types/todo';
 
 /** What the series editor edits, held locally until Save. `projectRef`/`milestoneRef` are ids ('' = none). */
@@ -51,14 +51,51 @@ interface SeriesDraft {
 
 const NEW = 'new';
 
-function draftFrom(rec: Recurrence | null): SeriesDraft {
+type StatusFilter = 'all' | 'active' | 'paused';
+type UnitFilter = 'any' | RecurrenceUnit;
+type ModeFilter = 'any' | RecurrenceMode;
+/** The project filter: every series, the ones without a project, or one project's id. */
+const ALL = 'all';
+const NONE = 'none';
+
+interface FilterOption<T extends string> {
+  id: T;
+  labelKey: string;
+}
+
+const STATUS_OPTIONS: readonly FilterOption<StatusFilter>[] = [
+  { id: 'all', labelKey: 'todo.filterAll' },
+  { id: 'active', labelKey: 'recurrence.modal.active' },
+  { id: 'paused', labelKey: 'recurrence.modal.pausedFilter' },
+];
+const UNIT_OPTIONS: readonly FilterOption<UnitFilter>[] = [
+  { id: 'any', labelKey: 'recurrence.modal.any' },
+  { id: 'day', labelKey: 'recurrence.modal.daily' },
+  { id: 'week', labelKey: 'recurrence.modal.weekly' },
+  { id: 'month', labelKey: 'recurrence.modal.monthly' },
+  { id: 'year', labelKey: 'recurrence.modal.yearly' },
+];
+const MODE_OPTIONS: readonly FilterOption<ModeFilter>[] = [
+  { id: 'any', labelKey: 'recurrence.modal.any' },
+  { id: 'schedule', labelKey: 'recurrence.modal.scheduled' },
+  { id: 'afterCompletion', labelKey: 'recurrence.modal.afterCompletion' },
+];
+
+interface FilterChip {
+  id: 'project' | 'status' | 'unit' | 'mode';
+  /** A project chip shows the project's name; the others a translated label. */
+  name: string | null;
+  labelKey: string;
+}
+
+function draftFrom(rec: Recurrence | null, projectRef = ''): SeriesDraft {
   return {
     title: rec?.title ?? '',
     description: rec?.description ?? '',
     importance: rec?.importance ?? 'medium',
     urgency: rec?.urgency ?? 'medium',
     tags: rec ? [...rec.tags] : [],
-    projectRef: rec?.projectId ?? '',
+    projectRef: rec?.projectId ?? projectRef,
     milestoneRef: rec?.projectId ? (rec.milestoneId ?? '') : '',
     pomodoros: rec?.pomodorosForTermination ?? null,
     rule: ruleDraftFrom(rec, todayIso()),
@@ -128,18 +165,60 @@ export class RecurringTasksModalComponent {
   // ---- list ----
 
   readonly search = signal('');
-  readonly filter = signal<'all' | 'active' | 'paused'>('all');
+
+  // Filters are local to the modal: opened from a project they start on that project, and nothing is persisted.
+  readonly statusOptions = STATUS_OPTIONS;
+  readonly unitOptions = UNIT_OPTIONS;
+  readonly modeOptions = MODE_OPTIONS;
+  readonly filtersOpen = signal(false);
+  readonly projectFilter = signal<string>(this.view.recurringProjectFilter() ?? ALL);
+  readonly statusFilter = signal<StatusFilter>('all');
+  readonly unitFilter = signal<UnitFilter>('any');
+  readonly modeFilter = signal<ModeFilter>('any');
+  readonly ALL = ALL;
+  readonly NONE = NONE;
+
+  /** The projects that have at least one series (plus the one the modal was opened for), in project order. */
+  readonly projectOptions = computed(() => {
+    const used = new Set(this.recurrences.recurrences().map((rec) => rec.projectId));
+    const wanted = this.projectFilter();
+    return this.projects.sortedProjects().filter((p) => used.has(p.id) || p.id === wanted);
+  });
+
+  readonly chips = computed<FilterChip[]>(() => {
+    const chips: FilterChip[] = [];
+    const project = this.projectFilter();
+    if (project === NONE) chips.push({ id: 'project', name: null, labelKey: 'recurrence.modal.noProject' });
+    else if (project !== ALL) {
+      const name = this.projects.projects().find((p) => p.id === project)?.name;
+      if (name) chips.push({ id: 'project', name, labelKey: '' });
+    }
+    const status = STATUS_OPTIONS.find((o) => o.id === this.statusFilter());
+    if (status && status.id !== 'all') chips.push({ id: 'status', name: null, labelKey: status.labelKey });
+    const unit = UNIT_OPTIONS.find((o) => o.id === this.unitFilter());
+    if (unit && unit.id !== 'any') chips.push({ id: 'unit', name: null, labelKey: unit.labelKey });
+    const mode = MODE_OPTIONS.find((o) => o.id === this.modeFilter());
+    if (mode && mode.id !== 'any') chips.push({ id: 'mode', name: null, labelKey: mode.labelKey });
+    return chips;
+  });
+  readonly activeFilters = computed(() => this.chips().length);
 
   private readonly dayFormat = computed(() => new Intl.DateTimeFormat(this.settings.language(), { weekday: 'short', day: 'numeric', month: 'short' }));
 
   readonly rows = computed(() => {
     const query = this.search().trim().toLowerCase();
-    const filter = this.filter();
+    const status = this.statusFilter();
+    const project = this.projectFilter();
+    const unit = this.unitFilter();
+    const mode = this.modeFilter();
     const projects = new Map(this.projects.projects().map((p) => [p.id, p.name]));
     const open = this.recurrences.occurrencesBySeries();
     return this.recurrences
       .sorted()
-      .filter((rec) => (filter === 'all' ? true : filter === 'paused' ? !!rec.paused : !rec.paused))
+      .filter((rec) => (status === 'all' ? true : status === 'paused' ? !!rec.paused : !rec.paused))
+      .filter((rec) => (project === ALL ? true : project === NONE ? !rec.projectId : rec.projectId === project))
+      .filter((rec) => unit === 'any' || rec.unit === unit)
+      .filter((rec) => mode === 'any' || rec.mode === mode)
       .filter((rec) => !query || rec.title.toLowerCase().includes(query))
       .map((rec) => {
         const next = this.format.nextDateOf(rec);
@@ -166,11 +245,11 @@ export class RecurringTasksModalComponent {
 
   readonly baseline = linkedSignal<string | null, SeriesDraft>({
     source: this.selection,
-    computation: () => draftFrom(untracked(this.selected)),
+    computation: () => untracked(() => this.draftFor(this.selected())),
   });
   readonly draft = linkedSignal<string | null, SeriesDraft>({
     source: this.selection,
-    computation: () => draftFrom(untracked(this.selected)),
+    computation: () => untracked(() => this.draftFor(this.selected())),
   });
 
   readonly dirty = computed(() => !draftsEqual(this.draft(), this.baseline()));
@@ -202,6 +281,12 @@ export class RecurringTasksModalComponent {
   private initialSelection(): string | null {
     const id = this.view.recurringSeriesId();
     return id === NEW || (id && this.recurrences.byId().has(id)) ? id : null;
+  }
+
+  /** A new series starts in the project the list is filtered to, so "New" from a project needs no extra step. */
+  private draftFor(rec: Recurrence | null): SeriesDraft {
+    const project = this.projectFilter();
+    return draftFrom(rec, !rec && project !== ALL && project !== NONE ? project : '');
   }
 
   edit(patch: Partial<SeriesDraft>): void {
@@ -317,8 +402,18 @@ export class RecurringTasksModalComponent {
     else this.recurrences.pause(rec.id);
   }
 
-  setFilter(value: 'active' | 'paused'): void {
-    this.filter.update((current) => (current === value ? 'all' : value));
+  removeChip(chip: FilterChip): void {
+    if (chip.id === 'project') this.projectFilter.set(ALL);
+    else if (chip.id === 'status') this.statusFilter.set('all');
+    else if (chip.id === 'unit') this.unitFilter.set('any');
+    else this.modeFilter.set('any');
+  }
+
+  clearFilters(): void {
+    this.projectFilter.set(ALL);
+    this.statusFilter.set('all');
+    this.unitFilter.set('any');
+    this.modeFilter.set('any');
   }
 
   // ---- dialog plumbing ----

@@ -1,69 +1,176 @@
-
-.task-picker__modal {
+.task-picker {
   --modal-max-width: 560px;
+  --modal-max-height: min(80vh, 640px);
+  --modal-radius: 12px;
+  --modal-padding: 0;
+  --modal-gap: 0;
+  height: min(80vh, 640px);
+  overflow: hidden;
+}
+
+.task-picker__top {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 0.85rem 1rem 0.75rem;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .task-picker__header {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 0.75rem;
 }
 
-.task-picker__header h3 {
+.task-picker__title {
   margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
 }
 
-.task-picker__close {
-  background: none;
-  border: 1px solid var(--color-border);
-  border-radius: 4px;
-  color: var(--color-text);
-  padding: 0.2rem 0.5rem;
-}
-
-.task-picker__tabs {
+.task-picker__search {
+  position: relative;
   display: flex;
-  gap: 0.5rem;
-}
-
-.task-picker__tabs button {
-  background: none;
-  border: 1px solid var(--color-border);
-  border-radius: 999px;
+  align-items: center;
   color: var(--color-text-muted);
-  padding: 0.35rem 1rem;
 }
 
-.task-picker__tabs button.active {
-  background-color: var(--color-primary);
-  color: var(--color-primary-contrast);
-  border-color: var(--color-primary);
+.task-picker__search app-ui-icon {
+  position: absolute;
+  left: 0.65rem;
+  pointer-events: none;
 }
 
-.task-picker__projects {
-  text-align: left;
+.task-picker__input {
+  padding-left: 2.1rem;
 }
 
-.task-picker__filters {
+.task-picker__chips {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.6rem;
+  gap: 0.4rem;
 }
 
-.task-picker__filters label {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  font-size: 0.75rem;
-  color: var(--color-text-muted);
-  flex: 1 1 100px;
+/* Only the list scrolls. The headings stick, so scroll-padding keeps a row scrolled into view from sliding under one. */
+.task-picker__list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-bottom: 0.5rem;
+  scroll-padding-top: 2rem;
+  scroll-padding-bottom: 0.5rem;
 }
 
-.task-picker__filters select {
+.task-picker__heading {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding: 0.7rem 1rem 0.3rem;
   background-color: var(--color-surface);
-  color: var(--color-text);
-  border: 1px solid var(--color-border);
-  border-radius: 4px;
-  padding: 0.35rem 0.5rem;
+  color: var(--color-text-muted);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
+.task-picker__row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  min-height: 44px;
+  padding: 0.35rem 1rem;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  color: var(--color-text);
+  font: inherit;
+  font-size: 0.92rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+/* The one use of the primary colour in the list: a 2px bar on the highlighted row. */
+.task-picker__row--active {
+  background-color: color-mix(in srgb, var(--color-text) 6%, transparent);
+  box-shadow: inset 2px 0 0 var(--color-primary);
+}
+
+.task-picker__row-title {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.task-picker__current {
+  flex: none;
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+}
+
+.task-picker__meta {
+  flex: 0 1 auto;
+  display: flex;
+  min-width: 0;
+  max-width: 55%;
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+.task-picker__meta > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.task-picker__meta > span + span::before {
+  content: '·';
+  margin: 0 0.35rem;
+}
+
+.task-picker__meta--overdue {
+  color: var(--color-high);
+}
+
+.task-picker__row--more {
+  min-height: 36px;
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+}
+
+.task-picker__row--create {
+  margin-top: 0.4rem;
+  border-top: 1px solid var(--color-border);
+}
+
+.task-picker__row--create app-ui-icon {
+  flex: none;
+  color: var(--color-text-muted);
+}
+
+.task-picker__empty {
+  margin: 0;
+  padding: 1rem;
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+}
+
+/* A phone gets the whole screen. */
+@media (max-width: 599px) {
+  .task-picker__overlay {
+    padding: 0;
+  }
+
+  .task-picker {
+    --modal-radius: 0;
+    --modal-max-width: none;
+    --modal-max-height: none;
+    height: 100dvh;
+    border: 0;
+  }
+}

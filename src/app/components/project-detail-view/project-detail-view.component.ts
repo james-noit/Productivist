@@ -1,6 +1,7 @@
-import { ChangeDetectionStrategy, Component, HostListener, computed, effect, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, HostListener, Injector, afterNextRender, computed, effect, inject, signal, viewChild } from '@angular/core';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { ProjectsService } from '../../../services/projects.service';
+import { RecurrenceService } from '../../../services/recurrence.service';
 import { TodosService } from '../../../services/todos.service';
 import { ViewService, type ProjectPresentation } from '../../../services/view.service';
 import { EditProjectModalComponent } from '../edit-project-modal/edit-project-modal.component';
@@ -45,6 +46,7 @@ export class ProjectDetailViewComponent {
   readonly view = inject(ViewService);
   private readonly projects = inject(ProjectsService);
   private readonly todos = inject(TodosService);
+  private readonly recurrences = inject(RecurrenceService);
   private readonly translate = inject(TranslateService);
 
   readonly presentations = PRESENTATIONS;
@@ -53,6 +55,13 @@ export class ProjectDetailViewComponent {
   readonly project = computed(() => {
     const id = this.view.activeProjectId();
     return id ? (this.projects.projects().find((p) => p.id === id) ?? null) : null;
+  });
+
+  /** This project's recurring series, paused ones included (the header button exists while there is one) and the active ones. */
+  readonly recurring = computed(() => {
+    const id = this.view.activeProjectId();
+    const series = this.recurrences.sorted().filter((rec) => rec.projectId === id);
+    return { total: series.length, active: series.filter((rec) => !rec.paused).length };
   });
 
   readonly progress = computed(() => {
@@ -67,10 +76,29 @@ export class ProjectDetailViewComponent {
     return { done, total, percent: total ? Math.round((done / total) * 100) : 0 };
   });
 
+  private readonly injector = inject(Injector);
+  private readonly tablist = viewChild<ElementRef<HTMLElement>>('tablist');
+
   constructor() {
     // The project may be deleted here or, after a sync, on another device.
     effect(() => {
       if (!this.project()) this.view.setView('projects');
+    });
+
+    // On a phone the tabs overflow sideways: keep the selected one in view (on open and on every change).
+    // Only the strip scrolls, never the page, hence scrollLeft rather than scrollIntoView.
+    effect(() => {
+      const key = this.view.projectPresentation();
+      afterNextRender(() => {
+        const list = this.tablist()?.nativeElement;
+        const tab = list?.querySelector<HTMLElement>(`[data-tab="${key}"]`);
+        if (!list || !tab) return;
+        const listBox = list.getBoundingClientRect();
+        const tabBox = tab.getBoundingClientRect();
+        const margin = 16;
+        if (tabBox.left < listBox.left) list.scrollLeft -= listBox.left - tabBox.left + margin;
+        else if (tabBox.right > listBox.right) list.scrollLeft += tabBox.right - listBox.right + margin;
+      }, { injector: this.injector });
     });
   }
 
@@ -121,5 +149,10 @@ export class ProjectDetailViewComponent {
     this.selectPresentation(next);
     const tablist = event.currentTarget as HTMLElement;
     queueMicrotask(() => tablist.querySelector<HTMLElement>(`[data-tab="${next}"]`)?.focus());
+  }
+
+  openRecurring(): void {
+    const id = this.view.activeProjectId();
+    if (id) this.view.openRecurring(null, { projectId: id });
   }
 }

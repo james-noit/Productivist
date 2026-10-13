@@ -418,7 +418,7 @@ button {
 
 /* ---------------------------------------------------------------------------
    Underline tabs (the project view's presentations, the Tasks and projects
-   view's Projects | Matrix). The selected tab is aria-selected="true".
+   view's Projects | Eisenhower Matrix). The selected tab is aria-selected="true".
      <div class="tabs" role="tablist">
        <button class="tabs__tab" role="tab" aria-selected="true">…</button>
      </div>

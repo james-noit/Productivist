@@ -1,73 +1,126 @@
 <div class="modal-overlay task-picker__overlay" (click)="closeOnBackdrop($event)">
-  <div class="modal-panel task-picker__modal" role="dialog" aria-modal="true" [attr.aria-label]="'clock.selectTask' | translate">
-    <div class="task-picker__header">
-      <h3>{{ 'clock.selectTask' | translate }}</h3>
-      <button type="button" class="task-picker__close" [attr.aria-label]="'todo.close' | translate" (click)="close.emit()">✕</button>
-    </div>
+  <div
+    #panel
+    class="modal-panel task-picker"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="task-picker-title"
+    (keydown)="onPanelKeydown($event)"
+  >
+    <header class="task-picker__top">
+      <div class="task-picker__header">
+        <h2 id="task-picker-title" class="task-picker__title">{{ 'picker.title' | translate }}</h2>
+        <button type="button" class="btn btn--ghost btn--icon" [attr.aria-label]="'todo.close' | translate" (click)="close.emit()">
+          <app-ui-icon name="x" [size]="18" />
+        </button>
+      </div>
 
-    <div class="task-picker__tabs" role="tablist">
-      <button
-        type="button"
-        role="tab"
-        [attr.aria-selected]="tab() === 'all'"
-        [class.active]="tab() === 'all'"
-        (click)="tab.set('all')"
-      >
-        {{ 'todo.viewAll' | translate }}
-      </button>
-      <button
-        type="button"
-        role="tab"
-        [attr.aria-selected]="tab() === 'projects'"
-        [class.active]="tab() === 'projects'"
-        (click)="tab.set('projects')"
-      >
-        {{ 'todo.viewProjects' | translate }}
-      </button>
-    </div>
+      <div class="task-picker__search">
+        <app-ui-icon name="search" [size]="16" />
+        <input
+          #search
+          class="input task-picker__input"
+          type="text"
+          role="combobox"
+          autocomplete="off"
+          spellcheck="false"
+          aria-autocomplete="list"
+          aria-expanded="true"
+          aria-controls="task-picker-list"
+          [attr.aria-activedescendant]="activeId()"
+          [attr.aria-label]="'picker.search' | translate"
+          [placeholder]="'picker.search' | translate"
+          [value]="query()"
+          (input)="setQuery($any($event.target).value)"
+          (keydown)="onSearchKeydown($event)"
+        />
+      </div>
 
-    @if (tab() === 'all') {
-      <div class="task-picker__filters">
-        <label>
-          {{ 'todo.importance' | translate }}
-          <select [ngModel]="importance()" (ngModelChange)="importance.set($event)" name="pickImportance">
-            <option value="all">{{ 'todo.filterAll' | translate }}</option>
-            <option value="low">{{ 'todo.low' | translate }}</option>
-            <option value="medium">{{ 'todo.medium' | translate }}</option>
-            <option value="high">{{ 'todo.high' | translate }}</option>
-          </select>
-        </label>
-        <label>
-          {{ 'todo.urgency' | translate }}
-          <select [ngModel]="urgency()" (ngModelChange)="urgency.set($event)" name="pickUrgency">
-            <option value="all">{{ 'todo.filterAll' | translate }}</option>
-            <option value="low">{{ 'todo.low' | translate }}</option>
-            <option value="medium">{{ 'todo.medium' | translate }}</option>
-            <option value="high">{{ 'todo.high' | translate }}</option>
-          </select>
-        </label>
-        @if (todos.allTags().length) {
-          <label>
-            {{ 'todo.tags' | translate }}
-            <select [ngModel]="tag()" (ngModelChange)="tag.set($event)" name="pickTag">
-              <option value="all">{{ 'todo.filterAll' | translate }}</option>
-              @for (t of todos.allTags(); track t) {
-                <option [value]="t">{{ t }}</option>
-              }
-            </select>
-          </label>
+      <div class="task-picker__chips" role="group" [attr.aria-label]="'picker.title' | translate">
+        @for (chip of chips(); track chip.id) {
+          <button type="button" class="filter-chip" [attr.aria-pressed]="filter() === chip.id" (click)="setFilter(chip.id)">
+            {{ chip.labelKey | translate }}
+          </button>
         }
       </div>
-      <app-task-pool-list
-        [tasks]="baseTasks()"
-        [isPickable]="isPickable()"
-        [hideUnpickable]="true"
-        (pick)="select.emit($event)"
-      />
-    } @else {
-      <div class="task-picker__projects">
-        <app-projects-panel [multitaskMode]="true" [isTaskPickable]="isPickable()" [onPickTask]="onPickTask" />
-      </div>
-    }
+    </header>
+
+    <!-- Mousedown stays out of the list so the search keeps focus: the highlight is driven by aria-activedescendant. -->
+    <div
+      id="task-picker-list"
+      class="task-picker__list"
+      role="listbox"
+      [attr.aria-label]="'picker.title' | translate"
+      (mousedown)="$event.preventDefault()"
+    >
+      @for (section of view().sections; track section.id) {
+        <div class="task-picker__section" role="group" [attr.aria-labelledby]="'task-picker-h-' + section.id">
+          <div class="task-picker__heading" [id]="'task-picker-h-' + section.id">
+            {{ section.labelKey ? (section.labelKey | translate) : section.name }}
+          </div>
+          @for (item of section.items; track item.index) {
+            @if (item.kind === 'task' && item.todo; as todo) {
+              <button
+                type="button"
+                role="option"
+                tabindex="-1"
+                class="task-picker__row"
+                [id]="optionId(item.index)"
+                [class.task-picker__row--active]="activeIndex() === item.index"
+                [attr.aria-selected]="activeIndex() === item.index"
+                (click)="activate(item)"
+                (mousemove)="highlight(item.index)"
+              >
+                <span class="task-picker__row-title">{{ todo.title }}</span>
+                @if (item.current) {
+                  <span class="task-picker__current">{{ 'picker.current' | translate }}</span>
+                }
+                <app-repeat-mark [todo]="todo" />
+                <span class="task-picker__meta">
+                  @for (part of item.meta; track $index) {
+                    <span [class.task-picker__meta--overdue]="part.overdue">{{ part.overdue ? ('picker.overdue' | translate) : part.text }}</span>
+                  }
+                </span>
+              </button>
+            } @else if (item.kind === 'more') {
+              <button
+                type="button"
+                role="option"
+                tabindex="-1"
+                class="task-picker__row task-picker__row--more"
+                [id]="optionId(item.index)"
+                [class.task-picker__row--active]="activeIndex() === item.index"
+                [attr.aria-selected]="activeIndex() === item.index"
+                (click)="activate(item)"
+                (mousemove)="highlight(item.index)"
+              >
+                {{ 'picker.more' | translate: { n: item.hidden } }}
+              </button>
+            }
+          }
+        </div>
+      }
+
+      @if (emptyKey(); as key) {
+        <p class="task-picker__empty">{{ key | translate }}</p>
+      }
+
+      @if (view().create; as create) {
+        <button
+          type="button"
+          role="option"
+          tabindex="-1"
+          class="task-picker__row task-picker__row--create"
+          [id]="optionId(create.index)"
+          [class.task-picker__row--active]="activeIndex() === create.index"
+          [attr.aria-selected]="activeIndex() === create.index"
+          (click)="activate(create)"
+          (mousemove)="highlight(create.index)"
+        >
+          <app-ui-icon name="plus" [size]="16" />
+          <span class="task-picker__row-title">{{ 'picker.create' | translate: { title: create.title } }}</span>
+        </button>
+      }
+    </div>
   </div>
 </div>

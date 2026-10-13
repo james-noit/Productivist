@@ -40,13 +40,22 @@ export class SettingsService {
   readonly breakSeconds = localStorageSignal<number>('productivist.breakSeconds', DEFAULT_BREAK_SECONDS);
   readonly bellSound = localStorageSignal<boolean>('productivist.bellSound', true);
   readonly bellSoundId = localStorageSignal<BellSoundId>('productivist.bellSoundId', DEFAULT_BELL_SOUND_ID);
-  /** Keep ringing until stopped (60 s at most) instead of one cycle. */
-  readonly bellLoop = localStorageSignal<boolean>('productivist.bellLoop', true);
+  /** Keep ringing until stopped (60 s at most) instead of one cycle. Off by default; replaces the old `bellLoop` key. */
+  readonly keepRinging = localStorageSignal<boolean>('productivist.keepRinging', false);
   readonly clockStyle = localStorageSignal<ClockStyle>('productivist.clockStyle', DEFAULT_CLOCK_STYLE);
   readonly boxClockOrder = localStorageSignal<BoxClockOrder>(
     'productivist.boxClockOrder',
     DEFAULT_BOX_CLOCK_ORDER,
   );
+
+  constructor() {
+    // 0.18 stored `bellLoop` (default true); the setting now lives under a new key so the new default applies.
+    try {
+      localStorage.removeItem('productivist.bellLoop');
+    } catch {
+      // storage unavailable: nothing to clean up
+    }
+  }
 
   setTheme(next: Theme): void {
     this.theme.set(next);
@@ -72,8 +81,8 @@ export class SettingsService {
     this.bellSoundId.set(id);
   }
 
-  setBellLoop(val: boolean): void {
-    this.bellLoop.set(val);
+  setKeepRinging(val: boolean): void {
+    this.keepRinging.set(val);
   }
 
   setClockStyle(style: ClockStyle): void {
@@ -91,7 +100,7 @@ export class SettingsService {
     this.breakSeconds.set(DEFAULT_BREAK_SECONDS);
     this.bellSound.set(true);
     this.bellSoundId.set(DEFAULT_BELL_SOUND_ID);
-    this.bellLoop.set(true);
+    this.keepRinging.set(false);
     this.clockStyle.set(DEFAULT_CLOCK_STYLE);
     this.boxClockOrder.set(DEFAULT_BOX_CLOCK_ORDER);
   }

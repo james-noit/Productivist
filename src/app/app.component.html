@@ -64,3 +64,10 @@
     <app-recurring-tasks-modal />
   }
 }
+
+<!-- The ringing alarm: above every view and every other modal, including Multitask, which has no session dialog. -->
+@if (clock.alarmModalOpen()) {
+  @defer (on immediate) {
+    <app-alarm-modal />
+  }
+}

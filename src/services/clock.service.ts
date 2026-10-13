@@ -48,6 +48,8 @@ export class ClockService {
 
   /** True while the end-of-session sound is ringing (the header offers "Stop alarm"). */
   readonly ringing = signal(false);
+  /** True while the end-of-session alarm keeps ringing (keep ringing on, never a preview): `alarm-modal` shows then. */
+  readonly alarmModalOpen = signal(false);
   // The synthesis lives in a lazy chunk; `start()` and the previews (user gestures) load it before the bell is needed.
   private bells?: Promise<BellSounds>;
   private audioCtx: AudioContext | null = null;
@@ -150,15 +152,17 @@ export class ClockService {
   }
 
   /** Rings a sound (loading its chunk first) and keeps `ringing` true until it ends or `stopAlarm()` cuts it. */
-  private ring(id: BellSoundId, loop: boolean): void {
+  private ring(id: BellSoundId, loop: boolean, withModal = false): void {
     const ctx = this.audio();
     if (!ctx) return;
     const token = ++this.ringToken;
     this.ringing.set(true);
+    this.alarmModalOpen.set(withModal);
     const end = (): void => {
       if (token !== this.ringToken) return;
       this.ringHandle = null;
       this.ringing.set(false);
+      this.alarmModalOpen.set(false);
     };
     this.loadBells().then((bells) => {
       if (token === this.ringToken) this.ringHandle = bells.ring(ctx, id, { loop, onEnd: end });
@@ -177,6 +181,7 @@ export class ClockService {
     this.ringHandle?.stop();
     this.ringHandle = null;
     if (this.ringing()) this.ringing.set(false);
+    if (this.alarmModalOpen()) this.alarmModalOpen.set(false);
   }
 
   ensureNotificationPermission(): void {
@@ -222,7 +227,10 @@ export class ClockService {
       if (!this.hasTicked) {
         this.hasTicked = true;
         this.pause();
-        if (this.settings.bellSound()) this.ring(this.settings.bellSoundId(), this.settings.bellLoop());
+        if (this.settings.bellSound()) {
+          const keep = this.settings.keepRinging();
+          this.ring(this.settings.bellSoundId(), keep, keep);
+        }
         this.sendNotification(this.mode());
         this.switchToNextMode();
       }

@@ -7,27 +7,96 @@
       </button>
     </header>
 
-    <div class="rt__toolbar">
-      <div class="rt__search">
-        <app-ui-icon name="search" [size]="16" />
-        <input
-          class="input rt__search-input"
-          type="search"
-          [value]="search()"
-          [attr.aria-label]="'recurrence.modal.search' | translate"
-          [placeholder]="'recurrence.modal.search' | translate"
-          autocomplete="off"
-          (input)="search.set($any($event.target).value)"
-        />
+    <div class="rt__top">
+      <div class="rt__toolbar">
+        <div class="rt__search">
+          <app-ui-icon name="search" [size]="16" />
+          <input
+            class="input rt__search-input"
+            type="search"
+            [value]="search()"
+            [attr.aria-label]="'recurrence.modal.search' | translate"
+            [placeholder]="'recurrence.modal.search' | translate"
+            autocomplete="off"
+            (input)="search.set($any($event.target).value)"
+          />
+        </div>
+        <button
+          type="button"
+          class="btn btn--secondary btn--sm"
+          [attr.aria-expanded]="filtersOpen()"
+          [attr.aria-controls]="uid + '-filters'"
+          [attr.aria-label]="(activeFilters() ? 'recurrence.modal.filtersActive' : 'recurrence.modal.filters') | translate: { n: activeFilters() }"
+          (click)="filtersOpen.set(!filtersOpen())"
+        >
+          <app-ui-icon name="filter" [size]="16" />
+          {{ 'recurrence.modal.filters' | translate }}
+          @if (activeFilters()) {
+            <span class="rt__badge" aria-hidden="true">{{ activeFilters() }}</span>
+          }
+        </button>
+        <button type="button" class="btn btn--primary btn--sm rt__new" (click)="leave(NEW)">
+          <app-ui-icon name="plus" [size]="16" />
+          {{ 'recurrence.modal.new' | translate }}
+        </button>
       </div>
-      <div class="rt__chips" role="group" [attr.aria-label]="'recurrence.modal.filter' | translate">
-        <button type="button" class="filter-chip" [attr.aria-pressed]="filter() === 'active'" (click)="setFilter('active')">{{ 'recurrence.modal.active' | translate }}</button>
-        <button type="button" class="filter-chip" [attr.aria-pressed]="filter() === 'paused'" (click)="setFilter('paused')">{{ 'recurrence.modal.pausedFilter' | translate }}</button>
-      </div>
-      <button type="button" class="btn btn--primary btn--sm rt__new" (click)="leave(NEW)">
-        <app-ui-icon name="plus" [size]="16" />
-        {{ 'recurrence.modal.new' | translate }}
-      </button>
+
+      @if (filtersOpen()) {
+        <div class="rt__filters" [id]="uid + '-filters'">
+          <div class="field">
+            <label class="field__label" [for]="uid + '-project'">{{ 'recurrence.modal.project' | translate }}</label>
+            <select class="select" [id]="uid + '-project'" [value]="projectFilter()" (change)="projectFilter.set($any($event.target).value)">
+              <option [value]="ALL" [selected]="projectFilter() === ALL">{{ 'recurrence.modal.allProjects' | translate }}</option>
+              <option [value]="NONE" [selected]="projectFilter() === NONE">{{ 'recurrence.modal.noProject' | translate }}</option>
+              @for (project of projectOptions(); track project.id) {
+                <option [value]="project.id" [selected]="projectFilter() === project.id">{{ project.name }}</option>
+              }
+            </select>
+          </div>
+          <div class="field">
+            <span class="field__label" [id]="uid + '-status'">{{ 'recurrence.modal.status' | translate }}</span>
+            <div class="segmented" role="group" [attr.aria-labelledby]="uid + '-status'">
+              @for (option of statusOptions; track option.id) {
+                <button type="button" class="segmented__option" [attr.aria-pressed]="statusFilter() === option.id" (click)="statusFilter.set(option.id)">{{ option.labelKey | translate }}</button>
+              }
+            </div>
+          </div>
+          <div class="field">
+            <span class="field__label" [id]="uid + '-repeats'">{{ 'recurrence.modal.repeats' | translate }}</span>
+            <div class="segmented" role="group" [attr.aria-labelledby]="uid + '-repeats'">
+              @for (option of unitOptions; track option.id) {
+                <button type="button" class="segmented__option" [attr.aria-pressed]="unitFilter() === option.id" (click)="unitFilter.set(option.id)">{{ option.labelKey | translate }}</button>
+              }
+            </div>
+          </div>
+          <div class="field">
+            <span class="field__label" [id]="uid + '-type'">{{ 'recurrence.modal.type' | translate }}</span>
+            <div class="segmented" role="group" [attr.aria-labelledby]="uid + '-type'">
+              @for (option of modeOptions; track option.id) {
+                <button type="button" class="segmented__option" [attr.aria-pressed]="modeFilter() === option.id" (click)="modeFilter.set(option.id)">{{ option.labelKey | translate }}</button>
+              }
+            </div>
+          </div>
+          @if (activeFilters()) {
+            <button type="button" class="button-ghost rt__clear" (click)="clearFilters()">{{ 'projects.empty.clearFilters' | translate }}</button>
+          }
+        </div>
+      } @else if (activeFilters()) {
+        <div class="rt__active" role="group" [attr.aria-label]="'projects.filters.active' | translate">
+          @for (chip of chips(); track chip.id) {
+            <button
+              type="button"
+              class="filter-chip rt__chip"
+              [attr.aria-label]="'projects.filters.remove' | translate: { name: chip.name ?? (chip.labelKey | translate) }"
+              (click)="removeChip(chip)"
+            >
+              {{ chip.name ?? (chip.labelKey | translate) }}
+              <app-ui-icon name="x" [size]="12" />
+            </button>
+          }
+          <button type="button" class="button-ghost rt__clear" (click)="clearFilters()">{{ 'projects.empty.clearFilters' | translate }}</button>
+        </div>
+      }
     </div>
 
     <div class="rt__body">
@@ -51,6 +120,9 @@
             @if (recurrences.count() === 0) {
               <p>{{ 'recurrence.modal.empty' | translate }}</p>
               <button type="button" class="btn btn--secondary btn--sm" (click)="leave(NEW)">{{ 'recurrence.modal.new' | translate }}</button>
+            } @else if (activeFilters()) {
+              <p>{{ 'recurrence.modal.noMatchFilters' | translate }}</p>
+              <button type="button" class="btn btn--secondary btn--sm" (click)="clearFilters()">{{ 'projects.empty.clearFilters' | translate }}</button>
             } @else {
               <p>{{ 'recurrence.modal.noMatch' | translate }}</p>
             }

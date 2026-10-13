@@ -1,4 +1,5 @@
 import { addDays } from './dates';
+import { normalizeQuery } from './search';
 import { QUADRANTS, classify, comparePriority, type QuadrantCounts } from './eisenhower';
 import type { EisenhowerQuadrant } from '../types/eisenhower';
 import type { Objective } from '../types/flow';
@@ -142,10 +143,8 @@ export function buildPageStats(
   return { byProject, inbox: inboxOrder(inbox), openByProject, quadrants, open, overdue, dueWeek };
 }
 
-/** Lower-cases and strips accents, so "reunion" finds "Reunión". */
-export function normalizeQuery(text: string): string {
-  return text.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase().trim();
-}
+// Moved to lib/search.ts so the task picker does not pull this file into its chunk; re-exported for the page.
+export { normalizeQuery };
 
 /**
  * Whether an open task shows under the page's filters: the search text, the due filter and the chosen quadrants

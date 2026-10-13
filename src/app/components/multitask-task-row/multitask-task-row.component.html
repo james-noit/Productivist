@@ -133,7 +133,7 @@
   }
 
   @if (taskModalOpen()) {
-    <app-task-picker [isPickable]="isPickable" (select)="selectTask($event)" (close)="closeTaskModal()" />
+    <app-task-picker [isPickable]="isPickable" (pick)="selectTask($event)" (close)="closeTaskModal()" />
   }
 
   @if (showDetail() && task(); as task) {

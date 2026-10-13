@@ -1,0 +1,184 @@
+/* Above every other modal, including the dialogs of the Plan-my-day wizard (z-index 100). A backdrop click does
+   nothing: this is an alarm, not a passing message. */
+.alarm-overlay {
+  --modal-z: 200;
+}
+
+.alarm {
+  --modal-max-width: 360px;
+  --modal-radius: 12px;
+  --modal-padding: 1.5rem 1.5rem 1.25rem;
+  --modal-gap: 0.25rem;
+  align-items: center;
+  text-align: center;
+}
+
+.alarm:focus {
+  outline: none;
+}
+
+/* 224 x 170: the 160px clock with room on each side for the ring arcs. */
+.alarm__clock {
+  position: relative;
+  width: 224px;
+  height: 170px;
+  flex: none;
+}
+
+.alarm__shaker {
+  position: absolute;
+  left: 32px;
+  top: 0;
+  width: 160px;
+  height: 160px;
+  /* Rattling on a table: it pivots on its feet. */
+  transform-origin: 50% 94%;
+  animation: alarm-rattle 1.32s linear infinite;
+}
+
+.alarm__body,
+.alarm__hammer {
+  position: absolute;
+  inset: 0;
+  width: 160px;
+  height: 160px;
+}
+
+/* The hammer is hinged at the top of the body: 256 / 512 across, 156 / 512 down in the drawing. */
+.alarm__hammer {
+  transform-origin: 50% 30.5%;
+  animation: alarm-hammer 1.32s linear infinite;
+}
+
+/* Ring arcs: the visible side of a circle around each bell (the bells sit at 64.6% / 35.4% across, 36.7% down). */
+.alarm__arc {
+  position: absolute;
+  top: calc(59px - var(--r));
+  width: calc(var(--r) * 2);
+  height: calc(var(--r) * 2);
+  border-radius: 50%;
+  border: 3px solid transparent;
+  opacity: 0;
+  animation: alarm-arc 1.32s ease-out infinite;
+}
+
+.alarm__arc--right {
+  left: calc(135px - var(--r));
+  border-right-color: var(--color-text-muted);
+}
+
+.alarm__arc--left {
+  left: calc(89px - var(--r));
+  border-left-color: var(--color-text-muted);
+}
+
+.alarm__arc--1 {
+  --r: 36px;
+}
+
+.alarm__arc--2 {
+  --r: 48px;
+  animation-delay: 0.09s;
+}
+
+.alarm__arc--3 {
+  --r: 60px;
+  animation-delay: 0.18s;
+}
+
+.alarm__title {
+  margin: 0.5rem 0 0;
+  font-size: 1.35rem;
+  font-weight: 600;
+}
+
+.alarm__time {
+  margin: 0 0 1rem;
+  font-size: 2.75rem;
+  font-weight: 600;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.alarm__stop {
+  width: 100%;
+  min-height: 44px;
+  font-size: 1rem;
+}
+
+/* Six swings of 0.12 s, then 0.6 s of stillness, like a real one. */
+@keyframes alarm-rattle {
+  0% {
+    transform: rotate(0);
+  }
+  4.5% {
+    transform: rotate(-6deg);
+  }
+  13.6% {
+    transform: rotate(6deg);
+  }
+  22.7% {
+    transform: rotate(-6deg);
+  }
+  31.8% {
+    transform: rotate(6deg);
+  }
+  40.9% {
+    transform: rotate(-6deg);
+  }
+  50% {
+    transform: rotate(6deg);
+  }
+  54.5%,
+  100% {
+    transform: rotate(0);
+  }
+}
+
+/* Twelve half swings of 0.06 s, between the bells, over the same 0.72 s as the rattle. */
+@keyframes alarm-hammer {
+  0%,
+  9.1%,
+  18.2%,
+  27.3%,
+  36.4%,
+  45.5% {
+    transform: rotate(-14deg);
+  }
+  4.5%,
+  13.6%,
+  22.7%,
+  31.8%,
+  40.9%,
+  50% {
+    transform: rotate(14deg);
+  }
+  54.5%,
+  100% {
+    transform: rotate(0);
+  }
+}
+
+@keyframes alarm-arc {
+  0%,
+  60%,
+  100% {
+    opacity: 0;
+  }
+  8%,
+  45% {
+    opacity: 0.85;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .alarm__shaker,
+  .alarm__hammer {
+    animation: none;
+  }
+
+  .alarm__arc {
+    animation: none;
+    opacity: 0.7;
+  }
+}

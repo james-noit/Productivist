@@ -33,7 +33,7 @@
     </div>
   }
   <div class="app-header__end">
-    @if (clock.ringing()) {
+    @if (clock.ringing() && !clock.alarmModalOpen()) {
       <button #stopAlarm type="button" class="btn btn--danger btn--sm" (click)="clock.stopAlarm()">{{ 'clock.stopAlarm' | translate }}</button>
     }
     @if (view.current() === 'pomodoro') {

@@ -112,15 +112,19 @@ export class ViewService {
    */
   readonly recurringOpen = signal(false);
   readonly recurringSeriesId = signal<string | null>(null);
+  /** The project the modal starts filtered to (a project's header opens it that way); null = every series. */
+  readonly recurringProjectFilter = signal<string | null>(null);
 
-  openRecurring(seriesId: string | null = null): void {
+  openRecurring(seriesId: string | null = null, opts?: { projectId?: string }): void {
     this.recurringSeriesId.set(seriesId);
+    this.recurringProjectFilter.set(opts?.projectId ?? null);
     this.recurringOpen.set(true);
   }
 
   closeRecurring(): void {
     this.recurringOpen.set(false);
     this.recurringSeriesId.set(null);
+    this.recurringProjectFilter.set(null);
   }
 
   openConfiguration(section: ConfigSection = 'general'): void {

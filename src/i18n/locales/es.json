@@ -90,7 +90,7 @@
       "siren": "Sirena",
       "buzzer": "Zumbador"
     },
-    "bellLoop": "Seguir sonando hasta pararlo",
+    "keepRinging": "Seguir sonando hasta pararlo",
     "stopAlarm": "Parar alarma",
     "clockStyle": "Estilo de reloj",
     "clockStyles": {
@@ -106,6 +106,7 @@
     "changeTask": "Cambiar tarea",
     "finished": "¡Terminado!",
     "timeUp": "Se acabó el tiempo",
+    "breakOver": "Fin del descanso",
     "timeUpFocusTitle": "Sesión de concentración completada",
     "timeUpBreakTitle": "Descanso completado",
     "startBreakPrompt": "¿Iniciar tu descanso ahora?",
@@ -147,6 +148,20 @@
     "startDate": "Fecha de inicio",
     "dueDate": "Fecha límite"
   },
+  "picker": {
+    "title": "Elige una tarea",
+    "search": "Buscar tareas, etiquetas o proyectos",
+    "all": "Todas",
+    "planned": "Planificadas para hoy",
+    "dueWeek": "Vencen esta semana",
+    "high": "Prioridad alta",
+    "create": "Crear «{{title}}» en la bandeja de entrada",
+    "noMatch": "Ninguna tarea coincide.",
+    "empty": "Aún no hay tareas abiertas. Escribe un título para crear una.",
+    "more": "Mostrar {{n}} más",
+    "current": "Actual",
+    "overdue": "Vencida"
+  },
   "projects": {
     "title": "Tareas y proyectos",
     "newProject": "Nuevo proyecto",
@@ -174,7 +189,7 @@
     "unassign": "Quitar del hito",
     "noUnassigned": "No hay tareas sin asignar.",
     "tabProjects": "Proyectos",
-    "tabMatrix": "Matriz",
+    "tabMatrix": "Matriz de Eisenhower",
     "tabsLabel": "Secciones de Tareas y proyectos",
     "summary": {
       "tasks": {
@@ -198,7 +213,7 @@
       "remove": "Quitar filtro: {{name}}",
       "clearAll": "Quitar todos",
       "priority": "Prioridad",
-      "openMatrix": "Abrir la Matriz",
+      "openMatrix": "Abrir la Matriz de Eisenhower",
       "due": "Vencimiento",
       "dueAnyShort": "Cualquiera",
       "dueWeek": "Vencen esta semana",
@@ -499,7 +514,7 @@
       "kanban": "Kanban",
       "overview": "Resumen",
       "list": "Lista",
-      "matrix": "Matriz",
+      "matrix": "Matriz de Eisenhower",
       "roadmap": "Hoja de ruta",
       "calendar": "Calendario",
       "flow": "Flujo"
@@ -567,7 +582,7 @@
     },
     "quadrants": {
       "title": "Tareas abiertas por prioridad",
-      "open": "Abrir la matriz"
+      "open": "Abrir la Matriz de Eisenhower"
     },
     "age": {
       "title": "Antigüedad de las tareas abiertas",
@@ -867,8 +882,23 @@
     },
     "modal": {
       "title": "Tareas recurrentes",
+      "filters": "Filtros",
+      "filtersActive": "Filtros, {{n}} activos",
+      "project": "Proyecto",
+      "allProjects": "Todos los proyectos",
+      "noProject": "Sin proyecto",
+      "status": "Estado",
+      "repeats": "Se repite",
+      "any": "Cualquiera",
+      "daily": "Cada día",
+      "weekly": "Cada semana",
+      "monthly": "Cada mes",
+      "yearly": "Cada año",
+      "type": "Tipo",
+      "scheduled": "Con calendario",
+      "afterCompletion": "Tras completarla",
+      "noMatchFilters": "Ninguna tarea recurrente coincide con estos filtros.",
       "search": "Buscar tareas recurrentes",
-      "filter": "Filtrar por estado",
       "active": "Activas",
       "pausedFilter": "En pausa",
       "new": "Nueva tarea recurrente",

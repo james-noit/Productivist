@@ -34,14 +34,17 @@
   font-weight: 600;
 }
 
-.rt__toolbar {
+.rt__top {
   flex: none;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.rt__toolbar {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 0.6rem 0.75rem;
   padding: 0.75rem 1.25rem;
-  border-bottom: 1px solid var(--color-border);
 }
 
 .rt__search {
@@ -63,9 +66,65 @@
   padding-left: 2.1rem;
 }
 
-.rt__chips {
+.rt__badge {
+  min-width: 1.35rem;
+  padding: 0.05rem 0.4rem;
+  border-radius: 999px;
+  background-color: var(--color-primary);
+  color: var(--color-primary-contrast);
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.3;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+/* A plain region under the toolbar (the modal is already a dialog), closed until asked for. */
+.rt__filters {
   display: flex;
-  gap: 0.4rem;
+  flex-wrap: wrap;
+  /* Top, so the field labels line up: the select is taller than the segmented controls. */
+  align-items: flex-start;
+  gap: 0.75rem 1.25rem;
+  padding: 0.25rem 1.25rem 0.9rem;
+}
+
+.rt__filters .field {
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+.rt__filters .select {
+  min-width: 11rem;
+}
+
+.rt__filters .segmented {
+  flex-wrap: wrap;
+}
+
+.rt__filters .rt__clear {
+  align-self: flex-end;
+}
+
+.rt__active {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 0.5rem;
+  padding: 0 1.25rem 0.75rem;
+}
+
+/* A chip that is already on: it removes itself, so it wears the "on" look without the shared check mark. */
+.rt__chip {
+  background-color: color-mix(in srgb, var(--color-primary) 15%, transparent);
+  border-color: var(--color-primary);
+  color: var(--color-text);
+  padding-block: 0.15rem;
+}
+
+.rt__chip:hover {
+  border-color: var(--color-primary);
+  background-color: color-mix(in srgb, var(--color-primary) 24%, transparent);
 }
 
 .rt__new {
@@ -102,7 +161,7 @@
 }
 
 /* The list's search and filters make no sense while the editor has the whole dialog. */
-.rt--editing .rt__toolbar {
+.rt--editing .rt__top {
   display: none;
 }
 
@@ -115,8 +174,8 @@
     grid-template-columns: minmax(280px, 22rem) minmax(0, 1fr);
   }
 
-  .rt--editing .rt__toolbar {
-    display: flex;
+  .rt--editing .rt__top {
+    display: block;
   }
 
   .rt--editing .rt__list,
@@ -359,6 +418,8 @@
 
   .rt__header,
   .rt__toolbar,
+  .rt__filters,
+  .rt__active,
   .rt__footer {
     padding-left: 1rem;
     padding-right: 1rem;
