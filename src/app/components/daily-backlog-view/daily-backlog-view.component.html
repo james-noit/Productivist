@@ -221,18 +221,13 @@
         </div>
       </div>
 
-      <div class="daily-backlog__choose-actions">
-        <div class="daily-backlog__back-and-reset">
-          <button type="button" class="daily-backlog__back" (click)="goBackToObjectives()">
-            {{ 'planningLab.backToObjectives' | translate }}
-          </button>
-          <button type="button" class="daily-backlog__start-over" (click)="confirmStartOver()">
-            {{ 'planningLab.startOver' | translate }}
-          </button>
-        </div>
+      <div class="daily-backlog__footer">
+        <button type="button" class="btn btn--ghost btn--sm" (click)="goBackToObjectives()">
+          <app-ui-icon name="chevron-left" [size]="16" /> {{ 'planningLab.backToObjectives' | translate }}
+        </button>
         <button
           type="button"
-          class="daily-backlog__confirm"
+          class="btn btn--primary"
           [disabled]="!dailyPlan.assignedProjectIds().size"
           (click)="dailyPlan.confirmProjects()"
         >
@@ -295,32 +290,28 @@
             </div>
           }
 
-          <div class="daily-backlog__next-actions">
-            <button
-              type="button"
-              class="daily-backlog__next-primary"
-              [disabled]="!dailyPlan.plannedTaskIds().length"
-              (click)="requestMoveToPomodoro()"
-            >
-              {{ 'planningLab.moveToPomodoro' | translate }}
+          <div class="daily-backlog__footer">
+            <button type="button" class="btn btn--ghost btn--sm" (click)="dailyPlan.backToChooseProjects()">
+              <app-ui-icon name="chevron-left" [size]="16" /> {{ 'planningLab.backToProjects' | translate }}
             </button>
-            <button
-              type="button"
-              class="daily-backlog__next-secondary"
-              [disabled]="!dailyPlan.plannedTaskIds().length"
-              (click)="startGroupingParallel()"
-            >
-              {{ 'planningLab.moveToPomodoroMultitask' | translate }}
-            </button>
-          </div>
-
-          <div class="daily-backlog__back-and-reset">
-            <button type="button" class="daily-backlog__back" (click)="dailyPlan.backToChooseProjects()">
-              {{ 'planningLab.backToProjects' | translate }}
-            </button>
-            <button type="button" class="daily-backlog__start-over" (click)="confirmStartOver()">
-              {{ 'planningLab.startOver' | translate }}
-            </button>
+            <div class="daily-backlog__footer-actions">
+              <button
+                type="button"
+                class="btn btn--secondary"
+                [disabled]="!dailyPlan.plannedTaskIds().length"
+                (click)="startGroupingParallel()"
+              >
+                {{ 'planningLab.moveToPomodoroMultitask' | translate }}
+              </button>
+              <button
+                type="button"
+                class="btn btn--primary"
+                [disabled]="!dailyPlan.plannedTaskIds().length"
+                (click)="requestMoveToPomodoro()"
+              >
+                {{ 'planningLab.moveToPomodoro' | translate }}
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -332,65 +323,20 @@
       <h3 class="daily-backlog__grouping-title">{{ 'planningLab.groupingTitle' | translate }}</h3>
       <p class="daily-backlog__prompt">{{ 'planningLab.groupingHint' | translate }}</p>
 
-      <div class="lot-list">
-        @for (lot of dailyPlan.executionLots(); track lot.id; let i = $index; let last = $last) {
-          <div
-            class="lot"
-            [class.lot--target]="dailyPlan.draggedTaskId()"
-            (dragover)="$event.preventDefault()"
-            (drop)="placeArmedInLot(lot.id)"
-            (click)="placeArmedInLot(lot.id)"
-          >
-            <div class="lot__header">
-              <span class="lot__index">{{ 'planningLab.lotLabel' | translate: { n: i + 1 } }}</span>
-              <div class="lot__order-buttons">
-                <button
-                  type="button"
-                  [attr.aria-label]="'planningLab.moveLotUp' | translate"
-                  [title]="'planningLab.moveLotUp' | translate"
-                  [disabled]="i === 0"
-                  (click)="$event.stopPropagation(); moveLot(lot.id, -1)"
-                >
-                  ↑
-                </button>
-                <button
-                  type="button"
-                  [attr.aria-label]="'planningLab.moveLotDown' | translate"
-                  [title]="'planningLab.moveLotDown' | translate"
-                  [disabled]="last"
-                  (click)="$event.stopPropagation(); moveLot(lot.id, 1)"
-                >
-                  ↓
-                </button>
-              </div>
-            </div>
-            <ul class="lot__tasks">
-              @for (taskId of lot.taskIds; track taskId) {
-                @if (taskById(taskId); as todo) {
-                  <li
-                    class="lot-task"
-                    [class.lot-task--armed]="isArmed(todo.id)"
-                    (click)="$event.stopPropagation(); toggleArmed(todo.id)"
-                  >
-                    {{ todo.title }}
-                  </li>
-                }
-              }
-            </ul>
-          </div>
-        }
+      <app-lot-editor
+        [lots]="dailyPlan.executionLots()"
+        [titles]="titles()"
+        [doneIds]="doneIds()"
+        (moveTask)="moveTask($event)"
+        (moveLot)="dailyPlan.moveLot($event.lotId, $event.dir)"
+      />
 
-        <button type="button" class="lot lot--new" (click)="addNewLotWithArmed()">
-          <span aria-hidden="true">+</span> {{ 'planningLab.newLot' | translate }}
+      <div class="daily-backlog__footer">
+        <button type="button" class="btn btn--ghost btn--sm" (click)="dailyPlan.backToPlanning()">
+          <app-ui-icon name="chevron-left" [size]="16" /> {{ 'planningLab.backToPlanning' | translate }}
         </button>
-      </div>
-
-      <div class="daily-backlog__next-actions">
-        <button type="button" class="daily-backlog__next-primary" (click)="launchMultitask()">
+        <button type="button" class="btn btn--primary" (click)="launchMultitask()">
           {{ 'planningLab.letsGo' | translate }}
-        </button>
-        <button type="button" class="daily-backlog__start-over" (click)="dailyPlan.backToPlanning()">
-          {{ 'planningLab.backToPlanning' | translate }}
         </button>
       </div>
     </div>

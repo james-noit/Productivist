@@ -3,6 +3,8 @@ import { localStorageSignal } from '../core/local-storage-signal';
 import { createId } from '../core/create-id';
 import { TodosService } from './todos.service';
 import { ClockService } from './clock.service';
+import { DailyPlanService } from './daily-plan.service';
+import { advanceLots, moveLotInPlan, moveTaskInPlan, unfinishedInActive, type CarryMode } from '../lib/execution-lots';
 import type { AccomplishmentMark, MultitaskCard } from '../types/multitask';
 
 
@@ -12,10 +14,15 @@ const DISSOLVE_DELAY_MS = 5000;
 export class MultitaskService {
   private readonly todos = inject(TodosService);
   private readonly clock = inject(ClockService);
+  private readonly plan = inject(DailyPlanService);
 
   readonly enabled = localStorageSignal<boolean>('productivist.multitaskEnabled', false);
   readonly cards = localStorageSignal<MultitaskCard[]>('productivist.multitaskCards', []);
-  readonly capacityTipDismissed = localStorageSignal<boolean>('productivist.multitaskTipDismissed', false);
+  /** "Research tips" switched off for good (the key predates the rotating tips, so earlier dismissals stay). */
+  readonly researchTipsOff = localStorageSignal<boolean>('productivist.multitaskTipDismissed', false);
+  /** Device-local tip state: the day the ✕ was pressed, and the ids of the last tips shown. */
+  readonly tipHiddenOn = localStorageSignal<string | null>('productivist.multitaskTipHiddenOn', null);
+  readonly tipRecent = localStorageSignal<string[]>('productivist.multitaskTipRecent', []);
 
   // Finishing/discarding a card removes it outright (see removeCard), which would
   // otherwise wipe its accomplishments from the effectivity totals. Archive the
@@ -31,6 +38,13 @@ export class MultitaskService {
       if (card.taskId) ids.add(card.taskId);
     }
     return ids;
+  });
+
+  /** Tasks of the active lot that are not done and still on a card (what "Next lot" has to ask about). */
+  readonly unfinishedInActiveLot = computed(() => {
+    const open = new Set<string>();
+    for (const todo of this.todos.todos()) if (!todo.done) open.add(todo.id);
+    return unfinishedInActive(this.plan.executionLots(), this.plan.activeLotIndex(), (id) => !open.has(id), this.assignedTaskIds());
   });
 
   // Effectivity aggregation: currently-displayed cards plus everything archived
@@ -106,6 +120,72 @@ export class MultitaskService {
     };
     this.cards.update((list) => [...list, card]);
     if (taskId === null) this.scheduleDissolveIfEmpty(id);
+  }
+
+  /** Adds a card for each task that has none (and is not done) in one write; their marks start empty. */
+  private addCardsFor(taskIds: readonly string[]): void {
+    const have = this.assignedTaskIds();
+    const open = new Set<string>();
+    for (const todo of this.todos.todos()) if (!todo.done) open.add(todo.id);
+    const phaseEndAt = this.clock.lastFocusEndAt();
+    const added = taskIds
+      .filter((id) => open.has(id) && !have.has(id))
+      .map<MultitaskCard>((taskId) => ({ id: createId(), taskId, createdAt: Date.now(), accomplishments: [], lastAnsweredPhaseEndAt: phaseEndAt }));
+    if (added.length) this.cards.update((list) => [...list, ...added]);
+  }
+
+  /** Removes the cards of these tasks in one write, archiving their marks like removeCard does. */
+  private removeCardsOf(taskIds: readonly string[]): void {
+    const gone = new Set(taskIds);
+    const removed = this.cards().filter((card) => card.taskId !== null && gone.has(card.taskId));
+    if (!removed.length) return;
+    let green = 0;
+    let red = 0;
+    for (const card of removed) {
+      this.cancelDissolve(card.id);
+      for (const mark of card.accomplishments ?? []) {
+        if (mark === 'green') green++;
+        else red++;
+      }
+    }
+    if (green) this.archivedGreen.update((v) => v + green);
+    if (red) this.archivedRed.update((v) => v + red);
+    const ids = new Set(removed.map((card) => card.id));
+    this.cards.update((list) => list.filter((card) => !ids.has(card.id)));
+  }
+
+  /**
+   * Moves on to the next lot (or finishes the plan on the last one). The unfinished tasks of the lot either
+   * come along (their cards and marks stay, and they lead the next lot) or are let go (their cards go, with
+   * the marks archived and no penalty). The next lot's tasks get their cards.
+   */
+  advanceLot(mode: CarryMode): void {
+    const unfinished = this.unfinishedInActiveLot();
+    const result = advanceLots(this.plan.executionLots(), this.plan.activeLotIndex(), unfinished, mode);
+    this.plan.executionLots.set(result.lots);
+    this.plan.activeLotIndex.set(result.activeIndex);
+    if (mode === 'drop') this.removeCardsOf(unfinished);
+    if (!result.finished) this.addCardsFor(result.lots[result.activeIndex]?.taskIds ?? []);
+  }
+
+  /** Edits the running plan; the cards follow the active lot: tasks that enter it get one, tasks that leave lose it. */
+  moveLotTask(taskId: string, target: { lotId: string } | 'newLot'): void {
+    const lots = this.plan.executionLots();
+    const index = this.plan.activeLotIndex();
+    const result = moveTaskInPlan(lots, index, taskId, target, createId);
+    if (result.lots === lots) return;
+    this.plan.executionLots.set(result.lots);
+    this.plan.activeLotIndex.set(result.activeIndex);
+    const before = lots[index]?.taskIds ?? [];
+    const after = result.lots[result.activeIndex]?.taskIds ?? [];
+    this.removeCardsOf(before.filter((id) => !after.includes(id)));
+    this.addCardsFor(after.filter((id) => !before.includes(id)));
+  }
+
+  moveLot(lotId: string, dir: -1 | 1): void {
+    const lots = this.plan.executionLots();
+    const next = moveLotInPlan(lots, this.plan.activeLotIndex(), lotId, dir);
+    if (next !== lots) this.plan.executionLots.set(next);
   }
 
   removeCard(cardId: string): void {
@@ -193,15 +273,14 @@ export class MultitaskService {
     }
   }
 
-  dismissCapacityTip(): void {
-    this.capacityTipDismissed.set(true);
-  }
 
   reset(): void {
     for (const cardId of Array.from(this.dissolveTimers.keys())) this.cancelDissolve(cardId);
     this.enabled.set(false);
     this.cards.set([]);
-    this.capacityTipDismissed.set(false);
+    this.researchTipsOff.set(false);
+    this.tipHiddenOn.set(null);
+    this.tipRecent.set([]);
     this.archivedGreen.set(0);
     this.archivedRed.set(0);
   }

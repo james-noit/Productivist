@@ -1,0 +1,93 @@
+<div class="lot-list">
+  @for (row of rows(); track row.id) {
+    <div
+      class="lot"
+      [class.lot--locked]="row.locked"
+      [class.lot--active]="row.active"
+      [class.lot--target]="armed() && !row.locked"
+      (dragover)="row.locked || $event.preventDefault()"
+      (drop)="!row.locked && place({ lotId: row.id })"
+      (click)="!row.locked && place({ lotId: row.id })"
+    >
+      <div class="lot__header">
+        <span class="lot__index">
+          {{ 'planningLab.lotLabel' | translate: { n: row.n } }}
+          @if (row.active) {
+            <span class="lot__now">{{ 'planningLab.now' | translate }}</span>
+          }
+        </span>
+        @if (!row.locked && !row.active) {
+          <div class="lot__order-buttons">
+            <button
+              type="button"
+              class="lot__up"
+              [attr.aria-label]="'planningLab.moveLotUp' | translate"
+              [title]="'planningLab.moveLotUp' | translate"
+              [disabled]="!row.canUp"
+              (click)="$event.stopPropagation(); moveLot.emit({ lotId: row.id, dir: -1 })"
+            >
+              <app-ui-icon name="chevron-down" [size]="16" />
+            </button>
+            <button
+              type="button"
+              [attr.aria-label]="'planningLab.moveLotDown' | translate"
+              [title]="'planningLab.moveLotDown' | translate"
+              [disabled]="!row.canDown"
+              (click)="$event.stopPropagation(); moveLot.emit({ lotId: row.id, dir: 1 })"
+            >
+              <app-ui-icon name="chevron-down" [size]="16" />
+            </button>
+          </div>
+        }
+      </div>
+      <ul class="lot__tasks">
+        @for (task of row.tasks; track task.id) {
+          <li
+            class="lot-task"
+            [class.lot-task--armed]="armed() === task.id"
+            [class.lot-task--done]="task.done"
+            [attr.draggable]="row.locked ? null : 'true'"
+            (dragstart)="arm(task.id)"
+            (dragend)="disarm()"
+          >
+            @if (row.locked) {
+              <span class="lot-task__title">{{ task.title }}</span>
+            } @else {
+              <button
+                type="button"
+                class="lot-task__title"
+                [attr.aria-pressed]="armed() === task.id"
+                (click)="$event.stopPropagation(); toggleArmed(task.id)"
+              >
+                {{ task.title }}
+              </button>
+              <app-kebab-menu #menu="kebabMenu" align="start" [label]="'planningLab.moveTo' | translate">
+                <p class="menu-heading">{{ 'planningLab.moveTo' | translate }}</p>
+                @for (target of editable(); track target.id) {
+                  @if (target.id !== row.id) {
+                    <button type="button" class="menu-item" role="menuitem" (click)="moveTo(task.id, { lotId: target.id }); menu.close(true)">
+                      {{ 'planningLab.lotLabel' | translate: { n: target.n } }}
+                    </button>
+                  }
+                }
+                <button type="button" class="menu-item" role="menuitem" (click)="moveTo(task.id, 'newLot'); menu.close(true)">
+                  {{ 'planningLab.newLot' | translate }}
+                </button>
+              </app-kebab-menu>
+            }
+          </li>
+        }
+      </ul>
+    </div>
+  }
+
+  <button
+    type="button"
+    class="lot lot--new"
+    (dragover)="$event.preventDefault()"
+    (drop)="place('newLot')"
+    (click)="place('newLot')"
+  >
+    <span aria-hidden="true">+</span> {{ 'planningLab.newLot' | translate }}
+  </button>
+</div>

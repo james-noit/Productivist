@@ -43,7 +43,7 @@ import { UiIconComponent } from '../ui-icon/ui-icon.component';
       <app-ui-icon name="more" />
     </button>
     @if (open()) {
-      <div class="kebab__panel" role="menu" [attr.aria-label]="label()" (keydown)="onPanelKeydown($event)">
+      <div class="kebab__panel" [class.kebab__panel--start]="align() === 'start'" role="menu" [attr.aria-label]="label()" (keydown)="onPanelKeydown($event)">
         <ng-content />
       </div>
     }
@@ -69,6 +69,11 @@ import { UiIconComponent } from '../ui-icon/ui-icon.component';
       border: 1px solid var(--color-border);
       border-radius: 8px;
       box-shadow: 0 1px 2px rgb(0 0 0 / 0.06), 0 4px 12px rgb(0 0 0 / 0.08);
+    }
+
+    .kebab__panel--start {
+      right: auto;
+      left: 0;
     }
 
     .menu-item {
@@ -137,6 +142,8 @@ export class KebabMenuComponent {
 
   /** Accessible name and tooltip of the ⋯ button. */
   readonly label = input.required<string>();
+  /** Which edge of the button the panel lines up with: 'end' (default) opens leftwards, 'start' rightwards. */
+  readonly align = input<'start' | 'end'>('end');
   /** Emits when the menu closes, so a caller can reset a multi-page menu. */
   readonly closed = output<void>();
 

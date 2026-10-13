@@ -9,6 +9,8 @@ import {
   type BellSoundId,
 } from './settings.service';
 
+type BellSounds = typeof import('../lib/bell-sounds');
+
 export type ClockMode = 'focus' | 'break';
 
 interface ClockPersistShape {
@@ -23,59 +25,6 @@ interface ClockPersistShape {
 // A whole second is enough, and re-aligning each tick to the deadline stops the visible
 // digit from drifting relative to the second it represents.
 const TICK_MS = 1000;
-
-let audioCtx: AudioContext | null = null;
-
-function getAudioCtx(): AudioContext {
-  if (!audioCtx) audioCtx = new AudioContext();
-  return audioCtx;
-}
-
-function playNote(
-  ctx: AudioContext,
-  frequency: number,
-  startDelay: number,
-  duration: number,
-  type: OscillatorType = 'sine',
-  gain = 0.3,
-): void {
-  const oscillator = ctx.createOscillator();
-  const gainNode = ctx.createGain();
-  const startTime = ctx.currentTime + startDelay;
-
-  oscillator.type = type;
-  oscillator.frequency.setValueAtTime(frequency, startTime);
-
-  gainNode.gain.setValueAtTime(gain, startTime);
-  gainNode.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
-
-  oscillator.connect(gainNode);
-  gainNode.connect(ctx.destination);
-
-  oscillator.start(startTime);
-  oscillator.stop(startTime + duration);
-}
-
-export function playSound(id: BellSoundId): void {
-  const ctx = getAudioCtx();
-  if (id === 'digital') {
-    for (let i = 0; i < 10; i++) {
-      playNote(ctx, 1200, i * 0.2, 0.1, 'square', 0.35);
-    }
-  } else if (id === 'classic') {
-    for (let i = 0; i < 10; i++) {
-      playNote(ctx, i % 2 === 0 ? 880 : 1108.7, i * 0.2, 0.2, 'square', 0.32);
-    }
-  } else if (id === 'siren') {
-    for (let i = 0; i < 10; i++) {
-      playNote(ctx, i % 2 === 0 ? 600 : 1400, i * 0.2, 0.2, 'sawtooth', 0.3);
-    }
-  } else if (id === 'buzzer') {
-    for (let i = 0; i < 5; i++) {
-      playNote(ctx, 220, i * 0.4, 0.35, 'sawtooth', 0.35);
-    }
-  }
-}
 
 @Injectable({ providedIn: 'root' })
 export class ClockService {
@@ -96,6 +45,14 @@ export class ClockService {
   // tab can never make the clock run slow.
   private endAt: number | null = null;
   private restoring = true;
+
+  /** True while the end-of-session sound is ringing (the header offers "Stop alarm"). */
+  readonly ringing = signal(false);
+  // The synthesis lives in a lazy chunk; `start()` and the previews (user gestures) load it before the bell is needed.
+  private bells?: Promise<BellSounds>;
+  private audioCtx: AudioContext | null = null;
+  private ringHandle: { stop(): void } | null = null;
+  private ringToken = 0;
 
   /**
    * Display and stepper state, shared by every view that renders the clock. These were
@@ -168,9 +125,58 @@ export class ClockService {
   }
 
   adjustDuration(deltaSeconds: number): void {
+    this.stopAlarm();
     if (this.running()) return;
     if (this.mode() === 'focus') this.settings.setFocusSeconds(this.settings.focusSeconds() + deltaSeconds);
     else this.settings.setBreakSeconds(this.settings.breakSeconds() + deltaSeconds);
+  }
+
+  /**
+   * The AudioContext, created and resumed here rather than in the lazy chunk: called from a click handler this
+   * happens inside the user gesture, which browsers require before they let a context make sound.
+   */
+  private audio(): AudioContext | null {
+    try {
+      this.audioCtx ??= new AudioContext();
+      if (this.audioCtx.state === 'suspended') this.audioCtx.resume().catch(() => undefined);
+      return this.audioCtx;
+    } catch {
+      return null;
+    }
+  }
+
+  private loadBells(): Promise<BellSounds> {
+    return (this.bells ??= import('../lib/bell-sounds'));
+  }
+
+  /** Rings a sound (loading its chunk first) and keeps `ringing` true until it ends or `stopAlarm()` cuts it. */
+  private ring(id: BellSoundId, loop: boolean): void {
+    const ctx = this.audio();
+    if (!ctx) return;
+    const token = ++this.ringToken;
+    this.ringing.set(true);
+    const end = (): void => {
+      if (token !== this.ringToken) return;
+      this.ringHandle = null;
+      this.ringing.set(false);
+    };
+    this.loadBells().then((bells) => {
+      if (token === this.ringToken) this.ringHandle = bells.ring(ctx, id, { loop, onEnd: end });
+    }, end);
+  }
+
+  /** One cycle of a sound, for the settings panel: never loops. */
+  preview(id: BellSoundId): void {
+    this.stopAlarm();
+    this.ring(id, false);
+  }
+
+  /** Silences the alarm; every user action on the clock calls it. */
+  stopAlarm(): void {
+    this.ringToken++;
+    this.ringHandle?.stop();
+    this.ringHandle = null;
+    if (this.ringing()) this.ringing.set(false);
   }
 
   ensureNotificationPermission(): void {
@@ -216,7 +222,7 @@ export class ClockService {
       if (!this.hasTicked) {
         this.hasTicked = true;
         this.pause();
-        if (this.settings.bellSound()) playSound(this.settings.bellSoundId());
+        if (this.settings.bellSound()) this.ring(this.settings.bellSoundId(), this.settings.bellLoop());
         this.sendNotification(this.mode());
         this.switchToNextMode();
       }
@@ -236,8 +242,12 @@ export class ClockService {
   }
 
   start(): void {
+    this.stopAlarm();
     if (this.running() || this.remainingSeconds() <= 0) return;
     this.ensureNotificationPermission();
+    // A user gesture: get the audio ready so the bell can sound later (the chunk, the context, the sample).
+    const ctx = this.audio();
+    if (ctx) this.loadBells().then((bells) => bells.prepare(ctx, this.settings.bellSoundId()), () => undefined);
     this.endAt = Date.now() + this.remainingSeconds() * 1000;
     this.running.set(true);
     this.startTicking();
@@ -245,6 +255,7 @@ export class ClockService {
   }
 
   pause(): void {
+    this.stopAlarm();
     if (this.running() && this.endAt !== null) this.remainingSeconds.set(this.computedRemaining());
     this.running.set(false);
     this.stopTicking();
@@ -286,11 +297,13 @@ export class ClockService {
   }
 
   startNextSession(): void {
+    this.stopAlarm();
     this.sessionModalOpen.set(false);
     this.start();
   }
 
   dismissSessionModal(): void {
+    this.stopAlarm();
     this.sessionModalOpen.set(false);
   }
 }

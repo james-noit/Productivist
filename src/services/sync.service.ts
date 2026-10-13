@@ -378,6 +378,7 @@ export class SyncService {
         breakSeconds: s.breakSeconds(),
         bellSound: s.bellSound(),
         bellSoundId: s.bellSoundId(),
+        bellLoop: s.bellLoop(),
         clockStyle: s.clockStyle(),
         boxClockOrder: s.boxClockOrder(),
         multitaskEnabled: mt.enabled(),
@@ -410,7 +411,8 @@ export class SyncService {
     set('focusSeconds', s.focusSeconds, isNumber);
     set('breakSeconds', s.breakSeconds, isNumber);
     set('bellSound', s.bellSound, isBoolean);
-    set('bellSoundId', s.bellSoundId, isOneOf('digital', 'classic', 'siren', 'buzzer'));
+    set('bellSoundId', s.bellSoundId, isOneOf('alarmClock', 'bowl', 'marimba', 'chime', 'birds', 'gong', 'digital', 'classic', 'siren', 'buzzer'));
+    set('bellLoop', s.bellLoop, isBoolean);
     set('clockStyle', s.clockStyle, isOneOf('boxes', 'ring'));
     set('boxClockOrder', s.boxClockOrder, isOneOf('sequential', 'random'));
     set('multitaskEnabled', this.multitask.enabled, isBoolean);

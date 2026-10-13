@@ -26,12 +26,16 @@
   margin: 0;
 }
 
-.planning-lab-modal__close {
-  background: none;
-  border: none;
-  color: var(--color-text-muted);
-  min-width: 2rem;
-  min-height: 2rem;
+.planning-lab-modal__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.planning-lab-modal__confirm {
+  flex: none;
+  padding: 0.6rem 0;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .planning-lab-modal__body {
@@ -41,6 +45,21 @@
 }
 
 @media (max-width: 600px) {
+  /* Start over keeps its aria-label and title; only the visible text goes. */
+  .planning-lab-modal__label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  .planning-lab-modal__actions .btn--sm:not(.btn--icon) {
+    width: 32px;
+    padding: 0;
+  }
+
   .planning-lab-modal-overlay {
     padding: 0;
   }

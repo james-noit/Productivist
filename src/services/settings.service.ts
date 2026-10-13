@@ -3,7 +3,18 @@ import { localStorageSignal } from '../core/local-storage-signal';
 
 export type Theme = 'light' | 'dark' | 'japanese' | 'nordic';
 export type Language = 'en' | 'es';
-export type BellSoundId = 'digital' | 'classic' | 'siren' | 'buzzer';
+export type BellSoundId =
+  | 'alarmClock'
+  | 'bowl'
+  | 'marimba'
+  | 'chime'
+  | 'birds'
+  | 'gong'
+  // Kept: stored and synced values must stay valid.
+  | 'digital'
+  | 'classic'
+  | 'siren'
+  | 'buzzer';
 export type ClockStyle = 'boxes' | 'ring';
 export type BoxClockOrder = 'sequential' | 'random';
 
@@ -12,7 +23,7 @@ export const DEFAULT_BREAK_SECONDS = 5 * 60;
 export const MIN_DURATION_SECONDS = 30;
 export const MAX_FOCUS_SECONDS = 180 * 60;
 export const MAX_BREAK_SECONDS = 60 * 60;
-export const DEFAULT_BELL_SOUND_ID: BellSoundId = 'classic';
+export const DEFAULT_BELL_SOUND_ID: BellSoundId = 'alarmClock';
 export const DEFAULT_CLOCK_STYLE: ClockStyle = 'boxes';
 export const DEFAULT_BOX_CLOCK_ORDER: BoxClockOrder = 'sequential';
 
@@ -29,6 +40,8 @@ export class SettingsService {
   readonly breakSeconds = localStorageSignal<number>('productivist.breakSeconds', DEFAULT_BREAK_SECONDS);
   readonly bellSound = localStorageSignal<boolean>('productivist.bellSound', true);
   readonly bellSoundId = localStorageSignal<BellSoundId>('productivist.bellSoundId', DEFAULT_BELL_SOUND_ID);
+  /** Keep ringing until stopped (60 s at most) instead of one cycle. */
+  readonly bellLoop = localStorageSignal<boolean>('productivist.bellLoop', true);
   readonly clockStyle = localStorageSignal<ClockStyle>('productivist.clockStyle', DEFAULT_CLOCK_STYLE);
   readonly boxClockOrder = localStorageSignal<BoxClockOrder>(
     'productivist.boxClockOrder',
@@ -59,6 +72,10 @@ export class SettingsService {
     this.bellSoundId.set(id);
   }
 
+  setBellLoop(val: boolean): void {
+    this.bellLoop.set(val);
+  }
+
   setClockStyle(style: ClockStyle): void {
     this.clockStyle.set(style);
   }
@@ -74,6 +91,7 @@ export class SettingsService {
     this.breakSeconds.set(DEFAULT_BREAK_SECONDS);
     this.bellSound.set(true);
     this.bellSoundId.set(DEFAULT_BELL_SOUND_ID);
+    this.bellLoop.set(true);
     this.clockStyle.set(DEFAULT_CLOCK_STYLE);
     this.boxClockOrder.set(DEFAULT_BOX_CLOCK_ORDER);
   }

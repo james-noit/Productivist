@@ -1,4 +1,4 @@
-<main class="multitask-view">
+<main #root class="multitask-view" tabindex="-1">
   <div class="multitask-view__clock-strip">
     <div class="multitask-view__mode">
       <button type="button" [class.active]="clock.mode() === 'focus'" (click)="clock.setMode('focus')">
@@ -98,30 +98,70 @@
   </div>
 
   @if (dailyPlan.executionLots().length) {
-    <div class="multitask-view__lots">
-      <span class="multitask-view__lots-label">{{ 'planningLab.executionLots' | translate }}</span>
+    <section class="multitask-view__lots" aria-labelledby="multitask-lots-title">
+      <div class="multitask-view__lots-head">
+        <h3 #lotsHeading id="multitask-lots-title" class="multitask-view__lots-label" tabindex="-1">
+          {{ 'planningLab.executionLots' | translate }}
+        </h3>
+        <div class="multitask-view__lots-actions">
+          <button #editButton type="button" class="btn btn--ghost btn--sm" (click)="editingLots.set(true)">
+            <app-ui-icon name="edit" [size]="16" /> {{ 'planningLab.editLots' | translate }}
+          </button>
+          <button #nextButton type="button" class="btn btn--secondary btn--sm" (click)="requestNextLot()">
+            {{ (isLastLot() ? 'planningLab.finishPlan' : 'planningLab.nextLot') | translate }}
+          </button>
+        </div>
+      </div>
       <ol class="multitask-view__lots-list">
-        @for (lot of dailyPlan.executionLots(); track lot.id; let i = $index) {
+        @for (lot of stripLots(); track lot.id) {
           <li
             class="multitask-view__lot"
-            [class.multitask-view__lot--active]="i === dailyPlan.activeLotIndex()"
-            [class.multitask-view__lot--done]="i < dailyPlan.activeLotIndex()"
+            [class.multitask-view__lot--active]="lot.active"
+            [class.multitask-view__lot--past]="lot.past"
+            [attr.aria-current]="lot.active ? 'step' : null"
           >
-            <span class="multitask-view__lot-index">{{ i + 1 }}</span>
+            <span class="multitask-view__lot-index">{{ lot.n }}</span>
             <span class="multitask-view__lot-tasks">
-              @for (taskId of lot.taskIds; track taskId) {
-                <span class="multitask-view__lot-task">{{ taskTitle(taskId) }}</span>
+              @for (task of lot.tasks; track task.id) {
+                <span class="multitask-view__lot-task" [class.multitask-view__lot-task--done]="task.done">{{ task.title }}</span>
               }
             </span>
           </li>
         }
       </ol>
-      @if (canAdvanceLot() && hasNextLot()) {
-        <button type="button" class="multitask-view__lot-advance" (click)="advanceLot()">
-          {{ 'planningLab.startNextLot' | translate }}
-        </button>
+      @if (asking()) {
+        <div class="confirm-bar" role="alertdialog" aria-labelledby="multitask-lots-question">
+          <p class="confirm-bar__text" id="multitask-lots-question">
+            {{ 'planningLab.unfinishedCount.' + (unfinishedCount() === 1 ? 'one' : 'other') | translate: { n: unfinishedCount() } }}
+          </p>
+          <div class="confirm-bar__actions">
+            <button type="button" class="btn btn--secondary" (click)="advance('drop')">{{ 'planningLab.leaveOut' | translate }}</button>
+            <button #takeAlong type="button" class="btn btn--primary" (click)="advance('carry')">{{ 'planningLab.takeAlong' | translate }}</button>
+          </div>
+        </div>
       }
-    </div>
+    </section>
+
+    <app-side-drawer
+      [open]="editingLots()"
+      titleKey="planningLab.editLots"
+      ariaId="multitask-lots-drawer"
+      [returnFocus]="editButton"
+      (closed)="editingLots.set(false)"
+    >
+      @if (editingLots()) {
+        <app-lot-editor
+          [lots]="dailyPlan.executionLots()"
+          [lockedCount]="dailyPlan.activeLotIndex()"
+          [activeIndex]="dailyPlan.activeLotIndex()"
+          [titles]="titles()"
+          [doneIds]="doneIds()"
+          (moveTask)="multitask.moveLotTask($event.taskId, $event.target)"
+          (moveLot)="multitask.moveLot($event.lotId, $event.dir)"
+        />
+      }
+      <button drawerFooter type="button" class="btn btn--primary" (click)="editingLots.set(false)">{{ 'kanban.columns.done' | translate }}</button>
+    </app-side-drawer>
   }
 
   <div class="multitask-view__toolbar">
@@ -131,17 +171,29 @@
     </div>
   </div>
 
-  @if (!multitask.capacityTipDismissed()) {
+  @if (tip(); as t) {
     <div class="multitask-view__tip">
-      <p><em>{{ 'multitask.capacityTip' | translate }}</em></p>
-      <button
-        type="button"
-        class="multitask-view__tip-close"
-        [attr.aria-label]="'todo.close' | translate"
-        (click)="multitask.dismissCapacityTip()"
-      >
-        ✕
-      </button>
+      <div class="multitask-view__tip-body">
+        <p class="multitask-view__tip-text">{{ t.text }}</p>
+        <p class="multitask-view__tip-cite">
+          — {{ t.authors }}, {{ t.year }}, <em>{{ t.venue }}</em> ·
+          <a #doiLink target="_blank" rel="noopener noreferrer">{{ t.doi }}</a>
+        </p>
+      </div>
+      <div class="multitask-view__tip-actions">
+        <button type="button" class="btn btn--ghost btn--sm" (click)="anotherTip()">
+          <app-ui-icon name="repeat" [size]="16" /> {{ 'multitask.anotherTip' | translate }}
+        </button>
+        <button
+          type="button"
+          class="btn btn--ghost btn--icon btn--sm"
+          [attr.aria-label]="'todo.close' | translate"
+          [title]="'todo.close' | translate"
+          (click)="hideTipToday()"
+        >
+          <app-ui-icon name="x" [size]="16" />
+        </button>
+      </div>
     </div>
   }
 

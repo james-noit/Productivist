@@ -440,59 +440,28 @@
   color: var(--color-text-muted);
 }
 
-.daily-backlog__choose-actions {
+.daily-backlog__footer {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   justify-content: space-between;
   gap: 0.6rem;
-  margin-top: 0.3rem;
+  margin-top: 0.4rem;
 }
 
-.daily-backlog__back-and-reset {
+.daily-backlog__footer-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 0.6rem;
 }
 
-.daily-backlog__back {
-  background: none;
-  border: 1px solid var(--color-primary);
-  border-radius: 4px;
-  color: var(--color-primary);
-  padding: 0.4rem 0.8rem;
-  font-size: 0.8rem;
-  align-self: flex-start;
-}
-
-.daily-backlog__start-over {
-  background: none;
-  border: 1px solid var(--color-border);
-  border-radius: 4px;
-  color: var(--color-text-muted);
-  padding: 0.4rem 0.8rem;
-  font-size: 0.8rem;
-  align-self: flex-start;
-}
-
-.daily-backlog__confirm {
-  background-color: var(--color-primary);
-  color: var(--color-primary-contrast);
-  border: none;
-  border-radius: 6px;
-  padding: 0.5rem 1rem;
-  font-weight: 600;
-  flex: 1 1 auto;
-}
-
-@media (min-width: 480px) {
-  .daily-backlog__confirm {
-    flex: 0 1 auto;
+/* On phones the primary action comes first and everything stretches. */
+@media (max-width: 600px) {
+  .daily-backlog__footer,
+  .daily-backlog__footer-actions {
+    flex-direction: column-reverse;
+    align-items: stretch;
   }
-}
-
-.daily-backlog__confirm:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
 }
 
 .daily-backlog__columns {
@@ -638,134 +607,8 @@
 }
 
 
-.daily-backlog__next-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.6rem;
-  margin-top: 0.4rem;
-}
-
-.daily-backlog__next-primary {
-  flex: 1 1 14rem;
-  background-color: var(--color-primary);
-  color: var(--color-primary-contrast);
-  border: none;
-  border-radius: 6px;
-  padding: 0.55rem 1rem;
-  font-weight: 600;
-}
-
-.daily-backlog__next-primary:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.daily-backlog__next-secondary {
-  flex: 1 1 14rem;
-  background: none;
-  border: 1px solid var(--color-primary);
-  color: var(--color-primary);
-  border-radius: 6px;
-  padding: 0.55rem 1rem;
-  font-weight: 600;
-}
-
-.daily-backlog__next-secondary:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  border-color: var(--color-border);
-  color: var(--color-text-muted);
-}
-
 .daily-backlog__grouping-title {
   margin: 0;
-}
-
-.lot-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
-}
-
-.lot {
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-  background-color: var(--color-surface);
-  border: 1px dashed var(--color-border);
-  border-radius: 8px;
-  padding: 0.6rem 0.75rem;
-  transition: border-color 0.15s, background-color 0.15s;
-}
-
-.lot--target {
-  cursor: pointer;
-  border-color: var(--color-primary);
-  border-style: solid;
-  background-color: color-mix(in srgb, var(--color-primary) 8%, var(--color-surface));
-}
-
-.lot--new {
-  align-items: center;
-  justify-content: center;
-  flex-direction: row;
-  gap: 0.4rem;
-  color: var(--color-text-muted);
-  border-style: dashed;
-}
-
-.lot__header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-}
-
-.lot__index {
-  font-weight: 600;
-  font-size: 0.85rem;
-}
-
-.lot__order-buttons {
-  display: flex;
-  gap: 0.3rem;
-}
-
-.lot__order-buttons button {
-  min-width: 1.8rem;
-  min-height: 1.8rem;
-  background: none;
-  border: 1px solid var(--color-border);
-  border-radius: 4px;
-  color: var(--color-text);
-}
-
-.lot__order-buttons button:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-.lot__tasks {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem;
-}
-
-.lot-task {
-  background-color: var(--color-surface-alt);
-  border: 1px solid var(--color-border);
-  border-radius: 6px;
-  padding: 0.35rem 0.6rem;
-  font-size: 0.85rem;
-  cursor: pointer;
-}
-
-.lot-task--armed {
-  border-color: var(--color-primary);
-  background-color: color-mix(in srgb, var(--color-primary) 14%, var(--color-surface));
 }
 
 .daily-backlog-modal-overlay {

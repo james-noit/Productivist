@@ -50,6 +50,16 @@
           <input type="checkbox" [checked]="settings.bellSound()" (change)="onBellSoundChange($event)" />
           {{ (settings.bellSound() ? 'clock.bellOff' : 'clock.bellOn') | translate }}
         </label>
+        <button
+          type="button"
+          class="switch"
+          role="switch"
+          [attr.aria-checked]="settings.bellLoop()"
+          (click)="settings.setBellLoop(!settings.bellLoop())"
+        >
+          <span class="switch__track" aria-hidden="true"></span>
+          {{ 'clock.bellLoop' | translate }}
+        </button>
         <ul class="clock-settings__list">
           @for (sound of bellSounds; track sound.id) {
             <li class="clock-settings__item">
@@ -75,6 +85,20 @@
           }
         </ul>
       </div>
+      @if (multitask.enabled()) {
+        <div class="clock-settings__section">
+          <button
+            type="button"
+            class="switch"
+            role="switch"
+            [attr.aria-checked]="!multitask.researchTipsOff()"
+            (click)="multitask.researchTipsOff.set(!multitask.researchTipsOff())"
+          >
+            <span class="switch__track" aria-hidden="true"></span>
+            {{ 'multitask.researchTips' | translate }}
+          </button>
+        </div>
+      }
     </div>
   }
 </div>

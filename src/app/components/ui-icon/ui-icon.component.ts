@@ -31,7 +31,9 @@ export type UiIconName =
   | 'target'
   | 'frame'
   | 'link'
-  | 'undo';
+  | 'undo'
+  | 'restart'
+  | 'chevron-left';
 
 /**
  * Interface icons (close, delete, add, ...) as inline SVGs on a 24px grid: 1.75 stroke, round caps and

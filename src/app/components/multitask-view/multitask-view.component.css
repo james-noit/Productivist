@@ -1,4 +1,5 @@
 .multitask-view {
+  outline: none;
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -129,11 +130,31 @@
   padding: 0.75rem 1rem;
 }
 
+.multitask-view__lots-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.multitask-view__lots-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
 .multitask-view__lots-label {
+  margin: 0;
   font-size: 0.75rem;
+  font-weight: 400;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--color-text-muted);
+}
+
+.multitask-view__lots-label:focus {
+  outline: none;
 }
 
 .multitask-view__lots-list {
@@ -161,9 +182,8 @@
   background-color: color-mix(in srgb, var(--color-primary) 10%, transparent);
 }
 
-.multitask-view__lot--done {
+.multitask-view__lot--past {
   opacity: 0.4;
-  text-decoration: line-through;
 }
 
 .multitask-view__lot-index {
@@ -197,14 +217,9 @@
   margin: 0;
 }
 
-.multitask-view__lot-advance {
-  align-self: flex-start;
-  background-color: var(--color-primary);
-  color: var(--color-primary-contrast);
-  border: none;
-  border-radius: 6px;
-  padding: 0.4rem 0.9rem;
-  font-weight: 600;
+.multitask-view__lot-task--done {
+  text-decoration: line-through;
+  color: var(--color-text-muted);
 }
 
 .multitask-view__toolbar {
@@ -233,18 +248,45 @@
   color: var(--color-text);
 }
 
-.multitask-view__tip p {
-  margin: 0;
+.multitask-view__tip-body {
   flex: 1;
+  min-width: 0;
 }
 
-.multitask-view__tip-close {
-  flex-shrink: 0;
-  background: none;
-  border: none;
+.multitask-view__tip p {
+  margin: 0;
+}
+
+.multitask-view__tip-text {
+  font-style: italic;
+}
+
+.multitask-view__tip-cite {
+  margin-top: 0.3rem;
+  font-size: 0.8rem;
   color: var(--color-text-muted);
-  min-width: 1.75rem;
-  min-height: 1.75rem;
+  overflow-wrap: anywhere;
+}
+
+.multitask-view__tip-cite a {
+  color: inherit;
+}
+
+.multitask-view__tip-actions {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+@media (max-width: 600px) {
+  .multitask-view__tip {
+    flex-direction: column;
+  }
+
+  .multitask-view__tip-actions {
+    align-self: flex-end;
+  }
 }
 
 .multitask-view__list-wrap {

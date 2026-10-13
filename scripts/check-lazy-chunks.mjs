@@ -51,6 +51,9 @@ const NEVER_INITIAL = ['src/lib/flow-graph.ts', component('objective-chip')];
  * the pieces only it uses: cards, rows, drawer, floating button, inbox, kebab menu, page maths) and the shared form widgets stay out of it too.
  */
 const NEVER_INITIAL_UI = [
+  'src/lib/multitask-research.ts',
+  'src/lib/bell-sounds.ts',
+  component('lot-editor'),
   component('recurring-tasks-modal'),
   component('recurrence-editor'),
   'src/lib/recurrence-format.ts',

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, HostListener, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, HostListener, computed, effect, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { ProjectsService } from '../../../services/projects.service';
@@ -11,6 +11,8 @@ import { ProjectFormComponent } from '../project-form/project-form.component';
 import { ProjectsPanelComponent } from '../projects-panel/projects-panel.component';
 import { TaskBadgesComponent } from '../task-badges/task-badges.component';
 import { IconComponent } from '../icon/icon.component';
+import { UiIconComponent } from '../ui-icon/ui-icon.component';
+import { LotEditorComponent, type LotTarget } from '../lot-editor/lot-editor.component';
 import type { Todo } from '../../../types/todo';
 import type { Project } from '../../../types/project';
 
@@ -45,6 +47,8 @@ const STEPS: PlanStep[] = [
     ProjectFormComponent,
     ProjectsPanelComponent,
     IconComponent,
+    UiIconComponent,
+    LotEditorComponent,
     TaskBadgesComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -116,6 +120,13 @@ export class DailyBacklogViewComponent {
   }
 
   readonly projectSearch = signal('');
+
+  constructor() {
+    // Back on step 1 (e.g. after Start over in the modal header): forget the project search too.
+    effect(() => {
+      if (this.dailyPlan.stage() === 'prompt') this.projectSearch.set('');
+    });
+  }
   readonly filteredProjects = computed(() => {
     const term = this.projectSearch().trim().toLowerCase();
     const all = this.projects.sortedProjects();
@@ -232,12 +243,6 @@ export class DailyBacklogViewComponent {
     this.dailyPlan.endDrag();
   }
 
-  confirmStartOver(): void {
-    if (!window.confirm(this.translate.instant('planningLab.startOverConfirm'))) return;
-    this.dailyPlan.startOver();
-    this.projectSearch.set('');
-  }
-
   // --- Move to pomodoro ---
 
   readonly showOverwriteConfirm = signal(false);
@@ -276,34 +281,13 @@ export class DailyBacklogViewComponent {
     this.dailyPlan.startGroupingParallel();
   }
 
-  taskById(id: string): Todo | undefined {
-    return this.todos.todos().find((t) => t.id === id);
-  }
+  /** id -> title of every task; the lot editor looks tasks up in it. */
+  readonly titles = computed(() => new Map(this.todos.todos().map((t) => [t.id, t.title] as const)));
+  readonly doneIds = computed(() => new Set(this.todos.todos().filter((t) => t.done).map((t) => t.id)));
 
-  isArmed(taskId: string): boolean {
-    return this.dailyPlan.draggedTaskId() === taskId;
-  }
-
-  toggleArmed(taskId: string): void {
-    this.dailyPlan.toggleArmed(taskId);
-  }
-
-  placeArmedInLot(lotId: string): void {
-    const taskId = this.dailyPlan.draggedTaskId();
-    if (!taskId) return;
-    this.dailyPlan.moveTaskToLot(taskId, lotId);
-    this.dailyPlan.endDrag();
-  }
-
-  addNewLotWithArmed(): void {
-    const taskId = this.dailyPlan.draggedTaskId();
-    if (!taskId) return;
-    this.dailyPlan.createLotWithTask(taskId);
-    this.dailyPlan.endDrag();
-  }
-
-  moveLot(lotId: string, direction: -1 | 1): void {
-    this.dailyPlan.moveLot(lotId, direction);
+  moveTask(event: { taskId: string; target: LotTarget }): void {
+    if (event.target === 'newLot') this.dailyPlan.createLotWithTask(event.taskId);
+    else this.dailyPlan.moveTaskToLot(event.taskId, event.target.lotId);
   }
 
   launchMultitask(): void {

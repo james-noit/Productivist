@@ -9,15 +9,40 @@
   >
     <div class="planning-lab-modal__header">
       <h2 id="planning-lab-modal-title">{{ 'planningLab.title' | translate }}</h2>
-      <button
-        type="button"
-        class="planning-lab-modal__close"
-        [attr.aria-label]="'planningLab.close' | translate"
-        (click)="close()"
-      >
-        ✕
-      </button>
+      <div class="planning-lab-modal__actions">
+        @if (canStartOver()) {
+          <button
+            #startOverButton
+            type="button"
+            class="btn btn--ghost btn--sm"
+            [attr.aria-label]="'planningLab.startOver' | translate"
+            [title]="'planningLab.startOver' | translate"
+            (click)="askStartOver()"
+          >
+            <app-ui-icon name="restart" [size]="16" />
+            <span class="planning-lab-modal__label">{{ 'planningLab.startOver' | translate }}</span>
+          </button>
+        }
+        <button
+          type="button"
+          class="btn btn--ghost btn--icon"
+          [attr.aria-label]="'planningLab.close' | translate"
+          [title]="'planningLab.close' | translate"
+          (click)="close()"
+        >
+          <app-ui-icon name="x" />
+        </button>
+      </div>
     </div>
+    @if (confirm() === 'startOver') {
+      <div class="confirm-bar planning-lab-modal__confirm" role="alertdialog" aria-labelledby="planning-lab-modal-confirm">
+        <p class="confirm-bar__text" id="planning-lab-modal-confirm">{{ 'planningLab.startOverConfirm' | translate }}</p>
+        <div class="confirm-bar__actions">
+          <button type="button" class="btn btn--secondary" (click)="dismissConfirm()">{{ 'projects.card.keep' | translate }}</button>
+          <button #confirmFocus type="button" class="btn btn--danger" (click)="startOver()">{{ 'planningLab.startOver' | translate }}</button>
+        </div>
+      </div>
+    }
     <div class="planning-lab-modal__body">
       <app-daily-backlog-view />
     </div>

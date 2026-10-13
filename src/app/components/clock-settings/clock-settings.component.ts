@@ -1,8 +1,9 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { SettingsService, type BellSoundId, type BoxClockOrder, type ClockStyle } from '../../../services/settings.service';
-import { playSound } from '../../../services/clock.service';
+import { ClockService } from '../../../services/clock.service';
 import { ViewService } from '../../../services/view.service';
+import { MultitaskService } from '../../../services/multitask.service';
 
 @Component({
   selector: 'app-clock-settings',
@@ -14,9 +15,17 @@ import { ViewService } from '../../../services/view.service';
 })
 export class ClockSettingsComponent {
   readonly settings = inject(SettingsService);
+  readonly multitask = inject(MultitaskService);
+  private readonly clock = inject(ClockService);
   private readonly translate = inject(TranslateService);
 
   readonly bellSounds: { id: BellSoundId }[] = [
+    { id: 'alarmClock' },
+    { id: 'bowl' },
+    { id: 'marimba' },
+    { id: 'chime' },
+    { id: 'birds' },
+    { id: 'gong' },
     { id: 'digital' },
     { id: 'classic' },
     { id: 'siren' },
@@ -45,6 +54,6 @@ export class ClockSettingsComponent {
   }
 
   playSound(id: BellSoundId): void {
-    playSound(id);
+    this.clock.preview(id);
   }
 }
