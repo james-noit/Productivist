@@ -157,7 +157,7 @@ export class ProjectsDashboardComponent {
     if (!this.state.inboxVisible()) chips.push({ id: 'inbox', labelKey: 'projects.filters.inboxHidden', kind: 'inbox' });
     return chips;
   });
-  readonly summaryVisible = computed(() => this.chips().length > 0 || this.state.activeSort() !== 'manual');
+  readonly summaryVisible = computed(() => this.chips().length > 0 || this.state.activeSort() !== 'activity');
 
   readonly editingProject = computed(() => {
     const id = this.editingProjectId();

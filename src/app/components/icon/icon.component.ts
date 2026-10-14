@@ -1,10 +1,11 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import { PROJECT_ICON_PATHS } from '../../../lib/project-icon-paths';
 
 /**
- * Renders a small library of hand-drawn SVG icons by name, matching the stroke style used
- * in the app menu. Anything that isn't a recognized name (e.g. an emoji a user saved
- * before icons moved off emoji) falls through to the default case and is printed as-is, so
- * older projects keep showing their original icon instead of breaking.
+ * Renders the project icon library by name: the shapes are data in `lib/project-icon-paths.ts`
+ * (a few `d` strings each), drawn with the stroke style of `ui-icon`. Anything that isn't a
+ * recognized name (e.g. an emoji a user saved before icons moved off emoji) is printed as-is,
+ * so older projects keep showing their original icon instead of breaking.
  */
 @Component({
   selector: 'app-icon',
@@ -15,4 +16,9 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 })
 export class IconComponent {
   readonly name = input.required<string>();
+
+  readonly paths = computed(() => {
+    const name = this.name();
+    return Object.hasOwn(PROJECT_ICON_PATHS, name) ? PROJECT_ICON_PATHS[name] : undefined;
+  });
 }

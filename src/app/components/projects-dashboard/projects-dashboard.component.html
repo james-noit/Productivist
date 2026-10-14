@@ -68,7 +68,7 @@
           <app-ui-icon name="x" [size]="12" />
         </button>
       }
-      @if (state.activeSort() !== 'manual') {
+      @if (state.activeSort() !== 'activity') {
         <span class="dash__sorted">{{ 'projects.filters.sortedBy.' + state.activeSort() | translate }}</span>
       }
       @if (chips().length) {

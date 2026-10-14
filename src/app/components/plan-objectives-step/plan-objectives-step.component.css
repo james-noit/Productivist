@@ -1,0 +1,369 @@
+:host {
+  display: block;
+}
+
+.pstep {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.pstep__cards {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.pstep__card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.7rem 0.8rem;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  transition: border-color 0.12s;
+}
+
+/* A row is being dragged over this card. */
+.pstep__card--drop {
+  border-color: var(--color-primary);
+}
+
+.pstep__head {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding-bottom: 0.45rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.pstep__head-top,
+.pstep__head-bottom {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.2rem 0.75rem;
+}
+
+.pstep__objective {
+  margin: 0;
+  min-width: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.pstep__count,
+.pstep__projects {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
+.pstep__count {
+  white-space: nowrap;
+}
+
+.pstep__projects {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.15rem 0.75rem;
+  min-width: 0;
+}
+
+.pstep__project {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.pstep__change {
+  flex: none;
+}
+
+.pstep__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* The drop position, a 2px line before a row, or after the last one. */
+.pstep__list--drop-end::after {
+  content: '';
+  display: block;
+  height: 2px;
+  margin-top: 1px;
+  background-color: var(--color-primary);
+}
+
+.pstep__row {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.2rem 0.3rem;
+  border-radius: 6px;
+}
+
+.pstep__row:hover {
+  background-color: var(--color-surface-alt);
+}
+
+.pstep__row--dragging {
+  opacity: 0.45;
+}
+
+.pstep__row--drop-before::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -2px;
+  height: 2px;
+  background-color: var(--color-primary);
+}
+
+.pstep__grip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.75rem;
+  color: var(--color-text-muted);
+  cursor: grab;
+  touch-action: none;
+}
+
+.pstep__grip:active {
+  cursor: grabbing;
+}
+
+.pstep__main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.pstep__line {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.pstep__title {
+  min-width: 0;
+  padding: 0;
+  background: none;
+  border: none;
+  border-radius: 3px;
+  color: var(--color-text);
+  font: inherit;
+  font-size: 0.92rem;
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.pstep__title:hover {
+  text-decoration: underline;
+}
+
+.pstep__meta {
+  display: flex;
+  min-width: 0;
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.pstep__meta > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pstep__meta > span + span::before {
+  content: '·';
+  margin: 0 0.35rem;
+}
+
+.pstep__meta--overdue {
+  color: var(--color-high);
+}
+
+.pstep__actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.1rem;
+}
+
+.pstep__flip {
+  transform: scaleX(-1);
+}
+
+.pstep__nothing {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+.pstep__suggest {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem 0.6rem;
+}
+
+.pstep__suggest-label {
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.pstep__suggestion {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  max-width: 16rem;
+  min-height: 1.75rem;
+  padding: 0 0.25rem;
+  background: none;
+  border: none;
+  border-radius: 4px;
+  color: var(--color-text-muted);
+  font: inherit;
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+
+.pstep__suggestion:hover {
+  color: var(--color-text);
+}
+
+.pstep__suggestion-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pstep__add {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.75rem;
+}
+
+.pstep__add .button-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.pstep__new {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.pstep__new-input {
+  flex: 1 1 10rem;
+  min-width: 0;
+}
+
+.pstep__new-project {
+  flex: 0 1 11rem;
+  min-width: 0;
+}
+
+/* Sticky inside the modal body (the scroll container); the wizard gives this step a card without bottom padding. */
+.pstep__footer {
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.75rem;
+  margin: 0 -1rem;
+  padding: 0.7rem 1rem;
+  background-color: var(--color-surface-alt);
+  border-top: 1px solid var(--color-border);
+  border-radius: 0 0 7px 7px;
+}
+
+.pstep__summary {
+  flex: 1 1 14rem;
+  display: flex;
+  flex-direction: column;
+  /* The day's total is the point of this bar: when space runs out the buttons wrap below, it is never cut. */
+  min-width: 13rem;
+  font-size: 0.85rem;
+}
+
+.pstep__total {
+  font-weight: 600;
+}
+
+.pstep__time {
+  white-space: nowrap;
+}
+
+.pstep__empty-note {
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+}
+
+.pstep__buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+/* The picker and Task Details open over the Plan my day modal (z-index 50). */
+.pstep__over {
+  --modal-z: 100;
+}
+
+/* The drag image: off-screen, but laid out, so the browser can take it. */
+.pstep__ghost {
+  position: fixed;
+  top: -1000px;
+  left: 0;
+  max-width: 240px;
+  padding: 0.3rem 0.65rem;
+  overflow: hidden;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-primary);
+  border-radius: 6px;
+  color: var(--color-text);
+  font-size: 0.88rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+/* On phones the footer stacks: the total, the actions (primary first), then Back. */
+@media (max-width: 600px) {
+  .pstep__summary {
+    order: 1;
+    flex-basis: 100%;
+  }
+
+  .pstep__buttons {
+    order: 2;
+    flex-basis: 100%;
+    flex-direction: column-reverse;
+  }
+
+  .pstep__back {
+    order: 3;
+    align-self: flex-start;
+  }
+}

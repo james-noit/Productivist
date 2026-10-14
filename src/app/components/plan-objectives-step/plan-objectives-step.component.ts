@@ -1,0 +1,414 @@
+import {
+  ChangeDetectionStrategy,
+  Component,
+  ElementRef,
+  Injector,
+  afterNextRender,
+  computed,
+  inject,
+  output,
+  signal,
+  viewChild,
+} from '@angular/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { formatIso } from '../../../lib/dates';
+import { compareNextUp } from '../../../lib/project-cards';
+import { DailyPlanService, UNASSIGNED_GROUP_ID } from '../../../services/daily-plan.service';
+import { ProjectsService } from '../../../services/projects.service';
+import { RecurrenceService } from '../../../services/recurrence.service';
+import { SettingsService } from '../../../services/settings.service';
+import { TodosService } from '../../../services/todos.service';
+import { IconComponent } from '../icon/icon.component';
+import { KebabMenuComponent } from '../kebab-menu/kebab-menu.component';
+import { RepeatMarkComponent } from '../repeat-mark/repeat-mark.component';
+import { TaskDetailModalComponent } from '../task-detail-modal/task-detail-modal.component';
+import { TaskPickerComponent } from '../task-picker/task-picker.component';
+import { UiIconComponent } from '../ui-icon/ui-icon.component';
+import type { Todo } from '../../../types/todo';
+
+/** Suggestions per objective. */
+const SUGGESTION_LIMIT = 4;
+
+interface MetaPart {
+  text: string;
+  overdue: boolean;
+}
+
+interface PlanRow {
+  todo: Todo;
+  meta: MetaPart[];
+}
+
+interface PlanProject {
+  id: string;
+  icon: string;
+  /** null for the Inbox, whose name is translated in the template. */
+  name: string | null;
+}
+
+interface ObjectiveCard {
+  id: string;
+  text: string;
+  rows: PlanRow[];
+  suggestions: Todo[];
+  projects: PlanProject[];
+  pomodoros: number;
+}
+
+interface PickerConfig {
+  objectiveId: string;
+  isPickable: (todoId: string) => boolean;
+  annotate: (todoId: string) => string | null;
+  scope: string[] | null;
+  createProjectId: string | null;
+}
+
+/** Where a dragged row would land: before `beforeId` in an objective's list, or last when null. */
+interface DropSpot {
+  objectiveId: string;
+  beforeId: string | null;
+}
+
+/**
+ * Step 3 of Plan my day: one card per objective, in the order of step 1. Each card lists the tasks planned for the
+ * objective (reorderable: that order is the execution order of the Planned tasks list and the lots), the projects
+ * linked to it in step 2 and a few suggestions from them; tasks come in through the common `task-picker`
+ * (scoped to those projects), the suggestions or an inline new-task field. Only the planned rows are draggable
+ * (by their grip, with a small title chip as the drag image); the row menu and Alt + Up/Down are the touch and
+ * keyboard paths. Everything the template reads is in the `cards` computed.
+ */
+@Component({
+  selector: 'app-plan-objectives-step',
+  standalone: true,
+  imports: [
+    TranslatePipe,
+    IconComponent,
+    UiIconComponent,
+    KebabMenuComponent,
+    RepeatMarkComponent,
+    TaskPickerComponent,
+    TaskDetailModalComponent,
+  ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  templateUrl: './plan-objectives-step.component.html',
+  styleUrl: './plan-objectives-step.component.css',
+})
+export class PlanObjectivesStepComponent {
+  private readonly dailyPlan = inject(DailyPlanService);
+  private readonly todos = inject(TodosService);
+  private readonly projects = inject(ProjectsService);
+  private readonly recurrences = inject(RecurrenceService);
+  private readonly settings = inject(SettingsService);
+  private readonly translate = inject(TranslateService);
+  private readonly injector = inject(Injector);
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+  private readonly ghost = viewChild<ElementRef<HTMLElement>>('ghost');
+
+  /** The wizard owns navigation and the "replace your planned tasks?" question; this step only asks. */
+  readonly back = output<void>();
+  readonly startLots = output<void>();
+  readonly startPomodoro = output<void>();
+
+  private readonly dateFormat = computed(
+    () => new Intl.DateTimeFormat(this.settings.language(), { day: 'numeric', month: 'short' }),
+  );
+
+  /** Every objective's card, built in one pass: its planned rows, suggestions, projects and estimate. */
+  readonly cards = computed<ObjectiveCard[]>(() => {
+    const objectives = this.dailyPlan.objectives();
+    const assignments = this.dailyPlan.assignments();
+    const links = this.dailyPlan.projectAssignments();
+    const todos = this.todos.todos();
+    const projectsById = new Map(this.projects.projects().map((p) => [p.id, p]));
+    const milestoneNames = new Map(this.projects.milestones().map((m) => [m.id, m.name]));
+    const todosById = new Map(todos.map((t) => [t.id, t]));
+    const format = this.dateFormat();
+    const today = this.recurrences.today();
+
+    // The open tasks of each objective, in the execution order.
+    const plannedBy = new Map<string, Todo[]>();
+    for (const id of this.dailyPlan.plannedTaskIds()) {
+      const todo = todosById.get(id);
+      const objectiveId = assignments[id];
+      if (!todo || todo.done || !objectiveId) continue;
+      const list = plannedBy.get(objectiveId);
+      if (list) list.push(todo);
+      else plannedBy.set(objectiveId, [todo]);
+    }
+
+    // The best few open, unplanned tasks of each project (the Inbox under its group id), in "next up" order.
+    const byNextUp = compareNextUp(today);
+    const free = new Map<string, Todo[]>();
+    for (const todo of todos) {
+      if (todo.done || assignments[todo.id]) continue;
+      const key = todo.projectId && projectsById.has(todo.projectId) ? todo.projectId : UNASSIGNED_GROUP_ID;
+      const list = free.get(key);
+      if (list) list.push(todo);
+      else free.set(key, [todo]);
+    }
+    for (const [key, list] of free) free.set(key, list.sort(byNextUp).slice(0, SUGGESTION_LIMIT));
+
+    return objectives.map((objective) => {
+      const linked: PlanProject[] = [];
+      const suggestions: Todo[] = [];
+      for (const id of links[objective.id] ?? []) {
+        if (id === UNASSIGNED_GROUP_ID) linked.push({ id, icon: 'inbox', name: null });
+        else {
+          const project = projectsById.get(id);
+          if (project) linked.push({ id, icon: project.icon, name: project.name });
+          else continue;
+        }
+        suggestions.push(...(free.get(id) ?? []));
+      }
+      const tasks = plannedBy.get(objective.id) ?? [];
+      const rows = tasks.map((todo): PlanRow => {
+        const meta: MetaPart[] = [];
+        // A card with several projects says which one a task belongs to; with one the header already does.
+        const project = linked.length > 1 && todo.projectId ? projectsById.get(todo.projectId)?.name : undefined;
+        if (project) meta.push({ text: project, overdue: false });
+        const milestone = todo.milestoneId ? milestoneNames.get(todo.milestoneId) : undefined;
+        if (milestone) meta.push({ text: milestone, overdue: false });
+        if (todo.dueDate) {
+          const overdue = todo.dueDate < today;
+          meta.push({ text: overdue ? '' : formatIso(format, todo.dueDate), overdue });
+        }
+        return { todo, meta };
+      });
+      return {
+        id: objective.id,
+        text: objective.text,
+        rows,
+        suggestions: suggestions.sort(byNextUp).slice(0, SUGGESTION_LIMIT),
+        projects: linked,
+        pomodoros: tasks.reduce((sum, t) => sum + (t.pomodorosForTermination ?? 1), 0),
+      };
+    });
+  });
+
+  /** The footer's numbers: planned tasks, the pomodoros they take, the time that is and the objectives still empty. */
+  readonly totals = computed(() => {
+    let tasks = 0;
+    let pomodoros = 0;
+    let empty = 0;
+    for (const card of this.cards()) {
+      tasks += card.rows.length;
+      pomodoros += card.pomodoros;
+      if (!card.rows.length) empty++;
+    }
+    const minutes = Math.round((pomodoros * this.settings.focusSeconds()) / 60);
+    const time = minutes >= 60 ? `${Math.floor(minutes / 60)} h ${String(minutes % 60).padStart(2, '0')} min` : `${minutes} min`;
+    return { tasks, pomodoros, empty, time };
+  });
+
+  // --- Adding: the picker, the suggestions and the inline new-task field ---
+
+  private readonly pickerFor = signal<string | null>(null);
+  readonly picker = computed<PickerConfig | null>(() => {
+    const objectiveId = this.pickerFor();
+    const card = objectiveId ? this.cards().find((c) => c.id === objectiveId) : undefined;
+    if (!card) return null;
+    const ids = card.projects.map((p) => p.id);
+    const only = ids.length === 1 && ids[0] !== UNASSIGNED_GROUP_ID ? ids[0] : null;
+    return {
+      objectiveId: card.id,
+      // What is already planned in this objective is hidden; what is planned in another is offered, and moves.
+      isPickable: (todoId) => this.dailyPlan.assignments()[todoId] !== card.id,
+      annotate: (todoId) => {
+        const other = this.dailyPlan.assignments()[todoId];
+        const text = other && other !== card.id ? this.dailyPlan.objectives().find((o) => o.id === other)?.text : undefined;
+        return text ? this.translate.instant('planningLab.inObjective', { objective: text }) : null;
+      },
+      scope: ids.length ? ids : null,
+      createProjectId: only,
+    };
+  });
+
+  openPicker(objectiveId: string): void {
+    this.pickerFor.set(objectiveId);
+  }
+
+  closePicker(): void {
+    this.pickerFor.set(null);
+  }
+
+  /** The picker's ticked tasks: planned here (moved if they were planned elsewhere), their projects linked here. */
+  addMany(objectiveId: string, ids: readonly string[]): void {
+    this.closePicker();
+    for (const id of ids) this.plan(id, objectiveId);
+  }
+
+  addSuggestion(todo: Todo, objectiveId: string): void {
+    this.plan(todo.id, objectiveId);
+  }
+
+  /** Plans a task and links its project to the objective when step 2 had not, so the two steps agree. */
+  private plan(todoId: string, objectiveId: string): void {
+    const todo = this.todos.todos().find((t) => t.id === todoId);
+    if (!todo) return;
+    const project = todo.projectId && this.projects.projects().some((p) => p.id === todo.projectId) ? todo.projectId : UNASSIGNED_GROUP_ID;
+    this.dailyPlan.assignProjectToObjective(project, objectiveId);
+    this.dailyPlan.assignTask(todoId, objectiveId);
+  }
+
+  readonly newFor = signal<string | null>(null);
+  readonly newTitle = signal('');
+  readonly newProject = signal(UNASSIGNED_GROUP_ID);
+
+  openNew(card: ObjectiveCard): void {
+    this.newFor.set(card.id);
+    this.newTitle.set('');
+    this.newProject.set(card.projects.find((p) => p.id !== UNASSIGNED_GROUP_ID)?.id ?? UNASSIGNED_GROUP_ID);
+    afterNextRender(() => this.host.nativeElement.querySelector<HTMLElement>('.pstep__new-input')?.focus(), {
+      injector: this.injector,
+    });
+  }
+
+  closeNew(): void {
+    this.newFor.set(null);
+  }
+
+  onNewKeydown(event: KeyboardEvent, card: ObjectiveCard): void {
+    if (event.isComposing) return;
+    if (event.key === 'Escape') {
+      // Only the field: the modal behind it must stay open.
+      event.preventDefault();
+      event.stopPropagation();
+      this.closeNew();
+    } else if (event.key === 'Enter') {
+      event.preventDefault();
+      this.submitNew(card);
+    }
+  }
+
+  submitNew(card: ObjectiveCard): void {
+    const title = this.newTitle().trim();
+    if (!title) return;
+    const project = this.newProject();
+    const id = this.todos.addTodo({
+      title,
+      importance: 'medium',
+      urgency: 'medium',
+      tags: [],
+      projectId: project === UNASSIGNED_GROUP_ID ? undefined : project,
+    });
+    this.dailyPlan.assignProjectToObjective(project, card.id);
+    this.dailyPlan.assignTask(id, card.id);
+    this.newTitle.set('');
+  }
+
+  // --- A planned row: remove, move, open ---
+
+  readonly movingId = signal<string | null>(null);
+  readonly detailId = signal<string | null>(null);
+  readonly detailTodo = computed(() => {
+    const id = this.detailId();
+    return id ? (this.todos.todos().find((t) => t.id === id) ?? null) : null;
+  });
+
+  remove(todoId: string): void {
+    this.dailyPlan.unassignTask(todoId);
+  }
+
+  moveToObjective(todoId: string, objectiveId: string): void {
+    this.dailyPlan.moveTask(todoId, objectiveId, null);
+    this.movingId.set(null);
+  }
+
+  /** Alt + Up/Down moves the row within its objective, from any control inside the row. */
+  onRowKeydown(event: KeyboardEvent, card: ObjectiveCard, index: number): void {
+    if (!event.altKey || (event.key !== 'ArrowUp' && event.key !== 'ArrowDown')) return;
+    // The row's own menu uses the arrows to move between its items.
+    if (event.target instanceof HTMLElement && event.target.closest('.kebab__panel')) return;
+    event.preventDefault();
+    const rows = card.rows;
+    const id = rows[index].todo.id;
+    if (event.key === 'ArrowUp') {
+      if (index === 0) return;
+      this.dailyPlan.moveTask(id, card.id, rows[index - 1].todo.id);
+    } else {
+      if (index === rows.length - 1) return;
+      this.dailyPlan.moveTask(id, card.id, rows[index + 2]?.todo.id ?? null);
+    }
+    // Re-ordering moves the row's elements, which drops focus: put it back on the title.
+    afterNextRender(
+      () => this.host.nativeElement.querySelector<HTMLElement>(`[data-task="${CSS.escape(id)}"] .pstep__title`)?.focus(),
+      { injector: this.injector },
+    );
+  }
+
+  // --- Drag and drop (the planned rows only) ---
+
+  readonly dragId = signal<string | null>(null);
+  readonly drop = signal<DropSpot | null>(null);
+
+  onDragStart(event: DragEvent, todo: Todo): void {
+    const transfer = event.dataTransfer;
+    if (!transfer) return;
+    // Firefox (and Thunderbird) only start a drag that carries data.
+    transfer.setData('text/plain', todo.id);
+    transfer.effectAllowed = 'move';
+    // The drag image is a small chip with the title, never the row (and whatever it contains).
+    const ghost = this.ghost()?.nativeElement;
+    if (ghost) {
+      ghost.textContent = todo.title;
+      transfer.setDragImage(ghost, 12, 12);
+    }
+    this.dragId.set(todo.id);
+  }
+
+  onDragEnd(): void {
+    this.dragId.set(null);
+    this.drop.set(null);
+  }
+
+  /** While a row is over a card, work out which row it would land before (null: at the end). */
+  onDragOver(event: DragEvent, card: ObjectiveCard): void {
+    if (!this.dragId()) return;
+    event.preventDefault();
+    if (event.dataTransfer) event.dataTransfer.dropEffect = 'move';
+    let before: string | null = null;
+    for (const row of (event.currentTarget as HTMLElement).querySelectorAll<HTMLElement>('[data-task]')) {
+      const box = row.getBoundingClientRect();
+      if (event.clientY < box.top + box.height / 2) {
+        before = row.dataset['task'] ?? null;
+        break;
+      }
+    }
+    const spot = this.drop();
+    if (spot?.objectiveId !== card.id || spot.beforeId !== before) this.drop.set({ objectiveId: card.id, beforeId: before });
+  }
+
+  onDragLeave(event: DragEvent, card: ObjectiveCard): void {
+    const next = event.relatedTarget;
+    if (next instanceof Node && (event.currentTarget as HTMLElement).contains(next)) return;
+    if (this.drop()?.objectiveId === card.id) this.drop.set(null);
+  }
+
+  onDrop(event: DragEvent, card: ObjectiveCard): void {
+    const id = this.dragId();
+    const spot = this.drop();
+    this.onDragEnd();
+    if (!id || !this.dailyPlan.assignments()[id]) return;
+    event.preventDefault();
+    const before = spot?.objectiveId === card.id ? spot.beforeId : null;
+    if (before !== id) this.dailyPlan.moveTask(id, card.id, before);
+  }
+
+  // --- Footer ---
+
+  /** Tasks deleted since they were planned must not reach the lots or the Planned tasks list. */
+  private pruneDeleted(): void {
+    const known = new Set(this.todos.todos().map((t) => t.id));
+    for (const id of Object.keys(this.dailyPlan.assignments())) if (!known.has(id)) this.dailyPlan.unassignTask(id);
+  }
+
+  goLots(): void {
+    this.pruneDeleted();
+    this.startLots.emit();
+  }
+
+  goPomodoro(): void {
+    this.pruneDeleted();
+    this.startPomodoro.emit();
+  }
+}

@@ -1,5 +1,6 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, inject, signal } from '@angular/core';
 import { localStorageSignal } from '../core/local-storage-signal';
+import { ProjectActivityService } from './project-activity.service';
 import type { EisenhowerQuadrant } from '../types/eisenhower';
 
 export type AppView = 'pomodoro' | 'projects' | 'project' | 'admin';
@@ -58,6 +59,8 @@ export class ViewService {
   static {
     migrateLegacyView();
   }
+
+  private readonly activity = inject(ProjectActivityService);
 
   readonly current = localStorageSignal<AppView>('productivist.activeView', 'projects');
 
@@ -143,6 +146,7 @@ export class ViewService {
   }
 
   openProject(id: string): void {
+    this.activity.touch(id);
     this.activeProjectId.set(id);
     this.setView('project');
   }

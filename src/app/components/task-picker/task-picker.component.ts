@@ -18,7 +18,7 @@ import { classify } from '../../../lib/eisenhower';
 import { trapTab } from '../../../lib/focus-trap';
 import { lockScroll } from '../../../lib/scroll-lock';
 import { normalizeQuery } from '../../../lib/search';
-import { DailyPlanService } from '../../../services/daily-plan.service';
+import { DailyPlanService, UNASSIGNED_GROUP_ID } from '../../../services/daily-plan.service';
 import { ProjectsService } from '../../../services/projects.service';
 import { SettingsService } from '../../../services/settings.service';
 import { TodosService } from '../../../services/todos.service';
@@ -44,11 +44,16 @@ interface PickItem {
   todo?: Todo;
   meta?: MetaPart[];
   current?: boolean;
+  /** `multiple` mode: the task is ticked. */
+  checked?: boolean;
+  /** The caller's note for this task (`annotate`), shown muted at the right. */
+  note?: string;
   /** `more`: the section it expands and how many rows it holds back. */
   sectionId?: string;
   hidden?: number;
-  /** `create`: the title typed in the search. */
+  /** `create`: the title typed in the search, and the project it goes to when the caller named one (else the Inbox). */
   title?: string;
+  project?: string;
 }
 
 interface PickSection {
@@ -72,7 +77,10 @@ interface PickView {
  * The one "choose a task" dialog of the app (Pomodoro's current task, a Multitask card). A quiet, keyboard-first
  * list: a search that owns focus (combobox) over a listbox grouped as Planned today, Inbox and one section per
  * project, a few single-select quick filters, and "Create ... in Inbox" while the search has text. Any new
- * "choose a task" flow reuses it; `isPickable` hides the tasks a caller cannot take.
+ * "choose a task" flow reuses it; `isPickable` hides the tasks a caller cannot take. Optional, all backwards
+ * compatible: `multiple` (tick several, "Add N tasks" in a footer, `pickMany` once with the ids), `scopeProjectIds`
+ * (those projects' sections first, everything else folded into a collapsed "Other projects"), `annotate` (a muted
+ * note per row) and `createProjectId` (where "Create ..." puts the new task).
  */
 @Component({
   selector: 'app-task-picker',
@@ -92,10 +100,23 @@ export class TaskPickerComponent {
   private readonly searchInput = viewChild<ElementRef<HTMLInputElement>>('search');
 
   readonly isPickable = input<(todoId: string) => boolean>(() => true);
+  /** Tick several tasks and confirm them together; the single-pick rows and footer-less layout are the default. */
+  readonly multiple = input(false);
+  /** Project ids whose sections come first (`UNASSIGNED_GROUP_ID` = the Inbox); the others fold into "Other projects". */
+  readonly scopeProjectIds = input<readonly string[] | null>(null);
+  /** A short note shown at the right of a task's row, or null. */
+  readonly annotate = input<(todoId: string) => string | null>(() => null);
+  /** The project "Create ..." adds the new task to; absent or unknown means the Inbox. */
+  readonly createProjectId = input<string | null | undefined>(undefined);
 
   // Not `select`: that is also a native DOM event, which the search input fires (and bubbles) when text in it is selected.
   readonly pick = output<string>();
+  /** `multiple` only: the ticked ids, once, on "Add N tasks" (`pick` also fires once per id). */
+  readonly pickMany = output<string[]>();
   readonly close = output<void>();
+
+  /** `multiple` only: what is ticked, in the order it was ticked. */
+  readonly selected = signal<readonly string[]>([]);
 
   readonly query = signal('');
   readonly filter = signal<QuickFilter>('all');
@@ -129,6 +150,12 @@ export class TaskPickerComponent {
     return chips;
   });
 
+  /** The project a created task goes to: the caller's, when it names one that exists. */
+  private readonly createTarget = computed(() => {
+    const id = this.createProjectId();
+    return id ? this.projects.projects().find((p) => p.id === id) : undefined;
+  });
+
   readonly view = computed<PickView>(() => {
     const raw = this.query().trim();
     const query = normalizeQuery(raw);
@@ -139,6 +166,11 @@ export class TaskPickerComponent {
     const milestoneNames = new Map(this.projects.milestones().map((m) => [m.id, m.name]));
     const currentId = this.todos.currentTaskId();
     const format = this.dateFormat();
+    const scope = this.scopeProjectIds();
+    const scoped = scope ? new Set(scope.map((id) => (id === UNASSIGNED_GROUP_ID ? 'inbox' : id))) : null;
+    const ticked = new Set(this.selected());
+    const multiple = this.multiple();
+    const annotate = this.annotate();
 
     const matches = this.pickable().filter((todo) => {
       if (filter === 'planned' && !planned.has(todo.id)) return false;
@@ -153,8 +185,9 @@ export class TaskPickerComponent {
       );
     });
 
-    // Which section a task goes to: the plan first (unless the chip already is the plan), then its project.
-    const showPlanned = this.hasPlanned() && filter !== 'planned';
+    // Which section a task goes to: the plan first (unless the chip already is the plan, or a scope is set, which
+    // sorts by project instead), then its project; outside the scope everything is one "Other projects" section.
+    const showPlanned = this.hasPlanned() && filter !== 'planned' && !scoped;
     const groups = new Map<string, Todo[]>();
     for (const todo of matches) {
       const key =
@@ -173,6 +206,21 @@ export class TaskPickerComponent {
       { id: 'inbox', labelKey: 'projects.inbox.title', name: '' },
       ...this.projects.sortedProjects().map((p) => ({ id: p.id, labelKey: null, name: p.name })),
     ];
+    if (scoped) {
+      // The scoped sections in their usual order, then the rest merged (still grouped by project) into "other".
+      const rest: Todo[] = [];
+      for (const spec of order) {
+        if (scoped.has(spec.id)) continue;
+        const tasks = groups.get(spec.id);
+        if (tasks?.length) rest.push(...this.todos.sortTasks(tasks));
+      }
+      groups.set('other', rest);
+      order.splice(0, order.length, ...order.filter((spec) => scoped.has(spec.id)), {
+        id: 'other',
+        labelKey: 'picker.other',
+        name: '',
+      });
+    }
 
     const items: PickItem[] = [];
     const sections: PickSection[] = [];
@@ -180,13 +228,16 @@ export class TaskPickerComponent {
     for (const spec of order) {
       const tasks = groups.get(spec.id);
       if (!tasks?.length) continue;
-      const sorted = this.todos.sortTasks(tasks);
-      const collapsed = !query && !expanded.has(spec.id) && sorted.length > SECTION_LIMIT;
-      const shown = collapsed ? sorted.slice(0, SECTION_LIMIT) : sorted;
+      // "Other" keeps the order it was merged in (by project); everything else is sorted as the app does.
+      const sorted = spec.id === 'other' ? tasks : this.todos.sortTasks(tasks);
+      // "Other projects" starts folded (no rows at all) until opened or searched; other sections show a few.
+      const limit = spec.id === 'other' ? 0 : SECTION_LIMIT;
+      const collapsed = !query && !expanded.has(spec.id) && sorted.length > limit;
+      const shown = collapsed ? sorted.slice(0, limit) : sorted;
       const rows: PickItem[] = shown.map((todo) => {
         const parts: MetaPart[] = [];
-        // Under Planned today a row also says which project it belongs to; elsewhere the heading does.
-        if (spec.id === 'planned' && todo.projectId) {
+        // Under Planned today and Other projects a row also says which project it belongs to; elsewhere the heading does.
+        if ((spec.id === 'planned' || spec.id === 'other') && todo.projectId) {
           const name = projectsById.get(todo.projectId)?.name;
           if (name) parts.push({ text: name, overdue: false });
         }
@@ -197,12 +248,15 @@ export class TaskPickerComponent {
           parts.push({ text: overdue ? '' : formatIso(format, todo.dueDate), overdue });
         }
         if (todo.tags.length) parts.push({ text: `#${todo.tags[0]}`, overdue: false });
+        const note = annotate(todo.id);
         const row: PickItem = {
           kind: 'task',
           index: items.length,
           todo,
           meta: parts.slice(0, 2),
           current: todo.id === currentId,
+          ...(multiple ? { checked: ticked.has(todo.id) } : {}),
+          ...(note ? { note } : {}),
         };
         items.push(row);
         return row;
@@ -218,7 +272,7 @@ export class TaskPickerComponent {
     const taskCount = matches.length;
     let create: PickItem | null = null;
     if (raw) {
-      create = { kind: 'create', index: items.length, title: raw };
+      create = { kind: 'create', index: items.length, title: raw, project: this.createTarget()?.name };
       items.push(create);
     }
     return { sections, items, create, taskCount };
@@ -266,14 +320,39 @@ export class TaskPickerComponent {
 
   activate(item: PickItem): void {
     if (item.kind === 'task' && item.todo) {
-      this.pick.emit(item.todo.id);
+      if (this.multiple()) this.toggle(item.todo.id);
+      else this.pick.emit(item.todo.id);
     } else if (item.kind === 'more' && item.sectionId) {
       const id = item.sectionId;
       this.expanded.update((set) => new Set(set).add(id));
     } else if (item.kind === 'create' && item.title) {
-      const id = this.todos.addTodo({ title: item.title, importance: 'medium', urgency: 'medium', tags: [] });
-      this.pick.emit(id);
+      const id = this.todos.addTodo({
+        title: item.title,
+        importance: 'medium',
+        urgency: 'medium',
+        tags: [],
+        projectId: this.createTarget()?.id,
+      });
+      if (this.multiple()) {
+        // Ticked right away; the search is cleared for the next one.
+        this.selected.update((list) => [...list, id]);
+        this.setQuery('');
+      } else {
+        this.pick.emit(id);
+      }
     }
+  }
+
+  private toggle(id: string): void {
+    this.selected.update((list) => (list.includes(id) ? list.filter((x) => x !== id) : [...list, id]));
+  }
+
+  /** `multiple`: hands over everything ticked (`pick` once per id, then `pickMany`). */
+  confirmMany(): void {
+    const ids = this.selected();
+    if (!ids.length) return;
+    for (const id of ids) this.pick.emit(id);
+    this.pickMany.emit([...ids]);
   }
 
   onSearchKeydown(event: KeyboardEvent): void {
@@ -297,8 +376,22 @@ export class TaskPickerComponent {
         break;
       case 'Enter': {
         event.preventDefault();
+        // Ctrl or Cmd + Enter adds what is ticked.
+        if (this.multiple() && (event.ctrlKey || event.metaKey)) {
+          this.confirmMany();
+          return;
+        }
         const item = this.view().items[current];
         if (item) this.activate(item);
+        return;
+      }
+      case ' ': {
+        // Space ticks the highlighted task, but only while the search is empty: otherwise it is part of the text.
+        if (!this.multiple() || this.query()) return;
+        const item = this.view().items[current];
+        if (item?.kind !== 'task') return;
+        event.preventDefault();
+        this.activate(item);
         return;
       }
       default:

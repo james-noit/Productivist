@@ -1,6 +1,8 @@
 import { Injectable, computed, effect, inject, signal } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
 import { localStorageSignal } from '../core/local-storage-signal';
+import { ProjectActivityService } from './project-activity.service';
+import { TodosService } from './todos.service';
 import {
   SettingsService,
   MIN_DURATION_SECONDS,
@@ -30,6 +32,8 @@ const TICK_MS = 1000;
 export class ClockService {
   private readonly settings = inject(SettingsService);
   private readonly translate = inject(TranslateService);
+  private readonly todos = inject(TodosService);
+  private readonly activity = inject(ProjectActivityService);
 
   readonly mode = signal<ClockMode>('focus');
   readonly running = signal(false);
@@ -245,7 +249,11 @@ export class ClockService {
     this.hasTicked = false;
     this.remainingSeconds.set(this.totalSeconds());
     this.sessionModalOpen.set(true);
-    if (wasFocus) this.lastFocusEndAt.set(Date.now());
+    if (wasFocus) {
+      this.lastFocusEndAt.set(Date.now());
+      // A finished focus session is work on the current task's project.
+      this.activity.touch(this.todos.currentTask()?.projectId);
+    }
     this.persistState();
   }
 

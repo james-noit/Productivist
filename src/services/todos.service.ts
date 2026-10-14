@@ -4,6 +4,7 @@ import { createId } from '../core/create-id';
 import { comparePriority } from '../lib/eisenhower';
 import { sanitizeDates } from '../lib/dates';
 import { FlowService } from './flow.service';
+import { ProjectActivityService } from './project-activity.service';
 import { columnOf, reorderSlice, statusOf, type BoardColumnKey } from '../lib/kanban';
 import type { Priority, TaskStatus, Todo, TodoExport } from '../types/todo';
 
@@ -39,6 +40,7 @@ export type TodoPatch = Partial<
 @Injectable({ providedIn: 'root' })
 export class TodosService {
   private readonly flow = inject(FlowService);
+  private readonly activity = inject(ProjectActivityService);
 
   readonly todos = localStorageSignal<Todo[]>('productivist.todos', []);
   readonly filters = localStorageSignal<TodoFilters>('productivist.todoFilters', {
@@ -132,6 +134,7 @@ export class TodosService {
       ...(input.dueDate ? { dueDate: input.dueDate } : {}),
     };
     this.todos.update((list) => [...list, todo]);
+    this.activity.touch(todo.projectId);
     return todo.id;
   }
 
@@ -153,11 +156,18 @@ export class TodosService {
     this.todos.update((list) => list.map((todo) => (todo.id === id ? { ...todo, ...patch } : todo)));
   }
 
+  /** The project of a task, for the activity log (a task that is gone has none). */
+  private projectOf(id: string): string | undefined {
+    return this.todos().find((t) => t.id === id)?.projectId;
+  }
+
   assignToMilestone(todoId: string, projectId: string, milestoneId: string): void {
+    this.activity.touchMany([this.projectOf(todoId), projectId]);
     this.patchTodo(todoId, { projectId, milestoneId });
   }
 
   unassignFromProject(todoId: string): void {
+    this.activity.touch(this.projectOf(todoId));
     this.patchTodo(todoId, { projectId: undefined, milestoneId: undefined });
   }
 
@@ -180,12 +190,15 @@ export class TodosService {
   }
 
   removeTodo(id: string): void {
+    this.activity.touch(this.projectOf(id));
     this.todos.update((list) => list.filter((todo) => todo.id !== id));
     this.flow.removeLinksFrom('task', id);
     if (this.currentTaskId() === id) this.currentTaskId.set(null);
   }
 
   updateTodo(id: string, patch: TodoPatch): void {
+    // Moving a task between projects touches both; an unrelated edit touches the project it is in.
+    this.activity.touchMany([this.projectOf(id), patch.projectId]);
     this.patchTodo(id, patch);
   }
 
@@ -198,6 +211,7 @@ export class TodosService {
     const selected = new Set(ids);
     const { done, ...rest } = patch;
     const now = Date.now();
+    this.activity.touchMany([...this.todos().filter((t) => selected.has(t.id)).map((t) => t.projectId), patch.projectId]);
     this.todos.update((list) =>
       list.map((todo) => {
         if (!selected.has(todo.id)) return todo;
@@ -216,6 +230,7 @@ export class TodosService {
   removeMany(ids: readonly string[]): void {
     if (!ids.length) return;
     const selected = new Set(ids);
+    this.activity.touchMany(this.todos().filter((t) => selected.has(t.id)).map((t) => t.projectId));
     this.todos.update((list) => list.filter((todo) => !selected.has(todo.id)));
     this.flow.removeLinksFrom('task', ids);
     const current = this.currentTaskId();
@@ -226,6 +241,7 @@ export class TodosService {
     const todo = this.todos().find((t) => t.id === id);
     if (!todo) return;
     const done = !todo.done;
+    this.activity.touch(todo.projectId);
     this.patchTodo(id, { done, completedAt: done ? Date.now() : undefined });
     if (done && this.currentTaskId() === id) this.currentTaskId.set(null);
   }
@@ -243,6 +259,7 @@ export class TodosService {
     const list = this.todos();
     const moved = list.find((t) => t.id === id);
     if (!moved) return;
+    this.activity.touch(moved.projectId);
     const now = Date.now();
     const toDone = target.column === 'done';
     const wasDone = moved.done;

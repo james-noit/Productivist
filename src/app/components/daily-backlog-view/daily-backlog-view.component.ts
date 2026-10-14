@@ -6,9 +6,8 @@ import { TodosService } from '../../../services/todos.service';
 import { MultitaskService } from '../../../services/multitask.service';
 import { ViewService } from '../../../services/view.service';
 import { DailyPlanService, UNASSIGNED_GROUP_ID } from '../../../services/daily-plan.service';
-import { DailyPlanProjectItemComponent } from '../daily-plan-project-item/daily-plan-project-item.component';
 import { ProjectFormComponent } from '../project-form/project-form.component';
-import { ProjectsPanelComponent } from '../projects-panel/projects-panel.component';
+import { PlanObjectivesStepComponent } from '../plan-objectives-step/plan-objectives-step.component';
 import { TaskBadgesComponent } from '../task-badges/task-badges.component';
 import { IconComponent } from '../icon/icon.component';
 import { UiIconComponent } from '../ui-icon/ui-icon.component';
@@ -22,8 +21,7 @@ interface Suggestion {
   milestoneName?: string;
 }
 
-// Shared empty arrays, so an objective with nothing in it doesn't allocate per read.
-const EMPTY_TASKS: readonly Todo[] = [];
+// Shared empty array, so an objective with nothing in it doesn't allocate per read.
 const EMPTY_PROJECTS: readonly { id: string; icon: string; name: string }[] = [];
 
 interface PlanStep {
@@ -43,9 +41,8 @@ const STEPS: PlanStep[] = [
   imports: [
     FormsModule,
     TranslatePipe,
-    DailyPlanProjectItemComponent,
     ProjectFormComponent,
-    ProjectsPanelComponent,
+    PlanObjectivesStepComponent,
     IconComponent,
     UiIconComponent,
     LotEditorComponent,
@@ -96,12 +93,6 @@ export class DailyBacklogViewComponent {
     this.objectivesList.update((list) => [...list, text]);
   }
 
-  readonly tasksModalOpen = signal(false);
-
-  closeTasksModalOnBackdrop(event: MouseEvent): void {
-    if (event.target === event.currentTarget) this.tasksModalOpen.set(false);
-  }
-
   /**
    * Escape closes the wizard's own modals, topmost first. PlanningLabModalComponent leaves Escape
    * alone while any nested overlay exists, so this is what keeps it from also closing the plan.
@@ -109,7 +100,6 @@ export class DailyBacklogViewComponent {
   @HostListener('document:keydown.escape')
   onEscape(): void {
     if (this.showOverwriteConfirm()) this.cancelOverwrite();
-    else if (this.tasksModalOpen()) this.tasksModalOpen.set(false);
   }
 
   readonly showNewProjectForm = signal(false);
@@ -132,13 +122,6 @@ export class DailyBacklogViewComponent {
     const all = this.projects.sortedProjects();
     return term ? all.filter((p) => p.name.toLowerCase().includes(term)) : all;
   });
-
-  readonly chosenProjects = computed(() => {
-    const ids = this.dailyPlan.assignedProjectIds();
-    return this.projects.sortedProjects().filter((p) => ids.has(p.id));
-  });
-
-  readonly isUnassignedChosen = computed(() => this.dailyPlan.assignedProjectIds().has(UNASSIGNED_GROUP_ID));
 
   addObjective(): void {
     const trimmed = this.objectiveDraft().trim();
@@ -209,38 +192,6 @@ export class DailyBacklogViewComponent {
     }
     const project = this.projects.projects().find((p) => p.id === id);
     return { id, icon: project?.icon ?? 'folder', name: project?.name ?? '' };
-  }
-
-  // --- Tasks step ---
-
-  isProjectSelected(id: string): boolean {
-    return this.dailyPlan.assignedProjectIds().has(id);
-  }
-
-  /** Same shape as projectsByObjective: one pass over the todos rather than one per read. */
-  private readonly tasksByObjective = computed(() => {
-    const assignments = this.dailyPlan.assignments();
-    const byObjective = new Map<string, Todo[]>();
-    for (const todo of this.todos.todos()) {
-      if (todo.done) continue;
-      const objectiveId = assignments[todo.id];
-      if (!objectiveId) continue;
-      const bucket = byObjective.get(objectiveId);
-      if (bucket) bucket.push(todo);
-      else byObjective.set(objectiveId, [todo]);
-    }
-    return byObjective;
-  });
-
-  tasksFor(objectiveId: string): readonly Todo[] {
-    return this.tasksByObjective().get(objectiveId) ?? EMPTY_TASKS;
-  }
-
-  placeArmedTask(objectiveId: string): void {
-    const taskId = this.dailyPlan.draggedTaskId();
-    if (!taskId) return;
-    this.dailyPlan.assignTask(taskId, objectiveId);
-    this.dailyPlan.endDrag();
   }
 
   // --- Move to pomodoro ---

@@ -1,6 +1,9 @@
 @media (prefers-reduced-motion: no-preference) {
   .stage-enter {
-    animation: stage-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+    /* Not `both`: a fill that keeps the final transform (even an identity one) makes this element the
+       containing block of every position: fixed descendant, so the task picker's overlay would be clipped
+       to the step instead of covering the screen. */
+    animation: stage-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) backwards;
   }
 }
 
@@ -284,21 +287,6 @@
   color: var(--color-text-muted);
 }
 
-.daily-backlog-prompt__tasks-button {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  background: none;
-  border: 1px solid var(--color-border);
-  border-radius: 999px;
-  color: var(--color-text);
-  padding: 0.3rem 0.75rem;
-  font-size: 0.8rem;
-  font-family: inherit;
-  cursor: pointer;
-  user-select: none;
-}
-
 .suggestion-list {
   list-style: none;
   margin: 0;
@@ -354,6 +342,11 @@
   border-top: 4px solid var(--color-primary);
   padding: 1rem;
   min-height: 220px;
+}
+
+.daily-backlog--step {
+  /* The step's footer sits flush with the bottom of the card (and sticks to the bottom of the modal). */
+  padding-bottom: 0;
 }
 
 .daily-backlog__prompt {
@@ -493,11 +486,6 @@
   }
 }
 
-.daily-backlog__groups-header {
-  display: flex;
-  justify-content: flex-end;
-}
-
 .daily-backlog__objectives {
   display: flex;
   flex-direction: column;
@@ -535,15 +523,6 @@
   color: var(--color-text-muted);
 }
 
-.objective-bucket__list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-}
-
 .objective-bucket__chips {
   list-style: none;
   margin: 0;
@@ -579,33 +558,6 @@
   min-width: 1.4rem;
   min-height: 1.4rem;
 }
-
-.objective-task {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  border: 1px solid var(--color-border);
-  border-radius: 6px;
-  padding: 0.35rem 0.6rem;
-}
-
-.objective-task__title {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.objective-task__remove {
-  flex-shrink: 0;
-  min-width: 1.8rem;
-  min-height: 1.8rem;
-  background: none;
-  border: none;
-  color: var(--color-text-muted);
-}
-
 
 .daily-backlog__grouping-title {
   margin: 0;
@@ -660,34 +612,4 @@
   border-radius: 6px;
   padding: 0.5rem 1rem;
   flex: 1 1 auto;
-}
-
-.tasks-overlay {
-  --modal-z: 100;
-}
-
-.tasks-modal {
-  --modal-max-width: 560px;
-  --modal-radius: 10px;
-  --modal-padding: 1rem 1.25rem 1.25rem;
-  border: none;
-}
-
-.tasks-modal__header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.6rem;
-}
-
-.tasks-modal__header h3 {
-  margin: 0;
-}
-
-.tasks-modal__close {
-  background: none;
-  border: none;
-  color: var(--color-text-muted);
-  min-width: 2rem;
-  min-height: 2rem;
 }

@@ -4,10 +4,44 @@
   gap: 0.9rem;
 }
 
+.project-form__icon-search {
+  margin-bottom: 0.4rem;
+}
+
+/* Capped, with its own scroll, so the form does not grow with the library. */
 .project-form__icons {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  max-height: 15rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0.1rem 0.15rem 0.15rem 0;
+}
+
+.project-form__group-title {
+  margin-top: 0.35rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.project-form__group-title:first-child {
+  margin-top: 0;
+}
+
+.project-form__group {
   display: flex;
   flex-wrap: wrap;
   gap: 0.35rem;
+}
+
+.project-form__no-icons {
+  margin: 0.5rem 0;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
 }
 
 .project-form__icon {

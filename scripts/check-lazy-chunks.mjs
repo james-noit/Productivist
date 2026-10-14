@@ -78,6 +78,8 @@ const NEVER_INITIAL_UI = [
   component('number-stepper'),
   component('task-detail-modal'),
   'src/lib/project-cards.ts',
+  'src/lib/project-icon-paths.ts',
+  component('plan-objectives-step'),
 ];
 
 const inputsOf = (output) => Object.keys(output.inputs ?? {});

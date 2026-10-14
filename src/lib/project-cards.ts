@@ -12,9 +12,37 @@ import type { Todo } from '../types/todo';
  * Only the lazy projects view imports this file.
  */
 
-export type ProjectsSort = 'manual' | 'urgency' | 'due' | 'name';
-/** `productivist.projectsSort` held 'manual' | 'urgency' before; both stay valid. Anything else falls back to manual. */
-export const PROJECTS_SORTS: readonly ProjectsSort[] = ['manual', 'urgency', 'due', 'name'];
+export type ProjectsSort = 'activity' | 'manual' | 'urgency' | 'due' | 'name';
+/** `productivist.projectsSortBy` (the drawer's order). Anything else falls back to 'activity', the default. */
+export const PROJECTS_SORTS: readonly ProjectsSort[] = ['activity', 'manual', 'urgency', 'due', 'name'];
+
+/** Half-life of an interaction in the activity score, and how far back the task timestamps count. */
+const ACTIVITY_HALF_LIFE_MS = 7 * 86_400_000;
+const ACTIVITY_WINDOW_MS = 30 * 86_400_000;
+
+/**
+ * How much a project has been worked on lately: every interaction counts 1, a task created 1 and a task completed 2,
+ * each halving every 7 days. The task terms (last 30 days only) come from synced data, so work done on another
+ * device still lifts a project; `log` is this device's interactions (opens, edits), see `ProjectActivityService`.
+ * `taskScore` is the task half, summed in `buildPageStats`' single pass over the todos.
+ */
+export function activityScore(log: readonly number[] | undefined, taskScore: number, now: number): number {
+  let score = taskScore;
+  if (Array.isArray(log)) for (const at of log) score += decay(now - at);
+  return score;
+}
+
+const decay = (ageMs: number): number => 0.5 ** (Math.max(0, ageMs) / ACTIVITY_HALF_LIFE_MS);
+
+/** The activity a task adds to its project (see `activityScore`): created 1, completed 2, last 30 days only. */
+function taskActivity(todo: Todo, now: number): number {
+  let score = 0;
+  if (typeof todo.createdAt === 'number' && now - todo.createdAt <= ACTIVITY_WINDOW_MS) score += decay(now - todo.createdAt);
+  if (todo.done && typeof todo.completedAt === 'number' && now - todo.completedAt <= ACTIVITY_WINDOW_MS) {
+    score += 2 * decay(now - todo.completedAt);
+  }
+  return score;
+}
 
 /** The drawer's due filter (null = any time). */
 export type TaskFilter = 'week' | 'overdue';
@@ -37,6 +65,8 @@ export interface ProjectStats {
   objectives: number;
   /** The open tasks to work on next (see `compareNextUp`), at most `NEXT_UP_LIMIT`. */
   nextUp: Todo[];
+  /** Recent activity (see `activityScore`); the "Recent activity" sort orders by it. */
+  activity: number;
 }
 
 export interface PageStats {
@@ -74,6 +104,8 @@ export function buildPageStats(
   objectivesByProject: ReadonlyMap<string, readonly Objective[]>,
   today: string,
   inboxOrder: (list: Todo[]) => Todo[],
+  activityLog: Readonly<Record<string, readonly number[]>> = {},
+  now: number = Date.now(),
 ): PageStats {
   const weekEnd = addDays(today, WEEK_DAYS - 1);
   const byProject = new Map<string, ProjectStats>();
@@ -90,6 +122,7 @@ export function buildPageStats(
       milestones: 0,
       objectives: 0,
       nextUp: [],
+      activity: 0,
     });
     openByProject.set(project.id, []);
   }
@@ -105,6 +138,7 @@ export function buildPageStats(
     if (stats) {
       stats.total++;
       if (todo.done) stats.done++;
+      stats.activity += taskActivity(todo, now);
     }
     if (todo.done) continue;
 
@@ -130,6 +164,7 @@ export function buildPageStats(
   for (const [id, stats] of byProject) {
     stats.percent = stats.total ? Math.round((stats.done / stats.total) * 100) : 0;
     stats.nextUp = openByProject.get(id)!.sort(byNextUp).slice(0, NEXT_UP_LIMIT);
+    stats.activity = activityScore(activityLog[id], stats.activity, now);
   }
   for (const milestone of milestones) {
     const stats = byProject.get(milestone.projectId);
@@ -171,6 +206,8 @@ export function sortCards<T extends { project: Project; stats: ProjectStats }>(
   locale: string,
 ): T[] {
   switch (sort) {
+    case 'activity':
+      return cards.sort((a, b) => b.stats.activity - a.stats.activity);
     case 'urgency':
       return cards.sort(
         (a, b) =>

@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, input, model, out
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { ProjectsService } from '../../../services/projects.service';
-import { PROJECT_ICONS } from '../../../lib/project-icons';
+import { QUICK_PROJECT_ICONS } from '../../../lib/project-icon-paths';
 import { IconComponent } from '../icon/icon.component';
 
 /** Sentinel refs for the two selects, alongside '' (none) and a real id. */
@@ -49,10 +49,10 @@ export class ProjectMilestonePickerComponent {
   readonly createProject = output<NewProjectInput>();
   readonly createMilestone = output<string>();
 
-  readonly icons = PROJECT_ICONS;
+  readonly icons = QUICK_PROJECT_ICONS;
 
   /** Draft state for the inline create forms; the parent reads these at submit time. */
-  readonly chosenIcon = signal(PROJECT_ICONS[0]);
+  readonly chosenIcon = signal(QUICK_PROJECT_ICONS[0]);
   readonly projectName = signal('');
   readonly milestoneName = signal('');
 
@@ -82,7 +82,7 @@ export class ProjectMilestonePickerComponent {
 
   /** Resets the inline drafts, e.g. when the host points the picker at a different task. */
   resetDrafts(): void {
-    this.chosenIcon.set(PROJECT_ICONS[0]);
+    this.chosenIcon.set(QUICK_PROJECT_ICONS[0]);
     this.projectName.set('');
     this.milestoneName.set('');
   }

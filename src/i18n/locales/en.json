@@ -160,7 +160,10 @@
     "empty": "No open tasks yet. Type a title to create one.",
     "more": "Show {{n}} more",
     "current": "Current",
-    "overdue": "Overdue"
+    "overdue": "Overdue",
+    "addN": { "one": "Add {{n}} task", "other": "Add {{n}} tasks" },
+    "other": "Other projects",
+    "createIn": "Create “{{title}}” in {{project}}"
   },
   "projects": {
     "title": "Tasks and projects",
@@ -171,6 +174,8 @@
     "deleteConfirm": "Delete this project? Its milestones will be removed and its tasks will return to the unassigned pool.",
     "deleteMilestoneConfirm": "Delete this milestone? Its tasks will return to the project's unassigned pool.",
     "icon": "Icon",
+    "searchIcons": "Search icons",
+    "noIcons": "No icons match",
     "name": "Name",
     "namePlaceholder": "Project name",
     "description": "Description",
@@ -228,6 +233,7 @@
         "other": "Show {{n}} results"
       },
       "sortedBy": {
+        "manual": "Sorted manually",
         "urgency": "Sorted by urgency",
         "due": "Sorted by due date",
         "name": "Sorted by name"
@@ -262,6 +268,7 @@
       "clearAction": "Clear search"
     },
     "sort": {
+      "activity": "Recent activity",
       "manual": "Manual",
       "urgency": "Urgency",
       "due": "Due date",
@@ -380,10 +387,7 @@
   "planningLab": {
     "title": "Plan my day",
     "dailyBacklog": "Daily backlog",
-    "dailyPlanProjectEmpty": "No tasks in this project yet.",
     "freeTasks": "Free tasks without project",
-    "newUnclassifiedTask": "New unclassified task",
-    "noMilestoneGroup": "No milestone",
     "objectivePromptTitle": "What do you want to achieve today?",
     "objectivePromptSubtitle": "What is that objective or objectives that, achieved in this session, will make you feel accomplished?",
     "objectivePlaceholder": "e.g. Ship the new checkout flow",
@@ -399,8 +403,6 @@
     "backToObjectives": "Back to objectives",
     "backToProjects": "Back to projects",
     "startOverConfirm": "Clear today's objectives, projects and lots?",
-    "planningPrompt": "Drag a task into an objective on the right — or, on touch, tap a task then tap the objective to place it there.",
-    "dropHere": "Drag tasks here",
     "dropProjectsHere": "Drag projects here",
     "armProjectHint": "Drag a project into an objective — or, on touch, tap a project then tap the objective. A project can belong to more than one objective.",
     "removeFromObjective": "Remove from objective",
@@ -409,9 +411,6 @@
     "stepProjects": "Projects",
     "stepTasks": "Tasks",
     "suggestionsLabel": "Need ideas?",
-    "tasksButton": "Tasks",
-    "popoverTaskCount": "{{n}} tasks",
-    "popoverAssignedTo": "Assigned to {{objective}}",
     "suggestionsHint": "Tap a task to turn it into an objective.",
     "noSuggestions": "No tasks to suggest yet.",
     "moveToPomodoro": "Move tasks to pomodoro",
@@ -440,6 +439,20 @@
     "unfinishedCount": { "one": "1 task isn't done.", "other": "{{n}} tasks aren't done." },
     "openButton": "Plan my day",
     "resumeButton": "Resume planning · {{step}}/3",
+    "addTasks": "Add tasks…",
+    "newTask": "New task",
+    "newTaskIn": "Project for the new task",
+    "suggested": "Suggested",
+    "changeProjects": "Change projects",
+    "noProjects": "No projects linked",
+    "moveToObjective": "Move to objective",
+    "openTask": "Open task",
+    "reorder": "Drag to reorder (Alt + arrows with the keyboard)",
+    "inObjective": "In: {{objective}}",
+    "nothingPlanned": "Nothing planned yet.",
+    "count": { "one": "{{n}} task", "other": "{{n}} tasks" },
+    "estimate": { "one": "≈ {{n}} pomodoro", "other": "≈ {{n}} pomodoros" },
+    "emptyObjective": { "one": "{{n}} objective has nothing planned.", "other": "{{n}} objectives have nothing planned." },
     "close": "Close"
   },
   "admin": {

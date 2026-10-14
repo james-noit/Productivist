@@ -8,6 +8,7 @@ import { TodoFiltersComponent } from '../todo-filters/todo-filters.component';
 import { TodoItemComponent } from '../todo-item/todo-item.component';
 import { CompletedTasksStackComponent } from '../completed-tasks-stack/completed-tasks-stack.component';
 import { ProjectsPanelComponent } from '../projects-panel/projects-panel.component';
+import type { Todo } from '../../../types/todo';
 
 @Component({
   selector: 'app-todo-list',
@@ -37,8 +38,14 @@ export class TodoListComponent {
   readonly showDailyBacklog = signal(false);
 
   readonly plannedTasks = computed(() => {
-    const ids = new Set(this.dailyPlan.committedPlannedTaskIds());
-    return this.todos.todos().filter((t) => !t.done && ids.has(t.id));
+    // In the order the plan committed them (the planning step's execution order), not the task list's.
+    const byId = new Map(this.todos.todos().map((t) => [t.id, t] as const));
+    const planned: Todo[] = [];
+    for (const id of this.dailyPlan.committedPlannedTaskIds()) {
+      const todo = byId.get(id);
+      if (todo && !todo.done) planned.push(todo);
+    }
+    return planned;
   });
 
   selectTodoViewMode(mode: 'all' | 'projects'): void {

@@ -160,7 +160,10 @@
     "empty": "Aún no hay tareas abiertas. Escribe un título para crear una.",
     "more": "Mostrar {{n}} más",
     "current": "Actual",
-    "overdue": "Vencida"
+    "overdue": "Vencida",
+    "addN": { "one": "Añadir {{n}} tarea", "other": "Añadir {{n}} tareas" },
+    "other": "Otros proyectos",
+    "createIn": "Crear “{{title}}” en {{project}}"
   },
   "projects": {
     "title": "Tareas y proyectos",
@@ -171,6 +174,8 @@
     "deleteConfirm": "¿Eliminar este proyecto? Sus hitos se eliminarán y sus tareas volverán al banco de tareas sin asignar.",
     "deleteMilestoneConfirm": "¿Eliminar este hito? Sus tareas volverán al banco de tareas sin asignar del proyecto.",
     "icon": "Icono",
+    "searchIcons": "Buscar iconos",
+    "noIcons": "Ningún icono coincide",
     "name": "Nombre",
     "namePlaceholder": "Nombre del proyecto",
     "description": "Descripción",
@@ -228,6 +233,7 @@
         "other": "Mostrar {{n}} resultados"
       },
       "sortedBy": {
+        "manual": "Orden manual",
         "urgency": "Ordenado por urgencia",
         "due": "Ordenado por vencimiento",
         "name": "Ordenado por nombre"
@@ -262,6 +268,7 @@
       "clearAction": "Borrar búsqueda"
     },
     "sort": {
+      "activity": "Actividad reciente",
       "manual": "Manual",
       "urgency": "Urgencia",
       "due": "Vencimiento",
@@ -380,10 +387,7 @@
   "planningLab": {
     "title": "Planificar mi día",
     "dailyBacklog": "Backlog diario",
-    "dailyPlanProjectEmpty": "Aún no hay tareas en este proyecto.",
     "freeTasks": "Tareas libres sin proyecto",
-    "newUnclassifiedTask": "Nueva tarea sin clasificar",
-    "noMilestoneGroup": "Sin hito",
     "objectivePromptTitle": "¿Qué quieres lograr hoy?",
     "objectivePromptSubtitle": "¿Cuál es ese objetivo u objetivos que, alcanzados en esta sesión, te harán sentir realizado?",
     "objectivePlaceholder": "p. ej. Lanzar el nuevo flujo de pago",
@@ -399,8 +403,6 @@
     "backToObjectives": "Volver a objetivos",
     "backToProjects": "Volver a proyectos",
     "startOverConfirm": "¿Borrar los objetivos, proyectos y lotes de hoy?",
-    "planningPrompt": "Arrastra una tarea a un objetivo de la derecha — o, en pantalla táctil, toca la tarea y luego el objetivo para colocarla.",
-    "dropHere": "Arrastra tareas aquí",
     "dropProjectsHere": "Arrastra proyectos aquí",
     "armProjectHint": "Arrastra un proyecto a un objetivo — o, en pantalla táctil, toca el proyecto y luego el objetivo. Un proyecto puede pertenecer a más de un objetivo.",
     "removeFromObjective": "Quitar del objetivo",
@@ -409,9 +411,6 @@
     "stepProjects": "Proyectos",
     "stepTasks": "Tareas",
     "suggestionsLabel": "¿Necesitas ideas?",
-    "tasksButton": "Tareas",
-    "popoverTaskCount": "{{n}} tareas",
-    "popoverAssignedTo": "Asignada a {{objective}}",
     "suggestionsHint": "Toca una tarea para convertirla en objetivo.",
     "noSuggestions": "Aún no hay tareas que sugerir.",
     "moveToPomodoro": "Mover tareas a pomodoro",
@@ -440,6 +439,20 @@
     "unfinishedCount": { "one": "1 tarea sin terminar.", "other": "{{n}} tareas sin terminar." },
     "openButton": "Planificar mi día",
     "resumeButton": "Continuar planificación · {{step}}/3",
+    "addTasks": "Añadir tareas…",
+    "newTask": "Nueva tarea",
+    "newTaskIn": "Proyecto de la nueva tarea",
+    "suggested": "Sugeridas",
+    "changeProjects": "Cambiar proyectos",
+    "noProjects": "Sin proyectos vinculados",
+    "moveToObjective": "Mover a objetivo",
+    "openTask": "Abrir tarea",
+    "reorder": "Arrastra para reordenar (Alt + flechas con el teclado)",
+    "inObjective": "En: {{objective}}",
+    "nothingPlanned": "Nada planificado todavía.",
+    "count": { "one": "{{n}} tarea", "other": "{{n}} tareas" },
+    "estimate": { "one": "≈ {{n}} pomodoro", "other": "≈ {{n}} pomodoros" },
+    "emptyObjective": { "one": "{{n}} objetivo sin nada planificado.", "other": "{{n}} objetivos sin nada planificado." },
     "close": "Cerrar"
   },
   "admin": {

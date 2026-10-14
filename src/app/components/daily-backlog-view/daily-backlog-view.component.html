@@ -61,16 +61,6 @@
       <details class="daily-backlog-prompt__suggestions" open>
         <summary class="daily-backlog-prompt__suggestions-header">
           <span class="daily-backlog-prompt__suggestions-label">{{ 'planningLab.suggestionsLabel' | translate }}</span>
-          <span
-            class="daily-backlog-prompt__tasks-button"
-            role="button"
-            tabindex="0"
-            (click)="$event.preventDefault(); $event.stopPropagation(); tasksModalOpen.set(true)"
-            (keydown.enter)="$event.preventDefault(); tasksModalOpen.set(true)"
-            (keydown.space)="$event.preventDefault(); tasksModalOpen.set(true)"
-          >
-            <app-icon name="folder-open" aria-hidden="true" /> {{ 'planningLab.tasksButton' | translate }}
-          </span>
         </summary>
 
         @if (productiveSuggestions().length) {
@@ -238,83 +228,12 @@
   }
 
   @case ('planning') {
-    <div class="daily-backlog stage-enter">
-      <div class="daily-backlog__columns">
-        <div class="daily-backlog__groups">
-          <div class="daily-backlog__groups-header">
-            <button type="button" class="daily-backlog-prompt__tasks-button" (click)="tasksModalOpen.set(true)">
-              <app-icon name="folder-open" aria-hidden="true" /> {{ 'planningLab.tasksButton' | translate }}
-            </button>
-          </div>
-
-          @if (isUnassignedChosen()) {
-            <app-daily-plan-project-item [project]="null" />
-          }
-          @for (project of chosenProjects(); track project.id) {
-            <app-daily-plan-project-item [project]="project" />
-          }
-        </div>
-
-        <div class="daily-backlog__objectives">
-          <p class="daily-backlog__prompt">{{ 'planningLab.planningPrompt' | translate }}</p>
-          @for (objective of dailyPlan.objectives(); track objective.id) {
-            <div
-              class="objective-bucket"
-              [class.objective-bucket--target]="dailyPlan.draggedTaskId()"
-              (dragover)="$event.preventDefault()"
-              (drop)="placeArmedTask(objective.id)"
-              (click)="placeArmedTask(objective.id)"
-            >
-              <div class="objective-bucket__header">{{ objective.text }}</div>
-              @if (!tasksFor(objective.id).length) {
-                <p class="objective-bucket__empty">{{ 'planningLab.dropHere' | translate }}</p>
-              } @else {
-                <ul class="objective-bucket__list">
-                  @for (todo of tasksFor(objective.id); track todo.id) {
-                    <li class="objective-task">
-                      <span class="objective-task__title">{{ todo.title }}</span>
-                      <app-task-badges [todo]="todo" />
-                      <button
-                        type="button"
-                        class="objective-task__remove"
-                        [attr.aria-label]="'planningLab.removeFromObjective' | translate"
-                        [title]="'planningLab.removeFromObjective' | translate"
-                        (click)="$event.stopPropagation(); dailyPlan.unassignTask(todo.id)"
-                      >
-                        ✕
-                      </button>
-                    </li>
-                  }
-                </ul>
-              }
-            </div>
-          }
-
-          <div class="daily-backlog__footer">
-            <button type="button" class="btn btn--ghost btn--sm" (click)="dailyPlan.backToChooseProjects()">
-              <app-ui-icon name="chevron-left" [size]="16" /> {{ 'planningLab.backToProjects' | translate }}
-            </button>
-            <div class="daily-backlog__footer-actions">
-              <button
-                type="button"
-                class="btn btn--secondary"
-                [disabled]="!dailyPlan.plannedTaskIds().length"
-                (click)="startGroupingParallel()"
-              >
-                {{ 'planningLab.moveToPomodoroMultitask' | translate }}
-              </button>
-              <button
-                type="button"
-                class="btn btn--primary"
-                [disabled]="!dailyPlan.plannedTaskIds().length"
-                (click)="requestMoveToPomodoro()"
-              >
-                {{ 'planningLab.moveToPomodoro' | translate }}
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+    <div class="daily-backlog daily-backlog--step stage-enter">
+      <app-plan-objectives-step
+        (back)="dailyPlan.backToChooseProjects()"
+        (startLots)="startGroupingParallel()"
+        (startPomodoro)="requestMoveToPomodoro()"
+      />
     </div>
   }
 
@@ -354,25 +273,6 @@
           {{ 'projects.cancel' | translate }}
         </button>
       </div>
-    </div>
-  </div>
-}
-
-@if (tasksModalOpen()) {
-  <div class="modal-overlay tasks-overlay" (click)="closeTasksModalOnBackdrop($event)">
-    <div class="modal-panel tasks-modal" role="dialog" aria-modal="true" [attr.aria-label]="'planningLab.tasksButton' | translate">
-      <div class="tasks-modal__header">
-        <h3>{{ 'planningLab.tasksButton' | translate }}</h3>
-        <button
-          type="button"
-          class="tasks-modal__close"
-          [attr.aria-label]="'todo.close' | translate"
-          (click)="tasksModalOpen.set(false)"
-        >
-          ✕
-        </button>
-      </div>
-      <app-projects-panel />
     </div>
   </div>
 }

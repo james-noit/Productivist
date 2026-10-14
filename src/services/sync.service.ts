@@ -388,6 +388,7 @@ export class SyncService {
         objectives: d.objectives(),
         projectAssignments: d.projectAssignments(),
         assignments: d.assignments(),
+        taskOrder: d.taskOrder(),
         executionLots: d.executionLots(),
         activeLotIndex: d.activeLotIndex(),
         committedTaskIds: d.committedPlannedTaskIds(),
@@ -423,6 +424,7 @@ export class SyncService {
     plan('objectives', d.objectives, isArray);
     plan('projectAssignments', d.projectAssignments, isRecord);
     plan('assignments', d.assignments, isRecord);
+    plan('taskOrder', d.taskOrder, isArray);
     plan('executionLots', d.executionLots, isArray);
     plan('activeLotIndex', d.activeLotIndex, isNumber);
     plan('committedTaskIds', d.committedPlannedTaskIds, isArray);

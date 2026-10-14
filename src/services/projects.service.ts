@@ -3,6 +3,7 @@ import { localStorageSignal } from '../core/local-storage-signal';
 import { sanitizeDates } from '../lib/dates';
 import { createId } from '../core/create-id';
 import { FlowService } from './flow.service';
+import { ProjectActivityService } from './project-activity.service';
 import { RecurrenceService } from './recurrence.service';
 import { TodosService } from './todos.service';
 import type { Milestone, Project, ProjectExport } from '../types/project';
@@ -13,6 +14,7 @@ export class ProjectsService {
   private readonly todos = inject(TodosService);
   private readonly flow = inject(FlowService);
   private readonly recurrences = inject(RecurrenceService);
+  private readonly activity = inject(ProjectActivityService);
 
   readonly projects = localStorageSignal<Project[]>('productivist.projects', []);
   readonly milestones = localStorageSignal<Milestone[]>('productivist.milestones', []);
@@ -37,10 +39,12 @@ export class ProjectsService {
       createdAt: Date.now(),
     };
     this.projects.update((list) => [...list, project]);
+    this.activity.touch(project.id);
     return project;
   }
 
   updateProject(id: string, patch: Partial<Pick<Project, 'icon' | 'name' | 'description' | 'notes'>>): void {
+    this.activity.touch(id);
     this.projects.update((list) => list.map((p) => (p.id === id ? { ...p, ...patch } : p)));
   }
 
@@ -54,6 +58,7 @@ export class ProjectsService {
     for (const milestoneId of removedMilestoneIds) this.todos.clearMilestoneRefs(milestoneId);
     this.flow.removeForProject(id);
     this.recurrences.clearProjectRefs(id);
+    this.activity.forget(id);
   }
 
   addMilestone(projectId: string, name: string): Milestone {
@@ -68,10 +73,12 @@ export class ProjectsService {
       createdAt: Date.now(),
     };
     this.milestones.update((list) => [...list, milestone]);
+    this.activity.touch(projectId);
     return milestone;
   }
 
   updateMilestone(id: string, patch: Partial<Pick<Milestone, 'name' | 'startDate' | 'dueDate'>>): void {
+    this.activity.touch(this.milestones().find((m) => m.id === id)?.projectId);
     this.milestones.update((list) => list.map((m) => (m.id === id ? { ...m, ...patch } : m)));
   }
 
@@ -111,5 +118,6 @@ export class ProjectsService {
   reset(): void {
     this.projects.set([]);
     this.milestones.set([]);
+    this.activity.reset();
   }
 }

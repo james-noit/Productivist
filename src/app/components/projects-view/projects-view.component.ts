@@ -7,6 +7,7 @@ import { FlowService } from '../../../services/flow.service';
 import { ProjectsService } from '../../../services/projects.service';
 import { RecurrenceService } from '../../../services/recurrence.service';
 import { TodosService } from '../../../services/todos.service';
+import { ProjectActivityService } from '../../../services/project-activity.service';
 import { ViewService, type ProjectsTab } from '../../../services/view.service';
 import { EisenhowerViewComponent } from '../eisenhower-view/eisenhower-view.component';
 import { FabMenuComponent, type FabItem } from '../fab-menu/fab-menu.component';
@@ -59,6 +60,7 @@ export class ProjectsViewComponent {
   private readonly projects = inject(ProjectsService);
   private readonly flow = inject(FlowService);
   private readonly recurrences = inject(RecurrenceService);
+  private readonly activity = inject(ProjectActivityService);
 
   readonly activeRecurring = this.recurrences.activeCount;
   protected readonly fabItems = FAB_ITEMS;
@@ -76,6 +78,7 @@ export class ProjectsViewComponent {
       this.flow.objectivesByProject(),
       this.recurrences.today(),
       (list) => this.todos.sortTasks(list),
+      this.activity.activity(),
     ),
   );
   readonly projectCount = computed(() => this.projects.projects().length);

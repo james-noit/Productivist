@@ -1,0 +1,214 @@
+<div class="pstep">
+  <div class="pstep__cards">
+    @for (card of cards(); track card.id) {
+      <section
+        class="pstep__card"
+        [class.pstep__card--drop]="drop()?.objectiveId === card.id"
+        [attr.aria-labelledby]="'pstep-h-' + card.id"
+        (dragover)="onDragOver($event, card)"
+        (dragleave)="onDragLeave($event, card)"
+        (drop)="onDrop($event, card)"
+      >
+        <header class="pstep__head">
+          <div class="pstep__head-top">
+            <h3 class="pstep__objective" [id]="'pstep-h-' + card.id">{{ card.text }}</h3>
+            <span class="pstep__count">
+              {{ 'planningLab.count.' + (card.rows.length === 1 ? 'one' : 'other') | translate: { n: card.rows.length } }}
+              @if (card.rows.length) {
+                · {{ 'planningLab.estimate.' + (card.pomodoros === 1 ? 'one' : 'other') | translate: { n: card.pomodoros } }}
+              }
+            </span>
+          </div>
+          <div class="pstep__head-bottom">
+            <span class="pstep__projects">
+              @for (project of card.projects; track project.id) {
+                <span class="pstep__project">
+                  <app-icon [name]="project.icon" aria-hidden="true" />
+                  {{ project.name ?? ('planningLab.freeTasks' | translate) }}
+                </span>
+              } @empty {
+                {{ 'planningLab.noProjects' | translate }}
+              }
+            </span>
+            <button type="button" class="button-ghost pstep__change" (click)="back.emit()">
+              {{ 'planningLab.changeProjects' | translate }}
+            </button>
+          </div>
+        </header>
+
+        @if (card.rows.length) {
+          <ul class="pstep__list" [class.pstep__list--drop-end]="drop()?.objectiveId === card.id && drop()?.beforeId === null">
+            @for (row of card.rows; track row.todo.id; let i = $index) {
+              <li
+                class="pstep__row"
+                [class.pstep__row--dragging]="dragId() === row.todo.id"
+                [class.pstep__row--drop-before]="drop()?.objectiveId === card.id && drop()?.beforeId === row.todo.id"
+                [attr.data-task]="row.todo.id"
+                (keydown)="onRowKeydown($event, card, i)"
+              >
+                <span
+                  class="pstep__grip"
+                  draggable="true"
+                  [title]="'planningLab.reorder' | translate"
+                  (dragstart)="onDragStart($event, row.todo)"
+                  (dragend)="onDragEnd()"
+                >
+                  <app-ui-icon name="grip" [size]="16" />
+                </span>
+                <div class="pstep__main">
+                  <span class="pstep__line">
+                    <button type="button" class="pstep__title" (click)="detailId.set(row.todo.id)">{{ row.todo.title }}</button>
+                    <app-repeat-mark [todo]="row.todo" />
+                  </span>
+                  @if (row.meta.length) {
+                    <span class="pstep__meta">
+                      @for (part of row.meta; track $index) {
+                        <span [class.pstep__meta--overdue]="part.overdue">{{ part.overdue ? ('picker.overdue' | translate) : part.text }}</span>
+                      }
+                    </span>
+                  }
+                </div>
+                <span class="pstep__actions">
+                  <app-kebab-menu #menu="kebabMenu" [label]="'projects.inbox.menu' | translate: { title: row.todo.title }" (closed)="movingId.set(null)">
+                    @if (movingId() === row.todo.id) {
+                      <button type="button" role="menuitem" class="menu-item menu-item--back" (click)="movingId.set(null); menu.focusFirst()">
+                        <app-ui-icon name="chevron-right" [size]="16" class="pstep__flip" /> {{ 'projects.inbox.back' | translate }}
+                      </button>
+                      <div class="menu-heading">{{ 'planningLab.moveToObjective' | translate }}</div>
+                      @for (other of cards(); track other.id) {
+                        @if (other.id !== card.id) {
+                          <button type="button" role="menuitem" class="menu-item" (click)="moveToObjective(row.todo.id, other.id); menu.close()">
+                            <span class="menu-item__label">{{ other.text }}</span>
+                          </button>
+                        }
+                      }
+                    } @else {
+                      @if (cards().length > 1) {
+                        <button type="button" role="menuitem" class="menu-item" (click)="movingId.set(row.todo.id); menu.focusFirst()">
+                          <app-ui-icon name="open" [size]="16" /> {{ 'planningLab.moveToObjective' | translate }}
+                        </button>
+                      }
+                      <button type="button" role="menuitem" class="menu-item" (click)="menu.close(); detailId.set(row.todo.id)">
+                        <app-ui-icon name="edit" [size]="16" /> {{ 'planningLab.openTask' | translate }}
+                      </button>
+                    }
+                  </app-kebab-menu>
+                  <button
+                    type="button"
+                    class="btn btn--ghost btn--icon btn--sm"
+                    [attr.aria-label]="'planningLab.removeFromObjective' | translate"
+                    [title]="'planningLab.removeFromObjective' | translate"
+                    (click)="remove(row.todo.id)"
+                  >
+                    <app-ui-icon name="x" [size]="16" />
+                  </button>
+                </span>
+              </li>
+            }
+          </ul>
+        } @else {
+          <p class="pstep__nothing">{{ 'planningLab.nothingPlanned' | translate }}</p>
+        }
+
+        @if (card.suggestions.length) {
+          <div class="pstep__suggest">
+            <span class="pstep__suggest-label">{{ 'planningLab.suggested' | translate }}</span>
+            @for (todo of card.suggestions; track todo.id) {
+              <button type="button" class="pstep__suggestion" [title]="todo.title" (click)="addSuggestion(todo, card.id)">
+                <app-ui-icon name="plus" [size]="12" />
+                <span class="pstep__suggestion-title">{{ todo.title }}</span>
+              </button>
+            }
+          </div>
+        }
+
+        <div class="pstep__add">
+          <button type="button" class="button-ghost" (click)="openPicker(card.id)">
+            <app-ui-icon name="plus" [size]="14" /> {{ 'planningLab.addTasks' | translate }}
+          </button>
+          @if (newFor() !== card.id) {
+            <button type="button" class="button-ghost" (click)="openNew(card)">
+              <app-ui-icon name="plus" [size]="14" /> {{ 'planningLab.newTask' | translate }}
+            </button>
+          }
+        </div>
+
+        @if (newFor() === card.id) {
+          <div class="pstep__new">
+            <input
+              class="input pstep__new-input"
+              type="text"
+              maxlength="1000"
+              [value]="newTitle()"
+              [placeholder]="'projects.inbox.addPlaceholder' | translate"
+              [attr.aria-label]="'planningLab.newTask' | translate"
+              (input)="newTitle.set($any($event.target).value)"
+              (keydown)="onNewKeydown($event, card)"
+            />
+            @if (card.projects.length > 1) {
+              <select
+                class="select pstep__new-project"
+                [attr.aria-label]="'planningLab.newTaskIn' | translate"
+                (change)="newProject.set($any($event.target).value)"
+              >
+                @for (project of card.projects; track project.id) {
+                  <option [value]="project.id" [selected]="newProject() === project.id">
+                    {{ project.name ?? ('planningLab.freeTasks' | translate) }}
+                  </option>
+                }
+              </select>
+            }
+            <button type="button" class="btn btn--ghost btn--icon btn--sm" [attr.aria-label]="'projects.cancel' | translate" (click)="closeNew()">
+              <app-ui-icon name="x" [size]="16" />
+            </button>
+          </div>
+        }
+      </section>
+    }
+  </div>
+
+  <footer class="pstep__footer">
+    <button type="button" class="btn btn--ghost btn--sm pstep__back" (click)="back.emit()">
+      <app-ui-icon name="chevron-left" [size]="16" /> {{ 'planningLab.backToProjects' | translate }}
+    </button>
+    <div class="pstep__summary">
+      <span class="pstep__total">
+        {{ 'planningLab.count.' + (totals().tasks === 1 ? 'one' : 'other') | translate: { n: totals().tasks } }} ·
+        {{ 'planningLab.estimate.' + (totals().pomodoros === 1 ? 'one' : 'other') | translate: { n: totals().pomodoros } }}
+        <span class="pstep__time">(≈ {{ totals().time }})</span>
+      </span>
+      @if (totals().empty) {
+        <span class="pstep__empty-note">
+          {{ 'planningLab.emptyObjective.' + (totals().empty === 1 ? 'one' : 'other') | translate: { n: totals().empty } }}
+        </span>
+      }
+    </div>
+    <div class="pstep__buttons">
+      <button type="button" class="btn btn--secondary" [disabled]="!totals().tasks" (click)="goLots()">
+        {{ 'planningLab.moveToPomodoroMultitask' | translate }}
+      </button>
+      <button type="button" class="btn btn--primary" [disabled]="!totals().tasks" (click)="goPomodoro()">
+        {{ 'planningLab.moveToPomodoro' | translate }}
+      </button>
+    </div>
+  </footer>
+</div>
+
+<div #ghost class="pstep__ghost" aria-hidden="true"></div>
+
+@if (picker(); as config) {
+  <app-task-picker
+    class="pstep__over"
+    [multiple]="true"
+    [isPickable]="config.isPickable"
+    [annotate]="config.annotate"
+    [scopeProjectIds]="config.scope"
+    [createProjectId]="config.createProjectId"
+    (pickMany)="addMany(config.objectiveId, $event)"
+    (close)="closePicker()"
+  />
+}
+
+@if (detailTodo(); as todo) {
+  <app-task-detail-modal class="pstep__over" [todo]="todo" (close)="detailId.set(null)" />
+}

@@ -10,3 +10,11 @@ svg {
   height: 1em;
   flex: none;
 }
+
+svg {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.75;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}

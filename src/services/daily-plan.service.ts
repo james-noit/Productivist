@@ -47,7 +47,6 @@ export class DailyPlanService {
   /** objectiveId -> projectIds assigned to it. A project may belong to several objectives at once. */
   readonly projectAssignments = localStorageSignal<Record<string, string[]>>('productivist.dailyPlanProjectAssignments', {});
   readonly assignments = localStorageSignal<Record<string, string>>('productivist.dailyPlanAssignments', {});
-  readonly draggedTaskId = signal<string | null>(null);
   readonly draggedProjectId = signal<string | null>(null);
 
   readonly assignedProjectIds = computed(() => {
@@ -62,7 +61,21 @@ export class DailyPlanService {
   /** Tasks committed to the Pomodoro view's "Planned tasks" list — survives startOver(), since it's a downstream artifact. */
   readonly committedPlannedTaskIds = localStorageSignal<string[]>('productivist.dailyPlanCommittedTaskIds', []);
 
-  readonly plannedTaskIds = computed(() => Object.keys(this.assignments()));
+  /**
+   * The execution order of the assigned tasks, across every objective (a card shows its own slice of it). Tasks
+   * assigned but missing from it (an older client, a sync of the assignments alone) come after, in key order.
+   */
+  readonly taskOrder = localStorageSignal<string[]>('productivist.dailyPlanTaskOrder', []);
+
+  /** The assigned tasks in execution order: the list the Pomodoro view's "Planned tasks" and the lots start from. */
+  readonly plannedTaskIds = computed(() => {
+    const ids = Object.keys(this.assignments());
+    const position = new Map(this.taskOrder().map((id, index) => [id, index] as const));
+    return ids
+      .map((id, index) => ({ id, at: position.get(id) ?? this.taskOrder().length + index }))
+      .sort((a, b) => a.at - b.at)
+      .map((entry) => entry.id);
+  });
 
   /**
    * Updates objective text while keeping each objective's id stable for any entry whose text
@@ -92,13 +105,18 @@ export class DailyPlanService {
       }
       return filtered;
     });
+    const kept = new Set<string>();
     this.assignments.update((map) => {
       const filtered: Record<string, string> = {};
       for (const [taskId, objectiveId] of Object.entries(map)) {
-        if (validIds.has(objectiveId)) filtered[taskId] = objectiveId;
+        if (validIds.has(objectiveId)) {
+          filtered[taskId] = objectiveId;
+          kept.add(taskId);
+        }
       }
       return filtered;
     });
+    this.taskOrder.update((order) => order.filter((id) => kept.has(id)));
   }
 
   startPlanning(objectiveTexts: string[]): void {
@@ -155,8 +173,21 @@ export class DailyPlanService {
     this.stage.set('planning');
   }
 
+  /** Plans a task under an objective, last in the order (moving it to another objective also puts it last there). */
   assignTask(taskId: string, objectiveId: string): void {
+    this.moveTask(taskId, objectiveId, null);
+  }
+
+  /**
+   * Plans `taskId` under `objectiveId`, right before `beforeTaskId` (which must be planned) or last. One write per
+   * signal: the card drag and drop, Alt + arrows and "Move to objective" all end here.
+   */
+  moveTask(taskId: string, objectiveId: string, beforeTaskId: string | null): void {
+    const order = this.plannedTaskIds().filter((id) => id !== taskId);
+    const at = beforeTaskId ? order.indexOf(beforeTaskId) : -1;
+    order.splice(at === -1 ? order.length : at, 0, taskId);
     this.assignments.update((map) => ({ ...map, [taskId]: objectiveId }));
+    this.taskOrder.set(order);
   }
 
   unassignTask(taskId: string): void {
@@ -165,25 +196,12 @@ export class DailyPlanService {
       delete next[taskId];
       return next;
     });
-  }
-
-  startDrag(taskId: string): void {
-    this.draggedTaskId.set(taskId);
-  }
-
-  endDrag(): void {
-    this.draggedTaskId.set(null);
-  }
-
-  /** Tap-to-place fallback for touch devices, where HTML5 drag-and-drop isn't available. */
-  toggleArmed(taskId: string): void {
-    this.draggedTaskId.set(this.draggedTaskId() === taskId ? null : taskId);
+    this.taskOrder.update((order) => order.filter((id) => id !== taskId));
   }
 
   startGroupingParallel(): void {
     this.executionLots.set(this.plannedTaskIds().map((id) => ({ id: createId(), taskIds: [id] })));
     this.activeLotIndex.set(0);
-    this.draggedTaskId.set(null);
     this.stage.set('groupingParallel');
   }
 
@@ -229,7 +247,7 @@ export class DailyPlanService {
     this.objectives.set([]);
     this.projectAssignments.set({});
     this.assignments.set({});
-    this.draggedTaskId.set(null);
+    this.taskOrder.set([]);
     this.draggedProjectId.set(null);
     this.executionLots.set([]);
     this.activeLotIndex.set(0);

@@ -4,6 +4,30 @@ import { PROJECTS_SORTS, normalizeQuery, type ProjectsSort, type TaskFilter } fr
 import type { EisenhowerQuadrant } from '../../../types/eisenhower';
 
 export type ProjectsLayout = 'cards' | 'list';
+const SORT_KEY = 'productivist.projectsSortBy';
+
+/**
+ * The sort used to live under `productivist.projectsSort` with 'manual' as its (always stored) default, so a new
+ * default could never apply. It moved to a new key: a deliberate choice (urgency, due, name) is carried over and the
+ * old key is removed; 'manual' was just the untouched default and gives way to 'activity'.
+ */
+function migrateSort(): void {
+  try {
+    const old = localStorage.getItem('productivist.projectsSort');
+    if (old === null) return;
+    localStorage.removeItem('productivist.projectsSort');
+    if (localStorage.getItem(SORT_KEY) !== null) return;
+    let value: unknown;
+    try {
+      value = JSON.parse(old);
+    } catch {
+      return;
+    }
+    if (value !== 'manual' && PROJECTS_SORTS.includes(value as ProjectsSort)) localStorage.setItem(SORT_KEY, old);
+  } catch {
+    // Storage unavailable: nothing to carry over.
+  }
+}
 const LAYOUTS: readonly ProjectsLayout[] = ['cards', 'list'];
 
 /**
@@ -14,14 +38,19 @@ const LAYOUTS: readonly ProjectsLayout[] = ['cards', 'list'];
  */
 @Injectable()
 export class ProjectsPageState {
+  // Runs when the class is defined, i.e. before any instance reads its localStorage keys.
+  static {
+    migrateSort();
+  }
+
   readonly query = signal('');
   /** Quadrants the page is narrowed to (empty = all). */
   readonly quadrants = signal<readonly EisenhowerQuadrant[]>([]);
   /** Due filter (null = any time). */
   readonly due = signal<TaskFilter | null>(null);
-  /** Persisted; an unknown stored value (another build wrote it) reads as 'manual' through `activeSort`. */
-  readonly sort = localStorageSignal<ProjectsSort>('productivist.projectsSort', 'manual');
-  readonly activeSort = computed<ProjectsSort>(() => (PROJECTS_SORTS.includes(this.sort()) ? this.sort() : 'manual'));
+  /** Persisted; an unknown stored value (another build wrote it) reads as 'activity' through `activeSort`. */
+  readonly sort = localStorageSignal<ProjectsSort>(SORT_KEY, 'activity');
+  readonly activeSort = computed<ProjectsSort>(() => (PROJECTS_SORTS.includes(this.sort()) ? this.sort() : 'activity'));
   /** Persisted; an unknown stored value reads as 'cards' through `activeLayout`. */
   readonly layout = localStorageSignal<ProjectsLayout>('productivist.projectsLayout', 'cards');
   readonly activeLayout = computed<ProjectsLayout>(() => (LAYOUTS.includes(this.layout()) ? this.layout() : 'cards'));

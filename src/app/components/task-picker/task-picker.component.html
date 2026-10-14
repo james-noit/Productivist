@@ -51,6 +51,7 @@
       class="task-picker__list"
       role="listbox"
       [attr.aria-label]="'picker.title' | translate"
+      [attr.aria-multiselectable]="multiple() || null"
       (mousedown)="$event.preventDefault()"
     >
       @for (section of view().sections; track section.id) {
@@ -67,10 +68,17 @@
                 class="task-picker__row"
                 [id]="optionId(item.index)"
                 [class.task-picker__row--active]="activeIndex() === item.index"
-                [attr.aria-selected]="activeIndex() === item.index"
+                [attr.aria-selected]="multiple() ? !!item.checked : activeIndex() === item.index"
                 (click)="activate(item)"
                 (mousemove)="highlight(item.index)"
               >
+                @if (multiple()) {
+                  <span class="task-picker__check" [class.task-picker__check--on]="item.checked" aria-hidden="true">
+                    @if (item.checked) {
+                      <app-ui-icon name="check" [size]="12" />
+                    }
+                  </span>
+                }
                 <span class="task-picker__row-title">{{ todo.title }}</span>
                 @if (item.current) {
                   <span class="task-picker__current">{{ 'picker.current' | translate }}</span>
@@ -81,6 +89,9 @@
                     <span [class.task-picker__meta--overdue]="part.overdue">{{ part.overdue ? ('picker.overdue' | translate) : part.text }}</span>
                   }
                 </span>
+                @if (item.note) {
+                  <span class="task-picker__note">{{ item.note }}</span>
+                }
               </button>
             } @else if (item.kind === 'more') {
               <button
@@ -90,7 +101,7 @@
                 class="task-picker__row task-picker__row--more"
                 [id]="optionId(item.index)"
                 [class.task-picker__row--active]="activeIndex() === item.index"
-                [attr.aria-selected]="activeIndex() === item.index"
+                [attr.aria-selected]="multiple() ? false : activeIndex() === item.index"
                 (click)="activate(item)"
                 (mousemove)="highlight(item.index)"
               >
@@ -113,14 +124,29 @@
           class="task-picker__row task-picker__row--create"
           [id]="optionId(create.index)"
           [class.task-picker__row--active]="activeIndex() === create.index"
-          [attr.aria-selected]="activeIndex() === create.index"
+          [attr.aria-selected]="multiple() ? false : activeIndex() === create.index"
           (click)="activate(create)"
           (mousemove)="highlight(create.index)"
         >
           <app-ui-icon name="plus" [size]="16" />
-          <span class="task-picker__row-title">{{ 'picker.create' | translate: { title: create.title } }}</span>
+          <span class="task-picker__row-title">
+            @if (create.project) {
+              {{ 'picker.createIn' | translate: { title: create.title, project: create.project } }}
+            } @else {
+              {{ 'picker.create' | translate: { title: create.title } }}
+            }
+          </span>
         </button>
       }
     </div>
+
+    @if (multiple()) {
+      <footer class="task-picker__footer">
+        <button type="button" class="btn btn--secondary" (click)="close.emit()">{{ 'projects.cancel' | translate }}</button>
+        <button type="button" class="btn btn--primary" [disabled]="!selected().length" (click)="confirmMany()">
+          {{ 'picker.addN.' + (selected().length === 1 ? 'one' : 'other') | translate: { n: selected().length } }}
+        </button>
+      </footer>
+    }
   </div>
 </div>

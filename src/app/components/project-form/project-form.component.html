@@ -1,18 +1,45 @@
 <form class="project-form" (submit)="$event.preventDefault(); submit()">
   <div class="field">
-    <span class="field__label">{{ 'projects.icon' | translate }}</span>
-    <div class="project-form__icons">
-      @for (option of icons; track option) {
-        <button
-          type="button"
-          class="project-form__icon"
-          [class.project-form__icon--selected]="icon() === option"
-          [attr.aria-label]="option"
-          [attr.aria-pressed]="icon() === option"
-          (click)="icon.set(option)"
-        >
-          <app-icon [name]="option" />
-        </button>
+    <span class="field__label" id="project-icon-label">{{ 'projects.icon' | translate }}</span>
+    <input
+      class="input project-form__icon-search"
+      type="search"
+      name="iconSearch"
+      autocomplete="off"
+      (keydown.enter)="$event.preventDefault()"
+      [ngModel]="query()"
+      (ngModelChange)="query.set($event)"
+      [attr.aria-label]="'projects.searchIcons' | translate"
+      [placeholder]="'projects.searchIcons' | translate"
+    />
+    <div
+      #grid
+      class="project-form__icons"
+      role="group"
+      aria-labelledby="project-icon-label"
+      (keydown)="moveFocus($event)"
+    >
+      @for (section of sections(); track section.key) {
+        <div class="project-form__group-title">{{ section.title }}</div>
+        <div class="project-form__group">
+          @for (option of section.icons; track option.name) {
+            <button
+              type="button"
+              class="project-form__icon"
+              [class.project-form__icon--selected]="icon() === option.name"
+              [attr.aria-label]="option.label"
+              [attr.aria-pressed]="icon() === option.name"
+              [attr.tabindex]="tabStop() === option.name ? 0 : -1"
+              [title]="option.label"
+              (focus)="focused.set(option.name)"
+              (click)="icon.set(option.name)"
+            >
+              <app-icon [name]="option.name" />
+            </button>
+          }
+        </div>
+      } @empty {
+        <p class="project-form__no-icons">{{ 'projects.noIcons' | translate }}</p>
       }
     </div>
   </div>
