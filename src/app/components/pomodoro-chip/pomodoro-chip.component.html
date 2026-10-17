@@ -1,0 +1,31 @@
+@if (note(); as note) {
+  <span class="visually-hidden" role="status">{{ note }}</span>
+}
+@if (visible()) {
+  <span class="chip-anchor">
+    <button
+      #chip
+      type="button"
+      class="btn btn--secondary btn--sm chip"
+      [class.chip--running]="clock.running()"
+      [attr.data-mode]="clock.mode()"
+      aria-haspopup="dialog"
+      [attr.aria-expanded]="open()"
+      [attr.aria-label]="texts().label"
+      (click)="toggle()"
+    >
+      @if (clock.running()) {
+        <span class="chip__dot" aria-hidden="true"></span>
+      } @else {
+        <span class="chip__pause" aria-hidden="true"></span>
+      }
+      <span class="chip__time">{{ clock.formattedTime() }}</span>
+      <span class="chip__extra" aria-hidden="true">{{ texts().extra }}</span>
+    </button>
+    @if (open()) {
+      @defer (on immediate) {
+        <app-pomodoro-popover (closed)="onClosed($event)" />
+      }
+    }
+  </span>
+}

@@ -80,6 +80,11 @@ const NEVER_INITIAL_UI = [
   'src/lib/project-cards.ts',
   'src/lib/project-icon-paths.ts',
   component('plan-objectives-step'),
+  component('context-menu'),
+  component('projects-context-menu'),
+  component('milestone-quick-form'),
+  component('pomodoro-popover'),
+  component('pomodoro-chip'),
 ];
 
 const inputsOf = (output) => Object.keys(output.inputs ?? {});

@@ -1,23 +1,7 @@
 @let p = project();
 <app-kebab-menu #menu="kebabMenu" [label]="'projects.card.menu' | translate: { name: p.name }" (closed)="resetMenu()">
   @if (addingMilestone()) {
-    <form class="menu-form" (submit)="$event.preventDefault(); submitMilestone(menu)">
-      <label class="field">
-        <span class="field__label">{{ 'projects.card.newMilestone' | translate }}</span>
-        <input
-          #milestoneInput
-          class="input"
-          type="text"
-          maxlength="200"
-          [value]="milestoneName()"
-          (input)="milestoneName.set($any($event.target).value)"
-          [placeholder]="'projects.milestoneNamePlaceholder' | translate"
-        />
-      </label>
-      <button type="submit" class="btn btn--primary btn--sm" [disabled]="!milestoneName().trim()">
-        {{ 'projects.addMilestone' | translate }}
-      </button>
-    </form>
+    <app-milestone-quick-form (submitted)="submitMilestone($event, menu)" />
   } @else if (confirming()) {
     <p class="confirm-text">{{ 'projects.card.deleteQuestion' | translate }}</p>
     <button type="button" role="menuitem" class="menu-item" (click)="confirming.set(false); menu.focusFirst()">

@@ -5,6 +5,8 @@
 
 .pcard {
   position: relative;
+  /* A long-press opens the page's context menu: no iOS callout sheet on top of it. */
+  -webkit-touch-callout: none;
   display: flex;
   flex-direction: column;
   gap: 0.8rem;

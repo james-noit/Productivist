@@ -55,24 +55,36 @@
     </div>
   </div>
 
-  @if (summaryVisible()) {
-    <div class="dash__summary" role="group" [attr.aria-label]="'projects.filters.active' | translate">
-      @for (chip of chips(); track chip.id) {
-        <button
-          type="button"
-          class="filter-chip dash__chip"
-          [attr.aria-label]="'projects.filters.remove' | translate: { name: (chip.labelKey | translate) }"
-          (click)="removeChip(chip)"
-        >
-          {{ chip.labelKey | translate }}
-          <app-ui-icon name="x" [size]="12" />
-        </button>
+  @if (summaryVisible() || tipVisible()) {
+    <div class="dash__summary">
+      @if (summaryVisible()) {
+        <div class="dash__chips" role="group" [attr.aria-label]="'projects.filters.active' | translate">
+          @for (chip of chips(); track chip.id) {
+            <button
+              type="button"
+              class="filter-chip dash__chip"
+              [attr.aria-label]="'projects.filters.remove' | translate: { name: (chip.labelKey | translate) }"
+              (click)="removeChip(chip)"
+            >
+              {{ chip.labelKey | translate }}
+              <app-ui-icon name="x" [size]="12" />
+            </button>
+          }
+          @if (state.activeSort() !== 'activity') {
+            <span class="dash__sorted">{{ 'projects.filters.sortedBy.' + state.activeSort() | translate }}</span>
+          }
+          @if (chips().length) {
+            <button type="button" class="button-ghost dash__clear" (click)="state.clearFilters()">{{ 'projects.filters.clearAll' | translate }}</button>
+          }
+        </div>
       }
-      @if (state.activeSort() !== 'activity') {
-        <span class="dash__sorted">{{ 'projects.filters.sortedBy.' + state.activeSort() | translate }}</span>
-      }
-      @if (chips().length) {
-        <button type="button" class="button-ghost dash__clear" (click)="state.clearFilters()">{{ 'projects.filters.clearAll' | translate }}</button>
+      @if (tipVisible()) {
+        <p class="dash__tip" role="note">
+          {{ (coarsePointer ? 'projects.ctx.tipTouch' : 'projects.ctx.tip') | translate }}
+          <button type="button" class="btn btn--ghost btn--icon btn--sm dash__tip-close" [attr.aria-label]="'projects.ctx.tipDismiss' | translate" (click)="state.contextMenuTipDismissed.set(true)">
+            <app-ui-icon name="x" [size]="14" />
+          </button>
+        </p>
       }
     </div>
   }

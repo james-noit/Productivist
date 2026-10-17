@@ -74,7 +74,8 @@ export class ProjectsDashboardComponent {
     { id: 'list', icon: 'list', labelKey: 'projects.layout.list' },
   ];
 
-  readonly editingProjectId = signal<string | null>(null);
+  /** Shared with the page state, so the context menu can ask for the same dialog. */
+  readonly editingProjectId = this.state.editingProjectId;
   readonly detailId = signal<string | null>(null);
   /** The rows of the list layout that are expanded to their next-up tasks. */
   readonly expanded = signal<ReadonlySet<string>>(new Set());
@@ -157,6 +158,10 @@ export class ProjectsDashboardComponent {
     if (!this.state.inboxVisible()) chips.push({ id: 'inbox', labelKey: 'projects.filters.inboxHidden', kind: 'inbox' });
     return chips;
   });
+  /** Touch screens have no right-click: the tip says long-press. */
+  readonly coarsePointer = typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches;
+  /** The one-time "right-click a project" tip: until dismissed or the menu has been used, once there is a project to click. */
+  readonly tipVisible = computed(() => !this.state.contextMenuTipDismissed() && !this.noProjects());
   readonly summaryVisible = computed(() => this.chips().length > 0 || this.state.activeSort() !== 'activity');
 
   readonly editingProject = computed(() => {

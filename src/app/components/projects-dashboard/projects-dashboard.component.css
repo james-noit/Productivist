@@ -77,12 +77,29 @@
 
 /* Active-filter summary ------------------------------------------------------------------------------------------ */
 
-.dash__summary {
+.dash__summary,
+.dash__chips {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 0.4rem 0.5rem;
+}
+
+.dash__summary {
   margin-top: -0.25rem;
+}
+
+.dash__tip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+.dash__tip-close {
+  color: inherit;
 }
 
 /* A chip that is already on: it removes itself, so it wears the "on" look without the shared check mark. */

@@ -255,6 +255,17 @@
       "toggleTasks": "Show the next tasks of {{name}}",
       "openTasks": "{{n}} open"
     },
+    "ctx": {
+      "label": "Page actions",
+      "newTaskIn": "New task in this project",
+      "newRecurringIn": "New recurring task in this project",
+      "recurringList": "Recurring tasks ({{n}})",
+      "toList": "Switch to List",
+      "toCards": "Switch to Cards",
+      "tip": "Tip: right-click a project for more actions.",
+      "tipTouch": "Tip: long-press a project for more actions.",
+      "tipDismiss": "Dismiss tip"
+    },
     "fab": {
       "label": "Create",
       "task": "New task",
@@ -321,6 +332,18 @@
       "overdue": "{{n}} overdue",
       "noMilestones": "No milestones yet"
     }
+  },
+  "chip": {
+    "label": "{{mode}}{{state}}, {{time}} left{{detail}}. Show timer details.",
+    "paused": "paused",
+    "running": "running",
+    "back": "Back to Pomodoro",
+    "backMultitask": "Back to Multitask",
+    "lot": "Lot {{n}}/{{m}}",
+    "more": "+{{n}} more",
+    "markDone": "Mark task done",
+    "focusEnded": "Focus ended",
+    "breakEnded": "Break ended"
   },
   "multitask": {
     "toggleLabel": "Multitask",

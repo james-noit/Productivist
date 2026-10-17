@@ -1,4 +1,4 @@
-import { Injectable, computed, effect, inject, signal } from '@angular/core';
+import { Injectable, computed, effect, inject, signal, untracked } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
 import { localStorageSignal } from '../core/local-storage-signal';
 import { ProjectActivityService } from './project-activity.service';
@@ -86,6 +86,8 @@ export class ClockService {
   );
   readonly totalSeconds = computed(() => this.durationSeconds());
   readonly remainingSeconds = signal(0);
+  /** A session is running, or paused partway through (what the header's Pomodoro chip shows). */
+  readonly inSession = computed(() => this.running() || this.remainingSeconds() < this.totalSeconds());
 
   // Persisted so the timer survives a page refresh. Written only on
   // state transitions (start/pause/reset/switch), never on every tick.
@@ -103,10 +105,12 @@ export class ClockService {
     // active mode changes. Skipped while a session is running and while we are
     // still restoring a persisted state, so a restored paused remainder is not
     // clobbered.
+    // `running` is read untracked: tracking it re-ran this on every pause and reset the paused remainder to the
+    // full duration, which made Pause behave like Reset.
     effect(() => {
       this.mode();
       this.totalSeconds();
-      if (!this.running() && !this.restoring) {
+      if (!untracked(this.running) && !this.restoring) {
         this.remainingSeconds.set(this.totalSeconds());
         this.persistState();
       }

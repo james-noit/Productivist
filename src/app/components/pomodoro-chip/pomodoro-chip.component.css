@@ -1,0 +1,66 @@
+:host {
+  display: contents;
+}
+
+.chip-anchor {
+  position: relative;
+  display: inline-flex;
+}
+
+/* A pill on the shared `.btn--secondary.btn--sm`; the primary hairline only while time is passing. */
+.chip {
+  gap: 0.45rem;
+  border-radius: 999px;
+}
+
+.chip--running {
+  border-color: var(--color-primary);
+}
+
+.chip__dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background-color: var(--color-primary);
+}
+
+.chip[data-mode='break'] .chip__dot {
+  background-color: var(--color-capacity-safe);
+}
+
+/* Paused: two bars (a 2px gap between two 3px borders). */
+.chip__pause {
+  width: 2px;
+  height: 0.6rem;
+  border: solid var(--color-text-muted);
+  border-width: 0 3px;
+}
+
+.chip__time {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.chip__extra {
+  display: none;
+  max-width: 20ch;
+  padding-left: 0.45rem;
+  overflow: hidden;
+  border-left: 1px solid var(--color-border);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--color-text-muted);
+}
+
+@media (min-width: 700px) {
+  .chip__extra {
+    display: block;
+  }
+}
+
+/* The header wraps on narrow screens: the popover hangs from the whole header instead of from the chip. */
+@media (max-width: 640px) {
+  .chip-anchor {
+    position: static;
+  }
+}

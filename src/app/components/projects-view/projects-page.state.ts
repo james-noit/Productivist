@@ -60,6 +60,12 @@ export class ProjectsPageState {
   readonly filtersOpen = signal(false);
   readonly creatingTask = signal(false);
   readonly creatingProject = signal(false);
+  /** The project the New task dialog starts in (null = none); set by `openNewTask(opener, projectId)`. */
+  readonly newTaskProjectId = signal<string | null>(null);
+  /** The project whose edit dialog is open (the dashboard hosts it); set by `editProject`. */
+  readonly editingProjectId = signal<string | null>(null);
+  /** Persisted, device-local: the "right-click a project" tip is gone for good once dismissed or after the menu was used. */
+  readonly contextMenuTipDismissed = localStorageSignal<boolean>('productivist.contextMenuTipDismissed', false);
 
   readonly normalized = computed(() => normalizeQuery(this.query()));
   readonly inboxVisible = computed(() => this.showInbox() !== false);
@@ -99,9 +105,15 @@ export class ProjectsPageState {
     this.filtersOpen.set(true);
   }
 
-  openNewTask(opener: HTMLElement | null = null): void {
+  openNewTask(opener: HTMLElement | null = null, projectId: string | null = null): void {
     this.opener = opener ?? this.activeElement();
+    this.newTaskProjectId.set(projectId);
     this.creatingTask.set(true);
+  }
+
+  /** Asks the dashboard to open its edit dialog for a project (the context menu's Edit…). */
+  editProject(id: string): void {
+    this.editingProjectId.set(id);
   }
 
   openNewProject(opener: HTMLElement | null = null): void {

@@ -1,0 +1,51 @@
+@let multi = multitask.enabled();
+@let paused = !clock.running();
+@let t = task();
+<section #root class="pp" role="dialog" aria-labelledby="pp-title" tabindex="-1" (keydown)="onKeydown($event)">
+  <h2 id="pp-title" class="pp__title">
+    @if (multi) {
+      {{ 'multitask.toggleLabel' | translate }} ·
+    }
+    {{ (clock.mode() === 'focus' ? 'clock.focus' : 'clock.break') | translate }}
+    <span class="pp__state">· {{ (paused ? 'chip.paused' : 'chip.running') | translate }}</span>
+  </h2>
+  <p class="pp__time">{{ clock.formattedTime() }}</p>
+  <div class="pp__bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" [attr.aria-valuenow]="progress()" aria-labelledby="pp-title">
+    <div class="pp__bar-fill" [style.width.%]="progress()"></div>
+  </div>
+
+  @if (multi) {
+    @if (effectivity() !== null) {
+      <p class="pp__meta">{{ 'multitask.effectivityTitle' | translate }} {{ effectivity() }}%</p>
+    }
+    @if (lot(); as l) {
+      <p class="pp__meta">{{ 'chip.lot' | translate: { n: l.n, m: l.m } }}</p>
+    }
+    @if (listed().shown.length) {
+      <ul class="pp__tasks">
+        @for (title of listed().shown; track $index) {
+          <li>{{ title }}</li>
+        }
+      </ul>
+      @if (listed().more) {
+        <p class="pp__meta">{{ 'chip.more' | translate: { n: listed().more } }}</p>
+      }
+    }
+  } @else if (t) {
+    <div class="pp__task">
+      <p class="pp__task-title">{{ t.title }}</p>
+      @if (t.project; as project) {
+        <p class="pp__meta pp__project"><app-icon [name]="project.icon" /> <span>{{ project.name }}</span></p>
+      }
+    </div>
+  }
+
+  <div class="pp__controls">
+    <button type="button" class="btn btn--secondary btn--sm" (click)="toggleRun()">{{ (paused ? 'clock.start' : 'clock.pause') | translate }}</button>
+    <button type="button" class="btn btn--ghost btn--sm" (click)="clock.reset()">{{ 'clock.reset' | translate }}</button>
+    @if (!multi && t) {
+      <button type="button" class="btn btn--ghost btn--sm" (click)="markDone(t.id)">{{ 'chip.markDone' | translate }}</button>
+    }
+  </div>
+  <button type="button" class="btn btn--primary pp__back" (click)="back()">{{ (multi ? 'chip.backMultitask' : 'chip.back') | translate }}</button>
+</section>

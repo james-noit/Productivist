@@ -255,6 +255,17 @@
       "toggleTasks": "Mostrar las siguientes tareas de {{name}}",
       "openTasks": "{{n}} abiertas"
     },
+    "ctx": {
+      "label": "Acciones de la página",
+      "newTaskIn": "Nueva tarea en este proyecto",
+      "newRecurringIn": "Nueva tarea recurrente en este proyecto",
+      "recurringList": "Tareas recurrentes ({{n}})",
+      "toList": "Cambiar a Lista",
+      "toCards": "Cambiar a Tarjetas",
+      "tip": "Consejo: haz clic derecho en un proyecto para ver más acciones.",
+      "tipTouch": "Consejo: mantén pulsado un proyecto para ver más acciones.",
+      "tipDismiss": "Descartar consejo"
+    },
     "fab": {
       "label": "Crear",
       "task": "Nueva tarea",
@@ -321,6 +332,18 @@
       "overdue": "{{n}} vencidas",
       "noMilestones": "Aún no hay hitos"
     }
+  },
+  "chip": {
+    "label": "{{mode}}{{state}}, quedan {{time}}{{detail}}. Mostrar detalles del temporizador.",
+    "paused": "en pausa",
+    "running": "en marcha",
+    "back": "Volver al Pomodoro",
+    "backMultitask": "Volver a Multitarea",
+    "lot": "Lote {{n}}/{{m}}",
+    "more": "+{{n}} más",
+    "markDone": "Marcar tarea hecha",
+    "focusEnded": "Terminó el enfoque",
+    "breakEnded": "Terminó el descanso"
   },
   "multitask": {
     "toggleLabel": "Multitarea",

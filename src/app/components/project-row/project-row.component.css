@@ -5,6 +5,8 @@
 
 .prow {
   position: relative;
+  /* A long-press opens the page's context menu: no iOS callout sheet on top of it. */
+  -webkit-touch-callout: none;
   min-width: 0;
   border-radius: inherit;
   transition: background-color 0.12s;

@@ -1,7 +1,7 @@
 @let v = view();
 @let p = v.project;
 @let s = v.stats;
-<article class="prow" [style.--tint]="tint()">
+<article class="prow" [attr.data-project-id]="p.id" [style.--tint]="tint()">
   <div class="prow__main">
     @if (v.rows.length) {
       <button

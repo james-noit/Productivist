@@ -1,8 +1,9 @@
-import { ChangeDetectionStrategy, Component, ElementRef, Injector, afterNextRender, inject, input, output, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, input, output, signal } from '@angular/core';
 import { TranslatePipe } from '@ngx-translate/core';
 import { ProjectsService } from '../../../services/projects.service';
 import { ViewService } from '../../../services/view.service';
 import { KebabMenuComponent } from '../kebab-menu/kebab-menu.component';
+import { MilestoneQuickFormComponent } from '../milestone-quick-form/milestone-quick-form.component';
 import { UiIconComponent } from '../ui-icon/ui-icon.component';
 import type { Project } from '../../../types/project';
 
@@ -15,7 +16,7 @@ import type { Project } from '../../../types/project';
 @Component({
   selector: 'app-project-actions-menu',
   standalone: true,
-  imports: [TranslatePipe, KebabMenuComponent, UiIconComponent],
+  imports: [TranslatePipe, KebabMenuComponent, MilestoneQuickFormComponent, UiIconComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './project-actions-menu.component.html',
   styles: `
@@ -35,7 +36,6 @@ import type { Project } from '../../../types/project';
 export class ProjectActionsMenuComponent {
   private readonly projects = inject(ProjectsService);
   private readonly appView = inject(ViewService);
-  private readonly injector = inject(Injector);
 
   readonly project = input.required<Project>();
   /** Ask "Delete project?" inside the menu instead of emitting `deleteRequested`. */
@@ -43,11 +43,8 @@ export class ProjectActionsMenuComponent {
   readonly edit = output<void>();
   readonly deleteRequested = output<void>();
 
-  private readonly milestoneInput = viewChild<ElementRef<HTMLElement>>('milestoneInput');
-
   readonly addingMilestone = signal(false);
   readonly confirming = signal(false);
-  readonly milestoneName = signal('');
 
   open(): void {
     this.appView.openProject(this.project().id);
@@ -55,12 +52,9 @@ export class ProjectActionsMenuComponent {
 
   startMilestone(): void {
     this.addingMilestone.set(true);
-    afterNextRender(() => this.milestoneInput()?.nativeElement.focus(), { injector: this.injector });
   }
 
-  submitMilestone(menu: { close(): void }): void {
-    const name = this.milestoneName().trim();
-    if (!name) return;
+  submitMilestone(name: string, menu: { close(): void }): void {
     this.projects.addMilestone(this.project().id, name);
     menu.close();
   }
@@ -83,6 +77,5 @@ export class ProjectActionsMenuComponent {
   resetMenu(): void {
     this.addingMilestone.set(false);
     this.confirming.set(false);
-    this.milestoneName.set('');
   }
 }

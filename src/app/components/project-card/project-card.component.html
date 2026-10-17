@@ -1,7 +1,7 @@
 @let v = view();
 @let p = v.project;
 @let s = v.stats;
-<article class="pcard" [style.--tint]="tint()" [class.pcard--confirming]="confirming()">
+<article class="pcard" [attr.data-project-id]="p.id" [style.--tint]="tint()" [class.pcard--confirming]="confirming()">
   <header class="pcard__head">
     <span class="pcard__icon" aria-hidden="true"><app-icon [name]="p.icon" /></span>
     <div class="pcard__titles">

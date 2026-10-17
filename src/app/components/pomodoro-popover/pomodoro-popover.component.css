@@ -1,0 +1,111 @@
+.pp {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  z-index: 25;
+  width: 320px;
+  max-width: calc(100vw - 1.5rem);
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 0.9rem;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.06), 0 4px 12px rgb(0 0 0 / 0.12);
+  text-align: left;
+}
+
+.pp:focus {
+  outline: none;
+}
+
+.pp__title {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.pp__state {
+  font-weight: 400;
+  color: var(--color-text-muted);
+}
+
+.pp__time {
+  margin: 0;
+  font-size: 2.5rem;
+  font-weight: 600;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.pp__bar {
+  height: 4px;
+  border-radius: 2px;
+  background-color: var(--color-surface-alt);
+  overflow: hidden;
+}
+
+.pp__bar-fill {
+  height: 100%;
+  background-color: var(--color-primary);
+}
+
+.pp__task {
+  min-width: 0;
+}
+
+.pp__task-title {
+  margin: 0;
+  font-size: 0.95rem;
+  overflow-wrap: anywhere;
+}
+
+.pp__meta {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+.pp__project {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.pp__project span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pp__tasks {
+  margin: 0;
+  padding-left: 1.1rem;
+  font-size: 0.9rem;
+  overflow-wrap: anywhere;
+}
+
+.pp__controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.pp__back {
+  width: 100%;
+}
+
+/* Where the header wraps the popover hangs from the header itself (the chip's anchor is static): full width minus 16px. */
+@media (max-width: 640px) {
+  .pp {
+    top: 100%;
+    left: 1rem;
+    right: 1rem;
+    width: auto;
+    max-width: none;
+    margin-top: 0.25rem;
+  }
+}

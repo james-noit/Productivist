@@ -1,0 +1,63 @@
+<app-context-menu
+  #menu="contextMenu"
+  [x]="x()"
+  [y]="y()"
+  [label]="(project() ? 'projects.card.menu' : 'projects.ctx.label') | translate: { name: project()?.name }"
+  [returnFocus]="returnFocus()"
+  (dismissed)="dismissed.emit()"
+>
+  <div class="pctx" (keydown.escape)="onPageEscape($event, menu)">
+    @if (projectId()) {
+      @if (project(); as p) {
+        @switch (page()) {
+          @case ('milestone') {
+            <app-milestone-quick-form [escapeBack]="true" (submitted)="addMilestone(p.id, $event, menu)" (escaped)="goTo('main', menu)" />
+          }
+          @case ('delete') {
+            <p class="confirm-text">{{ 'projects.card.deleteQuestion' | translate }}</p>
+            <button type="button" role="menuitem" class="menu-item" (click)="goTo('main', menu)">{{ 'projects.card.keep' | translate }}</button>
+            <button type="button" role="menuitem" class="menu-item menu-item--danger" (click)="remove(p.id, menu)">
+              {{ 'projects.card.deleteProject' | translate }}
+            </button>
+          }
+          @default {
+            <div class="menu-heading">
+              <app-icon [name]="p.icon" />
+              <span class="pctx__name">{{ p.name }}</span>
+            </div>
+            <button type="button" role="menuitem" class="menu-item" (click)="open(p.id, menu)">{{ 'projects.card.open' | translate }}</button>
+            <button type="button" role="menuitem" class="menu-item" (click)="newTaskIn(p.id, menu)">{{ 'projects.ctx.newTaskIn' | translate }}</button>
+            <button type="button" role="menuitem" class="menu-item" (click)="goTo('milestone', menu)">{{ 'projects.card.newMilestone' | translate }}…</button>
+            <button type="button" role="menuitem" class="menu-item" (click)="newRecurringIn(p.id, menu)">{{ 'projects.ctx.newRecurringIn' | translate }}</button>
+            @if (series().total) {
+              <button type="button" role="menuitem" class="menu-item" (click)="recurringOf(p.id, menu)">
+                {{ 'projects.ctx.recurringList' | translate: { n: series().active } }}
+              </button>
+            }
+            <hr class="menu-sep" />
+            <button type="button" role="menuitem" class="menu-item" (click)="edit(p.id, menu)">{{ 'projects.edit' | translate }}…</button>
+            <button type="button" role="menuitem" class="menu-item menu-item--danger" (click)="goTo('delete', menu)">{{ 'projects.delete' | translate }}…</button>
+          }
+        }
+      }
+    } @else {
+      <button type="button" role="menuitem" class="menu-item" aria-keyshortcuts="N" (click)="newTask(menu)">
+        {{ 'projects.fab.task' | translate }}<span class="menu-item__hint" aria-hidden="true">N</span>
+      </button>
+      <button type="button" role="menuitem" class="menu-item" aria-keyshortcuts="P" (click)="newProject(menu)">
+        {{ 'projects.fab.project' | translate }}<span class="menu-item__hint" aria-hidden="true">P</span>
+      </button>
+      <button type="button" role="menuitem" class="menu-item" (click)="newRecurring(menu)">{{ 'projects.fab.recurring' | translate }}</button>
+      <hr class="menu-sep" />
+      <button type="button" role="menuitem" class="menu-item" (click)="planMyDay(menu)">
+        {{ (planInProgress() ? 'planningLab.resumeButton' : 'planningLab.openButton') | translate: { step: planStep() } }}
+      </button>
+      @if (onProjectsTab()) {
+        <button type="button" role="menuitem" class="menu-item" (click)="toggleLayout(menu)">
+          {{ (state.activeLayout() === 'cards' ? 'projects.ctx.toList' : 'projects.ctx.toCards') | translate }}
+        </button>
+        <button type="button" role="menuitem" class="menu-item" (click)="openFilters(menu)">{{ 'projects.filters.title' | translate }}…</button>
+      }
+    }
+  </div>
+</app-context-menu>

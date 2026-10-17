@@ -1,4 +1,12 @@
-<main class="projects-view">
+<main
+  class="projects-view"
+  (contextmenu)="onContextMenu($event)"
+  (keydown)="onPageKeydown($event)"
+  (pointerdown)="onPagePointerDown($event)"
+  (pointermove)="onPagePointerMove($event)"
+  (pointerup)="onPagePointerEnd()"
+  (pointercancel)="onPagePointerEnd()"
+>
   <header class="projects-view__header">
     <div class="projects-view__heading">
       <h2>{{ 'projects.title' | translate }}</h2>
@@ -76,8 +84,21 @@
 
   <app-fab-menu [items]="fabItems" (pick)="onFabPick($event)" />
 
+  @for (menu of contextMenus(); track menu.id) {
+    @defer (on immediate) {
+      <app-projects-context-menu
+        [x]="menu.x"
+        [y]="menu.y"
+        [projectId]="menu.projectId"
+        [tab]="view.projectsTab()"
+        [returnFocus]="menu.returnFocus"
+        (dismissed)="closeContextMenu()"
+      />
+    }
+  }
+
   @if (state.creatingTask()) {
-    <app-new-task-modal (close)="closeNewTask()" />
+    <app-new-task-modal [projectId]="state.newTaskProjectId()" (close)="closeNewTask()" />
   }
 
   @if (state.creatingProject()) {
