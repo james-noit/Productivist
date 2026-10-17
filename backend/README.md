@@ -22,6 +22,7 @@ Schema is managed by Flyway (`src/main/resources/db/migration`).
 |---|---|---|
 | POST | `/api/auth/signup` `{email, password}` | Creates the account (password 8+ characters, at most 72 bytes) and returns `{email, token}`. 409 if the email is taken. No email confirmation. |
 | POST | `/api/auth/login` `{email, password}` | Returns `{email, token}`; 401 for any wrong email or password. |
+| DELETE | `/api/account` `{password}` | Deletes the caller's own account and every synced row under it (projects, tasks, Flow data, recurrences, settings), and with it every session, so all devices are signed out. 204 on success; 400 for a missing password; 403 for a wrong one (not 401, which clients read as an expired session); 409 for the admin account. |
 | GET | `/api/sync?since=<cursor>` | Rows changed after `cursor` (0 = all), tombstones included, plus `state` if changed. Returns the next `cursor`. |
 | POST | `/api/sync` | Upserts `{projects, milestones, todos, objectives, flowLinks, flowLayouts, recurrences, state}` (the Flow and recurrence lists are optional, so older clients keep working; a todo may carry `recurrenceId`). Last-write-wins on each row's `updatedAt`. Returns `{cursor}`. |
 | GET | `/api/admin/me` | Admin only (403 for everyone else): `{email}`. The frontend uses it to decide whether to show the admin view. |

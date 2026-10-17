@@ -28,6 +28,15 @@
     "syncing": "Syncing…",
     "lastSynced": "Last synced at {{time}}",
     "notSyncedYet": "Not synced yet.",
+    "delete": "Delete account…",
+    "deleteQuestion": "Delete your account? Everything synced to the server is erased for good. Tasks on this device stay.",
+    "deleteConfirm": "Delete account",
+    "deleted": "Account deleted. Your tasks stay on this device.",
+    "deleteError": {
+      "wrongPassword": "Wrong password.",
+      "admin": "The admin account cannot be deleted.",
+      "network": "Could not reach the server. Try again later."
+    },
     "manage": "Account and sync",
     "error": {
       "network": "Could not reach the server. Will retry.",

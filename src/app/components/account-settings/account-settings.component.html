@@ -18,11 +18,52 @@
     }
   </p>
   <div class="account-settings__actions">
-    <button type="button" [disabled]="sync.status() === 'syncing'" (click)="sync.syncNow()">
+    <button type="button" class="btn btn--secondary btn--sm" [disabled]="sync.status() === 'syncing'" (click)="sync.syncNow()">
       {{ 'account.syncNow' | translate }}
     </button>
-    <button type="button" (click)="accounts.logout()">{{ 'account.signOut' | translate }}</button>
+    <button type="button" class="btn btn--secondary btn--sm" (click)="accounts.logout()">{{ 'account.signOut' | translate }}</button>
+    @if (!confirming()) {
+      <button #deleteButton type="button" class="btn btn--danger btn--ghost btn--sm" (click)="askDelete()">
+        {{ 'account.delete' | translate }}
+      </button>
+    }
   </div>
+  @if (confirming()) {
+    <div class="confirm-bar account-settings__confirm" role="alertdialog" aria-labelledby="account-delete-question">
+      <p class="confirm-bar__text" id="account-delete-question">{{ 'account.deleteQuestion' | translate }}</p>
+      <form class="account-settings__form" (submit)="submitDelete($event)">
+        <div class="field">
+          <label class="field__label" for="account-delete-password">{{ 'login.passwordPlaceholder' | translate }}</label>
+          <input
+            #passwordInput
+            id="account-delete-password"
+            class="input"
+            type="password"
+            autocomplete="current-password"
+            [value]="password()"
+            [disabled]="busy()"
+            (input)="setPassword($event)"
+          />
+        </div>
+        @if (error(); as kind) {
+          <p class="account-settings__status account-settings__status--error" role="alert">
+            {{ (kind === 'session' ? 'account.error.session' : 'account.deleteError.' + kind) | translate }}
+          </p>
+        }
+        <div class="confirm-bar__actions">
+          <button type="button" class="btn btn--secondary btn--sm" [disabled]="busy()" (click)="cancelDelete()">
+            {{ 'projects.card.keep' | translate }}
+          </button>
+          <button type="submit" class="btn btn--danger btn--sm" [disabled]="!password() || busy()">
+            {{ 'account.deleteConfirm' | translate }}
+          </button>
+        </div>
+      </form>
+    </div>
+  }
 } @else {
   <p class="account-settings__status">{{ 'account.notSignedIn' | translate }}</p>
+  @if (deleted()) {
+    <p class="account-settings__status" role="status">{{ 'account.deleted' | translate }}</p>
+  }
 }

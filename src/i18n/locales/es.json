@@ -28,6 +28,15 @@
     "syncing": "Sincronizando…",
     "lastSynced": "Última sincronización a las {{time}}",
     "notSyncedYet": "Aún sin sincronizar.",
+    "delete": "Eliminar cuenta…",
+    "deleteQuestion": "¿Eliminar tu cuenta? Todo lo sincronizado en el servidor se borra para siempre. Las tareas de este dispositivo se conservan.",
+    "deleteConfirm": "Eliminar cuenta",
+    "deleted": "Cuenta eliminada. Tus tareas siguen en este dispositivo.",
+    "deleteError": {
+      "wrongPassword": "Contraseña incorrecta.",
+      "admin": "La cuenta de administrador no se puede eliminar.",
+      "network": "No se pudo contactar con el servidor. Inténtalo más tarde."
+    },
     "manage": "Cuenta y sincronización",
     "error": {
       "network": "No se pudo contactar con el servidor. Se reintentará.",

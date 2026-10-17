@@ -53,6 +53,19 @@ export class AccountService {
     this.account.set({ email: response.email, token: response.token });
   }
 
+  /**
+   * Erases the account and everything synced under it on the server, then signs out (only on success). Local data
+   * stays on this device: the app is local-first, so the stores are deliberately not wiped. Rejects with `ApiError`:
+   * 403 wrong password, 409 the admin account cannot be deleted, 401 the session had expired; network failures reject
+   * as-is.
+   */
+  async deleteAccount(password: string): Promise<void> {
+    const token = this.account()?.token;
+    if (!token) return;
+    await api<void>('/api/account', { method: 'DELETE', body: { password }, token });
+    this.logout();
+  }
+
   logout(): void {
     this.account.set(null);
   }
