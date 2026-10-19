@@ -32,7 +32,8 @@ app:
     # before setting it: signup is open, so whoever registers the address first owns it.
     email: ${ADMIN_EMAIL:}
   cors:
-    # moz-extension origins are random per Thunderbird profile, hence the wildcard.
-    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:4200,moz-extension://*}
+    # moz-extension origins are random per Thunderbird profile, hence the wildcard. https://localhost is the
+    # Android app's WebView and capacitor://localhost the iOS one (Capacitor, see docs/mobile/).
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:4200,moz-extension://*,https://localhost,capacitor://localhost}
   sync:
     max-batch-size: 5000

@@ -1,7 +1,7 @@
 {
   "name": "productivist",
   "private": true,
-  "version": "0.20.1",
+  "version": "0.21.0",
   "scripts": {
     "ng": "ng",
     "dev": "ng serve",
@@ -10,6 +10,9 @@
     "check:lazy": "ng build --stats-json && node scripts/check-lazy-chunks.mjs",
     "preview": "ng serve --configuration production",
     "build:tb": "node scripts/write-thunderbird-environment.mjs && ng build --configuration production,thunderbird --base-href ./ && node scripts/package-thunderbird.mjs",
+    "build:mobile": "node scripts/write-mobile-environment.mjs && ng build --configuration production,mobile && node scripts/sync-mobile-version.mjs && cap sync",
+    "cap:android": "cap open android",
+    "cap:ios": "cap open ios",
     "tb:run": "web-ext run -t thunderbird -s dist/thunderbird",
     "tb:lint": "web-ext lint -s dist/thunderbird"
   },
@@ -20,6 +23,10 @@
     "@angular/forms": "^19.2.0",
     "@angular/platform-browser": "^19.2.0",
     "@angular/platform-browser-dynamic": "^19.2.0",
+    "@capacitor/app": "^8.1.2",
+    "@capacitor/core": "^8.5.3",
+    "@capacitor/local-notifications": "^8.3.1",
+    "@capacitor/splash-screen": "^8.0.2",
     "@ngx-translate/core": "^16.0.4",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0"
@@ -28,8 +35,15 @@
     "@angular-devkit/build-angular": "^19.2.27",
     "@angular/cli": "^19.2.27",
     "@angular/compiler-cli": "^19.2.0",
+    "@capacitor/android": "^8.5.3",
+    "@capacitor/assets": "^3.0.5",
+    "@capacitor/cli": "^8.5.3",
+    "@capacitor/ios": "^8.5.3",
     "@types/node": "^24.12.3",
     "typescript": "~5.7.2",
     "web-ext": "^8.3.0"
+  },
+  "overrides": {
+    "sharp": "^0.34.5"
   }
 }

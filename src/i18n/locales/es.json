@@ -38,6 +38,7 @@
       "network": "No se pudo contactar con el servidor. Inténtalo más tarde."
     },
     "manage": "Cuenta y sincronización",
+    "privacy": "Política de privacidad",
     "error": {
       "network": "No se pudo contactar con el servidor. Se reintentará.",
       "server": "El servidor rechazó la sincronización. Se reintentará.",
@@ -481,6 +482,7 @@
     "openTask": "Abrir tarea",
     "reorder": "Arrastra para reordenar (Alt + flechas con el teclado)",
     "inObjective": "En: {{objective}}",
+    "ctx": { "moveUp": "Subir", "moveDown": "Bajar", "moveTop": "Mover arriba del todo", "remove": "Quitar", "planHere": "Planificar en «{{objective}}»", "planIn": "Planificar en…", "addAll": "Añadir todas las sugeridas ({{n}})", "clear": "Vaciar tareas planificadas ({{n}})", "clearConfirm": "¿Quitar {{n}} tareas de este objetivo?" },
     "nothingPlanned": "Nada planificado todavía.",
     "count": { "one": "{{n}} tarea", "other": "{{n}} tareas" },
     "estimate": { "one": "≈ {{n}} pomodoro", "other": "≈ {{n}} pomodoros" },

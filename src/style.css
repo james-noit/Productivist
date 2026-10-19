@@ -127,14 +127,17 @@ body {
 /* How far above the bottom edge floating controls (the "+" of Tasks and projects) must sit to clear the header's
    floating support pill. The header adds `support-floating` to <html> while the pill is shown; the pill only floats
    below 800px (see app-header.component.css): bottom 1.5rem + height (2.15rem logo + 0.7rem padding + 2px border)
-   + a 0.75rem gap, minus the 1rem a floating control already keeps from the edge. */
+   + a 0.75rem gap, minus the 1rem (or the bottom safe-area inset, if larger) a floating control already keeps from
+   the edge; the pill itself sits that inset higher. */
 :root {
   --floating-bottom-offset: 0px;
 }
 
 @media (max-width: 799px) {
   :root.support-floating {
-    --floating-bottom-offset: calc(1.5rem + 2.85rem + 2px + 0.75rem - 1rem);
+    --floating-bottom-offset: calc(
+      1.5rem + 2.85rem + 2px + 0.75rem + env(safe-area-inset-bottom) - max(1rem, env(safe-area-inset-bottom))
+    );
   }
 }
 
@@ -159,6 +162,10 @@ app-root {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  /* Notch, rounded corners and gesture bar on the phones that have them (viewport-fit=cover in index.html).
+     env() is 0 in a desktop browser. The header adds the top inset itself, so its background reaches the edge. */
+  box-sizing: border-box;
+  padding: 0 env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
 }
 
 button {
@@ -226,7 +233,8 @@ button {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 1rem;
+  padding: max(1rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right)) max(1rem, env(safe-area-inset-bottom))
+    max(1rem, env(safe-area-inset-left));
   z-index: var(--modal-z, 30);
 }
 

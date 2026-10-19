@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Monochrome status-bar icon of the end-of-session notification (a tomato silhouette); Android tints it. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M4.5,14.5a7.5,7.5 0 1,0 15,0a7.5,7.5 0 1,0 -15,0z" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M11,7.2C10.6,4.6 12.2,2.6 15.2,2.2C15.6,4.8 14,6.8 11,7.2z" />
+</vector>

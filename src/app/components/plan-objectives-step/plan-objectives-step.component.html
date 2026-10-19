@@ -1,8 +1,16 @@
-<div class="pstep">
+<div
+  class="pstep"
+  appContextMenuHost
+  contextTargets="[data-ctx]"
+  [contextFallback]="false"
+  (contextRequested)="onContext($event)"
+>
   <div class="pstep__cards">
     @for (card of cards(); track card.id) {
       <section
         class="pstep__card"
+        data-ctx="objective"
+        [attr.data-objective]="card.id"
         [class.pstep__card--drop]="drop()?.objectiveId === card.id"
         [attr.aria-labelledby]="'pstep-h-' + card.id"
         (dragover)="onDragOver($event, card)"
@@ -41,6 +49,7 @@
             @for (row of card.rows; track row.todo.id; let i = $index) {
               <li
                 class="pstep__row"
+                data-ctx="row"
                 [class.pstep__row--dragging]="dragId() === row.todo.id"
                 [class.pstep__row--drop-before]="drop()?.objectiveId === card.id && drop()?.beforeId === row.todo.id"
                 [attr.data-task]="row.todo.id"
@@ -114,7 +123,15 @@
           <div class="pstep__suggest">
             <span class="pstep__suggest-label">{{ 'planningLab.suggested' | translate }}</span>
             @for (todo of card.suggestions; track todo.id) {
-              <button type="button" class="pstep__suggestion" [title]="todo.title" (click)="addSuggestion(todo, card.id)">
+              <button
+                type="button"
+                class="pstep__suggestion"
+                data-ctx="suggestion"
+                [attr.data-task]="todo.id"
+                [attr.data-objective]="card.id"
+                [title]="todo.title"
+                (click)="addSuggestion(todo, card.id)"
+              >
                 <app-ui-icon name="plus" [size]="12" />
                 <span class="pstep__suggestion-title">{{ todo.title }}</span>
               </button>
@@ -192,6 +209,28 @@
       </button>
     </div>
   </footer>
+
+  @for (menu of contextMenus(); track menu.id) {
+    @defer (on immediate) {
+      <app-plan-context-menu
+        [x]="menu.x"
+        [y]="menu.y"
+        [kind]="menu.kind"
+        [taskId]="menu.taskId"
+        [objectiveId]="menu.objectiveId"
+        [cards]="cards()"
+        [returnFocus]="menu.returnFocus"
+        (dismissed)="closeContext()"
+        (openTask)="openFromMenu($event)"
+        (addTasks)="addTasksFromMenu($event)"
+        (newTask)="newTaskFromMenu($event)"
+        (addAll)="addAllFromMenu($event)"
+        (changeProjects)="changeProjectsFromMenu()"
+        (planTask)="planFromMenu($event.taskId, $event.objectiveId)"
+        (settled)="focusAfter($event.taskId, $event.objectiveId)"
+      />
+    }
+  }
 </div>
 
 <div #ghost class="pstep__ghost" aria-hidden="true"></div>

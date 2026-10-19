@@ -1,0 +1,116 @@
+<app-context-menu
+  #menu="contextMenu"
+  [x]="x()"
+  [y]="y()"
+  [label]="subject()?.todo?.title ?? subject()?.card?.text ?? ''"
+  [returnFocus]="returnFocus()"
+  (dismissed)="dismissed.emit()"
+>
+  <div class="plctx" (keydown.escape)="onPageEscape($event, menu)">
+    @if (subject(); as s) {
+      @switch (page()) {
+        @case ('moveTo') {
+          <button type="button" role="menuitem" class="menu-item" (click)="goTo('main', menu)">
+            <app-ui-icon name="chevron-left" [size]="16" /> {{ 'projects.inbox.back' | translate }}
+          </button>
+          <div class="menu-heading">{{ 'planningLab.moveToObjective' | translate }}</div>
+          @for (other of others(); track other.id) {
+            <button type="button" role="menuitem" class="menu-item" (click)="moveToObjective(s.todo!.id, other.id, menu)">
+              <span class="plctx__label">{{ other.text }}</span>
+            </button>
+          }
+        }
+        @case ('planIn') {
+          <button type="button" role="menuitem" class="menu-item" (click)="goTo('main', menu)">
+            <app-ui-icon name="chevron-left" [size]="16" /> {{ 'projects.inbox.back' | translate }}
+          </button>
+          <div class="menu-heading">{{ 'planningLab.ctx.planIn' | translate }}</div>
+          @for (other of cards(); track other.id) {
+            <button type="button" role="menuitem" class="menu-item" (click)="plan(s.todo!.id, other.id, menu)">
+              <span class="plctx__label">{{ other.text }}</span>
+            </button>
+          }
+        }
+        @case ('clear') {
+          <p class="confirm-text">{{ 'planningLab.ctx.clearConfirm' | translate: { n: s.card.rows.length } }}</p>
+          <button type="button" role="menuitem" class="menu-item" (click)="goTo('main', menu)">{{ 'projects.card.keep' | translate }}</button>
+          <button type="button" role="menuitem" class="menu-item menu-item--danger" (click)="clear(s.card, menu)">
+            {{ 'planningLab.ctx.remove' | translate }}
+          </button>
+        }
+        @default {
+          @switch (kind()) {
+            @case ('row') {
+              <div class="menu-heading"><span class="plctx__name">{{ s.todo!.title }}</span></div>
+              <button type="button" role="menuitem" class="menu-item" (click)="open(s.todo!.id, menu)">{{ 'planningLab.openTask' | translate }}</button>
+              <button
+                type="button"
+                role="menuitem"
+                class="menu-item"
+                aria-keyshortcuts="Alt+ArrowUp"
+                [attr.aria-disabled]="s.index === 0 ? 'true' : null"
+                (click)="reorder('up', menu)"
+              >
+                {{ 'planningLab.ctx.moveUp' | translate }}<span class="menu-item__hint" aria-hidden="true">Alt+↑</span>
+              </button>
+              <button
+                type="button"
+                role="menuitem"
+                class="menu-item"
+                aria-keyshortcuts="Alt+ArrowDown"
+                [attr.aria-disabled]="s.index === s.last ? 'true' : null"
+                (click)="reorder('down', menu)"
+              >
+                {{ 'planningLab.ctx.moveDown' | translate }}<span class="menu-item__hint" aria-hidden="true">Alt+↓</span>
+              </button>
+              <button type="button" role="menuitem" class="menu-item" [attr.aria-disabled]="s.index === 0 ? 'true' : null" (click)="reorder('top', menu)">
+                {{ 'planningLab.ctx.moveTop' | translate }}
+              </button>
+              @if (others().length) {
+                <button type="button" role="menuitem" class="menu-item" (click)="goTo('moveTo', menu)">
+                  {{ 'planningLab.moveToObjective' | translate }}<app-ui-icon class="menu-item__hint" name="chevron-right" [size]="16" />
+                </button>
+              }
+              <button type="button" role="menuitem" class="menu-item" (click)="markDone(s.todo!.id, s.card.id, menu)">
+                {{ 'eisenhower.markDone' | translate }}
+              </button>
+              <hr class="menu-sep" />
+              <button type="button" role="menuitem" class="menu-item menu-item--danger" (click)="remove(s.todo!.id, s.card.id, menu)">
+                {{ 'planningLab.removeFromObjective' | translate }}
+              </button>
+            }
+            @case ('suggestion') {
+              <div class="menu-heading"><span class="plctx__name">{{ s.todo!.title }}</span></div>
+              <button type="button" role="menuitem" class="menu-item" (click)="plan(s.todo!.id, s.card.id, menu)">
+                <span class="plctx__label">{{ 'planningLab.ctx.planHere' | translate: { objective: s.card.text } }}</span>
+              </button>
+              @if (cards().length > 1) {
+                <button type="button" role="menuitem" class="menu-item" (click)="goTo('planIn', menu)">
+                  {{ 'planningLab.ctx.planIn' | translate }}<app-ui-icon class="menu-item__hint" name="chevron-right" [size]="16" />
+                </button>
+              }
+              <button type="button" role="menuitem" class="menu-item" (click)="open(s.todo!.id, menu)">{{ 'planningLab.openTask' | translate }}</button>
+            }
+            @default {
+              <div class="menu-heading"><span class="plctx__name">{{ s.card.text }}</span></div>
+              <button type="button" role="menuitem" class="menu-item" (click)="add(s.card.id, menu)">{{ 'planningLab.addTasks' | translate }}</button>
+              <button type="button" role="menuitem" class="menu-item" (click)="create(s.card.id, menu)">{{ 'planningLab.newTask' | translate }}</button>
+              @if (s.card.suggestions.length) {
+                <button type="button" role="menuitem" class="menu-item" (click)="planAll(s.card.id, menu)">
+                  {{ 'planningLab.ctx.addAll' | translate: { n: s.card.suggestions.length } }}
+                </button>
+              }
+              <button type="button" role="menuitem" class="menu-item" (click)="projects(menu)">{{ 'planningLab.changeProjects' | translate }}</button>
+              @if (s.card.rows.length) {
+                <hr class="menu-sep" />
+                <button type="button" role="menuitem" class="menu-item menu-item--danger" (click)="goTo('clear', menu)">
+                  {{ 'planningLab.ctx.clear' | translate: { n: s.card.rows.length } }}
+                </button>
+              }
+            }
+          }
+        }
+      }
+    }
+  </div>
+</app-context-menu>

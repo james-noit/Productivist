@@ -18,8 +18,10 @@ import { ProjectsService } from '../../../services/projects.service';
 import { RecurrenceService } from '../../../services/recurrence.service';
 import { SettingsService } from '../../../services/settings.service';
 import { TodosService } from '../../../services/todos.service';
+import { ContextMenuHostDirective, type ContextRequest } from '../../directives/context-menu-host.directive';
 import { IconComponent } from '../icon/icon.component';
 import { KebabMenuComponent } from '../kebab-menu/kebab-menu.component';
+import { PlanContextMenuComponent, type PlanContextKind } from '../plan-context-menu/plan-context-menu.component';
 import { RepeatMarkComponent } from '../repeat-mark/repeat-mark.component';
 import { TaskDetailModalComponent } from '../task-detail-modal/task-detail-modal.component';
 import { TaskPickerComponent } from '../task-picker/task-picker.component';
@@ -69,13 +71,26 @@ interface DropSpot {
   beforeId: string | null;
 }
 
+/** One open context menu. `id` is new each time, so a menu opened over another is a fresh component. */
+interface PlanContextRequest {
+  id: number;
+  x: number;
+  y: number;
+  kind: PlanContextKind;
+  taskId: string | null;
+  objectiveId: string | null;
+  returnFocus: HTMLElement | null;
+}
+
 /**
  * Step 3 of Plan my day: one card per objective, in the order of step 1. Each card lists the tasks planned for the
  * objective (reorderable: that order is the execution order of the Planned tasks list and the lots), the projects
  * linked to it in step 2 and a few suggestions from them; tasks come in through the common `task-picker`
  * (scoped to those projects), the suggestions or an inline new-task field. Only the planned rows are draggable
  * (by their grip, with a small title chip as the drag image); the row menu and Alt + Up/Down are the touch and
- * keyboard paths. Everything the template reads is in the `cards` computed.
+ * keyboard paths, and a right-click, long-press or Menu key on a planned row, a suggestion or a card opens
+ * `plan-context-menu` (lazy; `appContextMenuHost` on the root, `data-ctx` on the three targets, the browser's own
+ * menu everywhere else). Everything the template reads is in the `cards` computed.
  */
 @Component({
   selector: 'app-plan-objectives-step',
@@ -88,6 +103,8 @@ interface DropSpot {
     RepeatMarkComponent,
     TaskPickerComponent,
     TaskDetailModalComponent,
+    ContextMenuHostDirective,
+    PlanContextMenuComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './plan-objectives-step.component.html',
@@ -367,7 +384,7 @@ export class PlanObjectivesStepComponent {
     event.preventDefault();
     if (event.dataTransfer) event.dataTransfer.dropEffect = 'move';
     let before: string | null = null;
-    for (const row of (event.currentTarget as HTMLElement).querySelectorAll<HTMLElement>('[data-task]')) {
+    for (const row of (event.currentTarget as HTMLElement).querySelectorAll<HTMLElement>('[data-ctx="row"]')) {
       const box = row.getBoundingClientRect();
       if (event.clientY < box.top + box.height / 2) {
         before = row.dataset['task'] ?? null;
@@ -392,6 +409,93 @@ export class PlanObjectivesStepComponent {
     event.preventDefault();
     const before = spot?.objectiveId === card.id ? spot.beforeId : null;
     if (before !== id) this.dailyPlan.moveTask(id, card.id, before);
+  }
+
+  // --- Context menu ---
+
+  readonly contextMenu = signal<PlanContextRequest | null>(null);
+  /** The list the template loops over, so a new request re-creates the menu. */
+  protected readonly contextMenus = computed(() => {
+    const menu = this.contextMenu();
+    return menu ? [menu] : [];
+  });
+  private menuSeq = 0;
+  /** Where focus goes back to once the menu has closed (a dialog it opens hands focus back there). */
+  private menuReturnFocus: HTMLElement | null = null;
+
+  onContext(request: ContextRequest): void {
+    const target = request.target;
+    const kind = target?.dataset['ctx'];
+    if (!target || (kind !== 'row' && kind !== 'suggestion' && kind !== 'objective')) return;
+    let returnFocus = request.returnFocus;
+    // A press on a card's background: back to its Add tasks button rather than the first control in the card.
+    if (kind === 'objective' && !(returnFocus && returnFocus === document.activeElement)) {
+      returnFocus = target.querySelector<HTMLElement>('.pstep__add .button-ghost') ?? returnFocus;
+    }
+    this.contextMenu.set({
+      id: ++this.menuSeq,
+      x: request.x,
+      y: request.y,
+      kind,
+      taskId: target.dataset['task'] ?? null,
+      objectiveId: target.dataset['objective'] ?? null,
+      returnFocus,
+    });
+  }
+
+  closeContext(): void {
+    this.menuReturnFocus = this.contextMenu()?.returnFocus ?? null;
+    this.contextMenu.set(null);
+  }
+
+  /** The menu is gone and a dialog is about to open: it takes the focus that is now on `<body>` as its opener. */
+  private restoreFocus(): void {
+    const target = this.menuReturnFocus;
+    if (target?.isConnected) target.focus({ preventScroll: true });
+  }
+
+  openFromMenu(todoId: string): void {
+    this.restoreFocus();
+    this.detailId.set(todoId);
+  }
+
+  addTasksFromMenu(objectiveId: string): void {
+    this.restoreFocus();
+    this.openPicker(objectiveId);
+  }
+
+  newTaskFromMenu(objectiveId: string): void {
+    const card = this.cards().find((c) => c.id === objectiveId);
+    if (card) this.openNew(card);
+  }
+
+  addAllFromMenu(objectiveId: string): void {
+    const card = this.cards().find((c) => c.id === objectiveId);
+    if (!card) return;
+    for (const todo of card.suggestions) this.plan(todo.id, objectiveId);
+    this.focusAfter(card.suggestions[0]?.id ?? null, objectiveId);
+  }
+
+  changeProjectsFromMenu(): void {
+    this.back.emit();
+  }
+
+  planFromMenu(taskId: string, objectiveId: string): void {
+    this.plan(taskId, objectiveId);
+    this.focusAfter(taskId, objectiveId);
+  }
+
+  /** After a menu action: the task's title if it is still on a card, else the objective's Add tasks button. */
+  focusAfter(taskId: string | null, objectiveId: string): void {
+    afterNextRender(
+      () => {
+        const root = this.host.nativeElement;
+        const title = taskId ? root.querySelector<HTMLElement>(`[data-ctx="row"][data-task="${CSS.escape(taskId)}"] .pstep__title`) : null;
+        const add = root.querySelector<HTMLElement>(`[data-ctx="objective"][data-objective="${CSS.escape(objectiveId)}"] .pstep__add .button-ghost`);
+        (title ?? add)?.focus();
+      },
+      { injector: this.injector },
+    );
   }
 
   // --- Footer ---

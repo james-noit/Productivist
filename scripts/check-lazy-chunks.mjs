@@ -1,4 +1,4 @@
-// Fails when a project presentation (or the Flow-only code) leaked into the initial bundle.
+// Fails when a project presentation (or the Flow-only or Capacitor code) leaked into the initial bundle.
 //
 // Each presentation of the project detail view sits in its own `@defer (on immediate)` block so its code
 // loads the first time its tab opens, never before. Anything that imports one of those components from
@@ -85,7 +85,21 @@ const NEVER_INITIAL_UI = [
   component('milestone-quick-form'),
   component('pomodoro-popover'),
   component('pomodoro-chip'),
+  component('plan-context-menu'),
+  'src/app/directives/context-menu-host.directive.ts',
 ];
+
+/**
+ * The Capacitor integration (back button, end-of-session notification, splash). Reached only by the dynamic
+ * `import()` in `AppComponent` behind the native-bridge check, so neither these files nor any `@capacitor/*`
+ * package may be in an initial chunk (the web build never runs them).
+ */
+const NATIVE_ONLY = [
+  'src/core/native/native-app.ts',
+  'src/core/native/back-button.ts',
+  'src/core/native/session-notification.ts',
+];
+const NATIVE_PACKAGE_PREFIX = 'node_modules/@capacitor/';
 
 const inputsOf = (output) => Object.keys(output.inputs ?? {});
 const names = Object.keys(outputs).filter((name) => name.endsWith('.js'));
@@ -112,6 +126,12 @@ for (const name of initial) {
   for (const file of [...PRESENTATIONS, ...FLOW_ONLY, ...NEVER_INITIAL, ...NEVER_INITIAL_UI]) {
     if (inputs.includes(file)) problems.push(`${file} is in the initial chunk ${name}`);
   }
+  for (const file of NATIVE_ONLY) {
+    if (inputs.includes(file)) problems.push(`${file} is in the initial chunk ${name}`);
+  }
+  for (const file of inputs.filter((input) => input.startsWith(NATIVE_PACKAGE_PREFIX))) {
+    problems.push(`${file} (Capacitor) is in the initial chunk ${name}`);
+  }
 }
 for (const name of names) {
   const inputs = inputsOf(outputs[name]);
@@ -125,9 +145,14 @@ for (const file of PRESENTATIONS) {
   if (!names.some((name) => inputsOf(outputs[name]).includes(file))) problems.push(`${file} is in no chunk at all (renamed?)`);
 }
 
+// The native integration must exist as a lazy chunk (a missing one means AppComponent no longer loads it).
+for (const file of NATIVE_ONLY) {
+  if (!names.some((name) => inputsOf(outputs[name]).includes(file))) problems.push(`${file} is in no chunk at all (renamed?)`);
+}
+
 if (problems.length) {
   console.error('Lazy chunk check failed:');
   for (const problem of problems) console.error(`  - ${problem}`);
   process.exit(1);
 }
-console.log(`Lazy chunk check passed: ${PRESENTATIONS.length} presentations stay out of the ${initial.size} initial chunks.`);
+console.log(`Lazy chunk check passed: ${PRESENTATIONS.length} presentations and the native (Capacitor) code stay out of the ${initial.size} initial chunks.`);

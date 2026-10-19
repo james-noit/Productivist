@@ -38,6 +38,7 @@
       "network": "Could not reach the server. Try again later."
     },
     "manage": "Account and sync",
+    "privacy": "Privacy policy",
     "error": {
       "network": "Could not reach the server. Will retry.",
       "server": "The server rejected the sync. Will retry.",
@@ -481,6 +482,7 @@
     "openTask": "Open task",
     "reorder": "Drag to reorder (Alt + arrows with the keyboard)",
     "inObjective": "In: {{objective}}",
+    "ctx": { "moveUp": "Move up", "moveDown": "Move down", "moveTop": "Move to top", "remove": "Remove", "planHere": "Plan in “{{objective}}”", "planIn": "Plan in…", "addAll": "Add all suggestions ({{n}})", "clear": "Clear planned tasks ({{n}})", "clearConfirm": "Remove {{n}} tasks from this objective?" },
     "nothingPlanned": "Nothing planned yet.",
     "count": { "one": "{{n}} task", "other": "{{n}} tasks" },
     "estimate": { "one": "≈ {{n}} pomodoro", "other": "≈ {{n}} pomodoros" },

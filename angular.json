@@ -82,6 +82,17 @@
                 "styles": { "minify": true, "inlineCritical": false },
                 "fonts": false
               }
+            },
+            // Layered on top of production for the Capacitor apps (Android and iOS). Same idea as the
+            // Thunderbird one: an absolute API URL, generated from API_URL by scripts/write-mobile-environment.mjs.
+            // The WebView is not an extension page, so critical-CSS inlining stays on.
+            "mobile": {
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.mobile.ts"
+                }
+              ]
             }
           },
           "defaultConfiguration": "production"

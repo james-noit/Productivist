@@ -47,7 +47,18 @@ export class ClockService {
   // Wall-clock deadline for the current session (ms since epoch). Remaining time
   // is always derived from this against Date.now(), so a throttled or hidden
   // tab can never make the clock run slow.
-  private endAt: number | null = null;
+  private get endAt(): number | null {
+    return untracked(this.endAtSignal);
+  }
+  private set endAt(value: number | null) {
+    this.endAtSignal.set(value);
+  }
+  private readonly endAtSignal = signal<number | null>(null);
+  /**
+   * Read-only view of that deadline (null while paused), for what has to schedule something at it from outside:
+   * the native app's end-of-session notification (`src/core/native`). Nothing in here depends on it.
+   */
+  readonly endsAt = this.endAtSignal.asReadonly();
   private restoring = true;
 
   /** True while the end-of-session sound is ringing (the header offers "Stop alarm"). */

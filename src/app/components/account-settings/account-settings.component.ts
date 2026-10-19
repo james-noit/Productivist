@@ -15,6 +15,7 @@ import { TranslatePipe } from '@ngx-translate/core';
 import { ApiError } from '../../../core/api';
 import { AccountService } from '../../../services/account.service';
 import { SyncService } from '../../../services/sync.service';
+import { environment } from '../../../environments/environment';
 
 type DeleteError = 'wrongPassword' | 'admin' | 'session' | 'network';
 
@@ -32,6 +33,14 @@ export class AccountSettingsComponent {
   readonly sync = inject(SyncService);
   private readonly injector = inject(Injector);
 
+  /**
+   * The hosted page, not the bundled copy: in the Android/iOS apps a link to the bundle would replace the app inside
+   * its WebView with no way back, while an off-origin URL opens in the system browser. apiUrl is the web's own
+   * origin in every build that has an account block (empty, i.e. same origin, on the web). Set from code: a bound
+   * `[href]` pulls Angular's URL sanitizer into the initial bundle.
+   */
+  private readonly privacyLink = viewChild<ElementRef<HTMLAnchorElement>>('privacyLink');
+
   readonly confirming = signal(false);
   readonly password = signal('');
   readonly busy = signal(false);
@@ -43,6 +52,11 @@ export class AccountSettingsComponent {
   private readonly passwordInput = viewChild<ElementRef<HTMLInputElement>>('passwordInput');
 
   constructor() {
+    effect(() => {
+      const link = this.privacyLink()?.nativeElement;
+      if (link) link.href = `${environment.apiUrl}/privacy.html`;
+    });
+
     // A later sign-in must not leave a stale "Account deleted" behind.
     effect(() => {
       if (this.accounts.account()) this.deleted.set(false);

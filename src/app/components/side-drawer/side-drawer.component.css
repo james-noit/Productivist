@@ -49,6 +49,8 @@
 
 .drawer__head {
   border-bottom: 1px solid var(--color-border);
+  padding-top: max(0.85rem, env(safe-area-inset-top));
+  padding-right: max(1.25rem, env(safe-area-inset-right));
 }
 
 .drawer__foot {

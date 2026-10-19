@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, effect, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Injector, effect, inject } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
 import { SettingsService, type Language } from '../services/settings.service';
 import { ClockService } from '../services/clock.service';
@@ -20,6 +20,11 @@ import { ProjectDetailViewComponent } from './components/project-detail-view/pro
 import { ProjectsViewComponent } from './components/projects-view/projects-view.component';
 import { AdminViewComponent } from './components/admin-view/admin-view.component';
 import en from '../i18n/locales/en.json';
+
+/** The bridge Capacitor injects into its WebView; reading it imports nothing. */
+type CapacitorGlobal = {
+  Capacitor?: { isNativePlatform?: () => boolean; nativePromise?: (plugin: string, method: string, options?: object) => Promise<unknown> };
+};
 
 @Component({
   selector: 'app-root',
@@ -50,6 +55,7 @@ export class AppComponent {
   readonly clock = inject(ClockService);
   readonly accounts = inject(AccountService);
   private readonly translate = inject(TranslateService);
+  private readonly injector = inject(Injector);
 
   private readonly loaded = new Set<Language>(['en']);
 
@@ -70,6 +76,8 @@ export class AppComponent {
     // users never switch to.
     this.translate.setTranslation('en', en);
 
+    this.startNativeApp();
+
     effect(() => {
       document.documentElement.setAttribute('data-theme', this.settings.theme());
     });
@@ -79,6 +87,20 @@ export class AppComponent {
       document.documentElement.setAttribute('lang', language);
       void this.useLanguage(language);
     });
+  }
+
+  /**
+   * In the Android and iOS apps only: back button, end-of-session notification and splash (`src/core/native`).
+   * A dynamic import behind the bridge check, so the web build never loads or even contains Capacitor in its
+   * initial bundle. If the chunk cannot load the splash is hidden through the bridge so it never sticks.
+   */
+  private startNativeApp(): void {
+    const capacitor = (window as CapacitorGlobal).Capacitor;
+    if (!capacitor?.isNativePlatform?.()) return;
+    import('../core/native/native-app').then(
+      ({ startNative }) => startNative(this.injector),
+      () => void capacitor.nativePromise?.('SplashScreen', 'hide', {})?.catch(() => undefined),
+    );
   }
 
   private async useLanguage(language: Language): Promise<void> {

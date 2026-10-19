@@ -21,6 +21,10 @@ p {
   color: var(--color-high);
 }
 
+.account-settings__privacy {
+  color: inherit;
+}
+
 .account-settings__actions {
   display: flex;
   gap: 0.4rem;

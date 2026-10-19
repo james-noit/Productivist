@@ -48,7 +48,7 @@
   display: flex;
   flex-direction: column;
   gap: 0.9rem;
-  padding: 1rem;
+  padding: max(1rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right)) max(1rem, env(safe-area-inset-bottom)) 1rem;
   overflow-y: auto;
   box-shadow: -8px 0 24px rgba(0, 0, 0, 0.25);
   animation: task-drawer-slide-in 0.2s ease-out;

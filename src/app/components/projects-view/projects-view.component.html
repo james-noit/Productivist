@@ -1,11 +1,9 @@
 <main
   class="projects-view"
-  (contextmenu)="onContextMenu($event)"
-  (keydown)="onPageKeydown($event)"
-  (pointerdown)="onPagePointerDown($event)"
-  (pointermove)="onPagePointerMove($event)"
-  (pointerup)="onPagePointerEnd()"
-  (pointercancel)="onPagePointerEnd()"
+  appContextMenuHost
+  contextTargets="[data-project-id]"
+  contextFocus="h3 button"
+  (contextRequested)="openMenu($event)"
 >
   <header class="projects-view__header">
     <div class="projects-view__heading">

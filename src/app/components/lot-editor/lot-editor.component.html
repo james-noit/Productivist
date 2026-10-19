@@ -1,7 +1,14 @@
-<div class="lot-list">
+<div
+  class="lot-list"
+  appContextMenuHost
+  contextTargets="[data-ctx]"
+  [contextFallback]="false"
+  (contextRequested)="onContext($event)"
+>
   @for (row of rows(); track row.id) {
     <div
       class="lot"
+      [attr.data-lot]="row.id"
       [class.lot--locked]="row.locked"
       [class.lot--active]="row.active"
       [class.lot--target]="armed() && !row.locked"
@@ -9,7 +16,7 @@
       (drop)="!row.locked && place({ lotId: row.id })"
       (click)="!row.locked && place({ lotId: row.id })"
     >
-      <div class="lot__header">
+      <div class="lot__header" [attr.data-ctx]="!row.locked && !row.active && (row.canUp || row.canDown) ? 'lot' : null">
         <span class="lot__index">
           {{ 'planningLab.lotLabel' | translate: { n: row.n } }}
           @if (row.active) {
@@ -44,6 +51,8 @@
         @for (task of row.tasks; track task.id) {
           <li
             class="lot-task"
+            [attr.data-ctx]="row.locked ? null : 'lot-task'"
+            [attr.data-task]="task.id"
             [class.lot-task--armed]="armed() === task.id"
             [class.lot-task--done]="task.done"
             [attr.draggable]="row.locked ? null : 'true'"
@@ -90,4 +99,25 @@
   >
     <span aria-hidden="true">+</span> {{ 'planningLab.newLot' | translate }}
   </button>
+
+  @for (menu of contextMenus(); track menu.id) {
+    <app-context-menu #cm="contextMenu" [x]="menu.x" [y]="menu.y" [label]="menu.label" [returnFocus]="menu.returnFocus" (dismissed)="closeContext()">
+      <div class="menu-heading">{{ menu.heading }}</div>
+      @if (menu.taskId; as taskId) {
+        @for (target of menu.targets; track target.id) {
+          <button type="button" class="menu-item" role="menuitem" (click)="moveFromMenu(taskId, { lotId: target.id }, cm)">
+            {{ 'planningLab.lotLabel' | translate: { n: target.n } }}
+          </button>
+        }
+        <button type="button" class="menu-item" role="menuitem" (click)="moveFromMenu(taskId, 'newLot', cm)">{{ 'planningLab.newLot' | translate }}</button>
+      } @else {
+        @if (menu.canUp) {
+          <button type="button" class="menu-item" role="menuitem" (click)="moveLotFromMenu(menu.lotId, -1, cm)">{{ 'planningLab.moveLotUp' | translate }}</button>
+        }
+        @if (menu.canDown) {
+          <button type="button" class="menu-item" role="menuitem" (click)="moveLotFromMenu(menu.lotId, 1, cm)">{{ 'planningLab.moveLotDown' | translate }}</button>
+        }
+      }
+    </app-context-menu>
+  }
 </div>
