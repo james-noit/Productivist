@@ -1,0 +1,133 @@
+.irm {
+  --modal-max-width: 36rem;
+  --modal-max-height: min(85vh, 40rem);
+  --modal-padding: 0;
+  --modal-gap: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.irm__head,
+.irm__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.85rem 1rem;
+}
+
+.irm__head h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.irm__foot {
+  justify-content: flex-end;
+  border-top: 1px solid var(--color-border);
+}
+
+.irm__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0 1rem 1rem;
+}
+
+.irm__body p {
+  margin: 0;
+  font-size: 0.85rem;
+}
+
+.irm__muted {
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+}
+
+.irm__error {
+  color: var(--color-high);
+}
+
+.irm__list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.irm__item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding-right: 0.5rem;
+}
+
+.irm__item--selected {
+  border-color: var(--color-primary);
+}
+
+.irm__repo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 0.55rem 0.75rem;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  border-radius: 8px;
+}
+
+.irm__repo:disabled {
+  cursor: default;
+}
+
+.irm__repo:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
+}
+
+.irm__path {
+  font-size: 0.85rem;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.irm__badges {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.irm__desc {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.irm__empty {
+  padding: 0.5rem 0;
+}
+
+.irm__more {
+  align-self: center;
+}
+
+.irm__options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}

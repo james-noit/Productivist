@@ -13,6 +13,7 @@ import { ProjectTaskListComponent } from '../project-task-list/project-task-list
 import { ProjectOverviewComponent } from '../project-overview/project-overview.component';
 import { ProjectRoadmapComponent } from '../project-roadmap/project-roadmap.component';
 import { ProjectCalendarComponent } from '../project-calendar/project-calendar.component';
+import { ProjectForgeStatusComponent } from '../project-forge-status/project-forge-status.component';
 import { ProjectFlowComponent } from '../project-flow/project-flow.component';
 
 interface PresentationTab {
@@ -37,7 +38,7 @@ const PRESENTATIONS: readonly PresentationTab[] = [
   selector: 'app-project-detail-view',
   standalone: true,
   // The presentations are only used inside @defer blocks, so each gets its own chunk.
-  imports: [TranslatePipe, IconComponent, UiIconComponent, EditProjectModalComponent, KanbanBoardComponent, ProjectOverviewComponent, ProjectTaskListComponent, EisenhowerViewComponent, ProjectRoadmapComponent, ProjectCalendarComponent, ProjectFlowComponent],
+  imports: [TranslatePipe, IconComponent, UiIconComponent, EditProjectModalComponent, KanbanBoardComponent, ProjectOverviewComponent, ProjectTaskListComponent, EisenhowerViewComponent, ProjectRoadmapComponent, ProjectCalendarComponent, ProjectFlowComponent, ProjectForgeStatusComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './project-detail-view.component.html',
   styleUrl: './project-detail-view.component.css',

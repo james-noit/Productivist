@@ -137,6 +137,11 @@ export class ProjectsContextMenuComponent {
     this.view.openRecurring('new');
   }
 
+  importFromGit(menu: { close(): void }): void {
+    menu.close();
+    this.state.openImport(this.returnFocus());
+  }
+
   planMyDay(menu: { close(): void }): void {
     menu.close();
     this.view.openPlanning();

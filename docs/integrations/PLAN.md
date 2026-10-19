@@ -168,7 +168,7 @@ project.
 
 ---
 
-## 3. Phase 1: read-only import and refresh (GitHub, GitLab, Gitea/Forgejo with CORS)
+## 3. Phase 1: read-only import and refresh (GitHub, GitLab, Gitea/Forgejo with CORS) — DONE
 
 ### 3.1 Pure libraries (lazy; never imported by `AppComponent`, the header, the menu or root services)
 
@@ -306,7 +306,7 @@ transport files of phase 3). Run `npm run check:lazy`.
 
 ---
 
-## 5. Phase 3: transports for instances without CORS
+## 5. Phase 3: transports for instances without CORS — DONE
 
 Introduce `ForgeTransport = (url: string, init: { headers: Record<string, string>; method: 'GET' | 'PATCH' | 'POST'; body?: string }) => Promise<Response-like>`
 and pick it per connection: try `direct` first; on a `cors` error offer the next available one and remember the
@@ -470,3 +470,34 @@ responses), and the UI in the dev server. For a local Gitea/Forgejo to test CORS
 ```bash
 docker run --rm -p 3000:3000 codeberg.org/forgejo/forgejo:11
 ```
+
+---
+
+## 11. Status
+
+**Phases 1 and 3 are implemented** (0.22.0). Phases 2, 4 and 5 are not. Deviations from the text above:
+
+- `listIssues` returns `{ issues, truncated }` (the 2 000 issue / 50 page cap is reported, and the refresh cursor does not advance when it hits it); the next refresh asks for issues changed since `lastSyncedAt` minus one minute (clock skew).
+- `owner/name` typed in the import dialog is looked up directly; GitHub and Gitea accept exactly two segments (a deeper path 404s without CORS headers and would read as a CORS failure), GitLab accepts nested groups.
+- An empty token sends no `Authorization` header (public repositories read anonymously). The UI still asks for a token.
+- The forge strings (all but `forge.fab` and `config.integrations`) are a lazy chunk (`src/i18n/forge-texts.ts`, merged by `lib/forge-texts.ts`), not part of `en.json`; initial bundle +1.6 kB over 311.19 kB.
+- Phase 3: the relay is `POST /api/forge/relay` (GET only for now), the transports live in `lib/forge-transport.ts`, the Thunderbird permission is requested from the click that picks the fallback (offered after a CORS error), the mobile transport is `core/native/native-http.ts`. `FORGE_RELAY_UNSAFE_DEV_ALLOW_HTTP_AND_PRIVATE` is a development-only switch.
+
+**Verified automatically / locally** (no real token, no non-local accounts):
+
+- Pure mappers, merge rules, pagination and error mapping with a throwaway Node script over stubbed responses; sync hashes of rows without `source` unchanged and `source` stable through Postgres null round trips.
+- Public GitHub (`tj/commander.js`: milestones, closed/open, refresh without duplicates), Codeberg (`Codeberg/Community`, 433 issues = 9 headerless pages), GitLab.com (`libtiff/libtiff`, 101 issues over two pages).
+- A local Forgejo 12 in Docker with a generated test user and token: 120 issues, 2 milestones, a label. With CORS off the app shows the CORS help (not "token rejected"); with `[cors]` on: import, pagination past 50, no duplicates on re-import, closing an issue + Refresh marks it done, a local importance edit survives a remote title edit.
+- Local backend + Postgres, two browser origins signed in to the same test account: import in one, sync into the other, refresh there (through the relay) with one remote edit: 119 tasks on both, no duplicates, and only the edited task and the project row were pushed again.
+- Relay: with CORS off, "Use the Productivist server" imports from the local Forgejo (dev flag on); with the dev flag **off** it answers 401 unauthenticated, and 400 for every private/loopback/link-local/CGNAT/multicast address (v4, v6, v4-mapped, NAT64, and names that resolve to them), `http`, credentials in the URL, non-allowlisted paths and dot segments, header injection and non-GET methods; real `https` GETs to codeberg.org and api.github.com (pinned connection, SNI) succeed. The relay is not offered when signed out.
+- `npm run build`, `npm run check:lazy`, `npm run build:tb`, `npm run tb:lint`, `npm run build:mobile` (without `API_URL`; `cap sync` worked and the Android/iOS version numbers moved to 0.22.0), backend `mvn compile`, `nginx -t` on the rendered template.
+
+**Not run here** (manual checklist):
+
+1. **GitHub, real token**: create a fine-grained read-only token (Issues: Read) in *Configuration → Integrations → GitHub*, import a **private** repository: project, milestones and open issues appear, pull requests do not; *Refresh* after closing an issue and after editing a title.
+2. **GitLab, real token** (`read_api`): import a project that has milestones with start and due dates; the dates must land unchanged. gitlab.com refuses anonymous milestone reads, so this was only covered by the pure tests.
+3. **Codeberg/Gitea with a token** (issue + repository + user read): *Test and save* shows `@username`.
+4. **Thunderbird** (`npm run build:tb`, `npm run tb:run`): import from GitHub works; for a self-hosted Gitea/Forgejo without CORS, *Allow access to this server* shows Thunderbird's permission prompt and the import then works. (`tb:lint` passes; the prompt itself was not exercised.)
+5. **Android / iOS** (`npm run build:mobile` with `API_URL`, then Android Studio / Xcode): for a server without CORS, *Use this device's network stack* works (`CapacitorHttp`); cleartext `http://` hosts need the platform's cleartext setting. Check that the sync still goes through the WebView's normal `fetch`.
+6. **Relay in production**: with a signed-in web session and a self-hosted Forgejo reachable over https from the server, *Use the Productivist server* imports; the backend must run **without** `FORGE_RELAY_UNSAFE_DEV_ALLOW_HTTP_AND_PRIVATE`. Check the nginx `forge` zone answers 429 under a burst.
+7. A real SAML/organisation GitHub token (SSO authorisation) and rate-limit behaviour (`Retry-After`) were not exercised.

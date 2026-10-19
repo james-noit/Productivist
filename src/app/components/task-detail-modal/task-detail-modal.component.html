@@ -50,6 +50,14 @@
             <span>{{ meta().statusKey | translate }}</span>
           }
         </p>
+        @if (forgeReady() && todo().source; as src) {
+          <p class="td__source">
+            <app-ui-icon name="git" [size]="12" />
+            {{ 'forge.from' | translate: { ref: forgeRef(src) } }}
+            <a class="td__source-link" [appExternalHref]="src.url">{{ 'forge.openOn' | translate: { name: forgeName(src) } }} ↗</a>
+          </p>
+          <p class="td__source td__source--hint">{{ 'forge.hint' | translate }}</p>
+        }
       </div>
 
       <button type="button" class="btn btn--ghost btn--icon" [attr.aria-label]="'todo.close' | translate" [title]="'todo.close' | translate" (click)="requestClose()">

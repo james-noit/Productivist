@@ -77,6 +77,13 @@
               }
             </div>
           </section>
+        } @else if (section() === 'integrations') {
+          <section class="config-modal__section" aria-labelledby="config-integrations">
+            <h3 id="config-integrations">{{ 'config.integrations' | translate }}</h3>
+            @defer (on immediate) {
+              <app-forge-connections-settings />
+            }
+          </section>
         } @else {
           <section class="config-modal__section" aria-labelledby="config-account">
             <h3 id="config-account">{{ 'config.account' | translate }}</h3>

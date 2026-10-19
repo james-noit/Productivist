@@ -25,7 +25,8 @@ Schema is managed by Flyway (`src/main/resources/db/migration`).
 | POST | `/api/auth/login` `{email, password}` | Returns `{email, token}`; 401 for any wrong email or password. |
 | DELETE | `/api/account` `{password}` | Deletes the caller's own account and every synced row under it (projects, tasks, Flow data, recurrences, settings), and with it every session, so all devices are signed out. 204 on success; 400 for a missing password; 403 for a wrong one (not 401, which clients read as an expired session); 409 for the admin account. |
 | GET | `/api/sync?since=<cursor>` | Rows changed after `cursor` (0 = all), tombstones included, plus `state` if changed. Returns the next `cursor`. |
-| POST | `/api/sync` | Upserts `{projects, milestones, todos, objectives, flowLinks, flowLayouts, recurrences, state}` (the Flow and recurrence lists are optional, so older clients keep working; a todo may carry `recurrenceId`). Last-write-wins on each row's `updatedAt`. Returns `{cursor}`. |
+| POST | `/api/sync` | Upserts `{projects, milestones, todos, objectives, flowLinks, flowLayouts, recurrences, state}` (the Flow and recurrence lists are optional, so older clients keep working; a todo may carry `recurrenceId`; a project, milestone or todo imported from a Git forge may carry `source`, see below). Last-write-wins on each row's `updatedAt`. Returns `{cursor}`. |
+| POST | `/api/forge/relay` `{url, method?, headers?}` | Signed-in users only. Fetches one Git forge API URL on the caller's behalf, for Gitea/Forgejo servers whose CORS settings block the browser, and answers `{status, headers, body}` with the forge's own status inside (see *Forge relay* below). The relay's own refusals are plain HTTP errors: 400 (target not allowed), 413 (response over 5 MB), 429 (busy), 502/504 (upstream failed or timed out). |
 | GET | `/api/admin/me` | Admin only (403 for everyone else): `{email}`. The frontend uses it to decide whether to show the admin view. |
 | GET | `/api/admin/stats` | Admin only: account, session, task and project totals. |
 | GET | `/api/admin/users?query=&page=&size=` | Admin only: accounts newest first, filtered by email substring, with their task/project/session counts (never their content). |
@@ -74,3 +75,43 @@ Two services plus Postgres; only the frontend has a public domain.
   is `https://localhost` on Android and `capacitor://localhost` on iOS, so both must be in `CORS_ALLOWED_ORIGINS`.
   The default in `application.yml` already has them, but a `CORS_ALLOWED_ORIGINS` variable set on Railway replaces
   the default: add them there too, or the apps' requests are rejected.
+
+### Forge import (`source`)
+
+Projects, milestones and todos imported from GitHub, GitLab or Gitea/Forgejo carry an optional `source` object
+(`V7__forge_source.sql`: a nullable `JSONB` column on each table; `SyncDtos.SourceDto`): `kind` (`github|gitlab|gitea`),
+`host`, `repoId`, `repoPath`, `url`, and optionally `number`, `remoteUpdatedAt`, `remoteState` (`open|closed`) and, on a
+project, `options` (`includeClosed`, `onlyAssignedToMe`, `importMilestones`, `labelsAsTags`, `lastSyncedAt`). The client
+sends it only when set. Every component is a wrapper type (`Boolean`, `Integer`, `Long`), never a primitive: Jackson 3
+rejects an absent primitive record component, which would reject the whole push. `kind`, `host`, `repoId` and `url` are
+required when a source is present. It never holds a secret: the personal access token used to import stays on the device
+and is not synced, exported or sent to this backend.
+
+### Forge relay (`POST /api/forge/relay`)
+
+An optional transport of the Git forge import (`docs/integrations/PLAN.md`, phase 3). A self-hosted Gitea or Forgejo has CORS
+off by default, so the browser cannot call it; a signed-in user can ask this endpoint to make the (read-only, `GET`) request
+instead. **The user's personal access token passes through the backend in transit**, in the `Authorization` header: it is
+not stored, not logged and not written anywhere, and nothing about a request or its answer is logged. The client offers the
+relay only while sync is enabled and the user is signed in, after the direct request failed with a CORS error, and says that
+the token passes through the server.
+
+Because it makes requests to addresses the user types, it is built not to be an open proxy or a way into the server's network
+(`ForgeRelayGuard`, `PinnedHttpClient`):
+
+- `https` only, no credentials or fragment in the URL; `GET` only; the path must be `/api/v1/`, `/api/v3/` or `/api/v4/` (Gitea and
+  Forgejo, GitHub Enterprise, GitLab) or anything on `api.github.com`; dot segments (also percent-encoded) are refused.
+- The host name is resolved and **every** address it resolves to must be public: loopback, `0.0.0.0/8`, private (RFC 1918),
+  link-local (cloud metadata `169.254.169.254` included), carrier-grade NAT `100.64.0.0/10`, multicast, reserved, benchmarking and
+  documentation ranges, and for IPv6 `::`, `::1`, `fc00::/7`, `fe80::/10`, `ff00::/8`, `2001:db8::/32`, plus IPv4 addresses embedded
+  in v4-mapped, v4-compatible, 6to4 and NAT64 forms. The connection then goes to **the address that was checked** (not a second
+  lookup), with the original name for SNI and certificate verification, so DNS rebinding cannot swap the destination.
+- Redirects are not followed, 10 s overall timeout, 5 MB response cap, at most 16 relays at once.
+- Only `Authorization`, `Accept`, `If-None-Match` and `Content-Type` are forwarded (values with control characters are refused);
+  only pagination, caching and rate-limit headers (`Link`, `ETag`, `X-Next-Page`, `X-Total*`, `X-RateLimit-*`, `Retry-After`,
+  `Content-Type`) come back.
+- nginx gives it its own `limit_req` zone (`forge`: 5 requests/s per client address, burst 20; `deploy/nginx.conf.template`).
+
+`FORGE_RELAY_UNSAFE_DEV_ALLOW_HTTP_AND_PRIVATE=true` lifts the scheme and address rules so the relay can be tried against a forge
+on `localhost` (for example a local Forgejo in Docker). **Development only, never set it in production**; it is off by default and
+the backend logs a warning at startup when it is on.

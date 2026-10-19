@@ -5,7 +5,7 @@
 // outside a @defer pulls it back into the initial chunk, which is easy to do by accident and invisible
 // until the bundle budget trips. Run after a build made with `--stats-json` (`npm run check:lazy` does
 // both); pass another stats file as the first argument.
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 
 const statsPath = process.argv[2] ?? 'dist/productivist/stats.json';
 const { outputs } = JSON.parse(readFileSync(statsPath, 'utf8'));
@@ -87,6 +87,22 @@ const NEVER_INITIAL_UI = [
   component('pomodoro-chip'),
   component('plan-context-menu'),
   'src/app/directives/context-menu-host.directive.ts',
+  // Git forge import: only the Configuration > Integrations section, the import dialog, the project header strip and the
+  // lazy pages load these; `lib/forge-source.ts` (sync codecs, import sanitising) and `types/forge.ts` types are eager.
+  component('forge-connections-settings'),
+  component('forge-error'),
+  'src/lib/forge-transport.ts',
+  component('import-repo-modal'),
+  component('project-forge-status'),
+  'src/lib/forge-map.ts',
+  'src/lib/forge-adapters.ts',
+  'src/lib/forge-flavors.ts',
+  'src/lib/forge-sanitize.ts',
+  'src/lib/forge-texts.ts',
+  'src/i18n/forge-texts.ts',
+  'src/services/forge-connections.service.ts',
+  'src/services/forge-import.service.ts',
+  'src/app/directives/external-href.directive.ts',
 ];
 
 /**
@@ -98,6 +114,8 @@ const NATIVE_ONLY = [
   'src/core/native/native-app.ts',
   'src/core/native/back-button.ts',
   'src/core/native/session-notification.ts',
+  // The Git forge import's HTTP transport for the mobile apps (CapacitorHttp), loaded per call by lib/forge-transport.ts.
+  'src/core/native/native-http.ts',
 ];
 const NATIVE_PACKAGE_PREFIX = 'node_modules/@capacitor/';
 
@@ -148,6 +166,18 @@ for (const file of PRESENTATIONS) {
 // The native integration must exist as a lazy chunk (a missing one means AppComponent no longer loads it).
 for (const file of NATIVE_ONLY) {
   if (!names.some((name) => inputsOf(outputs[name]).includes(file))) problems.push(`${file} is in no chunk at all (renamed?)`);
+}
+
+// Nothing outside src/core/native may import Capacitor or the native files, except the two dynamic entries (AppComponent ->
+// native-app, lib/forge-transport.ts -> native-http). A static import elsewhere would put the plugins in the initial bundle.
+const NATIVE_ENTRIES = new Set(['src/app/app.component.ts', 'src/lib/forge-transport.ts']);
+const walk = (dir) =>
+  readdirSync(dir, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? walk(`${dir}/${e.name}`) : e.name.endsWith('.ts') ? [`${dir}/${e.name}`] : []));
+for (const file of walk('src')) {
+  if (file.startsWith('src/core/native/') || NATIVE_ENTRIES.has(file)) continue;
+  if (/(from|import)\s*\(?\s*['"][^'"]*(core\/native\/|@capacitor\/)/.test(readFileSync(file, 'utf8'))) {
+    problems.push(`${file} imports Capacitor or src/core/native/*; only ${[...NATIVE_ENTRIES].join(' and ')} may (dynamically)`);
+  }
 }
 
 if (problems.length) {

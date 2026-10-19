@@ -10,6 +10,8 @@ map $http_x_forwarded_for $client_ip {
 
 limit_req_zone $client_ip zone=api:10m   rate=20r/s;
 limit_req_zone $client_ip zone=login:10m rate=10r/m;
+# The Git forge relay makes an outbound request per call (up to 10 s each), so it gets a much tighter budget than /api/.
+limit_req_zone $client_ip zone=forge:10m rate=5r/s;
 limit_req_status 429;
 
 server {
@@ -37,6 +39,12 @@ server {
     # Only /api/ reaches the backend: its actuator and anything else stay unreachable from outside.
     location ~ ^/api/auth/(login|signup)$ {
         limit_req zone=login burst=5 nodelay;
+        set $backend "${BACKEND_ORIGIN}";
+        include /etc/nginx/proxy-api.conf;
+    }
+
+    location = /api/forge/relay {
+        limit_req zone=forge burst=20 nodelay;
         set $backend "${BACKEND_ORIGIN}";
         include /etc/nginx/proxy-api.conf;
     }

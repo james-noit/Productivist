@@ -6,6 +6,7 @@ import {
   Injector,
   afterNextRender,
   computed,
+  effect,
   inject,
   input,
   linkedSignal,
@@ -14,7 +15,7 @@ import {
   untracked,
   viewChild,
 } from '@angular/core';
-import { TranslatePipe } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { isIsoDate, orderedDates, parseIso, todayIso } from '../../../lib/dates';
 import { trapTab } from '../../../lib/focus-trap';
 import { AutoGrowDirective } from '../../directives/auto-grow.directive';
@@ -28,6 +29,9 @@ import {
   ProjectMilestonePickerComponent,
   NEW_REF,
 } from '../project-milestone-picker/project-milestone-picker.component';
+import { forgeName, forgeRef } from '../../../lib/forge-flavors';
+import { loadForgeTexts } from '../../../lib/forge-texts';
+import { ExternalHrefDirective } from '../../directives/external-href.directive';
 import { NumberStepperComponent } from '../number-stepper/number-stepper.component';
 import { TagInputComponent } from '../tag-input/tag-input.component';
 import {
@@ -122,12 +126,15 @@ let nextUid = 0;
     UiIconComponent,
     RecurrenceEditorComponent,
     AutoGrowDirective,
+    ExternalHrefDirective,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './task-detail-modal.component.html',
   styleUrl: './task-detail-modal.component.css',
 })
 export class TaskDetailModalComponent {
+  protected readonly forgeName = forgeName;
+  protected readonly forgeRef = forgeRef;
   private readonly todos = inject(TodosService);
   private readonly projects = inject(ProjectsService);
   private readonly settings = inject(SettingsService);
@@ -235,7 +242,16 @@ export class TaskDetailModalComponent {
   private pressedOnBackdrop = false;
   private focusBeforeConfirm: HTMLElement | null = null;
 
+  /** Set once the Git forge strings are in (`lib/forge-texts.ts`, a lazy chunk); only an imported task needs them. */
+  readonly forgeReady = signal(false);
+  private readonly translateService = inject(TranslateService);
+
   constructor() {
+    effect(() => {
+      if (this.todo().source && !untracked(this.forgeReady)) {
+        void loadForgeTexts(this.translateService).then(() => this.forgeReady.set(true));
+      }
+    });
     afterNextRender(() => this.panel().nativeElement.focus({ preventScroll: true }));
     inject(DestroyRef).onDestroy(() => {
       if (this.opener?.isConnected) this.opener.focus({ preventScroll: true });

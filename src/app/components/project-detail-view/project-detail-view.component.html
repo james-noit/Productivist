@@ -18,6 +18,11 @@
         @if (project.description) {
           <p class="project-detail__description">{{ project.description }}</p>
         }
+        @if (project.source) {
+          @defer (on immediate) {
+            <app-project-forge-status [project]="project" />
+          }
+        }
       </div>
       <div class="project-detail__progress">
         <span class="project-detail__progress-text">

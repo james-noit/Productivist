@@ -1,0 +1,45 @@
+:host {
+  display: block;
+}
+
+.pfs {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
+.pfs__link {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.pfs__error {
+  color: var(--color-high);
+}
+
+.pfs__spin {
+  display: inline-flex;
+  animation: pfs-spin 0.9s linear infinite;
+}
+
+@keyframes pfs-spin {
+  to {
+    transform: rotate(-360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pfs__spin {
+    animation: none;
+  }
+}
+
+@media (max-width: 599px) {
+  .pfs__button-text {
+    display: none;
+  }
+}

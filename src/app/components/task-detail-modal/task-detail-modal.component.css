@@ -272,3 +272,23 @@
 .td__main .textarea {
   resize: none;
 }
+
+.td__source {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.3rem;
+  margin: 0.15rem 0 0;
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+
+.td__source--hint {
+  font-style: italic;
+}
+
+.td__source-link {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}

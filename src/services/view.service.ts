@@ -2,12 +2,13 @@ import { Injectable, inject, signal } from '@angular/core';
 import { localStorageSignal } from '../core/local-storage-signal';
 import { ProjectActivityService } from './project-activity.service';
 import type { EisenhowerQuadrant } from '../types/eisenhower';
+import type { ForgeKind } from '../types/forge';
 
 export type AppView = 'pomodoro' | 'projects' | 'project' | 'admin';
 /** How the project detail view shows its project. A union so later presentations extend it. */
 export type ProjectPresentation = 'overview' | 'kanban' | 'list' | 'matrix' | 'roadmap' | 'calendar' | 'flow';
 export type ProjectsTab = 'projects' | 'matrix';
-export type ConfigSection = 'general' | 'account';
+export type ConfigSection = 'general' | 'integrations' | 'account';
 
 const VIEWS: readonly AppView[] = ['pomodoro', 'projects', 'project', 'admin'];
 const PRESENTATIONS: readonly ProjectPresentation[] = ['overview', 'kanban', 'list', 'matrix', 'roadmap', 'calendar', 'flow'];
@@ -107,6 +108,8 @@ export class ViewService {
    */
   readonly configOpen = signal(false);
   readonly configSection = signal<ConfigSection>('general');
+  /** A Git host the Integrations section should open its "Add account" form on (a linked project's "Connect…"); read once. */
+  readonly forgePrefill = signal<{ kind: ForgeKind; host: string } | null>(null);
 
   /**
    * Recurring-tasks modal. Global like the Configuration modal, so the Tasks and projects header, the menu and
@@ -130,8 +133,9 @@ export class ViewService {
     this.recurringProjectFilter.set(null);
   }
 
-  openConfiguration(section: ConfigSection = 'general'): void {
+  openConfiguration(section: ConfigSection = 'general', forge?: { kind: ForgeKind; host: string }): void {
     this.configSection.set(section);
+    this.forgePrefill.set(forge ?? null);
     this.configOpen.set(true);
   }
 

@@ -1,3 +1,5 @@
+import type { ExternalRef, ProjectSource } from './forge'
+
 export interface Project {
   id: string
   icon: string
@@ -6,6 +8,8 @@ export interface Project {
   notes: string
   order: number
   createdAt: number
+  /** Set when imported from a Git forge (see types/forge.ts); absent otherwise. */
+  source?: ProjectSource
 }
 
 export interface Milestone {
@@ -17,6 +21,7 @@ export interface Milestone {
   /** Local calendar days as 'YYYY-MM-DD' (see lib/dates.ts). */
   startDate?: string
   dueDate?: string
+  source?: ExternalRef
 }
 
 export interface ProjectExport {

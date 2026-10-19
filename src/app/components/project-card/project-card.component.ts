@@ -3,9 +3,11 @@ import { TranslatePipe } from '@ngx-translate/core';
 import { ProjectsService } from '../../../services/projects.service';
 import { ViewService } from '../../../services/view.service';
 import { quadrantSegments, tintOf, type ProjectCardView } from '../../../lib/project-cards';
+import { forgeName } from '../../../lib/forge-flavors';
 import { IconComponent } from '../icon/icon.component';
 import { ProjectActionsMenuComponent } from '../project-actions-menu/project-actions-menu.component';
 import { ProjectTaskRowsComponent } from '../project-task-rows/project-task-rows.component';
+import { UiIconComponent } from '../ui-icon/ui-icon.component';
 
 /**
  * One project on the Tasks and projects page. The whole card opens the project: the title is the real button and
@@ -17,12 +19,13 @@ import { ProjectTaskRowsComponent } from '../project-task-rows/project-task-rows
 @Component({
   selector: 'app-project-card',
   standalone: true,
-  imports: [TranslatePipe, IconComponent, ProjectActionsMenuComponent, ProjectTaskRowsComponent],
+  imports: [TranslatePipe, IconComponent, ProjectActionsMenuComponent, ProjectTaskRowsComponent, UiIconComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './project-card.component.html',
   styleUrl: './project-card.component.css',
 })
 export class ProjectCardComponent {
+  protected readonly forgeName = forgeName;
   private readonly projects = inject(ProjectsService);
   private readonly appView = inject(ViewService);
   private readonly injector = inject(Injector);

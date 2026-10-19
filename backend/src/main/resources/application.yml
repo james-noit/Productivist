@@ -37,3 +37,7 @@ app:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:4200,moz-extension://*,https://localhost,capacitor://localhost}
   sync:
     max-batch-size: 5000
+  forge-relay:
+    # DEVELOPMENT ONLY, never in production: lets the relay use http and loopback/private addresses (to try it against a
+    # forge on localhost). Off unless this variable is set; the relay's address and scheme rules are its SSRF protection.
+    unsafe-dev-allow-http-and-private-addresses: ${FORGE_RELAY_UNSAFE_DEV_ALLOW_HTTP_AND_PRIVATE:false}

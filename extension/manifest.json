@@ -28,5 +28,9 @@
       "256": "icons/icon.png"
     }
   },
-  "permissions": []
+  "permissions": [],
+  "optional_permissions": [
+    "https://*/*",
+    "http://*/*"
+  ]
 }

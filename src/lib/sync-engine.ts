@@ -1,3 +1,4 @@
+import type { ProjectSource } from '../types/forge';
 import type { FlowLayout, FlowLink, FlowLinkKind, FlowPosition, Horizon, Objective, ObjectiveStatus } from '../types/flow';
 import type { Milestone, Project } from '../types/project';
 import type { Recurrence, RecurrenceMode, RecurrenceUnit } from '../types/recurrence';
@@ -148,7 +149,12 @@ export interface ProjectWire extends WireRow {
   notes: string;
   order: number;
   createdAt: number;
+  /** Optional on the wire: set only on rows imported from a Git forge (the backend sends null otherwise). */
+  source?: SourceWire | null;
 }
+
+/** The synced `source`; components the client did not set come back as null from the backend. */
+export type SourceWire = { [K in keyof ProjectSource]?: ProjectSource[K] | null };
 
 export interface MilestoneWire extends WireRow {
   projectId: string;
@@ -158,6 +164,7 @@ export interface MilestoneWire extends WireRow {
   /** Optional on the wire: absent or null means no date. */
   startDate?: string | null;
   dueDate?: string | null;
+  source?: SourceWire | null;
 }
 
 export interface TodoWire extends WireRow {
@@ -179,6 +186,7 @@ export interface TodoWire extends WireRow {
   dueDate?: string | null;
   /** Optional on the wire: the recurring series this task is an occurrence of. */
   recurrenceId?: string | null;
+  source?: SourceWire | null;
 }
 
 export interface ObjectiveWire extends WireRow {
@@ -229,6 +237,29 @@ export interface RecurrenceWire extends WireRow {
   lastDate?: string | null;
 }
 
+const KEYS = ['kind', 'host', 'repoId', 'repoPath', 'number', 'url', 'remoteUpdatedAt', 'remoteState'] as const;
+const OPTION_KEYS = ['includeClosed', 'onlyAssignedToMe', 'importMilestones', 'labelsAsTags', 'lastSyncedAt'] as const;
+
+type Loose = Record<string, unknown>;
+
+/**
+ * The `source` of an imported row as it travels (sync, in `forge-sanitize.ts` for import files): the source with its keys in a fixed order and no `null`s (the backend returns them for unset components), so the content
+ * hash of a row is the same before and after a round trip through Postgres JSONB. Assumes `s` came from this app or
+ * passed `sanitizeSource`.
+ */
+export function canonicalSource(s: object): ProjectSource {
+  const x = s as Loose;
+  const out: Loose = {};
+  for (const key of KEYS) if (x[key] != null) out[key] = x[key];
+  const options = x['options'] as Loose | null | undefined;
+  if (options) {
+    const o: Loose = {};
+    for (const key of OPTION_KEYS) if (options[key] != null) o[key] = options[key];
+    out['options'] = o;
+  }
+  return out as unknown as ProjectSource;
+}
+
 type Content<W extends WireRow> = Omit<W, 'updatedAt' | 'deleted'>;
 
 export const projectCodec = {
@@ -240,16 +271,22 @@ export const projectCodec = {
     notes: p.notes,
     order: p.order,
     createdAt: p.createdAt,
+    // Only when set (imported from a Git forge): an always-present key would change every project's hash.
+    ...(p.source ? { source: canonicalSource(p.source) } : {}),
   }),
-  fromWire: (w: ProjectWire): Project => ({
-    id: w.id,
-    icon: w.icon,
-    name: w.name,
-    description: w.description,
-    notes: w.notes,
-    order: w.order,
-    createdAt: w.createdAt,
-  }),
+  fromWire: (w: ProjectWire): Project => {
+    const project: Project = {
+      id: w.id,
+      icon: w.icon,
+      name: w.name,
+      description: w.description,
+      notes: w.notes,
+      order: w.order,
+      createdAt: w.createdAt,
+    };
+    if (w.source) project.source = canonicalSource(w.source);
+    return project;
+  },
   tombstone: (id: string): Content<ProjectWire> => ({ id, icon: '', name: '', description: '', notes: '', order: 0, createdAt: 0 }),
 };
 
@@ -263,6 +300,7 @@ export const milestoneCodec = {
     // Only when set, like Todo.status: an always-present key would change every existing row's hash.
     ...(m.startDate ? { startDate: m.startDate } : {}),
     ...(m.dueDate ? { dueDate: m.dueDate } : {}),
+    ...(m.source ? { source: canonicalSource(m.source) } : {}),
   }),
   fromWire: (w: MilestoneWire): Milestone => {
     const milestone: Milestone = {
@@ -274,6 +312,7 @@ export const milestoneCodec = {
     };
     if (w.startDate) milestone.startDate = w.startDate;
     if (w.dueDate) milestone.dueDate = w.dueDate;
+    if (w.source) milestone.source = canonicalSource(w.source);
     return milestone;
   },
   tombstone: (id: string): Content<MilestoneWire> => ({ id, projectId: '', name: '', order: 0, createdAt: 0 }),
@@ -299,6 +338,7 @@ export const todoCodec = {
     ...(t.startDate ? { startDate: t.startDate } : {}),
     ...(t.dueDate ? { dueDate: t.dueDate } : {}),
     ...(t.recurrenceId ? { recurrenceId: t.recurrenceId } : {}),
+    ...(t.source ? { source: canonicalSource(t.source) } : {}),
   }),
   fromWire: (w: TodoWire): Todo => {
     const todo: Todo = {
@@ -320,6 +360,7 @@ export const todoCodec = {
     if (w.startDate) todo.startDate = w.startDate;
     if (w.dueDate) todo.dueDate = w.dueDate;
     if (w.recurrenceId) todo.recurrenceId = w.recurrenceId;
+    if (w.source) todo.source = canonicalSource(w.source);
     return todo;
   },
   tombstone: (id: string): Content<TodoWire> => ({

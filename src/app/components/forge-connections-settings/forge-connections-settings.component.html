@@ -1,0 +1,103 @@
+@if (ready()) {
+<p class="fcs__hint">{{ 'forge.accounts.hint' | translate }}</p>
+
+@if (connections().length) {
+  <ul class="fcs__list">
+    @for (c of connections(); track c.id) {
+      <li class="fcs__item">
+        <div class="fcs__row">
+          <div class="fcs__who">
+            <span class="fcs__name">{{ c.name }}</span>
+            <span class="fcs__host">{{ c.baseUrl }}@if (c.username) { · &#64;{{ c.username }} }</span>
+          </div>
+          <div class="fcs__actions">
+            <button type="button" class="btn btn--secondary btn--sm" [disabled]="testing() === c.id" (click)="test(c.id)">
+              {{ 'forge.accounts.test' | translate }}
+            </button>
+            @if (removing() !== c.id) {
+              <button type="button" class="btn btn--danger btn--ghost btn--sm" (click)="askRemove(c.id)">{{ 'forge.accounts.remove' | translate }}</button>
+            }
+          </div>
+        </div>
+        @if (outcome(); as o) {
+          @if (o.id === c.id) {
+            @if (o.error) {
+              <app-forge-error [error]="o.error" [host]="c.baseUrl" (use)="useTransport(c.id, $event)" />
+            } @else {
+              <p class="fcs__status" role="status">{{ 'forge.accounts.ok' | translate: { user: o.user } }}</p>
+            }
+          }
+        }
+        @if (removing() === c.id) {
+          <div class="confirm-bar" role="alertdialog" [attr.aria-label]="'forge.accounts.removeQ' | translate" (keydown)="onQuestionKeydown($event)">
+            <p class="confirm-bar__text">{{ 'forge.accounts.removeQ' | translate }}</p>
+            <div class="confirm-bar__actions">
+              <button type="button" class="btn btn--secondary btn--sm" (click)="removing.set(null)" autofocus>{{ 'forge.accounts.keep' | translate }}</button>
+              <button type="button" class="btn btn--danger btn--sm" (click)="remove(c.id)">{{ 'forge.accounts.remove' | translate }}</button>
+            </div>
+          </div>
+        }
+      </li>
+    }
+  </ul>
+}
+
+@if (adding()) {
+  <form class="fcs__form" (submit)="testAndSave($event)" (keydown)="onFormKeydown($event)" autocomplete="off">
+    <div class="field">
+      <span class="field__label" id="fcs-platform">{{ 'forge.accounts.platform' | translate }}</span>
+      <div class="segmented fcs__segmented" role="group" aria-labelledby="fcs-platform">
+        @for (f of flavors; track f.id) {
+          <button type="button" class="segmented__option" [attr.aria-pressed]="flavor().id === f.id" (click)="pickFlavor(f.id)">{{ f.name }}</button>
+        }
+      </div>
+    </div>
+    <div class="field">
+      <label class="field__label" for="fcs-host">{{ 'forge.accounts.host' | translate }}</label>
+      <input
+        #hostInput
+        id="fcs-host"
+        class="input"
+        type="url"
+        inputmode="url"
+        placeholder="https://git.example.org"
+        autocomplete="off"
+        spellcheck="false"
+        [value]="host()"
+        (input)="host.set($any($event.target).value)"
+      />
+    </div>
+    <div class="field">
+      <label class="field__label" for="fcs-token">{{ 'forge.accounts.token' | translate }}</label>
+      <input
+        #tokenInput
+        id="fcs-token"
+        class="input"
+        type="password"
+        autocomplete="off"
+        spellcheck="false"
+        [value]="token()"
+        (input)="token.set($any($event.target).value)"
+      />
+      @if (tokenUrl(); as url) {
+        <a class="fcs__link" [appExternalHref]="url">{{ 'forge.accounts.create' | translate }} ↗</a>
+      }
+    </div>
+    @if (formError(); as e) {
+      <app-forge-error [error]="e" [host]="host()" (use)="useFormTransport($event)" />
+    } @else if (error() === 'host') {
+      <p class="fcs__status fcs__status--error" role="alert">{{ 'forge.err.host' | translate }}</p>
+    }
+    <div class="fcs__actions">
+      <button type="button" class="btn btn--ghost btn--sm" (click)="closeForm()">{{ 'projects.cancel' | translate }}</button>
+      <button type="submit" class="btn btn--primary btn--sm" [disabled]="busy() || !token().trim() || !host().trim()">
+        {{ 'forge.accounts.save' | translate }}
+      </button>
+    </div>
+  </form>
+} @else {
+  <div class="fcs__actions">
+    <button #addButton type="button" class="btn btn--secondary btn--sm" (click)="openForm()">{{ 'forge.accounts.add' | translate }}</button>
+  </div>
+}
+}

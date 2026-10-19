@@ -33,6 +33,8 @@ public final class SyncDtos {
             @Size(max = 100_000) String notes,
             double order,
             long createdAt,
+            // Optional (null for projects not imported from a Git forge and for older clients).
+            @Valid SourceDto source,
             long updatedAt,
             boolean deleted) {}
 
@@ -44,6 +46,7 @@ public final class SyncDtos {
             long createdAt,
             @Pattern(regexp = DATE) String startDate,
             @Pattern(regexp = DATE) String dueDate,
+            @Valid SourceDto source,
             long updatedAt,
             boolean deleted) {}
 
@@ -67,8 +70,35 @@ public final class SyncDtos {
             // Optional (null for ordinary tasks and for clients older than recurring tasks): the series this
             // occurrence belongs to.
             @Size(max = 64) String recurrenceId,
+            // Optional: where an imported issue came from (see SourceDto).
+            @Valid SourceDto source,
             long updatedAt,
             boolean deleted) {}
+
+    /**
+     * Where a project, milestone or task was imported from (src/types/forge.ts {@code ExternalRef}). Every component
+     * is a wrapper or reference type and nullable on the wire: the client emits only the keys that are set, and Jackson 3
+     * rejects an absent primitive. {@link SyncService} requires kind, host, repoId and url when a source is present.
+     * Holds no secret.
+     */
+    public record SourceDto(
+            @Pattern(regexp = "github|gitlab|gitea") String kind,
+            @Size(max = 300) String host,
+            @Size(max = 64) String repoId,
+            @Size(max = 300) String repoPath,
+            @Min(1) Integer number,
+            @Size(max = 500) String url,
+            @Size(max = 40) String remoteUpdatedAt,
+            @Pattern(regexp = "open|closed") String remoteState,
+            // Projects only: the import options and the refresh cursor.
+            @Valid SourceOptionsDto options) {}
+
+    public record SourceOptionsDto(
+            Boolean includeClosed,
+            Boolean onlyAssignedToMe,
+            Boolean importMilestones,
+            Boolean labelsAsTags,
+            Long lastSyncedAt) {}
 
     /**
      * A recurring task: a template (title ... pomodorosForTermination) plus a rule (every/unit/weekdays/mode and

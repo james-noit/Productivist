@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, ElementRef, HostListener, inject, isDevMode, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, ElementRef, HostListener, inject, Injector, isDevMode, signal, viewChild } from '@angular/core';
 import { TranslatePipe } from '@ngx-translate/core';
 import { TodosService } from '../../../services/todos.service';
 import { SettingsService } from '../../../services/settings.service';
@@ -30,6 +30,7 @@ export class AppMenuComponent {
   private readonly dailyPlan = inject(DailyPlanService);
   private readonly flow = inject(FlowService);
   private readonly recurrences = inject(RecurrenceService);
+  private readonly injector = inject(Injector);
 
   readonly resetPhrase = RESET_PHRASE;
   readonly isDev = isDevMode();
@@ -70,7 +71,8 @@ export class AppMenuComponent {
     const data = {
       // 3 added optional startDate/dueDate on todos and milestones; 4 added objectives, flowLinks and
       // flowLayouts; 5 added recurrences (and Todo.recurrenceId). 2 to 5 import the same way (missing arrays
-      // are empty).
+      // are empty). Rows imported from a Git forge carry an optional `source` (no version bump: old importers
+      // ignore it; new ones validate it); the access tokens are never exported.
       version: 5,
       todos: this.todos.todos(),
       projects: this.projects.projects(),
@@ -102,8 +104,11 @@ export class AppMenuComponent {
     try {
       const parsed = JSON.parse(text);
       if (typeof parsed.version === 'number' && parsed.version > 5) throw new Error('Unsupported export version');
-      this.todos.importTodos({ version: 1, todos: parsed.todos ?? [] });
-      this.projects.importProjects({ projects: parsed.projects ?? [], milestones: parsed.milestones ?? [] });
+      // Rows imported from a Git forge carry a `source` that must be well formed (the backend rejects bad ones); the
+      // validation is a lazy chunk, which an import file is the only thing to need.
+      const { sanitizeSources } = await import('../../../lib/forge-sanitize');
+      this.todos.importTodos({ version: 1, todos: sanitizeSources(parsed.todos ?? []) });
+      this.projects.importProjects({ projects: sanitizeSources(parsed.projects ?? []), milestones: sanitizeSources(parsed.milestones ?? []) });
       this.flow.importFlow(parsed);
       this.recurrences.importRecurrences(parsed);
       // Drops links to tasks and milestones the file does not contain.
@@ -140,6 +145,9 @@ export class AppMenuComponent {
     this.flow.reset();
     this.recurrences.reset();
     this.dailyPlan.reset();
+    // Git access tokens are device-local and never exported, so only a full Reset removes them. The service is lazy
+    // (it must stay out of the initial bundle), hence the dynamic import.
+    void import('../../../services/forge-connections.service').then((m) => this.injector.get(m.ForgeConnectionsService).reset());
     this.resetModalOpen.set(false);
     this.resetConfirmText.set('');
   }

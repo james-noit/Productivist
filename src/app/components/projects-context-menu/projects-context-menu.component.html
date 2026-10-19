@@ -48,6 +48,7 @@
         {{ 'projects.fab.project' | translate }}<span class="menu-item__hint" aria-hidden="true">P</span>
       </button>
       <button type="button" role="menuitem" class="menu-item" (click)="newRecurring(menu)">{{ 'projects.fab.recurring' | translate }}</button>
+      <button type="button" role="menuitem" class="menu-item" (click)="importFromGit(menu)">{{ 'forge.fab' | translate }}…</button>
       <hr class="menu-sep" />
       <button type="button" role="menuitem" class="menu-item" (click)="planMyDay(menu)">
         {{ (planInProgress() ? 'planningLab.resumeButton' : 'planningLab.openButton') | translate: { step: planStep() } }}

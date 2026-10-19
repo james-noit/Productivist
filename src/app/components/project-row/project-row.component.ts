@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, input, output } f
 import { TranslatePipe } from '@ngx-translate/core';
 import { ViewService } from '../../../services/view.service';
 import { quadrantSegments, tintOf, type ProjectCardView } from '../../../lib/project-cards';
+import { forgeName } from '../../../lib/forge-flavors';
 import { IconComponent } from '../icon/icon.component';
 import { ProjectActionsMenuComponent } from '../project-actions-menu/project-actions-menu.component';
 import { ProjectTaskRowsComponent } from '../project-task-rows/project-task-rows.component';
@@ -23,6 +24,7 @@ import { UiIconComponent } from '../ui-icon/ui-icon.component';
   styleUrl: './project-row.component.css',
 })
 export class ProjectRowComponent {
+  protected readonly forgeName = forgeName;
   private readonly appView = inject(ViewService);
 
   readonly view = input.required<ProjectCardView>();

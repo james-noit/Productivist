@@ -1,0 +1,22 @@
+@if (ready() && source(); as src) {
+  <div class="pfs">
+    <span class="pfs__text">
+      @if (synced(); as time) {
+        {{ 'forge.synced' | translate: { time: time } }}
+      } @else {
+        {{ 'forge.never' | translate }}
+      }
+      ·
+      <a class="pfs__link" [appExternalHref]="src.url">{{ name() }} ↗</a>
+    </span>
+    @if (connection()) {
+      <button type="button" class="btn btn--secondary btn--sm pfs__refresh" [disabled]="busy()" [attr.aria-label]="'forge.refresh' | translate" [title]="'forge.refresh' | translate" (click)="refresh()">
+        <app-ui-icon name="restart" [size]="16" [class.pfs__spin]="busy()" />
+        <span class="pfs__button-text">{{ 'forge.refresh' | translate }}</span>
+      </button>
+    } @else {
+      <button type="button" class="btn btn--secondary btn--sm" (click)="connect()">{{ 'forge.connect' | translate: { name: name() } }}</button>
+    }
+    <app-forge-error [error]="error()" [host]="src.host" (use)="useTransport($event)" />
+  </div>
+}

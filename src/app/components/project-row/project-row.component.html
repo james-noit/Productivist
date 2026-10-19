@@ -23,7 +23,9 @@
       <span class="prow__icon" aria-hidden="true"><app-icon [name]="p.icon" /></span>
       <div class="prow__titles">
         <h3 class="prow__title">
-          <button type="button" class="prow__open" (click)="open()">{{ p.name }}</button>
+          <button type="button" class="prow__open" (click)="open()">{{ p.name }}@if (p.source; as src) {
+          <span class="prow__forge" role="img" [attr.title]="forgeName(src)" [attr.aria-label]="forgeName(src)"><app-ui-icon name="git" [size]="13" /></span>
+        }</button>
         </h3>
         @if (p.description) {
           <p class="prow__sub prow__desc">{{ p.description }}</p>

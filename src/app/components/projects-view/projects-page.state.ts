@@ -60,6 +60,8 @@ export class ProjectsPageState {
   readonly filtersOpen = signal(false);
   readonly creatingTask = signal(false);
   readonly creatingProject = signal(false);
+  /** The Import from Git dialog is open. */
+  readonly importing = signal(false);
   /** The project the New task dialog starts in (null = none); set by `openNewTask(opener, projectId)`. */
   readonly newTaskProjectId = signal<string | null>(null);
   /** The project whose edit dialog is open (the dashboard hosts it); set by `editProject`. */
@@ -119,6 +121,11 @@ export class ProjectsPageState {
   openNewProject(opener: HTMLElement | null = null): void {
     this.opener = opener ?? this.activeElement();
     this.creatingProject.set(true);
+  }
+
+  openImport(opener: HTMLElement | null = null): void {
+    this.opener = opener ?? this.activeElement();
+    this.importing.set(true);
   }
 
   /** Puts focus back on the control that opened a create dialog, once the dialog is gone. */

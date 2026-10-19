@@ -6,7 +6,9 @@
     <span class="pcard__icon" aria-hidden="true"><app-icon [name]="p.icon" /></span>
     <div class="pcard__titles">
       <h3 class="pcard__name">
-        <button type="button" class="pcard__open" (click)="open()">{{ p.name }}</button>
+        <button type="button" class="pcard__open" (click)="open()">{{ p.name }}@if (p.source; as src) {
+          <span class="pcard__forge" role="img" [attr.title]="forgeName(src)" [attr.aria-label]="forgeName(src)"><app-ui-icon name="git" [size]="13" /></span>
+        }</button>
       </h3>
       @if (p.description) {
         <p class="pcard__description">{{ p.description }}</p>

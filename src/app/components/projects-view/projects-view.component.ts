@@ -12,6 +12,7 @@ import { ViewService, type ProjectsTab } from '../../../services/view.service';
 import { ContextMenuHostDirective, type ContextRequest } from '../../directives/context-menu-host.directive';
 import { EisenhowerViewComponent } from '../eisenhower-view/eisenhower-view.component';
 import { FabMenuComponent, type FabItem } from '../fab-menu/fab-menu.component';
+import { ImportRepoModalComponent } from '../import-repo-modal/import-repo-modal.component';
 import { NewTaskModalComponent } from '../new-task-modal/new-task-modal.component';
 import { ProjectFormComponent } from '../project-form/project-form.component';
 import { ProjectsContextMenuComponent } from '../projects-context-menu/projects-context-menu.component';
@@ -32,11 +33,12 @@ interface ContextMenuRequest {
   returnFocus: HTMLElement | null;
 }
 
-/** The floating "+" menu: New task (N), New project (P) and New recurring task. */
+/** The floating "+" menu: New task (N), New project (P), New recurring task and Import from Git. */
 const FAB_ITEMS: readonly FabItem[] = [
   { id: 'task', icon: 'check', labelKey: 'projects.fab.task', shortcut: 'N' },
   { id: 'project', icon: 'folder', labelKey: 'projects.fab.project', shortcut: 'P' },
   { id: 'recurring', icon: 'repeat', labelKey: 'projects.fab.recurring' },
+  { id: 'git', icon: 'git', labelKey: 'forge.fab' },
 ];
 
 /**
@@ -58,6 +60,7 @@ const FAB_ITEMS: readonly FabItem[] = [
     ProjectsDashboardComponent,
     EisenhowerViewComponent,
     FabMenuComponent,
+    ImportRepoModalComponent,
     NewTaskModalComponent,
     ProjectFormComponent,
     ProjectsContextMenuComponent,
@@ -124,7 +127,13 @@ export class ProjectsViewComponent {
   onFabPick(id: string): void {
     if (id === 'task') this.state.openNewTask();
     else if (id === 'project') this.state.openNewProject();
+    else if (id === 'git') this.state.openImport();
     else this.view.openRecurring('new');
+  }
+
+  closeImport(): void {
+    this.state.importing.set(false);
+    this.state.restoreFocus();
   }
 
   closeNewTask(): void {

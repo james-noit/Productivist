@@ -543,6 +543,7 @@
     "sections": "Configuration sections",
     "general": "General",
     "account": "Account",
+    "integrations": "Integrations",
     "language": "Language",
     "languageHint": "The language of the interface.",
     "theme": "Theme",
@@ -970,5 +971,6 @@
       "afterCompletion": "Next after completion",
       "ended": "Ended"
     }
-  }
+  },
+  "forge": { "fab": "Import from Git" }
 }

@@ -110,6 +110,7 @@
     <div class="dash__empty">
       <p>{{ 'projects.empty.noProjects' | translate }}</p>
       <button type="button" class="btn btn--primary btn--sm" (click)="state.openNewProject()">{{ 'projects.empty.create' | translate }}</button>
+      <button type="button" class="btn btn--ghost btn--sm" (click)="state.openImport()">{{ 'forge.fab' | translate }}</button>
     </div>
   } @else if (state.activeLayout() === 'list') {
     @if (cards().length) {

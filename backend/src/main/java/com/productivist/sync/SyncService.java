@@ -16,6 +16,7 @@ import com.productivist.sync.SyncDtos.ProjectDto;
 import com.productivist.sync.SyncDtos.PullResponse;
 import com.productivist.sync.SyncDtos.PushRequest;
 import com.productivist.sync.SyncDtos.RecurrenceDto;
+import com.productivist.sync.SyncDtos.SourceDto;
 import com.productivist.sync.SyncDtos.StateDto;
 import com.productivist.sync.SyncDtos.TodoDto;
 
@@ -85,30 +86,31 @@ public class SyncService {
     public PullResponse pull(long userId, long since) {
         long cursor = Math.max(since, currentCursor(userId));
         List<ProjectDto> projects = jdbc.sql("""
-                        SELECT id, icon, name, description, notes, sort_order, created_at, updated_at, deleted
+                        SELECT id, icon, name, description, notes, sort_order, created_at, source::text AS source, updated_at, deleted
                         FROM projects WHERE user_id = :u AND seq > :since AND seq <= :cursor ORDER BY seq
                         """)
                 .param("u", userId).param("since", since).param("cursor", cursor)
                 .query((rs, i) -> new ProjectDto(
                         rs.getString("id"), rs.getString("icon"), rs.getString("name"), rs.getString("description"),
                         rs.getString("notes"), rs.getDouble("sort_order"), rs.getLong("created_at"),
-                        rs.getLong("updated_at"), rs.getBoolean("deleted")))
+                        readSource(rs.getString("source")), rs.getLong("updated_at"), rs.getBoolean("deleted")))
                 .list();
         List<MilestoneDto> milestones = jdbc.sql("""
-                        SELECT id, project_id, name, sort_order, created_at, start_date, due_date, updated_at, deleted
+                        SELECT id, project_id, name, sort_order, created_at, start_date, due_date, source::text AS source,
+                               updated_at, deleted
                         FROM milestones WHERE user_id = :u AND seq > :since AND seq <= :cursor ORDER BY seq
                         """)
                 .param("u", userId).param("since", since).param("cursor", cursor)
                 .query((rs, i) -> new MilestoneDto(
                         rs.getString("id"), rs.getString("project_id"), rs.getString("name"),
                         rs.getDouble("sort_order"), rs.getLong("created_at"),
-                        rs.getString("start_date"), rs.getString("due_date"),
+                        rs.getString("start_date"), rs.getString("due_date"), readSource(rs.getString("source")),
                         rs.getLong("updated_at"), rs.getBoolean("deleted")))
                 .list();
         List<TodoDto> todos = jdbc.sql("""
                         SELECT id, title, description, importance, urgency, tags, done, sort_order, created_at,
                                completed_at, project_id, milestone_id, pomodoros_for_termination, status, start_date, due_date,
-                               recurrence_id, updated_at, deleted
+                               recurrence_id, source::text AS source, updated_at, deleted
                         FROM todos WHERE user_id = :u AND seq > :since AND seq <= :cursor ORDER BY seq
                         """)
                 .param("u", userId).param("since", since).param("cursor", cursor)
@@ -192,18 +194,20 @@ public class SyncService {
         }
         requireText(p.name(), "project name");
         jdbc.sql("""
-                        INSERT INTO projects (user_id, id, icon, name, description, notes, sort_order, created_at, updated_at, deleted)
-                        VALUES (:u, :id, :icon, :name, :description, :notes, :order, :createdAt, :updatedAt, :deleted)
+                        INSERT INTO projects (user_id, id, icon, name, description, notes, sort_order, created_at, source, updated_at, deleted)
+                        VALUES (:u, :id, :icon, :name, :description, :notes, :order, :createdAt, CAST(:source AS jsonb),
+                                :updatedAt, :deleted)
                         ON CONFLICT (user_id, id) DO UPDATE SET
                             icon = EXCLUDED.icon, name = EXCLUDED.name, description = EXCLUDED.description,
                             notes = EXCLUDED.notes, sort_order = EXCLUDED.sort_order, created_at = EXCLUDED.created_at,
-                            updated_at = EXCLUDED.updated_at, deleted = EXCLUDED.deleted, seq = nextval('sync_seq')
+                            source = EXCLUDED.source, updated_at = EXCLUDED.updated_at, deleted = EXCLUDED.deleted, seq = nextval('sync_seq')
                         WHERE projects.updated_at <= EXCLUDED.updated_at
                         """)
                 .param("u", userId).param("id", p.id())
                 .param("icon", nullToEmpty(p.icon())).param("name", p.name())
                 .param("description", nullToEmpty(p.description())).param("notes", nullToEmpty(p.notes()))
                 .param("order", p.order()).param("createdAt", p.createdAt())
+                .param("source", sourceJson(p.source()))
                 .param("updatedAt", p.updatedAt()).param("deleted", p.deleted())
                 .update();
     }
@@ -217,18 +221,20 @@ public class SyncService {
         requireText(m.name(), "milestone name");
         jdbc.sql("""
                         INSERT INTO milestones (user_id, id, project_id, name, sort_order, created_at,
-                                                start_date, due_date, updated_at, deleted)
-                        VALUES (:u, :id, :projectId, :name, :order, :createdAt, :startDate, :dueDate, :updatedAt, :deleted)
+                                                start_date, due_date, source, updated_at, deleted)
+                        VALUES (:u, :id, :projectId, :name, :order, :createdAt, :startDate, :dueDate,
+                                CAST(:source AS jsonb), :updatedAt, :deleted)
                         ON CONFLICT (user_id, id) DO UPDATE SET
                             project_id = EXCLUDED.project_id, name = EXCLUDED.name, sort_order = EXCLUDED.sort_order,
                             created_at = EXCLUDED.created_at, start_date = EXCLUDED.start_date,
-                            due_date = EXCLUDED.due_date, updated_at = EXCLUDED.updated_at,
-                            deleted = EXCLUDED.deleted, seq = nextval('sync_seq')
+                            due_date = EXCLUDED.due_date, source = EXCLUDED.source,
+                            updated_at = EXCLUDED.updated_at, deleted = EXCLUDED.deleted, seq = nextval('sync_seq')
                         WHERE milestones.updated_at <= EXCLUDED.updated_at
                         """)
                 .param("u", userId).param("id", m.id()).param("projectId", m.projectId()).param("name", m.name())
                 .param("order", m.order()).param("createdAt", m.createdAt())
                 .param("startDate", m.startDate()).param("dueDate", m.dueDate())
+                .param("source", sourceJson(m.source()))
                 .param("updatedAt", m.updatedAt()).param("deleted", m.deleted())
                 .update();
     }
@@ -244,11 +250,11 @@ public class SyncService {
         jdbc.sql("""
                         INSERT INTO todos (user_id, id, title, description, importance, urgency, tags, done, sort_order,
                                            created_at, completed_at, project_id, milestone_id, pomodoros_for_termination,
-                                           status, start_date, due_date, recurrence_id, updated_at, deleted)
+                                           status, start_date, due_date, recurrence_id, source, updated_at, deleted)
                         VALUES (:u, :id, :title, :description, :importance, :urgency,
                                 ARRAY(SELECT jsonb_array_elements_text(CAST(:tags AS jsonb))), :done, :order,
                                 :createdAt, :completedAt, :projectId, :milestoneId, :pomodoros, :status, :startDate, :dueDate,
-                                :recurrenceId, :updatedAt, :deleted)
+                                :recurrenceId, CAST(:source AS jsonb), :updatedAt, :deleted)
                         ON CONFLICT (user_id, id) DO UPDATE SET
                             title = EXCLUDED.title, description = EXCLUDED.description, importance = EXCLUDED.importance,
                             urgency = EXCLUDED.urgency, tags = EXCLUDED.tags, done = EXCLUDED.done,
@@ -257,7 +263,7 @@ public class SyncService {
                             milestone_id = EXCLUDED.milestone_id,
                             pomodoros_for_termination = EXCLUDED.pomodoros_for_termination,
                             status = EXCLUDED.status, start_date = EXCLUDED.start_date, due_date = EXCLUDED.due_date,
-                            recurrence_id = EXCLUDED.recurrence_id,
+                            recurrence_id = EXCLUDED.recurrence_id, source = EXCLUDED.source,
                             updated_at = EXCLUDED.updated_at, deleted = EXCLUDED.deleted, seq = nextval('sync_seq')
                         WHERE todos.updated_at <= EXCLUDED.updated_at
                         """)
@@ -467,7 +473,7 @@ public class SyncService {
         return m;
     }
 
-    private static Map<String, Object> todoParams(long userId, TodoDto t, String tagsJson) {
+    private Map<String, Object> todoParams(long userId, TodoDto t, String tagsJson) {
         // A map, because JdbcClient's varargs param() calls would not let nullable values through cleanly.
         Map<String, Object> m = new HashMap<>();
         m.put("u", userId);
@@ -488,6 +494,7 @@ public class SyncService {
         m.put("startDate", t.startDate());
         m.put("dueDate", t.dueDate());
         m.put("recurrenceId", t.recurrenceId());
+        m.put("source", sourceJson(t.source()));
         m.put("updatedAt", t.updatedAt());
         m.put("deleted", t.deleted());
         return m;
@@ -525,7 +532,7 @@ public class SyncService {
         return text;
     }
 
-    private static TodoDto mapTodo(ResultSet rs) throws SQLException {
+    private TodoDto mapTodo(ResultSet rs) throws SQLException {
         Array tagArray = rs.getArray("tags");
         List<String> tags = tagArray == null ? List.of() : List.of((String[]) tagArray.getArray());
         return new TodoDto(
@@ -535,7 +542,8 @@ public class SyncService {
                 rs.getString("project_id"), rs.getString("milestone_id"),
                 rs.getObject("pomodoros_for_termination", Integer.class),
                 rs.getString("status"), rs.getString("start_date"), rs.getString("due_date"),
-                rs.getString("recurrence_id"), rs.getLong("updated_at"), rs.getBoolean("deleted"));
+                rs.getString("recurrence_id"), readSource(rs.getString("source")), rs.getLong("updated_at"),
+                rs.getBoolean("deleted"));
     }
 
     private RecurrenceDto mapRecurrence(ResultSet rs) throws SQLException {
@@ -556,6 +564,20 @@ public class SyncService {
                 rs.getString("start_date"), rs.getString("end_date"), rs.getBoolean("paused"),
                 rs.getString("last_date"), rs.getDouble("sort_order"), rs.getLong("created_at"),
                 rs.getLong("updated_at"), rs.getBoolean("deleted"));
+    }
+
+    /** The source as JSON text for the JSONB column, or null; a present source must say where it points. */
+    private String sourceJson(SourceDto source) {
+        if (source == null) return null;
+        requireText(source.kind(), "source kind");
+        requireText(source.host(), "source host");
+        requireText(source.repoId(), "source repoId");
+        requireText(source.url(), "source url");
+        return json.writeValueAsString(source);
+    }
+
+    private SourceDto readSource(String text) {
+        return text == null ? null : json.readValue(text, SourceDto.class);
     }
 
     private static String nullToEmpty(String s) {

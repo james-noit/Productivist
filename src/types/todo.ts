@@ -1,3 +1,5 @@
+import type { ExternalRef } from './forge'
+
 export type Priority = 'low' | 'medium' | 'high'
 
 /** Workflow column of the project board. Absent means 'todo'; completion is the separate `done` flag. */
@@ -23,6 +25,8 @@ export interface Todo {
   dueDate?: string
   /** The recurring series this task is an occurrence of (see types/recurrence.ts); absent for ordinary tasks. */
   recurrenceId?: string
+  /** Set when imported from a Git forge issue (see types/forge.ts); absent otherwise. */
+  source?: ExternalRef
 }
 
 export interface TodoExport {

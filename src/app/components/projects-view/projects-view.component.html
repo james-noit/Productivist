@@ -95,6 +95,12 @@
     }
   }
 
+  @if (state.importing()) {
+    @defer (on immediate) {
+      <app-import-repo-modal (close)="closeImport()" />
+    }
+  }
+
   @if (state.creatingTask()) {
     <app-new-task-modal [projectId]="state.newTaskProjectId()" (close)="closeNewTask()" />
   }

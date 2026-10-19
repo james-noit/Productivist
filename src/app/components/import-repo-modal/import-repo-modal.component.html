@@ -1,0 +1,126 @@
+<div class="modal-overlay" (click)="closeOnBackdrop($event)" (keydown)="onKeydown($event)">
+  <div #panel class="modal-panel irm" role="dialog" aria-modal="true" aria-labelledby="irm-title" tabindex="-1">
+    <div class="irm__head">
+      <h3 id="irm-title">{{ 'forge.fab' | translate }}</h3>
+      <button type="button" class="btn btn--ghost btn--icon btn--sm" [attr.aria-label]="'todo.close' | translate" (click)="close.emit()">
+        <app-ui-icon name="x" />
+      </button>
+    </div>
+
+    @if (ready()) {
+    @if (result(); as r) {
+      <div class="irm__body" role="status">
+        <p>{{ 'forge.result' | translate: { m: r.summary.milestonesCreated, t: r.summary.tasksCreated, u: r.summary.milestonesUpdated + r.summary.tasksUpdated } }}</p>
+        @if (r.truncated) {
+          <p class="irm__muted">{{ 'forge.capped' | translate }}</p>
+        }
+      </div>
+      <div class="irm__foot">
+        <button type="button" class="btn btn--ghost btn--sm" (click)="close.emit()">{{ 'todo.close' | translate }}</button>
+        <button type="button" class="btn btn--primary btn--sm" (click)="openProject()">{{ 'forge.open' | translate }}</button>
+      </div>
+    } @else if (!connections().length) {
+      <div class="irm__body">
+        <p>{{ 'forge.none' | translate }}</p>
+      </div>
+      <div class="irm__foot">
+        <button type="button" class="btn btn--primary btn--sm" (click)="openIntegrations()">{{ 'forge.goSettings' | translate }}</button>
+      </div>
+    } @else {
+      <div class="irm__body">
+        @if (connections().length > 1) {
+          <div class="field">
+            <label class="field__label" for="irm-account">{{ 'forge.account' | translate }}</label>
+            <select id="irm-account" class="select" [value]="connectionId()" (change)="setConnection($any($event.target).value)">
+              @for (c of connections(); track c.id) {
+                <option [value]="c.id" [selected]="c.id === connectionId()">{{ c.label }}</option>
+              }
+            </select>
+          </div>
+        }
+
+        <div class="field">
+          <label class="field__label" for="irm-search">{{ 'forge.search' | translate }}</label>
+          <input
+            #searchInput
+            id="irm-search"
+            class="input"
+            type="search"
+            autocomplete="off"
+            spellcheck="false"
+            [value]="query()"
+            (input)="query.set($any($event.target).value)"
+          />
+        </div>
+
+        <app-forge-error [error]="loadError()" [host]="connection()?.baseUrl ?? ''" (use)="useTransport($event)" />
+
+        <ul class="irm__list" [attr.aria-busy]="loading()">
+          @for (row of rows(); track row.repo.id) {
+            <li class="irm__item" [class.irm__item--selected]="selected()?.id === row.repo.id">
+              <button
+                type="button"
+                class="irm__repo"
+                [attr.aria-pressed]="selected()?.id === row.repo.id"
+                [disabled]="row.projectId !== null"
+                (click)="choose(row.repo)"
+              >
+                <span class="irm__path">{{ row.repo.path }}</span>
+                <span class="irm__badges">
+                  @if (row.repo.private) {
+                    <span class="badge">{{ 'forge.private' | translate }}</span>
+                  }
+                  @if (row.projectId) {
+                    <span class="badge">{{ 'forge.imported' | translate }}</span>
+                  }
+                  @if (row.repo.openIssues !== undefined) {
+                    <span class="irm__muted">{{ 'forge.issues' | translate: { n: row.repo.openIssues } }}</span>
+                  }
+                </span>
+                @if (row.repo.description) {
+                  <span class="irm__desc">{{ row.repo.description }}</span>
+                }
+              </button>
+              @if (row.projectId; as id) {
+                <button type="button" class="btn btn--secondary btn--sm" [disabled]="importer.busy() !== null" (click)="refresh(id)">
+                  <app-ui-icon name="restart" [size]="16" />
+                  {{ 'forge.refresh' | translate }}
+                </button>
+              }
+            </li>
+          } @empty {
+            @if (!loading() && !loadError()) {
+              <li class="irm__muted irm__empty">{{ 'forge.empty' | translate }}</li>
+            }
+          }
+        </ul>
+        @if (more() && !query().trim()) {
+          <button type="button" class="btn btn--ghost btn--sm irm__more" [disabled]="loading()" (click)="loadMore()">{{ 'forge.more' | translate }}</button>
+        }
+
+        @if (selected()) {
+          <div class="irm__options" role="group">
+            @for (opt of switches(); track opt.key) {
+              <button type="button" class="switch" role="switch" [attr.aria-checked]="opt.on" (click)="toggle(opt.key)">
+                <span class="switch__track"></span>
+                {{ opt.label | translate }}
+              </button>
+            }
+          </div>
+        }
+
+        <app-forge-error [error]="importError()" [host]="connection()?.baseUrl ?? ''" (use)="useTransport($event)" />
+        @if (progressKey(); as key) {
+          <p class="irm__muted" role="status">{{ key | translate: { n: importer.progress()?.count } }}</p>
+        }
+      </div>
+      <div class="irm__foot">
+        <button type="button" class="btn btn--ghost btn--sm" (click)="close.emit()">{{ 'projects.cancel' | translate }}</button>
+        <button type="button" class="btn btn--primary btn--sm" [disabled]="!selected() || importer.busy() !== null" (click)="runImport()">
+          {{ 'forge.import' | translate }}
+        </button>
+      </div>
+    }
+    }
+  </div>
+</div>

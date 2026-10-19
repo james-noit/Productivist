@@ -187,3 +187,10 @@
     transition: none;
   }
 }
+
+.pcard__forge {
+  display: inline-flex;
+  margin-left: 0.35rem;
+  vertical-align: -1px;
+  color: var(--color-text-muted);
+}
