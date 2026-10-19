@@ -1,9 +1,11 @@
 # Frontend: builds the Angular app and serves it with nginx, proxying /api/ to the backend's private address.
 # The backend has its own Dockerfile in backend/.
-FROM node:22-alpine AS build
+FROM node:24-alpine AS build
 WORKDIR /app
 COPY package.json package-lock.json ./
-RUN npm ci
+# Same npm major as local development: npm 10 and 12 resolve optional peers differently, so a lock written by one
+# can fail `npm ci` on the other. Bump this together with the npm used locally.
+RUN npm install -g npm@12.0.2 && npm ci
 COPY angular.json tsconfig.json tsconfig.app.json ./
 COPY public ./public
 COPY src ./src
