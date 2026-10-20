@@ -1,6 +1,6 @@
 import type { BlockStep, ExerciseDef, MovementPattern } from '../../../types/sportask';
 import { type BlockGenerator, type GenerationContext, defineGoal } from '../engine/context';
-import { finalizePlan, mobilityTail, scaleDose, slotWorkFor, slotsFor, slotSteps } from '../engine/fit';
+import { fillRemainder, finalizePlan, mobilityTail, scaleDose, slotWorkFor, slotsFor, slotSteps } from '../engine/fit';
 import { LADDER_PROGRESSION, ladderDose, ladderStates, usableAlternatives } from '../engine/progression';
 import { pickExercise } from '../engine/select';
 
@@ -33,11 +33,17 @@ export function setsToday(ctx: GenerationContext): Map<string, number> {
   return out;
 }
 
-function previousPattern(ctx: GenerationContext): string | undefined {
+/** The pattern of the last strength set of the previous block (the mobility finish does not count). */
+function previousPattern(ctx: GenerationContext, patterns: readonly MovementPattern[]): string | undefined {
   const last = ctx.todayBlocks[ctx.todayBlocks.length - 1];
-  const step = last?.steps[last.steps.length - 1];
-  return step ? ctx.catalog.exercises.get(step.exerciseId)?.pattern : undefined;
+  for (let i = (last?.steps.length ?? 0) - 1; i >= 0; i--) {
+    const pattern = ctx.catalog.exercises.get(last!.steps[i]!.exerciseId)?.pattern;
+    if (pattern && patterns.includes(pattern)) return pattern;
+  }
+  return undefined;
 }
+
+const MOBILITY_ONLY = (e: ExerciseDef): boolean => e.pattern === 'mobility';
 
 /** Warm-up: one rung below the current one (not below 0), only level <= 2 moves. */
 function warmupAlternatives(ladderId: string, rung: number, ctx: GenerationContext): ExerciseDef[] {
@@ -56,7 +62,7 @@ const generator: BlockGenerator<StrengthParams> = {
     const sizing = slotsFor(ctx.blockSeconds, 'strength');
     const states = ladderStates(ctx, p);
     const done = setsToday(ctx);
-    const prev = previousPattern(ctx);
+    const prev = previousPattern(ctx, p.patterns);
     const prevIndex = prev ? p.patterns.indexOf(prev as MovementPattern) : -1;
     const n = p.patterns.length;
 
@@ -111,7 +117,8 @@ const generator: BlockGenerator<StrengthParams> = {
         steps.push(...slotSteps({ ex: it.ex, target: it.target, ...(it.loadKg !== undefined ? { loadKg: it.loadKg } : {}), work: Math.max(1, window), rest, tempo: p.tempoFactor, ...(rounds > 1 ? { round: r } : {}) }));
       }
     }
-    steps.push(...mobilityTail(ctx, sizing.tail, picked.map((it) => it.ex.id)));
+    steps.push(...mobilityTail(ctx, sizing.tail, picked.map((it) => it.ex.id), MOBILITY_ONLY));
+    fillRemainder(ctx, steps, sizing.prep, picked.map((it) => it.ex.id), MOBILITY_ONLY);
     return finalizePlan(kind, sizing.prep, steps, ctx.blockSeconds);
   },
 };

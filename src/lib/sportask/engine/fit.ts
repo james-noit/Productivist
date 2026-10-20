@@ -132,29 +132,56 @@ export function finalizePlan(kind: BlockKind, prep: number, steps: BlockStep[], 
   return plan;
 }
 
-/** Candidates for a short easy mobility finish: mobility-tagged, available, level <= 2. */
-export function mobilityCandidates(ctx: GenerationContext): ExerciseDef[] {
-  return ctx.catalog.exercises.all.filter((e) => e.tags.includes('mobility') && e.level <= 2 && available(e, ctx));
+/** Candidates for a short easy mobility finish: mobility-tagged, available, level <= 2 (and whatever `filter` allows). */
+export function mobilityCandidates(ctx: GenerationContext, filter?: (e: ExerciseDef) => boolean): ExerciseDef[] {
+  return ctx.catalog.exercises.all.filter((e) => e.tags.includes('mobility') && e.level <= 2 && available(e, ctx) && (!filter || filter(e)));
 }
 
 /** The mobility finish of long strength/calories blocks: up to two holds that fit in `seconds`. */
-export function mobilityTail(ctx: GenerationContext, seconds: number, avoidIds: Iterable<string>, round?: number): BlockStep[] {
+export function mobilityTail(ctx: GenerationContext, seconds: number, avoidIds: Iterable<string>, filter?: (e: ExerciseDef) => boolean): BlockStep[] {
   if (seconds <= 0) return [];
   const avoid = new Set(avoidIds);
   const steps: BlockStep[] = [];
-  const first = pickExercise(mobilityCandidates(ctx), ctx, { avoidIds: avoid });
+  const first = pickExercise(mobilityCandidates(ctx, filter), ctx, { avoidIds: avoid });
   if (!first) return steps;
   avoid.add(first.id);
   const zones = first.zones ?? [];
   const second = pickExercise(
-    mobilityCandidates(ctx).filter((e) => !e.zones?.some((z) => zones.includes(z))),
+    mobilityCandidates(ctx, filter).filter((e) => !e.zones?.some((z) => zones.includes(z))),
     ctx,
     { avoidIds: avoid },
   );
   const picks = second ? [first, second] : [first];
   const each = Math.floor(seconds / picks.length);
   picks.forEach((ex, i) => {
-    steps.push(...slotSteps({ ex, work: each - (i < picks.length - 1 ? 5 : 0), rest: 5, ...(round !== undefined ? { round } : {}) }));
+    steps.push(...slotSteps({ ex, work: each - (i < picks.length - 1 ? 5 : 0), rest: 5 }));
   });
   return steps;
+}
+
+/** Minimum leftover worth turning into exercise; shorter remainders stay as the last step's rest. */
+export const MIN_FILL_SECONDS = 10;
+
+/**
+ * Time the generator did not use becomes short mobility holds instead of dead time (PLAN section 8.2: no silent gap). Appends to `steps`
+ * until fewer than MIN_FILL_SECONDS remain; whatever is left is closed by finalizePlan as the last step's rest.
+ */
+export function fillRemainder(ctx: GenerationContext, steps: BlockStep[], prep: number, avoidIds: Iterable<string>, filter?: (e: ExerciseDef) => boolean): void {
+  if (steps.length === 0) return;
+  const avoid = new Set(avoidIds);
+  const tail = steps[steps.length - 1]!;
+  const original = tail.restSeconds;
+  // The last step's rest is padding, not real rest: it is given up when there is room for more exercise.
+  tail.restSeconds = 0;
+  const before = steps.length;
+  for (let i = 0; i < 12; i++) {
+    const used = prep + steps.reduce((t, s) => t + s.workSeconds + s.restSeconds, 0);
+    const remaining = ctx.blockSeconds - used;
+    if (remaining < MIN_FILL_SECONDS) break;
+    const extra = mobilityTail(ctx, Math.min(remaining, 120), avoid, filter);
+    if (extra.length === 0) break;
+    for (const s of extra) avoid.add(s.exerciseId);
+    steps.push(...extra);
+  }
+  if (steps.length === before) tail.restSeconds = original;
 }

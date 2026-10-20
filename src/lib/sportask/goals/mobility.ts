@@ -2,7 +2,7 @@ import { startOfWeek } from '../../dates';
 import type { BlockStep, BodyZone, Dose, ExerciseDef, Level } from '../../../types/sportask';
 import { type BlockGenerator, type GenerationContext, type ProgressionModel, defineGoal } from '../engine/context';
 import { available } from '../engine/filter';
-import { finalizePlan, scaleDose, slotWorkFor, slotsFor, slotSteps } from '../engine/fit';
+import { fillRemainder, finalizePlan, scaleDose, slotWorkFor, slotsFor, slotSteps } from '../engine/fit';
 import { weekdayIndex } from '../engine/schedule';
 import { pickExercise } from '../engine/select';
 
@@ -97,6 +97,7 @@ const generator: BlockGenerator<MobilityParams> = {
     for (let r = 1; r <= rounds; r++) {
       for (const ex of list) steps.push(...slotSteps({ ex, target: holdOrReps(ex, p), work: Math.max(1, window), rest, ...(rounds > 1 ? { round: r } : {}) }));
     }
+    fillRemainder(ctx, steps, sizing.prep, list.map((e) => e.id), (e) => p.allowLoaded || (e.needsOneOf.length === 0 && !e.loadable));
     return finalizePlan(kind, sizing.prep, steps, ctx.blockSeconds);
   },
 };

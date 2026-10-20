@@ -1,7 +1,7 @@
 import type { BlockStep, ExerciseDef, Level } from '../../../types/sportask';
 import { type BlockGenerator, type GenerationContext, type ProgressionModel, defineGoal } from '../engine/context';
 import { available } from '../engine/filter';
-import { finalizePlan, mobilityTail, slotWorkFor, slotsFor, slotSteps } from '../engine/fit';
+import { fillRemainder, finalizePlan, mobilityTail, slotWorkFor, slotsFor, slotSteps } from '../engine/fit';
 import { pickExercise } from '../engine/select';
 
 export interface CaloriesParams {
@@ -131,17 +131,18 @@ const generator: BlockGenerator<CaloriesParams> = {
         steps.push(...made);
       }
     } else {
+      // As many intervals as fit, cycling through the circuit; the last round may be partial.
       const total = Math.max(1, Math.floor((avail + rest) / (work + rest)));
       const k = Math.min(total, total >= 10 ? 5 : total >= 8 ? 4 : 3);
-      const rounds = Math.max(1, Math.floor(total / k));
       const picks = pickSequence(ctx, candidates, k, start);
       usedIds.push(...picks.map((e) => e.id));
-      const w = Math.max(1, Math.min(work, slotWorkFor(avail, picks.length * rounds, rest)));
-      for (let r = 1; r <= rounds; r++) {
-        for (const ex of picks) steps.push(...slotSteps({ ex, work: w, rest, fixed: true, ...(rounds > 1 ? { round: r } : {}) }));
+      const w = Math.max(1, Math.min(work, slotWorkFor(avail, total, rest)));
+      for (let i = 0; i < total; i++) {
+        steps.push(...slotSteps({ ex: picks[i % picks.length]!, work: w, rest: i < total - 1 ? rest : 0, fixed: true, ...(total > picks.length ? { round: Math.floor(i / picks.length) + 1 } : {}) }));
       }
     }
-    steps.push(...mobilityTail(ctx, sizing.tail, usedIds));
+    steps.push(...mobilityTail(ctx, sizing.tail, usedIds, (e) => e.pattern === 'mobility'));
+    fillRemainder(ctx, steps, sizing.prep, usedIds, (e) => e.pattern === 'mobility');
     return finalizePlan(kind, sizing.prep, steps, ctx.blockSeconds);
   },
 };

@@ -4,6 +4,7 @@ import { addDays, startOfWeek } from '../src/lib/dates';
 import { CADENCES, breakSecondsFor, resolveCadence } from '../src/lib/sportask/cadences';
 import { CATALOG, CATALOG_VERSION, MET, PICTOGRAM_IDS } from '../src/lib/sportask/catalog';
 import type { AnyGoal, GenerationContext } from '../src/lib/sportask/engine/context';
+import { MIN_FILL_SECONDS } from '../src/lib/sportask/engine/fit';
 import { available } from '../src/lib/sportask/engine/filter';
 import { type BlockMeta, generate } from '../src/lib/sportask/engine/generate';
 import { LADDER_PROGRESSION, isRungUsable } from '../src/lib/sportask/engine/progression';
@@ -204,6 +205,18 @@ function checkRegistries(): void {
 
 // ---------------------------------------------------------------- 2 + 4. generation sweep
 
+/**
+ * Trailing padding (the last step's rest beyond the normal rest between steps) must be shorter than one slot (work + rest): the block is
+ * filled, not left with a gap (a leftover under MIN_FILL_SECONDS is too short to fill and always allowed). The normal rest is that of the first earlier step that has one.
+ */
+function checkNoIdleGap(plan: BlockPlan, label: string): void {
+  const last = plan.steps[plan.steps.length - 1]!;
+  const normalRest = plan.steps.slice(0, -1).find((s) => s.restSeconds > 0)?.restSeconds ?? 0;
+  const pad = last.restSeconds - normalRest;
+  const slot = Math.max(...plan.steps.map((s, i) => s.workSeconds + (i < plan.steps.length - 1 ? s.restSeconds : normalRest)));
+  check(pad < Math.max(slot, MIN_FILL_SECONDS), `${label}: ${pad} s of idle padding at the end, but a slot is ${slot} s`);
+}
+
 function assertPlan(plan: BlockPlan, ctx: GenerationContext, meta: BlockMeta, warm: boolean, label: string): void {
   check(plan.steps.length > 0, `${label}: empty plan`);
   check(plan.totalSeconds <= ctx.blockSeconds, `${label}: total ${plan.totalSeconds} > block ${ctx.blockSeconds}`);
@@ -223,6 +236,7 @@ function assertPlan(plan: BlockPlan, ctx: GenerationContext, meta: BlockMeta, wa
     if (plan.kind === 'warmup') check(ex.level <= 2 && ex.impact !== 'high', `${label}: warm-up step ${s.exerciseId} level ${ex.level} / ${ex.impact}`);
     if (ex.perSide && s.side === undefined) check(meta.origin === 'free' || plan.kind === 'test' || ex.perSide === true, `${label}: per-side step without side`);
   }
+  if (meta.origin === 'goal' && plan.kind !== 'test' && meta.fallback !== 'minimal') checkNoIdleGap(plan, label);
   if (meta.origin === 'goal' && plan.kind !== 'test') check(plan.kind === (warm ? 'warmup' : 'train'), `${label}: kind ${plan.kind} but warm=${warm}`);
   if (plan.kind === 'test') {
     check(plan.assessmentId && CATALOG.assessments.get(plan.assessmentId), `${label}: test without a known assessment`);
@@ -346,10 +360,12 @@ function checkDeterminism(): void {
 
 // ---------------------------------------------------------------- 5. strength day
 
-function patternRuns(plan: BlockPlan): string[] {
+/** Strength patterns of the plan in order, adjacent repeats collapsed; the mobility finish is left out. */
+function patternRuns(plan: BlockPlan, patterns: readonly string[]): string[] {
   const out: string[] = [];
   for (const s of plan.steps) {
     const p = CATALOG.exercises.get(s.exerciseId)!.pattern;
+    if (!patterns.includes(p)) continue;
     if (out[out.length - 1] !== p) out.push(p);
   }
   return out;
@@ -371,10 +387,10 @@ function simulateStrengthDay(week: number, equipment: EquipmentInventory, constr
     const g = generate(ctx, { mode: 'goal', templateId: null }, { enrolment });
     assertPlan(g.plan, ctx, g.meta, day.every((b) => b.status !== 'done'), `${label}-${i}`);
     if (g.meta.fallback === 'mobility') simFallbacks++;
-    const runs = patternRuns(g.plan);
+    const runs = patternRuns(g.plan, params.patterns);
     const prev = day[day.length - 1];
     if (prev && prev.goalId === 'strength' && prev.kind !== 'test' && g.meta.goalId === 'strength' && g.plan.kind !== 'test') {
-      const prevLast = CATALOG.exercises.get(prev.steps[prev.steps.length - 1]!.exerciseId)!.pattern;
+      const prevLast = patternRuns({ ...g.plan, steps: prev.steps }, params.patterns).pop();
       check(runs[0] !== prevLast, `${label}-${i}: same pattern (${prevLast}) in two consecutive blocks`);
     }
     if (g.meta.goalId === 'strength' && g.plan.kind !== 'test') {
@@ -386,7 +402,10 @@ function simulateStrengthDay(week: number, equipment: EquipmentInventory, constr
   const sets = new Map<string, number>();
   for (const b of day) {
     if (b.goalId !== 'strength' || b.kind === 'test') continue;
-    for (const s of b.steps) if (s.side !== 'right') sets.set(CATALOG.exercises.get(s.exerciseId)!.pattern, (sets.get(CATALOG.exercises.get(s.exerciseId)!.pattern) ?? 0) + 1);
+    for (const s of b.steps) {
+      const pattern = CATALOG.exercises.get(s.exerciseId)!.pattern;
+      if (s.side !== 'right' && params.patterns.includes(pattern)) sets.set(pattern, (sets.get(pattern) ?? 0) + 1);
+    }
   }
   for (const [pattern, n] of sets) check(n <= params.capPerPatternPerDay, `${label}: ${n} sets of ${pattern} above the cap ${params.capPerPatternPerDay}`);
   return strengthBlocks;
@@ -595,6 +614,16 @@ function checkScheduleAndFallbacks(): void {
   // a day that already has strength work stays a training day
   const again = makeCtx({ blockId: 'again', blockSeconds: 120, today: addDays(MONDAY, 4), equipment: EQUIPMENT_SETS['all']!, enrolment, history, todayBlocks: [history[4]!] });
   check(generate(again, { mode: 'goal', templateId: null }, { enrolment }).meta.goalId === 'strength', 'a day already trained is still a training day');
+
+  // calories week 3 (30:30 circuit), 300 s, bodyweight: the intervals fill the block
+  const calEnrol = enrol('calories', 'burnAndMove', 1, addDays(MONDAY, -14));
+  const calFirst = makeCtx({ blockId: 'cal0', blockSeconds: 120, enrolment: calEnrol });
+  const calDone = toBlock(generate(calFirst, { mode: 'goal', templateId: null }, { enrolment: calEnrol }).plan, { origin: 'goal', goalId: 'calories' }, calFirst);
+  const calCtx = makeCtx({ blockId: 'cal1', blockSeconds: 300, enrolment: calEnrol, todayBlocks: [calDone], history: [calDone] });
+  const cal = generate(calCtx, { mode: 'goal', templateId: null }, { enrolment: calEnrol });
+  check(cal.plan.steps.length >= 5 && cal.plan.steps.slice(0, 5).every((s) => s.workSeconds === 30 && s.restSeconds === (cal.plan.steps.indexOf(s) < 4 ? 30 : s.restSeconds)), `300 s at 30:30 starts with 5 full intervals, got ${stable(cal.plan.steps.map((s) => [s.exerciseId, s.workSeconds, s.restSeconds]))}`);
+  const calLast = cal.plan.steps[cal.plan.steps.length - 1]!;
+  check(calLast.restSeconds <= 45, `at most 45 s of trailing padding, got ${calLast.restSeconds}`);
 
   // no enrolment, an unknown goal: mobility, never empty
   for (const e of [null, enrol('nope', 'x', 1, start)]) {
