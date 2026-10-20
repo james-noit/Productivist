@@ -6,6 +6,8 @@ import { TodosService } from '../../../services/todos.service';
 import { MultitaskService } from '../../../services/multitask.service';
 import { ViewService } from '../../../services/view.service';
 import { DailyPlanService, UNASSIGNED_GROUP_ID } from '../../../services/daily-plan.service';
+import { SportaskService } from '../../../services/sportask.service';
+import { activateArmed } from '../../../lib/sportask/session-ops';
 import { ProjectFormComponent } from '../project-form/project-form.component';
 import { PlanObjectivesStepComponent } from '../plan-objectives-step/plan-objectives-step.component';
 import { TaskBadgesComponent } from '../task-badges/task-badges.component';
@@ -58,6 +60,7 @@ export class DailyBacklogViewComponent {
   private readonly todos = inject(TodosService);
   private readonly multitask = inject(MultitaskService);
   private readonly view = inject(ViewService);
+  private readonly sportask = inject(SportaskService);
   private readonly translate = inject(TranslateService);
 
   readonly unassignedGroupId = UNASSIGNED_GROUP_ID;
@@ -224,6 +227,7 @@ export class DailyBacklogViewComponent {
     this.dailyPlan.commitPlannedTasks();
     this.multitask.setEnabled(false);
     this.view.setView('pomodoro');
+    activateArmed(this.sportask, 'planner');
   }
 
   // --- Grouping into parallel execution lots ---
@@ -259,5 +263,6 @@ export class DailyBacklogViewComponent {
     this.dailyPlan.setActiveLotIndex(0);
     this.multitask.setEnabled(true);
     this.view.setView('pomodoro');
+    activateArmed(this.sportask, 'planner');
   }
 }

@@ -21,6 +21,7 @@ import { TodosService } from '../../../services/todos.service';
 import { ContextMenuHostDirective, type ContextRequest } from '../../directives/context-menu-host.directive';
 import { IconComponent } from '../icon/icon.component';
 import { KebabMenuComponent } from '../kebab-menu/kebab-menu.component';
+import { PlanSportaskSwitchComponent } from '../plan-sportask-switch/plan-sportask-switch.component';
 import { PlanContextMenuComponent, type PlanContextKind } from '../plan-context-menu/plan-context-menu.component';
 import { RepeatMarkComponent } from '../repeat-mark/repeat-mark.component';
 import { TaskDetailModalComponent } from '../task-detail-modal/task-detail-modal.component';
@@ -105,6 +106,7 @@ interface PlanContextRequest {
     TaskDetailModalComponent,
     ContextMenuHostDirective,
     PlanContextMenuComponent,
+    PlanSportaskSwitchComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './plan-objectives-step.component.html',

@@ -1,0 +1,28 @@
+:host {
+  display: block;
+  min-width: 0;
+}
+
+.psw {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.6rem;
+  min-height: 2rem;
+  min-width: 0;
+}
+
+.psw__summary {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+}
+
+.psw__change {
+  flex-shrink: 0;
+}
+
+/* The setup sheet opens over the Plan my day modal (z-index 50). */
+.psw__over {
+  --modal-z: 100;
+}
