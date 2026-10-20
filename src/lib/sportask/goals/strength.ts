@@ -135,7 +135,7 @@ export const STRENGTH_GOAL = defineGoal<StrengthParams>({
   tag: 'strength',
   name: w('Full-body strength', 'Fuerza de cuerpo completo'),
   description: w('Push, pull, squat, hinge, core and lunge in short sets, moving up a variant when you are ready.', 'Empuje, tirón, sentadilla, bisagra, core y zancada en series cortas, subiendo de variante cuando estés listo.'),
-  icon: 'flag',
+  icon: 'dumbbell',
   programs: [
     {
       id: 'microStrength',

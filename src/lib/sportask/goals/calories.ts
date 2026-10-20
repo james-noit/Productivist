@@ -164,7 +164,7 @@ export const CALORIES_GOAL = defineGoal<CaloriesParams>({
   tag: 'calories',
   name: w('Burn calories', 'Quemar calorías'),
   description: w('Work/rest intervals that raise your heart rate, from low-impact marching to tabata and EMOM.', 'Intervalos de trabajo y descanso que suben el pulso, desde marcha sin impacto hasta tabata y EMOM.'),
-  icon: 'flag',
+  icon: 'flame',
   programs: [
     {
       id: 'burnAndMove',

@@ -80,9 +80,6 @@ export const SPORTASK_TEXTS: Record<'en' | 'es', Record<string, unknown>> = {
     "weight": {
       "title": "Body weight (optional, this device only)",
       "hint": "Only to estimate calories. It is not synced.",
-      "unset": "Not set",
-      "less": "Decrease weight",
-      "more": "Increase weight",
       "unit": "kg"
     }
   },
@@ -160,9 +157,6 @@ export const SPORTASK_TEXTS: Record<'en' | 'es', Record<string, unknown>> = {
     "weight": {
       "title": "Peso corporal (opcional, solo en este dispositivo)",
       "hint": "Solo para estimar calorías. No se sincroniza.",
-      "unset": "Sin indicar",
-      "less": "Disminuir peso",
-      "more": "Aumentar peso",
       "unit": "kg"
     }
   },

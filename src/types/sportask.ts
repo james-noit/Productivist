@@ -169,6 +169,7 @@ export interface SportaskSettings {
   skinWholeApp: boolean;
   cues: boolean;
   autoStartBreak: boolean;
+  disclaimerAcceptedAt?: number;       // epoch ms; kept when leaving a program (Enrolment.acceptedDisclaimerAt is a copy)
 }
 
 /** Device-local, never synced. */

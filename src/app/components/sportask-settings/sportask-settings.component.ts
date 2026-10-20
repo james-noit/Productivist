@@ -19,6 +19,8 @@ type BandStrength = 'light' | 'medium' | 'heavy';
 const BAND_STRENGTHS: readonly BandStrength[] = ['light', 'medium', 'heavy'];
 const LEVELS: readonly (1 | 2 | 3)[] = [1, 2, 3];
 const MAX_WEIGHTS = 12;
+const MIN_WEIGHT_KG = 30;
+const MAX_WEIGHT_KG = 300;
 
 const minutes = (seconds: number): number => seconds / 60;
 
@@ -50,6 +52,7 @@ export class SportaskSettingsComponent {
   protected readonly skins = SKINS.all;
   protected readonly levels = LEVELS;
   protected readonly bandStrengths = BAND_STRENGTHS;
+  protected readonly weightLimits = { min: MIN_WEIGHT_KG, max: MAX_WEIGHT_KG };
   protected readonly limits = {
     focusMin: minutes(MIN_CUSTOM_FOCUS_SECONDS),
     focusMax: minutes(MAX_FOCUS_SECONDS),
@@ -86,7 +89,12 @@ export class SportaskSettingsComponent {
     const e = this.enrolment();
     return !!e && e.goalId === this.goalId() && e.programId === this.programId() && e.level === this.level();
   });
-  readonly alreadyAccepted = computed(() => (this.enrolment()?.acceptedDisclaimerAt ?? 0) > 0);
+  /** The notice was accepted before: the settings keep it when a program is left, the enrolment carries a copy. */
+  private readonly acceptedAt = computed(() => {
+    const s = this.settings();
+    return s.disclaimerAcceptedAt ?? ((s.enrolment?.acceptedDisclaimerAt ?? 0) > 0 ? s.enrolment!.acceptedDisclaimerAt : 0);
+  });
+  readonly alreadyAccepted = computed(() => this.acceptedAt() > 0);
   readonly canStart = computed(() => this.alreadyAccepted() || this.accepted());
   readonly since = computed(() => {
     const e = this.enrolment();
@@ -190,15 +198,10 @@ export class SportaskSettingsComponent {
   }
 
   enrol(): void {
-    const previous = this.enrolment();
+    const acceptedAt = this.acceptedAt() || Date.now();
     this.patch({
-      enrolment: {
-        goalId: this.goalId(),
-        programId: this.programId(),
-        level: this.level(),
-        startedOn: todayIso(),
-        acceptedDisclaimerAt: previous && previous.acceptedDisclaimerAt > 0 ? previous.acceptedDisclaimerAt : Date.now(),
-      },
+      enrolment: { goalId: this.goalId(), programId: this.programId(), level: this.level(), startedOn: todayIso(), acceptedDisclaimerAt: acceptedAt },
+      disclaimerAcceptedAt: acceptedAt,
     });
     this.closeQuestion();
   }
@@ -341,7 +344,16 @@ export class SportaskSettingsComponent {
 
   // --- Weight ---------------------------------------------------------------------------------------------------------
 
-  setWeight(value: number | null): void {
-    this.weightKg.set(value);
+  /** Typed in kg; empty clears it. Committed on blur/Enter (`change`), clamped to the box's limits, and written back. */
+  onWeight(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const raw = input.value.trim().replace(',', '.');
+    if (raw === '') {
+      this.weightKg.set(null);
+      return;
+    }
+    const n = Number(raw);
+    if (Number.isFinite(n)) this.weightKg.set(Math.round(Math.min(MAX_WEIGHT_KG, Math.max(MIN_WEIGHT_KG, n)) * 2) / 2);
+    input.value = String(this.weightKg() ?? '');
   }
 }

@@ -762,8 +762,10 @@ function checkSanitize(): void {
     skinWholeApp: false,
     cues: false,
     autoStartBreak: true,
+    disclaimerAcceptedAt: 1_700_000_000_000,
   };
   check(same(sanitizeSettings(JSON.parse(JSON.stringify(custom))), custom), 'valid custom settings are unchanged');
+  check(sanitizeSettings({ disclaimerAcceptedAt: 0 }).disclaimerAcceptedAt === undefined && sanitizeSettings({ disclaimerAcceptedAt: 'x' }).disclaimerAcceptedAt === undefined && sanitizeSettings({ disclaimerAcceptedAt: -5 }).disclaimerAcceptedAt === undefined, 'disclaimerAcceptedAt must be a positive number');
   for (const g of [null, 5, 'x', [], { enrolment: 5, cadenceId: 7, equipment: [], constraints: 'a', customCadence: { focusSeconds: 'a' } }, { equipment: { band: 5, 'bad key!': { owned: true }, kettlebell: { owned: 'yes', weightsKg: [-1, 'a', 1e9, 12, 12] } }, customCadence: { focusSeconds: 1, breakSeconds: 1e9, exerciseEvery: 99, longBreak: { every: 1, seconds: 1 } } }]) {
     const out = sanitizeSettings(g);
     check(same(sanitizeSettings(JSON.parse(JSON.stringify(out))), out), 'garbage settings become stable valid settings');

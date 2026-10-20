@@ -118,7 +118,7 @@ export const MOBILITY_GOAL = defineGoal<MobilityParams>({
   tag: 'mobility',
   name: w('Improve mobility', 'Mejorar la movilidad'),
   description: w('Short mobility holds for the joints a desk job stiffens: neck, shoulders, back, hips and ankles.', 'Movilidad breve para las articulaciones que el trabajo de escritorio endurece: cuello, hombros, espalda, caderas y tobillos.'),
-  icon: 'flag',
+  icon: 'stretch',
   programs: [
     {
       id: 'deskReset',

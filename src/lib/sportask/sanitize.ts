@@ -79,6 +79,8 @@ export function sanitizeSettings(raw: unknown): SportaskSettings {
     cues: typeof raw['cues'] === 'boolean' ? raw['cues'] : d.cues,
     autoStartBreak: typeof raw['autoStartBreak'] === 'boolean' ? raw['autoStartBreak'] : d.autoStartBreak,
   };
+  const accepted = real(raw['disclaimerAcceptedAt'], 0, 8.64e15);
+  if (accepted !== undefined && accepted > 0) out.disclaimerAcceptedAt = accepted;
   const c = raw['customCadence'];
   if (isRec(c) && isNum(c['focusSeconds']) && isNum(c['breakSeconds'])) {
     const lb = c['longBreak'];

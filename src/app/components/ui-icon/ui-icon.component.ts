@@ -39,7 +39,9 @@ export type UiIconName =
   | 'band'
   | 'kettlebell'
   | 'rope'
-  | 'ball';
+  | 'ball'
+  | 'flame'
+  | 'stretch';
 
 /**
  * Interface icons (close, delete, add, ...) as inline SVGs on a 24px grid: 1.75 stroke, round caps and

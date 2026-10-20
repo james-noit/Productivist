@@ -257,18 +257,19 @@
       <h4 id="ss-weight">{{ 'sportask.weight.title' | translate }}</h4>
       <p class="ss__hint">{{ 'sportask.weight.hint' | translate }}</p>
       <div class="ss__weight">
-        <app-number-stepper
-          [value]="weightKg()"
-          (valueChange)="setWeight($event)"
-          [min]="30"
-          [max]="300"
-          [emptyText]="'sportask.weight.unset' | translate"
-          [decreaseLabel]="'sportask.weight.less' | translate"
-          [increaseLabel]="'sportask.weight.more' | translate"
+        <input
+          class="input ss__min"
+          type="number"
+          inputmode="decimal"
+          [min]="weightLimits.min"
+          [max]="weightLimits.max"
+          step="0.5"
+          placeholder="kg"
+          [attr.aria-labelledby]="'ss-weight'"
+          [value]="weightKg() ?? ''"
+          (change)="onWeight($event)"
         />
-        @if (weightKg() !== null) {
-          <span class="ss__hint">{{ 'sportask.weight.unit' | translate }}</span>
-        }
+        <span class="ss__hint">{{ 'sportask.weight.unit' | translate }}</span>
       </div>
     </section>
   </div>
