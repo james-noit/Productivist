@@ -8,7 +8,7 @@ export type AppView = 'pomodoro' | 'projects' | 'project' | 'admin';
 /** How the project detail view shows its project. A union so later presentations extend it. */
 export type ProjectPresentation = 'overview' | 'kanban' | 'list' | 'matrix' | 'roadmap' | 'calendar' | 'flow';
 export type ProjectsTab = 'projects' | 'matrix';
-export type ConfigSection = 'general' | 'integrations' | 'account';
+export type ConfigSection = 'general' | 'integrations' | 'sportask' | 'account';
 
 const VIEWS: readonly AppView[] = ['pomodoro', 'projects', 'project', 'admin'];
 const PRESENTATIONS: readonly ProjectPresentation[] = ['overview', 'kanban', 'list', 'matrix', 'roadmap', 'calendar', 'flow'];

@@ -6,6 +6,16 @@ import type { SportaskSettings } from '../types/sportask';
 const KEY = 'productivist.sportask';
 const DEFAULTS_JSON = JSON.stringify(SPORTASK_DEFAULTS);
 
+/** Storage can throw (private windows, blocked site data): then Sportask counts as untouched. */
+function storedDiffersFromDefaults(): boolean {
+  try {
+    const stored = localStorage.getItem(KEY);
+    return stored !== null && stored !== DEFAULTS_JSON;
+  } catch {
+    return false;
+  }
+}
+
 const isObject = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v);
 
 /**
@@ -25,7 +35,7 @@ export class SportaskSettingsService {
    * The sync blob only carries `sportask` while it is true, so users who never touch Sportask keep the blob (and its
    * hash) they had before the feature existed instead of re-pushing it.
    */
-  readonly customized = signal(localStorage.getItem(KEY) !== null && localStorage.getItem(KEY) !== DEFAULTS_JSON);
+  readonly customized = signal(storedDiffersFromDefaults());
 
   update(patch: Partial<SportaskSettings>): void {
     this.settings.update((current) => ({ ...(isObject(current) ? current : SPORTASK_DEFAULTS), ...patch }));

@@ -50,7 +50,13 @@ const NEVER_INITIAL = ['src/lib/flow-graph.ts', component('objective-chip')];
  * `lib/recurrence.ts` are deliberately in the initial bundle, these are not. The Tasks and projects page (and
  * the pieces only it uses: cards, rows, drawer, floating button, inbox, kebab menu, page maths) and the shared form widgets stay out of it too.
  */
+// Everything under src/lib/sportask/ (the pure Sportask domain: catalog, engine, sanitiser...) is lazy, as are its UI and texts.
+const walkSportask = (dir) =>
+  readdirSync(dir, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? walkSportask(`${dir}/${e.name}`) : e.name.endsWith('.ts') ? [`${dir}/${e.name}`] : []));
 const NEVER_INITIAL_UI = [
+  ...walkSportask('src/lib/sportask'),
+  'src/i18n/sportask-texts.ts',
+  component('sportask-settings'),
   'src/lib/multitask-research.ts',
   'src/lib/bell-sounds.ts',
   component('lot-editor'),

@@ -544,6 +544,7 @@
     "general": "General",
     "account": "Account",
     "integrations": "Integrations",
+    "sportask": "Sportask",
     "language": "Language",
     "languageHint": "The language of the interface.",
     "theme": "Theme",
