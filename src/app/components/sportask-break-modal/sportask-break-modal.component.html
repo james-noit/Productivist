@@ -1,0 +1,241 @@
+<div class="modal-overlay sbm-overlay">
+  <div
+    #panel
+    class="modal-panel sbm sport-skin"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="sbm-title"
+    [attr.aria-busy]="!ready() || !pending()"
+    tabindex="-1"
+  >
+    @if (ready() && pending(); as p) {
+      <header class="sbm__head">
+        <div class="sbm__head-text">
+          <h2 id="sbm-title" class="sbm__title">{{ heading().key | translate: heading().params }}</h2>
+          <p class="sbm__pain">{{ 'sportask.brk.pain' | translate }}</p>
+        </div>
+        @if (stage() !== 'results') {
+          <app-kebab-menu #menu="kebabMenu" [label]="'sportask.brk.menu' | translate">
+            <button type="button" class="menu-item" role="menuitem" (click)="menu.close(); leave()">
+              {{ 'sportask.brk.leave' | translate }}
+            </button>
+          </app-kebab-menu>
+        }
+      </header>
+
+      @switch (stage()) {
+        @case ('preview') {
+          <div class="sbm__body">
+            @if (isRestDay()) {
+              <div class="sbm__banner" role="note">
+                <p>{{ 'sportask.brk.restDay' | translate }}</p>
+                <button type="button" class="btn btn--secondary btn--sm" (click)="trainAnyway()">
+                  {{ 'sportask.brk.trainAnyway' | translate }}
+                </button>
+              </div>
+            }
+            @if (fallback(); as f) {
+              <p class="sbm__note" role="note">{{ 'sportask.brk.fallback.' + f | translate }}</p>
+            }
+            @if (phaseNote()) {
+              <p class="sbm__note">{{ phaseNote() }}</p>
+            }
+            @if (testInfo(); as t) {
+              <p class="sbm__note">{{ t.instructions }}</p>
+            }
+            <ol class="sbm__steps" [attr.aria-label]="'sportask.brk.steps' | translate">
+              @for (r of rows(); track r.index) {
+                <li class="sbm__step">
+                  <app-sportask-pictogram [id]="r.pictogram" />
+                  <div class="sbm__step-main">
+                    <span class="sbm__step-name">{{ r.name }}</span>
+                    @if (r.side) {
+                      <span class="sbm__chip">{{ 'sportask.brk.side.' + r.side | translate }}</span>
+                    }
+                    @if (r.round) {
+                      <span class="sbm__chip">{{ 'sportask.brk.round' | translate: { n: r.round } }}</span>
+                    }
+                  </div>
+                  <span class="sbm__step-dose">
+                    @if (r.dose; as d) {
+                      {{ 'sportask.brk.unit.' + d.unit | translate: { n: d.n } }}
+                    } @else {
+                      {{ 'sportask.brk.unit.max' | translate }}
+                    }
+                    @if (r.loadKg !== null) {
+                      · {{ 'sportask.brk.unit.kg' | translate: { n: r.loadKg } }}
+                    }
+                  </span>
+                </li>
+              }
+            </ol>
+            <p class="sbm__total">{{ 'sportask.brk.total' | translate: { time: totalTime() } }}</p>
+          </div>
+          <footer class="sbm__foot">
+            <button type="button" class="btn btn--primary" data-first (click)="begin()">{{ 'sportask.brk.start' | translate }}</button>
+            @if (canReroll()) {
+              <button type="button" class="btn btn--secondary" (click)="another()">
+                {{ 'sportask.brk.another' | translate }} ({{ maxRerolls - p.rerolls }})
+              </button>
+            }
+            <button type="button" class="btn btn--ghost" (click)="skip()">{{ 'sportask.brk.skip' | translate }}</button>
+          </footer>
+        }
+
+        @case ('running') {
+          @if (now(); as n) {
+            <div class="sbm__body sbm__run" [attr.data-kind]="n.kind">
+              <p class="sbm__phase">{{ 'sportask.brk.phase.' + n.kind | translate }}</p>
+              <app-sportask-pictogram class="sbm__hero" [id]="n.pictogram" [animate]="(n.kind === 'work' || n.kind === 'breathe') && !paused()" />
+              @if (n.name) {
+                <h3 class="sbm__name">{{ n.name }}</h3>
+              }
+              <p class="sbm__facts">
+                @if (n.side) {
+                  <span class="sbm__chip">{{ 'sportask.brk.side.' + n.side | translate }}</span>
+                }
+                @if (n.dose; as d) {
+                  <span>{{ 'sportask.brk.unit.' + d.unit | translate: { n: d.n } }}</span>
+                }
+                @if (n.loadKg !== null) {
+                  <span>{{ 'sportask.brk.unit.kg' | translate: { n: n.loadKg } }}</span>
+                }
+              </p>
+              @if (n.cue) {
+                <p class="sbm__cue">{{ n.cue }}</p>
+              }
+              <p class="sbm__count" aria-hidden="true" [class.sbm__count--paused]="paused()">{{ n.remaining }}</p>
+              <div class="sbm__strip" aria-hidden="true">
+                @for (seg of strip(); track $index) {
+                  <span class="sbm__seg" [attr.data-state]="seg.state" [style.flex-grow]="seg.width"></span>
+                }
+              </div>
+              @if (n.next; as next) {
+                <p class="sbm__next">
+                  {{ 'sportask.brk.next' | translate: { name: next.name } }}
+                </p>
+              }
+              <p class="sbm__left">{{ 'sportask.brk.left' | translate: { time: clock.formattedTime() } }}</p>
+            </div>
+            <div class="visually-hidden" role="status" aria-live="polite">
+              @if (announce(); as say) {
+                {{ say.key | translate: say.params }}
+              }
+            </div>
+            <footer class="sbm__foot">
+              <button type="button" class="btn btn--primary" data-first (click)="togglePause()">
+                {{ (paused() ? 'sportask.brk.resume' : 'sportask.brk.pause') | translate }}
+              </button>
+              @if (n.repsStep) {
+                <button type="button" class="btn btn--secondary" (click)="markStepDone(n.index)">{{ 'sportask.brk.markDone' | translate }}</button>
+              }
+              <button type="button" class="btn btn--ghost" (click)="finishNow()">{{ 'sportask.brk.finishNow' | translate }}</button>
+            </footer>
+          }
+        }
+
+        @case ('results') {
+          <div class="sbm__body">
+            <p class="sbm__lead">{{ (isTest() ? 'sportask.brk.testResult' : 'sportask.brk.marks') | translate }}</p>
+            @if (testInfo(); as t) {
+              <p class="sbm__note">{{ t.instructions }}</p>
+            }
+            <ul class="sbm__rows">
+              @for (row of draft(); track row.key) {
+                <li class="sbm__row" [class.sbm__row--off]="!row.done">
+                  <div class="sbm__row-head">
+                    <label class="sbm__check">
+                      <input type="checkbox" [checked]="row.done" (change)="toggleDone(row.key)" />
+                      <span class="sbm__row-name">{{ row.name }}</span>
+                    </label>
+                    @if (row.side) {
+                      <span class="sbm__chip">{{ 'sportask.brk.side.' + row.side | translate }}</span>
+                    }
+                  </div>
+                  <div class="sbm__row-fields">
+                    <div class="sbm__field">
+                      <span class="sbm__field-label">{{ 'sportask.brk.field.' + row.metric | translate }}</span>
+                      @if (isTest() || row.metric === 'cm') {
+                        <input
+                          type="number"
+                          inputmode="decimal"
+                          class="input sbm__big"
+                          step="any"
+                          [value]="row.value ?? ''"
+                          [attr.aria-label]="'sportask.brk.field.' + row.metric | translate"
+                          (change)="setNumber(row.key, $event)"
+                        />
+                      } @else {
+                        <app-number-stepper
+                          [value]="row.value"
+                          (valueChange)="setValue(row.key, $event)"
+                          [min]="1"
+                          [max]="maxOf(row.metric)"
+                          [decreaseLabel]="'sportask.rhythm.less' | translate"
+                          [increaseLabel]="'sportask.rhythm.more' | translate"
+                        />
+                      }
+                    </div>
+                    @if (row.loadable) {
+                      <div class="sbm__field">
+                        <span class="sbm__field-label">{{ 'sportask.brk.field.kg' | translate }}</span>
+                        <app-number-stepper
+                          [value]="row.loadKg"
+                          (valueChange)="setLoad(row.key, $event)"
+                          [min]="1"
+                          [max]="500"
+                          [decreaseLabel]="'sportask.rhythm.less' | translate"
+                          [increaseLabel]="'sportask.rhythm.more' | translate"
+                        />
+                      </div>
+                    }
+                  </div>
+                </li>
+              }
+            </ul>
+
+            @if (!isTest()) {
+              <div class="sbm__feel">
+                <span class="sbm__field-label" id="sbm-feel">{{ 'sportask.brk.feel' | translate }}</span>
+                <div class="segmented" role="group" aria-labelledby="sbm-feel">
+                  @for (f of feedbacks; track f) {
+                    <button type="button" class="segmented__option" [attr.aria-pressed]="feedback() === f" (click)="feedback.set(f)">
+                      {{ 'sportask.brk.feedback.' + f | translate }}
+                    </button>
+                  }
+                </div>
+              </div>
+              <div class="sbm__feel">
+                <span class="sbm__field-label" id="sbm-rpe">{{ 'sportask.brk.rpe' | translate }}</span>
+                <div class="sbm__rpe" role="group" aria-labelledby="sbm-rpe">
+                  @for (n of rpes; track n) {
+                    <button type="button" class="filter-chip" [attr.aria-pressed]="rpe() === n" (click)="setRpe(n)">{{ n }}</button>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+          <footer class="sbm__foot">
+            @if (confirm()) {
+              <div class="confirm-bar" role="alertdialog" aria-labelledby="sbm-confirm">
+                <p class="confirm-bar__text" id="sbm-confirm">{{ 'sportask.brk.discardQ' | translate }}</p>
+                <div class="confirm-bar__actions">
+                  <button type="button" class="btn btn--secondary" data-first (click)="save(false)">{{ 'sportask.brk.save' | translate }}</button>
+                  <button type="button" class="btn btn--danger" (click)="discard()">{{ 'sportask.brk.discard' | translate }}</button>
+                </div>
+              </div>
+            } @else {
+              <button type="button" class="btn btn--primary" data-first (click)="save(true)">{{ 'sportask.brk.saveBack' | translate }}</button>
+              <button type="button" class="btn btn--secondary" (click)="save(false)">{{ 'sportask.brk.save' | translate }}</button>
+            }
+          </footer>
+        }
+      }
+    } @else {
+      <p class="sbm__loading" role="status">
+        <app-ui-icon name="dumbbell" [size]="20" />
+        <span class="visually-hidden">…</span>
+      </p>
+    }
+  </div>
+</div>

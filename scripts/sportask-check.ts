@@ -4,6 +4,7 @@ import { addDays, startOfWeek } from '../src/lib/dates';
 import { hashWith, sportBlockCodec, sportTemplateCodec, type SportBlockWire, type SportTemplateWire } from '../src/lib/sync-engine';
 import { CADENCES, breakSecondsFor, resolveCadence } from '../src/lib/sportask/cadences';
 import { CATALOG, CATALOG_VERSION, MET, PICTOGRAM_IDS } from '../src/lib/sportask/catalog';
+import { PICTOGRAMS } from '../src/lib/sportask/pictogram-paths';
 import type { AnyGoal, GenerationContext } from '../src/lib/sportask/engine/context';
 import { MIN_FILL_SECONDS } from '../src/lib/sportask/engine/fit';
 import { available } from '../src/lib/sportask/engine/filter';
@@ -141,6 +142,11 @@ function checkRegistries(): void {
   const exercises = CATALOG.exercises;
   check(exercises.all.length > 0, 'catalog has exercises');
   const pictograms = new Set<string>(PICTOGRAM_IDS);
+  for (const id of PICTOGRAM_IDS) {
+    const p = PICTOGRAMS[id];
+    check(!!p && p.a.length > 0 && p.b.length > 0, `pictogram ${id}: both poses drawn`);
+    for (const d of [...(p?.a ?? []), ...(p?.b ?? [])]) check(/^M[-\d. ]+[aLC]/.test(d) && !d.includes('NaN'), `pictogram ${id}: a sane path`);
+  }
   const equipmentIds = new Set(EQUIPMENT.all.map((e) => e.id));
   for (const ex of exercises.all) {
     check(ex.name.en.length > 0 && ex.name.es.length > 0, `${ex.id}: names in en and es`);

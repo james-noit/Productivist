@@ -77,6 +77,106 @@ export const SPORTASK_TEXTS: Record<'en' | 'es', Record<string, unknown>> = {
       "cues": "Sound for each step",
       "autoStart": "Start the block without confirming"
     },
+    "btn": {
+      "goal": "My goal: {{name}}",
+      "free": "Free training",
+      "rhythm": "Rhythm {{rhythm}} (focus/break, minutes)",
+      "change": "Change...",
+      "leave": "Leave Sportask"
+    },
+    "setup": {
+      "title": "Sportask",
+      "what": "What to train",
+      "goalTab": "My goal",
+      "freeTab": "Free training",
+      "noGoal": "You have not picked a goal yet.",
+      "pickGoal": "Choose a goal",
+      "week": "Week {{week}} of {{weeks}}",
+      "templates": "Templates",
+      "random": "Random",
+      "needsGear": "Needs equipment you do not have",
+      "gear": "Equipment today",
+      "noGear": "No equipment",
+      "gearHint": "Only for this session.",
+      "shortBreak": "Only a short exercise fits in a break this short.",
+      "cancel": "Cancel",
+      "activate": "Turn on Sportask",
+      "activateAccept": "I accept and turn it on",
+      "savePlan": "Save for the plan",
+      "savePlanAccept": "I accept and save"
+    },
+    "brk": {
+      "menu": "More options",
+      "leave": "Leave Sportask",
+      "pain": "If something hurts, stop.",
+      "head": {
+        "freeAny": "Free training",
+        "free": "Free training · {{name}}",
+        "test": "Test: {{name}}",
+        "rest": "Rest day: {{goal}}",
+        "goal": "{{goal}} · week {{week}}",
+        "warmup": "Warm-up · {{goal}} · week {{week}}"
+      },
+      "restDay": "Rest day: this block is easy so you recover. Train anyway if you feel like it.",
+      "trainAnyway": "Train anyway",
+      "fallback": {
+        "mobility": "With these limits the usual exercises do not fit, so this block is mobility.",
+        "minimal": "With these limits only one easy move fits."
+      },
+      "steps": "Steps in this block",
+      "side": {
+        "left": "Left",
+        "right": "Right"
+      },
+      "round": "Round {{n}}",
+      "unit": {
+        "reps": "{{n}} reps",
+        "seconds": "{{n}} s",
+        "max": "as many as you can",
+        "kg": "{{n}} kg"
+      },
+      "total": "{{time}} in total",
+      "start": "Start",
+      "another": "Another one",
+      "skip": "Skip",
+      "phase": {
+        "prep": "Get ready",
+        "work": "Go",
+        "rest": "Rest",
+        "breathe": "Breathe / walk"
+      },
+      "next": "Next: {{name}}",
+      "left": "Break left: {{time}}",
+      "pause": "Pause",
+      "resume": "Resume",
+      "markDone": "Done",
+      "finishNow": "Finish now",
+      "say": {
+        "prep": "Get ready: {{name}} {{dose}}",
+        "work": "Now: {{name}}, {{dose}}",
+        "rest": "Rest. Next: {{name}}, {{dose}}",
+        "breathe": "Breathe and walk until the break ends"
+      },
+      "marks": "How did it go? Check what you did.",
+      "testResult": "Enter your result.",
+      "field": {
+        "reps": "Reps",
+        "seconds": "Seconds",
+        "cm": "cm",
+        "kg": "Weight (kg)"
+      },
+      "feel": "How did it feel?",
+      "feedback": {
+        "tooEasy": "Easy",
+        "ok": "Good",
+        "tooHard": "Hard"
+      },
+      "rpe": "Effort, 1 to 10 (optional)",
+      "saveBack": "Save and back to work",
+      "save": "Save",
+      "discard": "Discard",
+      "discardQ": "Discard the marks?"
+    },
     "weight": {
       "title": "Body weight (optional, this device only)",
       "hint": "Only to estimate calories. It is not synced.",
@@ -153,6 +253,106 @@ export const SPORTASK_TEXTS: Record<'en' | 'es', Record<string, unknown>> = {
       "wholeApp": "Aplicar a toda la app durante la sesión",
       "cues": "Sonidos de cada paso",
       "autoStart": "Empezar el bloque sin confirmar"
+    },
+    "btn": {
+      "goal": "Mi objetivo: {{name}}",
+      "free": "Entrenamiento libre",
+      "rhythm": "Ritmo {{rhythm}} (foco/pausa, minutos)",
+      "change": "Cambiar...",
+      "leave": "Salir de Sportask"
+    },
+    "setup": {
+      "title": "Sportask",
+      "what": "Qué entrenar",
+      "goalTab": "Mi objetivo",
+      "freeTab": "Entrenamiento libre",
+      "noGoal": "Todavía no has elegido un objetivo.",
+      "pickGoal": "Elegir un objetivo",
+      "week": "Semana {{week}} de {{weeks}}",
+      "templates": "Plantillas",
+      "random": "Al azar",
+      "needsGear": "Necesita material que no tienes",
+      "gear": "Material de hoy",
+      "noGear": "Sin material",
+      "gearHint": "Solo para esta sesión.",
+      "shortBreak": "En una pausa tan corta solo cabe un ejercicio breve.",
+      "cancel": "Cancelar",
+      "activate": "Activar Sportask",
+      "activateAccept": "Acepto y lo activo",
+      "savePlan": "Guardar para el plan",
+      "savePlanAccept": "Acepto y guardo"
+    },
+    "brk": {
+      "menu": "Más opciones",
+      "leave": "Salir de Sportask",
+      "pain": "Si algo duele, para.",
+      "head": {
+        "freeAny": "Entrenamiento libre",
+        "free": "Entrenamiento libre · {{name}}",
+        "test": "Test: {{name}}",
+        "rest": "Día de descanso: {{goal}}",
+        "goal": "{{goal}} · semana {{week}}",
+        "warmup": "Calentamiento · {{goal}} · semana {{week}}"
+      },
+      "restDay": "Día de descanso: este bloque es suave para que te recuperes. Entrena igualmente si te apetece.",
+      "trainAnyway": "Entrenar igualmente",
+      "fallback": {
+        "mobility": "Con estas restricciones no caben los ejercicios habituales, así que este bloque es de movilidad.",
+        "minimal": "Con estas restricciones solo cabe un movimiento suave."
+      },
+      "steps": "Pasos de este bloque",
+      "side": {
+        "left": "Izquierda",
+        "right": "Derecha"
+      },
+      "round": "Ronda {{n}}",
+      "unit": {
+        "reps": "{{n}} reps",
+        "seconds": "{{n}} s",
+        "max": "las que puedas",
+        "kg": "{{n}} kg"
+      },
+      "total": "{{time}} en total",
+      "start": "Empezar",
+      "another": "Otro",
+      "skip": "Saltar",
+      "phase": {
+        "prep": "Prepárate",
+        "work": "¡Vamos!",
+        "rest": "Descanso",
+        "breathe": "Respira / camina"
+      },
+      "next": "Siguiente: {{name}}",
+      "left": "Pausa restante: {{time}}",
+      "pause": "Pausa",
+      "resume": "Reanudar",
+      "markDone": "Hecho",
+      "finishNow": "Terminar ya",
+      "say": {
+        "prep": "Prepárate: {{name}} {{dose}}",
+        "work": "Ahora: {{name}}, {{dose}}",
+        "rest": "Descanso. Siguiente: {{name}}, {{dose}}",
+        "breathe": "Respira y camina hasta que acabe la pausa"
+      },
+      "marks": "¿Qué tal ha ido? Marca lo que has hecho.",
+      "testResult": "Anota tu resultado.",
+      "field": {
+        "reps": "Repeticiones",
+        "seconds": "Segundos",
+        "cm": "cm",
+        "kg": "Peso (kg)"
+      },
+      "feel": "¿Cómo se ha sentido?",
+      "feedback": {
+        "tooEasy": "Fácil",
+        "ok": "Bien",
+        "tooHard": "Duro"
+      },
+      "rpe": "Esfuerzo, de 1 a 10 (opcional)",
+      "saveBack": "Guardar y volver al trabajo",
+      "save": "Guardar",
+      "discard": "Descartar",
+      "discardQ": "¿Descartar las marcas?"
     },
     "weight": {
       "title": "Peso corporal (opcional, solo en este dispositivo)",

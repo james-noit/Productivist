@@ -2,6 +2,7 @@ import { Injectable, computed, effect, inject, signal, untracked } from '@angula
 import { TranslateService } from '@ngx-translate/core';
 import { localStorageSignal } from '../core/local-storage-signal';
 import { ProjectActivityService } from './project-activity.service';
+import { SportaskService } from './sportask.service';
 import { TodosService } from './todos.service';
 import {
   SettingsService,
@@ -34,6 +35,8 @@ export class ClockService {
   private readonly translate = inject(TranslateService);
   private readonly todos = inject(TodosService);
   private readonly activity = inject(ProjectActivityService);
+  // Eager and tiny; it never injects the clock back.
+  private readonly sportask = inject(SportaskService);
 
   readonly mode = signal<ClockMode>('focus');
   readonly running = signal(false);
@@ -92,9 +95,11 @@ export class ClockService {
     () => !this.running() && this.durationSeconds() < this.maxDurationSeconds(),
   );
 
-  readonly durationSeconds = computed(() =>
-    this.mode() === 'focus' ? this.settings.focusSeconds() : this.settings.breakSeconds(),
-  );
+  readonly durationSeconds = computed(() => {
+    const override = this.sportask.durationOverride();
+    if (override) return this.mode() === 'focus' ? override.focus : override.break;
+    return this.mode() === 'focus' ? this.settings.focusSeconds() : this.settings.breakSeconds();
+  });
   readonly totalSeconds = computed(() => this.durationSeconds());
   readonly remainingSeconds = signal(0);
   /** A session is running, or paused partway through (what the header's Pomodoro chip shows). */
@@ -188,6 +193,12 @@ export class ClockService {
     }, end);
   }
 
+  /** A short step cue for Sportask blocks. The caller checks that the page is visible and that the cues and the sounds are on. */
+  playCue(id: 'step' | 'countdown' | 'end'): void {
+    const ctx = this.audio();
+    if (ctx) void this.loadBells().then((bells) => bells.cue(ctx, id));
+  }
+
   /** One cycle of a sound, for the settings panel: never loops. */
   preview(id: BellSoundId): void {
     this.stopAlarm();
@@ -260,6 +271,7 @@ export class ClockService {
 
   private switchToNextMode(): void {
     const wasFocus = this.mode() === 'focus';
+    if (wasFocus) this.sportask.focusEnded();
     this.mode.set(wasFocus ? 'break' : 'focus');
     this.hasTicked = false;
     this.remainingSeconds.set(this.totalSeconds());

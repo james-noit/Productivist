@@ -8,6 +8,7 @@ import { SyncService } from '../services/sync.service';
 import { ProjectsService } from '../services/projects.service';
 import { RecurrenceService } from '../services/recurrence.service';
 import { AccountService } from '../services/account.service';
+import { SportaskService } from '../services/sportask.service';
 import { AppHeaderComponent } from './components/app-header/app-header.component';
 import { PomodoroClockComponent } from './components/pomodoro-clock/pomodoro-clock.component';
 import { TodoListComponent } from './components/todo-list/todo-list.component';
@@ -15,6 +16,7 @@ import { MultitaskViewComponent } from './components/multitask-view/multitask-vi
 import { PlanningLabModalComponent } from './components/planning-lab-modal/planning-lab-modal.component';
 import { ConfigModalComponent } from './components/config-modal/config-modal.component';
 import { AlarmModalComponent } from './components/alarm-modal/alarm-modal.component';
+import { SportaskBreakModalComponent } from './components/sportask-break-modal/sportask-break-modal.component';
 import { RecurringTasksModalComponent } from './components/recurring-tasks-modal/recurring-tasks-modal.component';
 import { ProjectDetailViewComponent } from './components/project-detail-view/project-detail-view.component';
 import { ProjectsViewComponent } from './components/projects-view/projects-view.component';
@@ -40,6 +42,7 @@ type CapacitorGlobal = {
     ConfigModalComponent,
     RecurringTasksModalComponent,
     AlarmModalComponent,
+    SportaskBreakModalComponent,
     ProjectsViewComponent,
     ProjectDetailViewComponent,
     AdminViewComponent,
@@ -54,6 +57,7 @@ export class AppComponent {
   readonly view = inject(ViewService);
   readonly clock = inject(ClockService);
   readonly accounts = inject(AccountService);
+  readonly sportask = inject(SportaskService);
   private readonly translate = inject(TranslateService);
   private readonly injector = inject(Injector);
 

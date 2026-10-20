@@ -11,6 +11,7 @@ import { FlowService } from '../../../services/flow.service';
 import { RecurrenceService } from '../../../services/recurrence.service';
 import { SportDataService } from '../../../services/sport-data.service';
 import { SportaskSettingsService } from '../../../services/sportask-settings.service';
+import { SportaskService } from '../../../services/sportask.service';
 
 const RESET_PHRASE = 'confirm reset';
 
@@ -34,6 +35,7 @@ export class AppMenuComponent {
   private readonly recurrences = inject(RecurrenceService);
   private readonly sportData = inject(SportDataService);
   private readonly sportaskSettings = inject(SportaskSettingsService);
+  private readonly sportask = inject(SportaskService);
   private readonly injector = inject(Injector);
 
   readonly resetPhrase = RESET_PHRASE;
@@ -153,13 +155,8 @@ export class AppMenuComponent {
     this.dailyPlan.reset();
     this.sportData.reset();
     this.sportaskSettings.reset();
-    // The session and the armed flag have no signals yet (phase 4 adds them: its stop() must be called here too).
-    try {
-      localStorage.removeItem('productivist.sportaskSession');
-      localStorage.removeItem('productivist.sportaskArmed');
-    } catch {
-      // Storage unavailable: there is nothing to clear.
-    }
+    this.sportask.stop();
+    this.sportask.armed.set(null);
     // Git access tokens are device-local and never exported, so only a full Reset removes them. The service is lazy
     // (it must stay out of the initial bundle), hence the dynamic import.
     void import('../../../services/forge-connections.service').then((m) => this.injector.get(m.ForgeConnectionsService).reset());

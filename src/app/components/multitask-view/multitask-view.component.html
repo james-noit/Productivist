@@ -8,13 +8,14 @@
         {{ 'clock.break' | translate }}
       </button>
       <app-clock-settings />
+      <app-sportask-button source="multitask" />
     </div>
 
     <div class="multitask-view__time-group">
       <div class="multitask-view__stepper" role="group" [attr.aria-label]="'clock.adjustDuration' | translate">
         <button
           type="button"
-          [disabled]="!clock.canDecreaseDuration()"
+          [disabled]="!clock.canDecreaseDuration() || sportask.active()"
           [attr.aria-label]="'clock.decreaseLarge' | translate"
           [title]="'clock.decreaseLarge' | translate"
           (click)="clock.adjustDuration(-300)"
@@ -23,7 +24,7 @@
         </button>
         <button
           type="button"
-          [disabled]="!clock.canDecreaseDuration()"
+          [disabled]="!clock.canDecreaseDuration() || sportask.active()"
           [attr.aria-label]="'clock.decreaseSmall' | translate"
           [title]="'clock.decreaseSmall' | translate"
           (click)="clock.adjustDuration(-30)"
@@ -35,7 +36,7 @@
       <div class="multitask-view__stepper" role="group" [attr.aria-label]="'clock.adjustDuration' | translate">
         <button
           type="button"
-          [disabled]="!clock.canIncreaseDuration()"
+          [disabled]="!clock.canIncreaseDuration() || sportask.active()"
           [attr.aria-label]="'clock.increaseSmall' | translate"
           [title]="'clock.increaseSmall' | translate"
           (click)="clock.adjustDuration(30)"
@@ -44,7 +45,7 @@
         </button>
         <button
           type="button"
-          [disabled]="!clock.canIncreaseDuration()"
+          [disabled]="!clock.canIncreaseDuration() || sportask.active()"
           [attr.aria-label]="'clock.increaseLarge' | translate"
           [title]="'clock.increaseLarge' | translate"
           (click)="clock.adjustDuration(300)"

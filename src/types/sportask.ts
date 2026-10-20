@@ -182,8 +182,42 @@ export interface SportaskSession {
   equipmentOverride: EquipmentInventory | null;
   startedAt: number;
   breaksSeen: number;
-  pending: { blockId: string; plan: BlockPlan; startedAt: number | null } | null;
+  pending: PendingBlock | null;
 }
+
+/** What the generator says about a block besides its steps; stored on the block row and shown in the preview. */
+export interface BlockMeta {
+  origin: 'goal' | 'free';
+  /** The goal that actually generated the block (the rest-day goal on a rest day). */
+  goalId?: string;
+  programId?: string;
+  programWeek?: number;
+  templateId?: string;
+  assessmentId?: string;
+  /** Today is not a training day of the program: the block comes from the rest-day goal. */
+  restDay?: boolean;
+  /** The requested block could not be made with these constraints. */
+  fallback?: 'mobility' | 'minimal';
+  phaseNote?: LocalizedText;
+}
+
+/** The block of the current break, kept in the session so a reload (or another tab) resumes it. */
+export interface PendingBlock {
+  blockId: string;
+  plan: BlockPlan;
+  /** Epoch ms of the press on Start; null while the preview is showing. */
+  startedAt: number | null;
+  meta: BlockMeta;
+  /** The break's length when the plan was made (the clock's own total changes once the break is over). */
+  blockSeconds: number;
+  /** How many times "Another one" was used for this break (at most 3). */
+  rerolls: number;
+  /** "Train anyway" on a rest day. */
+  forceTrain?: boolean;
+}
+
+/** What a session (or the armed planner session) needs to start. */
+export type SportaskStartOptions = Pick<SportaskSession, 'source' | 'mode' | 'templateId' | 'cadence' | 'equipmentOverride'>;
 
 /** The Sportask part of an export file (version 6). User templates only: the built-in ones live in code. */
 export interface SportExport {

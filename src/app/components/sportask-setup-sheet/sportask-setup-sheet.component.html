@@ -1,0 +1,179 @@
+<div class="modal-overlay sss-overlay" (mousedown)="onBackdrop($event)">
+  <div
+    #panel
+    class="modal-panel sss sport-skin"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="sss-title"
+    [attr.aria-busy]="!ready()"
+    tabindex="-1"
+    (keydown)="onKeydown($event)"
+  >
+    @if (ready()) {
+      <header class="sss__head">
+        <h2 id="sss-title" class="sss__title">{{ 'sportask.setup.title' | translate }}</h2>
+        <button type="button" class="btn btn--ghost btn--icon btn--sm" [attr.aria-label]="'sportask.setup.cancel' | translate" (click)="close()">
+          <app-ui-icon name="x" />
+        </button>
+      </header>
+
+      <div class="sss__body">
+        <section class="sss__section" aria-labelledby="sss-what">
+          <h3 class="sss__label" id="sss-what">{{ 'sportask.setup.what' | translate }}</h3>
+          <div class="segmented" role="group" aria-labelledby="sss-what">
+            <button type="button" class="segmented__option" data-first [attr.aria-pressed]="mode() === 'goal'" (click)="setMode('goal')">
+              {{ 'sportask.setup.goalTab' | translate }}
+            </button>
+            <button type="button" class="segmented__option" [attr.aria-pressed]="mode() === 'free'" (click)="setMode('free')">
+              {{ 'sportask.setup.freeTab' | translate }}
+            </button>
+          </div>
+
+          @if (mode() === 'goal') {
+            @if (goalCard(); as g) {
+              <div class="sss__card">
+                <app-ui-icon [name]="g.icon" [size]="22" />
+                <div class="sss__card-text">
+                  <strong>{{ g.name }}</strong>
+                  <span>{{ g.program }} · {{ 'sportask.setup.week' | translate: { week: g.week, weeks: g.weeks } }}</span>
+                </div>
+              </div>
+            } @else {
+              <div class="sss__card sss__card--empty">
+                <p>{{ 'sportask.setup.noGoal' | translate }}</p>
+                <button type="button" class="btn btn--secondary btn--sm" (click)="pickGoal()">{{ 'sportask.setup.pickGoal' | translate }}</button>
+              </div>
+            }
+          } @else {
+            <div class="sss__radios" role="radiogroup" [attr.aria-label]="'sportask.setup.templates' | translate">
+              <label class="sss__radio">
+                <input type="radio" name="sss-template" [checked]="chosenTemplate() === 'random'" (change)="templateId.set('random')" />
+                <span>{{ 'sportask.setup.random' | translate }}</span>
+              </label>
+              @for (t of templateRows(); track t.id) {
+                <label class="sss__radio" [class.sss__radio--off]="!t.available">
+                  <input type="radio" name="sss-template" [disabled]="!t.available" [checked]="chosenTemplate() === t.id" (change)="templateId.set(t.id)" />
+                  <span>{{ t.name }}</span>
+                  @if (!t.available) {
+                    <small>{{ 'sportask.setup.needsGear' | translate }}</small>
+                  }
+                </label>
+              }
+            </div>
+          }
+        </section>
+
+        <section class="sss__section" aria-labelledby="sss-rhythm">
+          <h3 class="sss__label" id="sss-rhythm">{{ 'sportask.rhythm.title' | translate }}</h3>
+          <div class="sss__radios" role="radiogroup" [attr.aria-label]="'sportask.rhythm.list' | translate">
+            @for (c of cadenceRows(); track c.id) {
+              <label class="sss__radio">
+                <input type="radio" name="sss-cadence" [checked]="cadenceId() === c.id" (change)="pickCadence(c.id)" />
+                <span>
+                  <strong>{{ c.name }}</strong>
+                  <small>
+                    {{ 'sportask.rhythm.line' | translate: { focus: c.focus, brk: c.brk } }}@if (c.longMin) {, {{ 'sportask.rhythm.long' | translate: { min: c.longMin, n: c.longEvery } }}}@if (c.every > 1) {, {{ 'sportask.rhythm.every' | translate: { n: c.every } }}}
+                  </small>
+                </span>
+              </label>
+            }
+            <label class="sss__radio">
+              <input type="radio" name="sss-cadence" [checked]="cadenceId() === 'custom'" (change)="pickCadence('custom')" />
+              <span><strong>{{ 'sportask.rhythm.custom' | translate }}</strong></span>
+            </label>
+          </div>
+
+          @if (cadenceId() === 'custom') {
+            <div class="sss__custom">
+              <label class="field">
+                <span class="field__label">{{ 'sportask.rhythm.focus' | translate }}</span>
+                <input class="input" type="number" inputmode="decimal" [attr.min]="limits.focusMin" [attr.max]="limits.focusMax" step="0.5" [value]="custom().focusSeconds / 60" (change)="onMinutes($event, 'focusSeconds')" />
+              </label>
+              <label class="field">
+                <span class="field__label">{{ 'sportask.rhythm.break' | translate }}</span>
+                <input class="input" type="number" inputmode="decimal" [attr.min]="limits.breakMin" [attr.max]="limits.breakMax" step="0.5" [value]="custom().breakSeconds / 60" (change)="onMinutes($event, 'breakSeconds')" />
+              </label>
+              <div class="field">
+                <span class="field__label">{{ 'sportask.rhythm.exEvery' | translate }}</span>
+                <app-number-stepper
+                  [value]="custom().exerciseEvery"
+                  (valueChange)="setExerciseEvery($event)"
+                  [min]="1"
+                  [max]="8"
+                  [decreaseLabel]="'sportask.rhythm.less' | translate"
+                  [increaseLabel]="'sportask.rhythm.more' | translate"
+                />
+              </div>
+              <div class="sss__long">
+                <button type="button" class="switch" role="switch" [attr.aria-checked]="!!custom().longBreak" (click)="toggleLong()">
+                  <span class="switch__track" aria-hidden="true"></span>
+                  <span>{{ 'sportask.rhythm.longBreak' | translate }}</span>
+                </button>
+                @if (custom().longBreak; as lb) {
+                  <label class="field">
+                    <span class="field__label">{{ 'sportask.rhythm.longMin' | translate }}</span>
+                    <input class="input" type="number" inputmode="decimal" [attr.min]="limits.breakMin" [attr.max]="limits.breakMax" step="0.5" [value]="lb.seconds / 60" (change)="onMinutes($event, 'longSeconds')" />
+                  </label>
+                  <div class="field">
+                    <span class="field__label">{{ 'sportask.rhythm.longEvery' | translate }}</span>
+                    <app-number-stepper
+                      [value]="lb.every"
+                      (valueChange)="setLongEvery($event)"
+                      [min]="2"
+                      [max]="12"
+                      [decreaseLabel]="'sportask.rhythm.less' | translate"
+                      [increaseLabel]="'sportask.rhythm.more' | translate"
+                    />
+                  </div>
+                }
+              </div>
+            </div>
+          }
+          @if (shortBreak()) {
+            <p class="sss__warn" role="note">
+              <app-ui-icon name="alert" [size]="16" />
+              {{ 'sportask.setup.shortBreak' | translate }}
+            </p>
+          }
+        </section>
+
+        @if (equipmentChips().length > 0) {
+          <section class="sss__section" aria-labelledby="sss-gear">
+            <h3 class="sss__label" id="sss-gear">{{ 'sportask.setup.gear' | translate }}</h3>
+            <div class="sss__chips">
+              @for (e of equipmentChips(); track e.id) {
+                <button type="button" class="filter-chip" [attr.aria-pressed]="e.on" (click)="toggleGear(e.id)">
+                  <app-ui-icon [name]="e.icon" [size]="16" /> {{ e.name }}
+                </button>
+              }
+              <button type="button" class="filter-chip" [attr.aria-pressed]="noEquipment()" (click)="setNoEquipment()">
+                {{ 'sportask.setup.noGear' | translate }}
+              </button>
+            </div>
+            <p class="sss__hint">{{ 'sportask.setup.gearHint' | translate }}</p>
+          </section>
+        }
+
+        @if (needsAcceptance()) {
+          <section class="sss__notice" aria-labelledby="sss-notice">
+            <h3 class="sss__label" id="sss-notice">{{ 'sportask.goal.notice' | translate }}</h3>
+            <p>{{ 'sportask.disclaimer' | translate }}</p>
+            <label class="sss__check">
+              <input type="checkbox" [checked]="accepted()" (change)="accepted.set(!accepted())" />
+              {{ 'sportask.goal.accept' | translate }}
+            </label>
+          </section>
+        }
+      </div>
+
+      <footer class="sss__foot">
+        <button type="button" class="btn btn--primary" [disabled]="!canActivate()" (click)="activate()">
+          {{ 'sportask.setup.' + (planner() ? 'savePlan' : 'activate') + (needsAcceptance() ? 'Accept' : '') | translate }}
+        </button>
+        <button type="button" class="btn btn--secondary" (click)="close()">{{ 'sportask.setup.cancel' | translate }}</button>
+      </footer>
+    } @else {
+      <p class="sss__loading" role="status"><app-ui-icon name="dumbbell" [size]="20" /></p>
+    }
+  </div>
+</div>

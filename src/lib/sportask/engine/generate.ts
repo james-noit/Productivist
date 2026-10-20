@@ -1,4 +1,4 @@
-import type { BlockPlan, BlockStep, LocalizedText, SportaskSession, SportaskSettings, SportTemplate } from '../../../types/sportask';
+import type { BlockMeta, BlockPlan, BlockStep, SportaskSession, SportaskSettings, SportTemplate } from '../../../types/sportask';
 import { BUILTIN_TEMPLATES } from '../templates';
 import { GOALS } from '../goals';
 import { type AnyGoal, type AssessmentDef, type GenerationContext } from './context';
@@ -15,21 +15,7 @@ export interface GenerateOptions {
   forceTrain?: boolean;
 }
 
-/** What the caller stores on the block row and shows in the preview. */
-export interface BlockMeta {
-  origin: 'goal' | 'free';
-  /** The goal that actually generated the block (the rest-day goal on a rest day). */
-  goalId?: string;
-  programId?: string;
-  programWeek?: number;
-  templateId?: string;
-  assessmentId?: string;
-  /** Today is not a training day of the program: the block comes from the rest-day goal. */
-  restDay?: boolean;
-  /** The requested block could not be made with these constraints. */
-  fallback?: 'mobility' | 'minimal';
-  phaseNote?: LocalizedText;
-}
+export type { BlockMeta };
 export interface GeneratedBlock {
   plan: BlockPlan;
   meta: BlockMeta;

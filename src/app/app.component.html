@@ -65,6 +65,13 @@
   }
 }
 
+<!-- Sportask's training block for the break (--modal-z 60): over every view and modal, under the alarm. -->
+@if (sportask.breakOpen()) {
+  @defer (on immediate) {
+    <app-sportask-break-modal />
+  }
+}
+
 <!-- The ringing alarm: above every view and every other modal, including Multitask, which has no session dialog. -->
 @if (clock.alarmModalOpen()) {
   @defer (on immediate) {
