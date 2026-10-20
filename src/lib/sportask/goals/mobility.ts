@@ -2,7 +2,7 @@ import { startOfWeek } from '../../dates';
 import type { BlockStep, BodyZone, Dose, ExerciseDef, Level } from '../../../types/sportask';
 import { type BlockGenerator, type GenerationContext, type ProgressionModel, defineGoal } from '../engine/context';
 import { available } from '../engine/filter';
-import { fillRemainder, finalizePlan, scaleDose, slotWorkFor, slotsFor, slotSteps } from '../engine/fit';
+import { fillRemainder, finalizePlan, fitsWindow, scaleDose, slotWorkFor, slotsFor, slotSteps } from '../engine/fit';
 import { weekdayIndex } from '../engine/schedule';
 import { pickExercise } from '../engine/select';
 
@@ -44,7 +44,7 @@ function zoneCounts(ctx: GenerationContext): { today: Map<BodyZone, number>; wee
 
 function holdOrReps(ex: ExerciseDef, p: MobilityParams): Dose {
   const factor = p.warmup ? 0.7 : 1;
-  if (ex.dose.seconds !== undefined) return { seconds: Math.max(5, Math.floor(p.holdSeconds * factor)) };
+  if (ex.dose.seconds !== undefined) return scaleDose({ seconds: p.holdSeconds }, factor);
   return scaleDose({ reps: Math.max(1, Math.round((ex.dose.reps ?? 1) * p.repsScale)) }, factor);
 }
 
@@ -60,6 +60,9 @@ const generator: BlockGenerator<MobilityParams> = {
       .sort((a, b) => (counts.today.get(a.zone) ?? 0) - (counts.today.get(b.zone) ?? 0) || (counts.week.get(a.zone) ?? 0) - (counts.week.get(b.zone) ?? 0) || a.i - b.i)
       .map((o) => o.zone);
 
+    // Every exercise must be sensible in the smallest window this block can give it (the window only grows if slots are dropped).
+    const rest = 5;
+    const guess = slotWorkFor(ctx.blockSeconds - sizing.prep, sizing.slots * sizing.rounds, rest);
     const chosen: ExerciseDef[] = [];
     const used = new Set<string>();
     for (let i = 0; i < sizing.slots * 2 && chosen.length < sizing.slots; i++) {
@@ -70,6 +73,7 @@ const generator: BlockGenerator<MobilityParams> = {
           e.zones?.includes(zone) &&
           e.level <= maxLevel &&
           available(e, ctx) &&
+          fitsWindow(e, guess) &&
           (p.allowLoaded || (e.needsOneOf.length === 0 && !e.loadable)),
       );
       const ex = pickExercise(candidates.filter((e) => !used.has(e.id)), ctx, { preferZones: [zone] });
@@ -81,15 +85,14 @@ const generator: BlockGenerator<MobilityParams> = {
     if (chosen.length === 0) return finalizePlan(kind, sizing.prep, [], ctx.blockSeconds);
 
     const avail = ctx.blockSeconds - sizing.prep;
-    const rest = 5;
     let rounds = sizing.rounds;
     let list = chosen;
     let window = slotWorkFor(avail, list.length * rounds, rest);
-    while (window < 12 && rounds > 1) {
+    while (window < 20 && rounds > 1) {
       rounds -= 1;
       window = slotWorkFor(avail, list.length * rounds, rest);
     }
-    while (window < 12 && list.length > 1) {
+    while (window < 20 && list.length > 1) {
       list = list.slice(0, -1);
       window = slotWorkFor(avail, list.length * rounds, rest);
     }

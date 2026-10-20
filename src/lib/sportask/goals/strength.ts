@@ -1,6 +1,6 @@
 import type { BlockStep, ExerciseDef, MovementPattern } from '../../../types/sportask';
 import { type BlockGenerator, type GenerationContext, defineGoal } from '../engine/context';
-import { fillRemainder, finalizePlan, mobilityTail, scaleDose, slotWorkFor, slotsFor, slotSteps } from '../engine/fit';
+import { fillRemainder, finalizePlan, fitsWindow, mobilityTail, scaleDose, slotWorkFor, slotsFor, slotSteps } from '../engine/fit';
 import { LADDER_PROGRESSION, ladderDose, ladderStates, usableAlternatives } from '../engine/progression';
 import { pickExercise } from '../engine/select';
 
@@ -46,10 +46,10 @@ function previousPattern(ctx: GenerationContext, patterns: readonly MovementPatt
 const MOBILITY_ONLY = (e: ExerciseDef): boolean => e.pattern === 'mobility';
 
 /** Warm-up: one rung below the current one (not below 0), only level <= 2 moves. */
-function warmupAlternatives(ladderId: string, rung: number, ctx: GenerationContext): ExerciseDef[] {
+function warmupAlternatives(ladderId: string, rung: number, ctx: GenerationContext, ok: (e: ExerciseDef) => boolean): ExerciseDef[] {
   const ladder = ctx.catalog.ladders.get(ladderId)!;
   for (let r = Math.max(0, rung - 1); r >= 0; r--) {
-    const alts = usableAlternatives(ladder, r, ctx).filter((e) => e.level <= 2);
+    const alts = usableAlternatives(ladder, r, ctx).filter((e) => e.level <= 2 && ok(e));
     if (alts.length > 0) return alts;
   }
   return [];
@@ -65,6 +65,9 @@ const generator: BlockGenerator<StrengthParams> = {
     const prev = previousPattern(ctx, p.patterns);
     const prevIndex = prev ? p.patterns.indexOf(prev as MovementPattern) : -1;
     const n = p.patterns.length;
+    // Every exercise must be sensible in the smallest window this block can give it (the window only grows if slots are dropped).
+    const guess = slotWorkFor(ctx.blockSeconds - sizing.prep - sizing.tail, sizing.slots * sizing.rounds, p.restSeconds);
+    const sensible = (e: ExerciseDef): boolean => fitsWindow(e, guess, p.tempoFactor);
 
     type Option = { pattern: MovementPattern; remaining: number; deficit: number; rotation: number; alts: ExerciseDef[] };
     const options: Option[] = [];
@@ -74,13 +77,13 @@ const generator: BlockGenerator<StrengthParams> = {
       const doneSets = done.get(pattern) ?? 0;
       const remaining = p.capPerPatternPerDay - doneSets;
       if (remaining < 1) return;
-      const alts = warm ? warmupAlternatives(pattern, state.rung, ctx) : usableAlternatives(ctx.catalog.ladders.get(pattern)!, state.rung, ctx);
+      const alts = warm ? warmupAlternatives(pattern, state.rung, ctx, sensible) : usableAlternatives(ctx.catalog.ladders.get(pattern)!, state.rung, ctx).filter(sensible);
       if (alts.length === 0) return;
       options.push({ pattern, remaining, deficit: p.setsPerPatternPerDay - doneSets, rotation: (index - prevIndex - 1 + n * 2) % n, alts });
     });
     options.sort((a, b) => b.deficit - a.deficit || a.rotation - b.rotation);
-    const fresh = options.filter((o) => o.pattern !== prev);
-    let pool = fresh.length > 0 ? fresh : options;
+    // Never the pattern the previous block ended on: with nothing else to do the block falls back to mobility.
+    let pool = options.filter((o) => o.pattern !== prev);
 
     let slots = Math.min(sizing.slots, pool.length);
     pool = pool.slice(0, slots);
@@ -117,7 +120,7 @@ const generator: BlockGenerator<StrengthParams> = {
         steps.push(...slotSteps({ ex: it.ex, target: it.target, ...(it.loadKg !== undefined ? { loadKg: it.loadKg } : {}), work: Math.max(1, window), rest, tempo: p.tempoFactor, ...(rounds > 1 ? { round: r } : {}) }));
       }
     }
-    steps.push(...mobilityTail(ctx, sizing.tail, picked.map((it) => it.ex.id), MOBILITY_ONLY));
+    steps.push(...mobilityTail(ctx, sizing.tail, picked.map((it) => it.ex.id), MOBILITY_ONLY, picked.some((it) => it.ex.floor)));
     fillRemainder(ctx, steps, sizing.prep, picked.map((it) => it.ex.id), MOBILITY_ONLY);
     return finalizePlan(kind, sizing.prep, steps, ctx.blockSeconds);
   },

@@ -1,7 +1,7 @@
 import type { BlockStep, ExerciseDef, Level } from '../../../types/sportask';
 import { type BlockGenerator, type GenerationContext, type ProgressionModel, defineGoal } from '../engine/context';
 import { available } from '../engine/filter';
-import { fillRemainder, finalizePlan, mobilityTail, slotWorkFor, slotsFor, slotSteps } from '../engine/fit';
+import { fillRemainder, finalizePlan, fitsWindow, mobilityTail, slotWorkFor, slotsFor, slotSteps } from '../engine/fit';
 import { pickExercise } from '../engine/select';
 
 export interface CaloriesParams {
@@ -79,9 +79,9 @@ const generator: BlockGenerator<CaloriesParams> = {
   generate(ctx, p) {
     const sizing = slotsFor(ctx.blockSeconds, 'calories');
     const kind = p.warmup ? 'warmup' : 'train';
-    const candidates = pool(ctx, p);
-    if (candidates.length === 0) return finalizePlan(kind, sizing.prep, [], ctx.blockSeconds);
-    const work = p.warmup ? Math.max(10, Math.floor(p.work * 0.7)) : p.work;
+    const all = pool(ctx, p);
+    if (all.length === 0) return finalizePlan(kind, sizing.prep, [], ctx.blockSeconds);
+    const work = p.warmup ? Math.max(15, Math.floor(p.work * 0.7)) : p.work;
     const rest = p.rest;
     const avail = ctx.blockSeconds - sizing.prep - sizing.tail;
     const start = lastClass(ctx);
@@ -97,6 +97,10 @@ const generator: BlockGenerator<CaloriesParams> = {
           : p.longFormat === 'tabata' && avail >= TABATA_SECONDS
             ? 'tabata'
             : 'circuit';
+    // Per-side exercises need >= 15 s per side in the interval, and reps need room for 3 of them.
+    const window = format === 'emom' ? 55 : format === 'tabata' ? TABATA_WORK : Math.min(work, avail);
+    const candidates = all.filter((e) => fitsWindow(e, window));
+    if (candidates.length === 0) return finalizePlan(kind, sizing.prep, [], ctx.blockSeconds);
 
     if (format === 'intervals') {
       const w = Math.max(1, Math.min(work, avail));
@@ -141,7 +145,7 @@ const generator: BlockGenerator<CaloriesParams> = {
         steps.push(...slotSteps({ ex: picks[i % picks.length]!, work: w, rest: i < total - 1 ? rest : 0, fixed: true, ...(total > picks.length ? { round: Math.floor(i / picks.length) + 1 } : {}) }));
       }
     }
-    steps.push(...mobilityTail(ctx, sizing.tail, usedIds, (e) => e.pattern === 'mobility'));
+    steps.push(...mobilityTail(ctx, sizing.tail, usedIds, (e) => e.pattern === 'mobility', steps.some((s) => ctx.catalog.exercises.get(s.exerciseId)?.floor)));
     fillRemainder(ctx, steps, sizing.prep, usedIds, (e) => e.pattern === 'mobility');
     return finalizePlan(kind, sizing.prep, steps, ctx.blockSeconds);
   },

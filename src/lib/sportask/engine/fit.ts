@@ -43,9 +43,23 @@ export function slotWorkFor(avail: number, n: number, rest: number): number {
   return Math.floor((avail - (n - 1) * rest) / n);
 }
 
+/** Scales a dose, never below the sensible minimum (3 reps, 15 s) or below the original when that is already smaller. */
 export function scaleDose(dose: Dose, factor: number): Dose {
-  if (dose.seconds !== undefined) return { seconds: Math.max(5, Math.floor(dose.seconds * factor)) };
-  return { reps: Math.max(1, Math.floor((dose.reps ?? 1) * factor)) };
+  if (dose.seconds !== undefined) return { seconds: Math.max(Math.min(MIN_STEP_SECONDS, dose.seconds), Math.floor(dose.seconds * factor)) };
+  const reps = dose.reps ?? 1;
+  return { reps: Math.max(Math.min(MIN_REPS, reps), Math.floor(reps * factor)) };
+}
+
+/** No step is shorter than this, and no rep target is lower than MIN_REPS (unless the exercise's own default is). */
+export const MIN_STEP_SECONDS = 15;
+export const MIN_REPS = 3;
+
+/** Whether the exercise can be done sensibly in `window` seconds (all sides): >= 15 s per side and at least 3 reps. */
+export function fitsWindow(ex: ExerciseDef, window: number, tempo = 1): boolean {
+  const w = Math.floor(window / (ex.perSide ? 2 : 1));
+  if (w < MIN_STEP_SECONDS) return false;
+  if (ex.dose.reps !== undefined) return repWork(ex, Math.min(MIN_REPS, ex.dose.reps), tempo) <= w;
+  return true;
 }
 
 export interface SlotSpec {
@@ -86,11 +100,11 @@ export function slotSteps(spec: SlotSpec): BlockStep[] {
       const reps = Math.max(1, Math.floor(dose.reps ?? 1));
       const need = repWork(ex, reps, spec.tempo);
       if (need <= w) {
-        workSeconds = need;
+        workSeconds = Math.min(w, Math.max(need, MIN_STEP_SECONDS));
         target = { reps };
       } else {
         const fitted = Math.max(1, Math.floor((w - 5) / secondsPerRep(ex, spec.tempo)));
-        workSeconds = Math.min(w, repWork(ex, fitted, spec.tempo));
+        workSeconds = Math.min(w, Math.max(repWork(ex, fitted, spec.tempo), MIN_STEP_SECONDS));
         target = { reps: fitted };
       }
     }
@@ -137,51 +151,73 @@ export function mobilityCandidates(ctx: GenerationContext, filter?: (e: Exercise
   return ctx.catalog.exercises.all.filter((e) => e.tags.includes('mobility') && e.level <= 2 && available(e, ctx) && (!filter || filter(e)));
 }
 
-/** The mobility finish of long strength/calories blocks: up to two holds that fit in `seconds`. */
-export function mobilityTail(ctx: GenerationContext, seconds: number, avoidIds: Iterable<string>, filter?: (e: ExerciseDef) => boolean): BlockStep[] {
-  if (seconds <= 0) return [];
-  const avoid = new Set(avoidIds);
+/** Smallest worthwhile filler: 20 s of work per side, at least 3 reps (5 s of set-up included in the rep time). */
+const FILLER_WORK = 20;
+
+interface FillerPlan {
+  dose: Dose;
+  perSide: number;
+  total: number;
+}
+function fillerPlan(ex: ExerciseDef): FillerPlan {
+  const sides = ex.perSide ? 2 : 1;
+  if (ex.dose.seconds !== undefined) {
+    const seconds = Math.max(FILLER_WORK, ex.dose.seconds);
+    return { dose: { seconds }, perSide: seconds, total: seconds * sides };
+  }
+  const reps = Math.max(MIN_REPS, ex.dose.reps ?? MIN_REPS, Math.ceil((FILLER_WORK - 5) / secondsPerRep(ex)));
+  const perSide = repWork(ex, reps);
+  return { dose: { reps }, perSide, total: perSide * sides };
+}
+
+/**
+ * Short mobility holds that fit in `seconds` (PLAN section 8.2's mobility finish). Each filler is a real step: at least 20 s of work per side
+ * and at least 3 reps or a 20 s hold. Floor exercises only when `allowFloor` (the block already uses the floor). May return fewer
+ * steps than fit, or none.
+ */
+export function mobilityTail(
+  ctx: GenerationContext,
+  seconds: number,
+  avoidIds: Iterable<string>,
+  filter?: (e: ExerciseDef) => boolean,
+  allowFloor = false,
+): BlockStep[] {
   const steps: BlockStep[] = [];
-  const first = pickExercise(mobilityCandidates(ctx, filter), ctx, { avoidIds: avoid });
-  if (!first) return steps;
-  avoid.add(first.id);
-  const zones = first.zones ?? [];
-  const second = pickExercise(
-    mobilityCandidates(ctx, filter).filter((e) => !e.zones?.some((z) => zones.includes(z))),
-    ctx,
-    { avoidIds: avoid },
-  );
-  const picks = second ? [first, second] : [first];
-  const each = Math.floor(seconds / picks.length);
-  picks.forEach((ex, i) => {
-    steps.push(...slotSteps({ ex, work: each - (i < picks.length - 1 ? 5 : 0), rest: 5 }));
-  });
+  const avoid = new Set(avoidIds);
+  let remaining = seconds;
+  let lastZones: readonly string[] = [];
+  while (remaining >= FILLER_WORK) {
+    let eligible = mobilityCandidates(ctx, filter).filter((e) => (allowFloor || !e.floor) && fillerPlan(e).total <= remaining);
+    const fresh = eligible.filter((e) => !e.zones?.some((z) => lastZones.includes(z)));
+    if (fresh.length > 0) eligible = fresh;
+    const ex = pickExercise(eligible, ctx, { avoidIds: avoid });
+    if (!ex) break;
+    const plan = fillerPlan(ex);
+    steps.push(...slotSteps({ ex, target: plan.dose, work: plan.total, rest: 5 }));
+    remaining -= plan.total + 5;
+    avoid.add(ex.id);
+    lastZones = ex.zones ?? [];
+  }
   return steps;
 }
 
-/** Minimum leftover worth turning into exercise; shorter remainders stay as the last step's rest. */
-export const MIN_FILL_SECONDS = 10;
+/** Leftover shorter than this stays as the last step's rest ("breathe / walk"). */
+export const MIN_FILL_SECONDS = 30;
 
 /**
- * Time the generator did not use becomes short mobility holds instead of dead time (PLAN section 8.2: no silent gap). Appends to `steps`
- * until fewer than MIN_FILL_SECONDS remain; whatever is left is closed by finalizePlan as the last step's rest.
+ * Time the generator did not use becomes a few mobility holds instead of dead time (PLAN section 8.2: no silent gap), but only when at
+ * least MIN_FILL_SECONDS are left; the last step's rest is padding, so it is given up for them. Appends to `steps`.
  */
 export function fillRemainder(ctx: GenerationContext, steps: BlockStep[], prep: number, avoidIds: Iterable<string>, filter?: (e: ExerciseDef) => boolean): void {
   if (steps.length === 0) return;
-  const avoid = new Set(avoidIds);
   const tail = steps[steps.length - 1]!;
   const original = tail.restSeconds;
-  // The last step's rest is padding, not real rest: it is given up when there is room for more exercise.
+  const withoutRest = prep + steps.reduce((t, s, i) => t + s.workSeconds + (i === steps.length - 1 ? 0 : s.restSeconds), 0);
+  const remaining = ctx.blockSeconds - withoutRest;
+  if (remaining < MIN_FILL_SECONDS) return;
+  const usesFloor = steps.some((s) => ctx.catalog.exercises.get(s.exerciseId)?.floor);
   tail.restSeconds = 0;
-  const before = steps.length;
-  for (let i = 0; i < 12; i++) {
-    const used = prep + steps.reduce((t, s) => t + s.workSeconds + s.restSeconds, 0);
-    const remaining = ctx.blockSeconds - used;
-    if (remaining < MIN_FILL_SECONDS) break;
-    const extra = mobilityTail(ctx, Math.min(remaining, 120), avoid, filter);
-    if (extra.length === 0) break;
-    for (const s of extra) avoid.add(s.exerciseId);
-    steps.push(...extra);
-  }
-  if (steps.length === before) tail.restSeconds = original;
+  const extra = mobilityTail(ctx, remaining, [...avoidIds, ...steps.map((s) => s.exerciseId)], filter, usesFloor);
+  if (extra.length === 0) tail.restSeconds = original;
+  else steps.push(...extra);
 }

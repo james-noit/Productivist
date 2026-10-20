@@ -219,6 +219,12 @@ function checkNoIdleGap(plan: BlockPlan, label: string): void {
 
 function assertPlan(plan: BlockPlan, ctx: GenerationContext, meta: BlockMeta, warm: boolean, label: string): void {
   check(plan.steps.length > 0, `${label}: empty plan`);
+  for (const [i, s] of plan.steps.entries()) {
+    check(s.workSeconds >= 15, `${label}: step ${i} (${s.exerciseId}) has only ${s.workSeconds} s of work`);
+    const reps = s.target?.reps;
+    if (reps !== undefined) check(reps >= Math.min(3, CATALOG.exercises.get(s.exerciseId)!.dose.reps ?? 3), `${label}: step ${i} (${s.exerciseId}) aims for ${reps} reps`);
+    if (s.target?.seconds !== undefined) check(s.target.seconds >= 15, `${label}: step ${i} (${s.exerciseId}) holds only ${s.target.seconds} s`);
+  }
   check(plan.totalSeconds <= ctx.blockSeconds, `${label}: total ${plan.totalSeconds} > block ${ctx.blockSeconds}`);
   const sum = plan.prepSeconds + plan.steps.reduce((t, s) => t + s.workSeconds + s.restSeconds, 0);
   check(plan.totalSeconds === sum, `${label}: total ${plan.totalSeconds} != prep + steps ${sum}`);
@@ -624,6 +630,14 @@ function checkScheduleAndFallbacks(): void {
   check(cal.plan.steps.length >= 5 && cal.plan.steps.slice(0, 5).every((s) => s.workSeconds === 30 && s.restSeconds === (cal.plan.steps.indexOf(s) < 4 ? 30 : s.restSeconds)), `300 s at 30:30 starts with 5 full intervals, got ${stable(cal.plan.steps.map((s) => [s.exerciseId, s.workSeconds, s.restSeconds]))}`);
   const calLast = cal.plan.steps[cal.plan.steps.length - 1]!;
   check(calLast.restSeconds <= 45, `at most 45 s of trailing padding, got ${calLast.restSeconds}`);
+  // the idle-gap check must fail on a plan with the original 135 s of padding
+  let caught = false;
+  try {
+    checkNoIdleGap({ kind: 'train', prepSeconds: 15, steps: [...cal.plan.steps.slice(0, 3).map((s, i) => ({ ...s, restSeconds: i < 2 ? 30 : 135 }))], totalSeconds: 300 }, 'regression');
+  } catch {
+    caught = true;
+  }
+  check(caught, 'the idle-gap check misses the 135 s case');
 
   // no enrolment, an unknown goal: mobility, never empty
   for (const e of [null, enrol('nope', 'x', 1, start)]) {

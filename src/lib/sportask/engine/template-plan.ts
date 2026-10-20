@@ -1,7 +1,7 @@
 import type { BlockPlan, BlockStep, Dose, ExerciseDef, SportTemplate, TemplateSlot } from '../../../types/sportask';
 import type { GenerationContext } from './context';
 import { available } from './filter';
-import { finalizePlan, repWork, slotWorkFor, slotsFor, slotSteps } from './fit';
+import { MIN_STEP_SECONDS, finalizePlan, fitsWindow, repWork, slotWorkFor, slotsFor, slotSteps } from './fit';
 import { pickExercise } from './select';
 
 export interface ResolvedSlot {
@@ -67,7 +67,6 @@ function need(r: ResolvedSlot): number {
   return one * (r.ex.perSide ? 2 : 1);
 }
 
-const MIN_WINDOW = 10;
 
 /** Plans a free-training block from a template (PLAN section 8.5). Returns a plan with no steps when no slot resolves. */
 export function planFromTemplate(t: SportTemplate, ctx: GenerationContext): BlockPlan {
@@ -81,7 +80,7 @@ export function planFromTemplate(t: SportTemplate, ctx: GenerationContext): Bloc
   if (t.format === 'intervals') {
     const work = t.workSeconds ?? 30;
     const rest = t.restSeconds ?? 30;
-    const w = Math.max(1, Math.min(work, avail));
+    const w = Math.max(1, Math.min(Math.max(work, MIN_STEP_SECONDS), avail));
     const count = Math.max(1, Math.floor((avail + rest) / (w + rest)));
     for (let i = 0; i < count; i++) {
       const { ex } = slots[i % n]!;
@@ -114,11 +113,19 @@ export function planFromTemplate(t: SportTemplate, ctx: GenerationContext): Bloc
     const rounds = Math.max(1, Math.min(3, Math.floor(avail / Math.max(1, typical))));
     let list = slots;
     let r = rounds;
-    while ((list.length * r) * MIN_WINDOW + (list.length * r - 1) * rest > avail && (list.length > 1 || r > 1)) {
+    // Fewer rounds, then fewer slots, until every kept slot is sensible in its window (>= 15 s per side, >= 3 reps).
+    for (;;) {
+      const w = slotWorkFor(avail, list.length * r, rest);
+      const ok = list.filter((x) => fitsWindow(x.ex, w));
+      if (ok.length === list.length && w >= MIN_STEP_SECONDS) break;
       if (r > 1) r -= 1;
-      else list = list.slice(0, -1);
+      else if (ok.length > 0 && ok.length < list.length) list = ok;
+      else if (list.length > 1) list = list.slice(0, -1);
+      else break;
     }
     const window = slotWorkFor(avail, list.length * r, rest);
+    list = list.filter((x) => fitsWindow(x.ex, window));
+    if (list.length === 0) return finalizePlan('train', prep, [], ctx.blockSeconds);
     for (let round = 1; round <= r; round++) {
       for (const { ex, dose } of list) {
         steps.push(...slotSteps({ ex, ...(dose ? { target: dose } : {}), work: Math.max(1, window), rest, ...(r > 1 ? { round } : {}) }));
