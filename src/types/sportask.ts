@@ -183,3 +183,9 @@ export interface SportaskSession {
   breaksSeen: number;
   pending: { blockId: string; plan: BlockPlan; startedAt: number | null } | null;
 }
+
+/** The Sportask part of an export file (version 6). User templates only: the built-in ones live in code. */
+export interface SportExport {
+  sportBlocks: SportBlock[];
+  sportTemplates: SportTemplate[];
+}

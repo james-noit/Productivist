@@ -27,6 +27,8 @@ export interface AdminStats {
   objectives?: number;
   /** Recurring series; no admin UI shows it yet. */
   recurrences?: number;
+  /** Sportask training blocks; no admin UI shows it yet. */
+  sportBlocks?: number;
 }
 
 interface UserPage {

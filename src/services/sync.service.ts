@@ -14,6 +14,8 @@ import {
   projectCodec,
   recurrenceCodec,
   reconcileLocal,
+  sportBlockCodec,
+  sportTemplateCodec,
   todoCodec,
   type FlowLayoutWire,
   type FlowLinkWire,
@@ -23,6 +25,8 @@ import {
   type RecurrenceWire,
   type RowMeta,
   type RowMetaMap,
+  type SportBlockWire,
+  type SportTemplateWire,
   type TodoWire,
 } from '../lib/sync-engine';
 import { AccountService } from './account.service';
@@ -32,10 +36,13 @@ import { MultitaskService } from './multitask.service';
 import { ProjectsService } from './projects.service';
 import { RecurrenceService } from './recurrence.service';
 import { SettingsService } from './settings.service';
+import { SportDataService } from './sport-data.service';
+import { SportaskSettingsService } from './sportask-settings.service';
 import { TodosService } from './todos.service';
 import type { FlowLayout, FlowLink, Objective } from '../types/flow';
 import type { Milestone, Project } from '../types/project';
 import type { Recurrence } from '../types/recurrence';
+import type { SportBlock, SportTemplate } from '../types/sportask';
 import type { Todo } from '../types/todo';
 
 export type SyncStatus = 'idle' | 'syncing' | 'error';
@@ -63,6 +70,9 @@ interface PullResponse {
   flowLayouts?: FlowLayoutWire[];
   /** Absent when talking to a backend older than recurring tasks. */
   recurrences?: RecurrenceWire[];
+  /** Absent when talking to a backend older than Sportask. */
+  sportBlocks?: SportBlockWire[];
+  sportTemplates?: SportTemplateWire[];
   state: StateWire | null;
 }
 
@@ -78,6 +88,8 @@ interface SyncMeta {
   flowLinks?: RowMetaMap;
   flowLayouts?: RowMetaMap;
   recurrences?: RowMetaMap;
+  sportBlocks?: RowMetaMap;
+  sportTemplates?: RowMetaMap;
   /** Null until the first sync decided whether the server's state or the local one wins. */
   state: RowMeta | null;
 }
@@ -92,6 +104,8 @@ const emptyMeta = (email: string | null): SyncMeta => ({
   flowLinks: {},
   flowLayouts: {},
   recurrences: {},
+  sportBlocks: {},
+  sportTemplates: {},
   state: null,
 });
 
@@ -113,6 +127,8 @@ export class SyncService {
   private readonly multitask = inject(MultitaskService);
   private readonly flow = inject(FlowService);
   private readonly recurrences = inject(RecurrenceService);
+  private readonly sportData = inject(SportDataService);
+  private readonly sportask = inject(SportaskSettingsService);
 
   readonly status = signal<SyncStatus>('idle');
   readonly errorKind = signal<SyncErrorKind | null>(null);
@@ -137,6 +153,8 @@ export class SyncService {
       this.flow.links();
       this.flow.layouts();
       this.recurrences.recurrences();
+      this.sportData.blocks();
+      this.sportData.templates();
       this.stateBlob();
       untracked(() => this.schedule());
     });
@@ -222,6 +240,8 @@ export class SyncService {
       flowLinks: reconcileLocal(this.flow.links(), m.flowLinks ?? {}, hashWith(flowLinkCodec.toWire), now),
       flowLayouts: reconcileLocal(this.flow.layouts(), m.flowLayouts ?? {}, hashWith(flowLayoutCodec.toWire), now),
       recurrences: reconcileLocal(this.recurrences.recurrences(), m.recurrences ?? {}, hashWith(recurrenceCodec.toWire), now),
+      sportBlocks: reconcileLocal(this.sportData.blocks(), m.sportBlocks ?? {}, hashWith(sportBlockCodec.toWire), now),
+      sportTemplates: reconcileLocal(this.sportData.templates(), m.sportTemplates ?? {}, hashWith(sportTemplateCodec.toWire), now),
       state: m.state && m.state.h !== stateHash ? { h: stateHash, u: now, p: false } : m.state,
     }));
   }
@@ -237,6 +257,8 @@ export class SyncService {
       pending(m.flowLinks ?? {}) ||
       pending(m.flowLayouts ?? {}) ||
       pending(m.recurrences ?? {}) ||
+      pending(m.sportBlocks ?? {}) ||
+      pending(m.sportTemplates ?? {}) ||
       (m.state !== null && !m.state.p)
     );
   }
@@ -253,6 +275,8 @@ export class SyncService {
     const flowLinks = applyPulled(this.flow.links(), m.flowLinks ?? {}, pulled.flowLinks ?? [], flowLinkCodec.fromWire, hashWith(flowLinkCodec.toWire));
     const flowLayouts = applyPulled(this.flow.layouts(), m.flowLayouts ?? {}, pulled.flowLayouts ?? [], flowLayoutCodec.fromWire, hashWith(flowLayoutCodec.toWire));
     const recurrences = applyPulled(this.recurrences.recurrences(), m.recurrences ?? {}, pulled.recurrences ?? [], recurrenceCodec.fromWire, hashWith(recurrenceCodec.toWire));
+    const sportBlocks = applyPulled(this.sportData.blocks(), m.sportBlocks ?? {}, pulled.sportBlocks ?? [], sportBlockCodec.fromWire, hashWith(sportBlockCodec.toWire));
+    const sportTemplates = applyPulled(this.sportData.templates(), m.sportTemplates ?? {}, pulled.sportTemplates ?? [], sportTemplateCodec.fromWire, hashWith(sportTemplateCodec.toWire));
     if (projects.items !== this.projects.projects()) this.projects.projects.set(projects.items);
     if (milestones.items !== this.projects.milestones()) this.projects.milestones.set(milestones.items);
     if (todos.items !== this.todos.todos()) this.todos.todos.set(todos.items);
@@ -260,6 +284,8 @@ export class SyncService {
     if (flowLinks.items !== this.flow.links()) this.flow.links.set(flowLinks.items);
     if (flowLayouts.items !== this.flow.layouts()) this.flow.layouts.set(flowLayouts.items);
     if (recurrences.items !== this.recurrences.recurrences()) this.recurrences.recurrences.set(recurrences.items);
+    if (sportBlocks.items !== this.sportData.blocks()) this.sportData.blocks.set(sportBlocks.items);
+    if (sportTemplates.items !== this.sportData.templates()) this.sportData.templates.set(sportTemplates.items);
 
     let state = m.state;
     const remote = pulled.state;
@@ -285,6 +311,8 @@ export class SyncService {
       flowLinks: flowLinks.meta,
       flowLayouts: flowLayouts.meta,
       recurrences: recurrences.meta,
+      sportBlocks: sportBlocks.meta,
+      sportTemplates: sportTemplates.meta,
       state,
     });
     // Rows another device deleted may leave links behind; the next reconcile turns the sweep into tombstones.
@@ -305,6 +333,8 @@ export class SyncService {
     const flowLinks = pendingRows<FlowLink, FlowLinkWire>(this.flow.links(), m.flowLinks ?? {}, flowLinkCodec.toWire, flowLinkCodec.tombstone);
     const flowLayouts = pendingRows<FlowLayout, FlowLayoutWire>(this.flow.layouts(), m.flowLayouts ?? {}, flowLayoutCodec.toWire, flowLayoutCodec.tombstone);
     const recurrences = pendingRows<Recurrence, RecurrenceWire>(this.recurrences.recurrences(), m.recurrences ?? {}, recurrenceCodec.toWire, recurrenceCodec.tombstone);
+    const sportBlocks = pendingRows<SportBlock, SportBlockWire>(this.sportData.blocks(), m.sportBlocks ?? {}, sportBlockCodec.toWire, sportBlockCodec.tombstone);
+    const sportTemplates = pendingRows<SportTemplate, SportTemplateWire>(this.sportData.templates(), m.sportTemplates ?? {}, sportTemplateCodec.toWire, sportTemplateCodec.tombstone);
     const state = m.state && !m.state.p ? { ...this.stateBlob(), updatedAt: m.state.u } : undefined;
 
     if (
@@ -315,6 +345,8 @@ export class SyncService {
       !flowLinks.rows.length &&
       !flowLayouts.rows.length &&
       !recurrences.rows.length &&
+      !sportBlocks.rows.length &&
+      !sportTemplates.rows.length &&
       !state
     ) {
       return;
@@ -330,6 +362,8 @@ export class SyncService {
         flowLinks: flowLinks.rows,
         flowLayouts: flowLayouts.rows,
         recurrences: recurrences.rows,
+        sportBlocks: sportBlocks.rows,
+        sportTemplates: sportTemplates.rows,
         state,
       },
     });
@@ -343,6 +377,8 @@ export class SyncService {
       flowLinks: markPushed(current.flowLinks ?? {}, flowLinks.sent),
       flowLayouts: markPushed(current.flowLayouts ?? {}, flowLayouts.sent),
       recurrences: markPushed(current.recurrences ?? {}, recurrences.sent),
+      sportBlocks: markPushed(current.sportBlocks ?? {}, sportBlocks.sent),
+      sportTemplates: markPushed(current.sportTemplates ?? {}, sportTemplates.sent),
       state:
         current.state && state && current.state.u === state.updatedAt && !current.state.p
           ? { ...current.state, p: true }
@@ -382,6 +418,9 @@ export class SyncService {
         clockStyle: s.clockStyle(),
         boxClockOrder: s.boxClockOrder(),
         multitaskEnabled: mt.enabled(),
+        // Raw, as stored (lazy code sanitises it). Only once it has been customised: an always-present key would change
+        // everybody's blob hash and re-push it, which could clobber settings changed on another device.
+        ...(this.sportask.customized() ? { sportask: this.sportask.settings() } : {}),
       },
       dailyPlan: {
         stage: d.stage(),
@@ -417,6 +456,10 @@ export class SyncService {
     set('clockStyle', s.clockStyle, isOneOf('boxes', 'ring'));
     set('boxClockOrder', s.boxClockOrder, isOneOf('sequential', 'random'));
     set('multitaskEnabled', this.multitask.enabled, isBoolean);
+
+    // Sportask's settings travel raw; only a plain object is taken (lazy code sanitises it when it reads them).
+    const sportask = state.settings?.['sportask'];
+    if (isRecord<Record<string, unknown>>(sportask)) this.sportask.apply(sportask);
 
     const d = this.dailyPlan;
     const plan = settingsApplier(state.dailyPlan);

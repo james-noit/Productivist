@@ -1,6 +1,7 @@
-// Sportask self-check (docs/sportask/PLAN.md section 12, all but #8: the codecs come in phase 2).
+// Sportask self-check (docs/sportask/PLAN.md section 12).
 // Run with `npm run check:sportask`. Throws on the first failed assertion.
 import { addDays, startOfWeek } from '../src/lib/dates';
+import { hashWith, sportBlockCodec, sportTemplateCodec, type SportBlockWire, type SportTemplateWire } from '../src/lib/sync-engine';
 import { CADENCES, breakSecondsFor, resolveCadence } from '../src/lib/sportask/cadences';
 import { CATALOG, CATALOG_VERSION, MET, PICTOGRAM_IDS } from '../src/lib/sportask/catalog';
 import type { AnyGoal, GenerationContext } from '../src/lib/sportask/engine/context';
@@ -771,6 +772,128 @@ function checkSanitize(): void {
   console.log(`  ${samples.length} blocks round-tripped`);
 }
 
+// ---------------------------------------------------------------- 8. sync codecs
+
+/** What Postgres JSONB does to an object: keys come back ordered by length, then alphabetically. */
+function jsonbOrder(v: unknown): unknown {
+  if (Array.isArray(v)) return v.map(jsonbOrder);
+  if (v && typeof v === 'object') {
+    const o = v as Record<string, unknown>;
+    return Object.fromEntries(Object.keys(o).sort((a, b) => a.length - b.length || (a < b ? -1 : 1)).map((k) => [k, jsonbOrder(o[k])]));
+  }
+  return v;
+}
+/** The same, with the keys shuffled by a seeded rng (any order must hash alike). */
+function shuffled(v: unknown, rng: () => number): unknown {
+  if (Array.isArray(v)) return v.map((x) => shuffled(x, rng));
+  if (v && typeof v === 'object') {
+    const o = v as Record<string, unknown>;
+    const keys = Object.keys(o).map((k) => [k, rng()] as const).sort((a, b) => a[1] - b[1]).map(([k]) => k);
+    return Object.fromEntries(keys.map((k) => [k, shuffled(o[k], rng)]));
+  }
+  return v;
+}
+/** The backend answers `null` for every optional column and key that is unset. */
+function withNulls(v: unknown, optional: readonly string[]): unknown {
+  if (!v || typeof v !== 'object' || Array.isArray(v)) return v;
+  const o: Record<string, unknown> = { ...(v as Record<string, unknown>) };
+  for (const k of optional) if (!(k in o)) o[k] = null;
+  return o;
+}
+const BLOCK_OPTIONAL = ['goalId', 'programId', 'programWeek', 'templateId', 'assessmentId', 'rpe', 'feedback'];
+const STEP_OPTIONAL = ['target', 'side', 'loadKg', 'round'];
+const RESULT_OPTIONAL = ['value', 'loadKg'];
+const SLOT_OPTIONAL = ['exerciseId', 'pattern', 'tag', 'zone', 'maxLevel', 'dose'];
+const TEMPLATE_OPTIONAL = ['workSeconds', 'restSeconds', 'minSeconds'];
+
+function blockViaServer(wire: Record<string, unknown>, mode: 'shuffle' | 'jsonb', rng: () => number): SportBlockWire {
+  const nulled = withNulls(wire, BLOCK_OPTIONAL) as Record<string, unknown>;
+  nulled['steps'] = (wire['steps'] as unknown[]).map((x) => withNulls(x, STEP_OPTIONAL)).map((x) => (x as Record<string, unknown>)['target'] ? { ...(x as object), target: withNulls((x as Record<string, unknown>)['target'], ['reps', 'seconds']) } : x);
+  nulled['results'] = (wire['results'] as unknown[]).map((x) => withNulls(x, RESULT_OPTIONAL));
+  const ordered = mode === 'shuffle' ? shuffled(nulled, rng) : jsonbOrder(nulled);
+  return { ...(JSON.parse(JSON.stringify(ordered)) as object), updatedAt: 5, deleted: false } as SportBlockWire;
+}
+function templateViaServer(wire: Record<string, unknown>, mode: 'shuffle' | 'jsonb', rng: () => number): SportTemplateWire {
+  const nulled = withNulls(wire, TEMPLATE_OPTIONAL) as Record<string, unknown>;
+  nulled['slots'] = (wire['slots'] as unknown[]).map((x) => withNulls(x, SLOT_OPTIONAL));
+  const ordered = mode === 'shuffle' ? shuffled(nulled, rng) : jsonbOrder(nulled);
+  return { ...(JSON.parse(JSON.stringify(ordered)) as object), updatedAt: 5, deleted: false } as SportTemplateWire;
+}
+
+function checkCodecs(): void {
+  section('8. sync codecs');
+  const hashBlock = hashWith(sportBlockCodec.toWire);
+  const hashTemplate = hashWith(sportTemplateCodec.toWire);
+  const rng = mulberry32(8);
+
+  const blocks: SportBlock[] = [];
+  for (const [i, { plan }] of sweepPlans.entries()) {
+    if (i % 3 !== 0) continue;
+    const ctx = makeCtx({ blockId: `codec-${i}`, blockSeconds: plan.totalSeconds });
+    const meta: BlockMeta = i % 2 === 0 ? { origin: 'goal', goalId: 'strength', programId: 'microStrength', programWeek: 3 } : { origin: 'free', templateId: 'tpl.deskReset' };
+    blocks.push(toBlock(plan, meta, ctx, { feedback: i % 5 === 0 ? 'tooHard' : undefined }));
+  }
+  // Every optional set, zero values included (0 is a real load, value and rest).
+  const full: SportBlock = {
+    id: 'full', startedAt: 1, date: '2026-03-02', origin: 'goal', goalId: 'g', programId: 'p', programWeek: 1, templateId: 't', kind: 'test',
+    assessmentId: 'a', blockSeconds: 600, prepSeconds: 0,
+    steps: [{ exerciseId: 'plank', workSeconds: 30, restSeconds: 0, target: { seconds: 30 }, side: 'left', loadKg: 0, round: 1 }, { exerciseId: 'squat', workSeconds: 20, restSeconds: 10, target: { reps: 12 } }],
+    results: [{ stepIndex: 0, done: true, value: 0, loadKg: 0 }, { stepIndex: 1, done: false }],
+    status: 'partial', rpe: 10, feedback: 'ok', catalogVersion: 0, createdAt: 1, updatedAt: 1,
+  };
+  blocks.push(full);
+  check(blocks.length > 20, 'enough codec samples');
+
+  for (const b of blocks) {
+    const wire = sportBlockCodec.toWire(b) as unknown as Record<string, unknown>;
+    const h = hashBlock(b);
+    for (const mode of ['shuffle', 'jsonb'] as const) {
+      const back = sportBlockCodec.fromWire(blockViaServer(wire, mode, rng));
+      check(hashBlock(back) === h, `block ${b.id}: hash survives the ${mode} round trip`);
+      check(JSON.stringify(sportBlockCodec.toWire(back)) === JSON.stringify(wire), `block ${b.id}: wire form is stable (${mode})`);
+    }
+    for (const k of ['goalId', 'programId', 'programWeek', 'templateId', 'assessmentId', 'rpe', 'feedback'] as const) {
+      check((b[k] === undefined) === !(k in wire), `block ${b.id}: ${k} on the wire only when set`);
+    }
+    (wire['steps'] as Record<string, unknown>[]).forEach((step, n) => {
+      for (const k of STEP_OPTIONAL) check((b.steps[n] as unknown as Record<string, unknown>)[k] === undefined ? !(k in step) : step[k] != null, `step ${k} on the wire only when set`);
+    });
+    (wire['results'] as Record<string, unknown>[]).forEach((r, n) => {
+      for (const k of RESULT_OPTIONAL) check((b.results[n] as unknown as Record<string, unknown>)[k] === undefined ? !(k in r) : r[k] != null, `result ${k} on the wire only when set`);
+    });
+  }
+  const bare: SportBlock = { ...full, id: 'bare', kind: 'train', status: 'done', steps: [{ exerciseId: 'plank', workSeconds: 30, restSeconds: 5 }], results: [{ stepIndex: 0, done: true }] };
+  for (const k of ['goalId', 'programId', 'programWeek', 'templateId', 'assessmentId', 'rpe', 'feedback'] as const) delete bare[k];
+  const bareWire = sportBlockCodec.toWire(bare) as unknown as Record<string, unknown>;
+  check(Object.keys(bareWire).join() === 'id,startedAt,date,origin,kind,blockSeconds,prepSeconds,steps,results,status,catalogVersion,createdAt', 'a block without optionals has none of their keys');
+  check(Object.keys((bareWire['steps'] as object[])[0]!).join() === 'exerciseId,workSeconds,restSeconds', 'a step without optionals has none of their keys');
+  check(Object.keys((bareWire['results'] as object[])[0]!).join() === 'stepIndex,done', 'a result without optionals has none of their keys');
+  check(sportBlockCodec.fromWire({ ...(sportBlockCodec.tombstone('x') as object), updatedAt: 1, deleted: true } as SportBlockWire).id === 'x', 'block tombstone reads back');
+
+  let templates = 0;
+  for (const t of BUILTIN_TEMPLATES.all) {
+    const user: SportTemplate = { ...t, id: `u-${t.id.replace(/\W/g, '')}` };
+    delete user.builtin;
+    delete user.nameText;
+    const wire = sportTemplateCodec.toWire(user) as unknown as Record<string, unknown>;
+    for (const mode of ['shuffle', 'jsonb'] as const) {
+      const back = sportTemplateCodec.fromWire(templateViaServer(wire, mode, rng));
+      check(hashTemplate(back) === hashTemplate(user), `template ${t.id}: hash survives the ${mode} round trip`);
+      check(JSON.stringify(sportTemplateCodec.toWire(back)) === JSON.stringify(wire), `template ${t.id}: wire form is stable (${mode})`);
+    }
+    for (const k of TEMPLATE_OPTIONAL) check((user[k as 'workSeconds'] === undefined) === !(k in wire), `template ${t.id}: ${k} on the wire only when set`);
+    (wire['slots'] as Record<string, unknown>[]).forEach((slot, n) => {
+      for (const k of SLOT_OPTIONAL) check((user.slots[n] as unknown as Record<string, unknown>)[k] === undefined ? !(k in slot) : slot[k] != null, 'slot keys on the wire only when set');
+    });
+    templates++;
+  }
+  const mixed: SportTemplate = { id: 'mixed', name: 'm', format: 'intervals', workSeconds: 40, restSeconds: 0, minSeconds: 0, order: 1, createdAt: 1, updatedAt: 1, slots: [{ exerciseId: 'plank', dose: { seconds: 40 } }, { pattern: 'core', tag: 'strength', zone: 'hips', maxLevel: 2 }, { exerciseId: 'squat' }] };
+  const mixedWire = sportTemplateCodec.toWire(mixed) as unknown as Record<string, unknown>;
+  check('restSeconds' in mixedWire && 'minSeconds' in mixedWire, 'zero rest and min seconds are kept');
+  check(hashTemplate(sportTemplateCodec.fromWire(templateViaServer(mixedWire, 'jsonb', rng))) === hashTemplate(mixed), 'mixed slots round trip');
+  console.log(`  ${blocks.length} blocks and ${templates + 1} templates hash identically after a shuffled / JSONB-ordered round trip`);
+}
+
 // ---------------------------------------------------------------- 10. kcal
 
 function checkKcal(): void {
@@ -800,9 +923,10 @@ try {
   progressionChecks();
   checkScheduleAndFallbacks();
   checkRunner();
+  checkCodecs();
   checkSanitize();
   checkKcal();
-  console.log(`\ncheck:sportask OK (${assertions} assertions; #8, the codecs, comes in phase 2)`);
+  console.log(`\ncheck:sportask OK (${assertions} assertions)`);
 } catch (e) {
   console.error(e instanceof Error ? e.message : e);
   proc.exitCode = 1;

@@ -1,4 +1,5 @@
 import { isIsoDate } from '../dates';
+import { SPORTASK_DEFAULTS } from '../sportask-defaults';
 import type {
   BlockStep,
   Dose,
@@ -58,16 +59,7 @@ function sanitizeEquipment(raw: unknown): EquipmentInventory {
 }
 
 export function defaultSettings(): SportaskSettings {
-  return {
-    enrolment: null,
-    cadenceId: 'classic',
-    equipment: {},
-    constraints: { lowImpact: false, noFloor: false },
-    skin: 'cyberpunk',
-    skinWholeApp: true,
-    cues: true,
-    autoStartBreak: false,
-  };
+  return { ...SPORTASK_DEFAULTS, equipment: {}, constraints: { ...SPORTASK_DEFAULTS.constraints } };
 }
 
 /** Fills defaults for missing or unknown fields; never throws. */
