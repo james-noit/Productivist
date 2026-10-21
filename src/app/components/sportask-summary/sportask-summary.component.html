@@ -1,0 +1,40 @@
+@if (!hasBlocks()) {
+  <section class="ss__empty">
+    <app-ui-icon name="dumbbell" [size]="32" />
+    <h3>{{ 'sportask.panel.empty.title' | translate }}</h3>
+    <p>{{ 'sportask.panel.empty.body' | translate }}</p>
+    <div class="ss__empty-actions">
+      @if (!state.enrolment()) {
+        <button type="button" class="btn btn--primary" (click)="state.openConfiguration()">{{ 'sportask.panel.pickGoal' | translate }}</button>
+      }
+      <button type="button" class="btn" [class.btn--secondary]="!state.enrolment()" [class.btn--primary]="state.enrolment()" (click)="state.openPomodoro()">
+        {{ 'sportask.panel.goPomodoro' | translate }}
+      </button>
+    </div>
+  </section>
+} @else {
+  <dl class="ss__tiles" [attr.aria-label]="'sportask.panel.tile.title' | translate">
+    @for (t of tiles(); track t.id) {
+      <div class="ss__tile">
+        <dt>{{ t.label }}</dt>
+        <dd>{{ t.value }}</dd>
+        @if (t.hint) {
+          <dd class="ss__hint">{{ t.hint }}</dd>
+        }
+      </div>
+    }
+  </dl>
+
+  <section class="ss__card">
+    <h3 class="ss__title">{{ 'sportask.panel.heat' | translate: { n: 12 } }}</h3>
+    <app-sportask-metric-chart metricId="heatmap" [range]="heatRange()" [heading]="false" />
+  </section>
+
+  <section class="ss__card">
+    <app-sportask-metric-chart [metricId]="headlineId()" [range]="chartRange()" />
+    <button type="button" class="btn btn--ghost btn--sm ss__more" (click)="goProgress()">
+      {{ 'sportask.panel.seeProgress' | translate }}
+      <app-ui-icon name="chevron-right" [size]="16" />
+    </button>
+  </section>
+}

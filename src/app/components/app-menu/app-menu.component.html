@@ -15,41 +15,40 @@
     <div class="app-menu__panel" role="menu">
       <div class="app-menu__group">
         <span class="app-menu__group-label">{{ 'menu.views' | translate }}</span>
-        <button
-          type="button"
-          role="menuitem"
-          class="app-menu__view"
-          [class.app-menu__view--active]="view.current() === 'projects' || view.current() === 'project'"
-          [attr.aria-current]="view.current() === 'projects' || view.current() === 'project'"
-          (click)="goToView('projects')"
-        >
-          <svg class="app-menu__view-icon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
-            <path
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.8"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              d="M3 7a2 2 0 0 1 2-2h4l2 2.5h8a2 2 0 0 1 2 2V17a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"
-            />
-            <path fill="currentColor" opacity="0.55" d="M3 9.5h18V17a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-          </svg>
-          {{ 'menu.projects' | translate }}
-        </button>
-        <button
-          type="button"
-          role="menuitem"
-          class="app-menu__view"
-          [class.app-menu__view--active]="view.current() === 'pomodoro'"
-          [attr.aria-current]="view.current() === 'pomodoro'"
-          (click)="goToView('pomodoro')"
-        >
-          <svg class="app-menu__view-icon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
-            <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2" />
-            <path d="M12 7v5l3.5 2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-          </svg>
-          {{ 'menu.pomodoro' | translate }}
-        </button>
+        @for (v of viewEntries; track v.id) {
+          <button
+            type="button"
+            role="menuitem"
+            class="app-menu__view"
+            [class.app-menu__view--active]="isActive(v.id)"
+            [attr.aria-current]="isActive(v.id)"
+            (click)="goToView(v.id)"
+          >
+            <svg class="app-menu__view-icon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+              @switch (v.id) {
+                @case ('projects') {
+                  <path
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.8"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M3 7a2 2 0 0 1 2-2h4l2 2.5h8a2 2 0 0 1 2 2V17a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"
+                  />
+                  <path fill="currentColor" opacity="0.55" d="M3 9.5h18V17a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                }
+                @case ('pomodoro') {
+                  <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2" />
+                  <path d="M12 7v5l3.5 2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                }
+                @default {
+                  <path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M6.5 6.5v11M17.5 6.5v11M3.5 9.5v5M20.5 9.5v5M6.5 12h11" />
+                }
+              }
+            </svg>
+            {{ v.label | translate }}
+          </button>
+        }
         @if (accounts.isAdmin()) {
           <button
             type="button"

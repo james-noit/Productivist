@@ -1,0 +1,80 @@
+@if (!hasBlocks()) {
+  <section class="sh__empty">
+    <app-ui-icon name="clock" [size]="28" />
+    <p>{{ 'sportask.panel.empty.history' | translate }}</p>
+    <button type="button" class="btn btn--secondary" (click)="state.openPomodoro()">{{ 'sportask.panel.goPomodoro' | translate }}</button>
+  </section>
+} @else {
+  @if (shownRecords().length > 0) {
+    <section class="sh__records" aria-labelledby="sh-records">
+      <h3 id="sh-records" class="sh__heading">{{ 'sportask.panel.records' | translate }}</h3>
+      <ul class="sh__record-list">
+        @for (r of shownRecords(); track r.key) {
+          <li class="sh__record">
+            <span class="sh__record-name">{{ r.name }}</span>
+            <strong class="sh__record-value">{{ r.value }}</strong>
+            @if (r.load) {
+              <span class="sh__muted">{{ r.load }}</span>
+            }
+            <span class="sh__muted">{{ r.date }}</span>
+          </li>
+        }
+      </ul>
+      @if (moreRecords() > 0) {
+        <button type="button" class="btn btn--ghost btn--sm" [attr.aria-expanded]="allRecords()" (click)="allRecords.set(!allRecords())">
+          {{ (allRecords() ? 'sportask.panel.showFewer' : 'sportask.panel.showAll') | translate: { n: moreRecords() } }}
+        </button>
+      }
+    </section>
+  }
+
+  <section #dayList class="sh__days" tabindex="-1" (keydown)="onRowKeydown($event)">
+    @for (day of days(); track day.date) {
+      <section class="sh__day" [attr.aria-label]="day.label">
+        <h3 class="sh__day-title">{{ day.label }}</h3>
+        <ul class="sh__list">
+          @for (row of day.rows; track row.id) {
+            <li class="sh__row" [attr.data-status]="row.status">
+              <div class="sh__line">
+                <span class="sh__time">{{ row.time }}</span>
+                <span class="sh__badge" [attr.data-kind]="row.kind">{{ 'sportask.panel.kind.' + row.kind | translate }}</span>
+                <div class="sh__main">
+                  <span class="sh__source">{{ row.source }}</span>
+                  @if (row.summary) {
+                    <span class="sh__summary">{{ row.summary }}</span>
+                  }
+                </div>
+                <span class="sh__status" [attr.data-status]="row.status">{{ 'sportask.panel.status.' + row.status | translate }}</span>
+                @if (row.rpe) {
+                  <span class="sh__rpe" [title]="'sportask.brk.rpe' | translate">RPE {{ row.rpe }}</span>
+                }
+                <app-kebab-menu #menu="kebabMenu" [label]="'sportask.panel.rowMenu' | translate: { time: row.time }">
+                  <button type="button" class="menu-item" role="menuitem" (click)="menu.close(); edit(row.id)">{{ 'sportask.panel.editMarks' | translate }}</button>
+                  <button type="button" class="menu-item menu-item--danger" role="menuitem" (click)="menu.close(); askDelete(row.id)">
+                    {{ 'sportask.panel.delete' | translate }}
+                  </button>
+                </app-kebab-menu>
+              </div>
+              @if (deletingId() === row.id) {
+                <div class="confirm-bar" role="alertdialog" [attr.aria-labelledby]="'sh-del-' + row.id">
+                  <p class="confirm-bar__text" [id]="'sh-del-' + row.id">{{ 'sportask.panel.deleteQ' | translate }}</p>
+                  <div class="confirm-bar__actions">
+                    <button type="button" class="btn btn--secondary" (click)="keep()">{{ 'sportask.panel.keep' | translate }}</button>
+                    <button #deleteButton type="button" class="btn btn--danger" (click)="remove(row.id)">{{ 'sportask.panel.delete' | translate }}</button>
+                  </div>
+                </div>
+              }
+            </li>
+          }
+        </ul>
+      </section>
+    }
+    @if (moreDays() > 0) {
+      <button type="button" class="btn btn--secondary sh__more" (click)="showMore()">{{ 'sportask.panel.moreDays' | translate: { n: moreDays() } }}</button>
+    }
+  </section>
+
+  @if (editing(); as block) {
+    <app-sportask-marks-modal [block]="block" (closed)="closeEdit()" />
+  }
+}

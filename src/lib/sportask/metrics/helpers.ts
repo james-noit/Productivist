@@ -32,3 +32,20 @@ export function doneSteps(block: Pick<SportBlock, 'steps' | 'results'>): number[
   const done = new Set(block.results.filter((r) => r.done).map((r) => r.stepIndex));
   return block.steps.map((_, i) => i).filter((i) => done.has(i));
 }
+
+/**
+ * A set is a step the user marked done in a training block (tests do not count). The two sides of a per-side exercise are
+ * one set, so the right-side step that follows its left twin adds nothing.
+ */
+export function setExerciseIds(block: SportBlock): string[] {
+  if (block.kind === 'test') return [];
+  const done = new Set(doneSteps(block));
+  const out: string[] = [];
+  block.steps.forEach((step, i) => {
+    if (!done.has(i)) return;
+    const prev = block.steps[i - 1];
+    if (step.side === 'right' && prev?.side === 'left' && prev.exerciseId === step.exerciseId && done.has(i - 1)) return;
+    out.push(step.exerciseId);
+  });
+  return out;
+}

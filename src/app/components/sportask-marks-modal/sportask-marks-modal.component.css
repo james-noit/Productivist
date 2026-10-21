@@ -1,0 +1,91 @@
+.smm {
+  --modal-max-width: 560px;
+  --modal-max-height: min(92vh, 760px);
+  --modal-radius: var(--sport-radius, 12px);
+  --modal-padding: 0;
+  --modal-gap: 0;
+  overflow: hidden;
+  max-height: var(--modal-max-height);
+  border: var(--sport-outline, 1px solid var(--color-border));
+  box-shadow: var(--sport-shadow, none);
+}
+
+.smm:focus {
+  outline: none;
+}
+
+.smm__head {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 1rem 1rem 0.5rem;
+}
+
+.smm__head-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.smm__title {
+  margin: 0;
+  font-size: 1.15rem;
+  line-height: 1.25;
+  font-family: var(--sport-font-display, inherit);
+  text-transform: var(--sport-title-case, none);
+  letter-spacing: var(--sport-title-tracking, normal);
+}
+
+.smm__sub {
+  margin: 0.2rem 0 0;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+.smm__body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0.5rem 1rem 1rem;
+}
+
+.smm__lead {
+  margin: 0;
+  font-weight: 600;
+}
+
+.smm__foot {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0.75rem 1rem;
+  border-top: 1px solid var(--color-border);
+  background-color: var(--sport-foot-bg, var(--color-surface));
+}
+
+.smm__actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+@media (max-width: 600px) {
+  .smm__overlay {
+    padding: 0;
+    align-items: stretch;
+  }
+
+  .smm {
+    --modal-max-width: none;
+    --modal-max-height: none;
+    --modal-radius: 0;
+    height: 100%;
+    border: none;
+    box-shadow: none;
+    padding-top: env(safe-area-inset-top);
+  }
+
+  .smm__foot {
+    padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+  }
+}

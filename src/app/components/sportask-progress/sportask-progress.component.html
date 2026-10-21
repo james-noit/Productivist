@@ -1,0 +1,40 @@
+@if (!hasBlocks()) {
+  <section class="sp__empty">
+    <p>{{ 'sportask.panel.empty.progress' | translate }}</p>
+    <button type="button" class="btn btn--secondary" (click)="state.openPomodoro()">{{ 'sportask.panel.goPomodoro' | translate }}</button>
+  </section>
+} @else {
+  <div class="sp__bar">
+    <span class="sp__label" id="sp-range">{{ 'sportask.panel.range' | translate }}</span>
+    <div class="segmented" role="group" aria-labelledby="sp-range">
+      @for (n of ranges; track n) {
+        <button type="button" class="segmented__option" [attr.aria-pressed]="state.weeks() === n" (click)="setWeeks(n)">
+          {{ (n === 0 ? 'sportask.panel.rangeAll' : 'sportask.panel.rangeWeeks') | translate: { n: n } }}
+        </button>
+      }
+    </div>
+  </div>
+
+  @if (pullHint()) {
+    <p class="sp__hint" role="note">{{ 'sportask.panel.pullHint' | translate }}</p>
+  }
+
+  <div class="sp__grid">
+    @for (id of charts(); track id) {
+      <article class="sp__card">
+        <app-sportask-metric-chart [metricId]="id" [range]="state.range()" />
+      </article>
+    }
+  </div>
+
+  @if (tests().length > 0) {
+    <h3 class="sp__heading">{{ 'sportask.panel.tests' | translate }}</h3>
+    <div class="sp__grid">
+      @for (id of tests(); track id) {
+        <article class="sp__card">
+          <app-sportask-metric-chart [metricId]="id" [range]="state.range()" />
+        </article>
+      }
+    </div>
+  }
+}

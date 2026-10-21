@@ -1,0 +1,9 @@
+.bar__rect {
+  shape-rendering: crispEdges;
+}
+
+.bar__target {
+  stroke: var(--color-text);
+  stroke-width: 2;
+  stroke-dasharray: 6 4;
+}

@@ -1,0 +1,75 @@
+/* Shared by sport-line-chart, sport-bar-chart and sport-heatmap. Tokens only: the skins redefine them. */
+:host {
+  display: block;
+  min-width: 0;
+}
+
+.chart {
+  display: block;
+  width: 100%;
+  min-width: 0;
+}
+
+.chart__svg {
+  display: block;
+  overflow: visible;
+}
+
+.chart__grid {
+  stroke: var(--color-border);
+  stroke-width: 1;
+}
+
+.chart__axis {
+  stroke: var(--color-text-muted);
+  stroke-width: 1;
+}
+
+.chart__tick {
+  fill: var(--color-text-muted);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.chart__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
+.chart__legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.chart__swatch {
+  width: 0.8rem;
+  height: 0.8rem;
+  border-radius: 3px;
+  background-color: var(--swatch);
+  flex: none;
+}
+
+.chart__swatch--line {
+  height: 0;
+  border-radius: 0;
+  background: none;
+  border-top: 3px solid var(--swatch);
+}
+
+.chart__swatch--dashed {
+  border-top-style: dashed;
+}
+
+.chart__swatch--target {
+  height: 0;
+  border-radius: 0;
+  background: none;
+  border-top: 2px dashed var(--color-text-muted);
+}

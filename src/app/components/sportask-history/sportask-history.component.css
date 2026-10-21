@@ -1,0 +1,199 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.sh__heading,
+.sh__day-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  font-family: var(--sport-font-display, inherit);
+  text-transform: var(--sport-title-case, none);
+  letter-spacing: var(--sport-title-tracking, normal);
+}
+
+.sh__day-title {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  text-transform: capitalize;
+  font-family: inherit;
+  letter-spacing: normal;
+}
+
+.sh__records,
+.sh__day {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.sh__records {
+  padding: 0.9rem 1rem;
+  border: var(--sport-card-border, 1px solid var(--color-border));
+  border-radius: var(--sport-radius-sm, 8px);
+  background-color: var(--sport-card-bg, var(--color-surface));
+  box-shadow: var(--sport-card-shadow, none);
+  align-items: flex-start;
+}
+
+.sh__record-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 15rem), 1fr));
+  gap: 0.4rem 1.25rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  width: 100%;
+}
+
+.sh__record {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.1rem 0.5rem;
+  min-width: 0;
+  font-size: 0.9rem;
+}
+
+.sh__record-name {
+  flex: 1 1 100%;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.sh__record-value {
+  font-variant-numeric: tabular-nums;
+  color: var(--color-primary);
+}
+
+.sh__muted {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
+.sh__days {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.sh__days:focus {
+  outline: none;
+}
+
+.sh__list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sh__row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.5rem 0.5rem 0.5rem 0.75rem;
+  border: var(--sport-card-border, 1px solid var(--color-border));
+  border-radius: var(--sport-radius-sm, 8px);
+  background-color: var(--sport-card-bg, var(--color-surface));
+  box-shadow: var(--sport-card-shadow, none);
+  min-width: 0;
+}
+
+.sh__line {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.sh__time {
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+}
+
+.sh__badge {
+  padding: 0 0.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.sh__badge[data-kind='test'] {
+  border-color: var(--color-quadrant-schedule);
+  color: var(--color-quadrant-schedule);
+}
+
+.sh__main {
+  flex: 1 1 12rem;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.sh__source {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.sh__summary {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  overflow-wrap: anywhere;
+}
+
+.sh__status {
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.sh__status[data-status='done'] {
+  color: var(--color-capacity-safe);
+}
+
+.sh__status[data-status='partial'] {
+  color: var(--color-capacity-high);
+}
+
+.sh__status[data-status='skipped'] {
+  color: var(--color-text-muted);
+}
+
+.sh__rpe {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.sh__more {
+  align-self: center;
+}
+
+.sh__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 2.5rem 1rem;
+  text-align: center;
+  color: var(--color-text-muted);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--sport-radius, 12px);
+}
+
+.sh__empty p {
+  margin: 0;
+}

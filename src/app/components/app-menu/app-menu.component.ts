@@ -63,6 +63,18 @@ export class AppMenuComponent {
     if (!this.host.nativeElement.contains(event.target as Node)) this.close();
   }
 
+  /** The views every user has (Admin is added by the template while the account is the admin's). */
+  readonly viewEntries: readonly { id: AppView; label: string }[] = [
+    { id: 'projects', label: 'menu.projects' },
+    { id: 'pomodoro', label: 'menu.pomodoro' },
+    { id: 'sportask', label: 'config.sportask' },
+  ];
+
+  isActive(id: AppView): boolean {
+    const current = this.view.current();
+    return current === id || (id === 'projects' && current === 'project');
+  }
+
   goToView(next: AppView): void {
     this.view.setView(next);
     this.close();

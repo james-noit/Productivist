@@ -5,7 +5,7 @@ import { type LadderParams, ladderIndex, replayLadders } from '../engine/progres
 import { phaseFor, programWeek } from '../engine/schedule';
 import { GOALS } from '../goals';
 import { netKcal, workSecondsDone } from '../kcal';
-import { counted, dayKeys, doneSteps, inRange, weekIndexer, weekKeys } from './helpers';
+import { counted, dayKeys, doneSteps, inRange, setExerciseIds, weekIndexer, weekKeys } from './helpers';
 import type { AssessmentSummary, DateRange, MetricDef, MetricEnv, Series, SeriesGroup } from './types';
 
 const text = (en: string, es: string): LocalizedText => ({ en, es });
@@ -110,23 +110,6 @@ export const heatmap: MetricDef = {
 
 // ---- sets per pattern ----------------------------------------------------------------------------------------------------
 
-/**
- * A set is a step the user marked done in a training block (tests do not count). The two sides of a per-side exercise are
- * one set, so the right-side step that follows its left twin adds nothing.
- */
-function setsOf(block: SportBlock): string[] {
-  if (block.kind === 'test') return [];
-  const done = new Set(doneSteps(block));
-  const out: string[] = [];
-  block.steps.forEach((step, i) => {
-    if (!done.has(i)) return;
-    const prev = block.steps[i - 1];
-    if (step.side === 'right' && prev?.side === 'left' && prev.exerciseId === step.exerciseId && done.has(i - 1)) return;
-    out.push(step.exerciseId);
-  });
-  return out;
-}
-
 export const setsPerPattern: MetricDef = {
   id: 'setsPerPattern',
   name: text('Sets per movement', 'Series por movimiento'),
@@ -137,7 +120,7 @@ export const setsPerPattern: MetricDef = {
     const week = weekIndexer(keys);
     const byPattern = new Map<string, number[]>();
     for (const { block, week: w } of trained(blocks, range, week)) {
-      for (const id of setsOf(block)) {
+      for (const id of setExerciseIds(block)) {
         const pattern = env.catalog.exercises.get(id)?.pattern;
         if (!pattern) continue;
         let row = byPattern.get(pattern);

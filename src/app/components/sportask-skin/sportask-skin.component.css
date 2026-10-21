@@ -16,6 +16,7 @@
     --sport-glow, --sport-glow-filter      neon glow as text-shadow / as filter
     --sport-bg-pattern (+ -size, -position, -repeat)   the panel's background drawing
     --sport-stroke*, --sport-ink*, --sport-soft-opacity  the pictograms
+    --sport-series-1..9                   the chart series colours (sport-*-chart)
     --sport-*-anim, --sport-ring-*         motion; defined ONLY under prefers-reduced-motion: no-preference, so it is off otherwise
 
   A third skin = one more pair of blocks here and a SKINS entry. The fonts are bundled (see below). No remote URLs and no inline script (Thunderbird CSP); the one image is a data: URI of under 1 kB.
@@ -120,6 +121,16 @@
   --sport-stroke-width: 3;
   --sport-ink-width: 6.6;
   --sport-soft-opacity: 0.55;
+  /* Chart series (sport-line-chart, sport-bar-chart): nine hues that stay apart from each other, 4.5:1 or better on the surface (3:1 needed). */
+  --sport-series-1: #ff2e88;
+  --sport-series-2: #19e3ff;
+  --sport-series-3: #3df5a0;
+  --sport-series-4: #ffb02e;
+  --sport-series-5: #9b7bff;
+  --sport-series-6: #ffe14d;
+  --sport-series-7: #5b8cff;
+  --sport-series-8: #ff7a59;
+  --sport-series-9: #c8f542;
 }
 
 /* ---------------------------------------------------------------------------------------------------------------------------
@@ -192,6 +203,16 @@
   --sport-stroke-width: 3.4;
   --sport-ink-width: 0;
   --sport-soft-opacity: 0.45;
+  /* Chart series: nine hues that stay apart from each other, 3.5:1 or better on the surface and on the card (3:1 needed). */
+  --sport-series-1: #b84e27;
+  --sport-series-2: #3f7384;
+  --sport-series-3: #4f7f4a;
+  --sport-series-4: #a1620c;
+  --sport-series-5: #7a5c9e;
+  --sport-series-6: #b0446e;
+  --sport-series-7: #5468a8;
+  --sport-series-8: #7d7d22;
+  --sport-series-9: #8a7570;
   --sport-ring-content: '';
 }
 

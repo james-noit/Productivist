@@ -2,17 +2,20 @@ import { diffDays, startOfWeek } from '../dates';
 
 /** Pure geometry for the Sportask charts (scales, ticks, bars, paths, the heatmap grid). No Angular, no DOM. */
 
-/** Series colours, as tokens (the skins redefine them): the first four are the plan's, the rest cover the stacked pattern/zone charts. */
+/**
+ * Series colours: the skin's nine chart hues (`--sport-series-N`, which keep apart from each other on both skins), falling back to
+ * the app's own tokens where there is no skin.
+ */
 export const SERIES_TONES: readonly string[] = [
-  'var(--color-primary)',
-  'var(--color-quadrant-schedule)',
-  'var(--color-capacity-safe)',
-  'var(--color-capacity-high)',
-  'var(--color-quadrant-delegate)',
-  'var(--color-quadrant-do-first)',
-  'var(--color-quadrant-eliminate)',
-  'var(--color-low)',
-  'var(--color-medium)',
+  'var(--sport-series-1, var(--color-primary))',
+  'var(--sport-series-2, var(--color-quadrant-schedule))',
+  'var(--sport-series-3, var(--color-capacity-safe))',
+  'var(--sport-series-4, var(--color-capacity-high))',
+  'var(--sport-series-5, var(--color-quadrant-eliminate))',
+  'var(--sport-series-6, var(--color-quadrant-delegate))',
+  'var(--sport-series-7, var(--color-low))',
+  'var(--sport-series-8, var(--color-quadrant-do-first))',
+  'var(--sport-series-9, var(--color-capacity-elevated))',
 ];
 
 export const toneOf = (index: number): string => SERIES_TONES[index % SERIES_TONES.length]!;
@@ -46,11 +49,12 @@ function niceStep(span: number, count: number): number {
 }
 
 /** Ticks from `min` to a rounded-up max. A zero or empty span still gets a usable axis. */
-export function niceTicks(min: number, max: number, count = 4): Ticks {
+export function niceTicks(min: number, max: number, count = 4, integer = false): Ticks {
   const lo = Math.min(min, max);
   let hi = Math.max(min, max);
   if (!(hi > lo)) hi = lo + 1;
-  const step = niceStep(hi - lo, count);
+  // Whole numbers (reps, levels, seconds) never get a step like 0.5.
+  const step = integer ? Math.max(1, Math.ceil(niceStep(hi - lo, count))) : niceStep(hi - lo, count);
   const start = Math.floor(lo / step + 1e-9) * step;
   const end = Math.ceil(hi / step - 1e-9) * step;
   const values: number[] = [];
@@ -230,4 +234,18 @@ export function heatLayout(keys: readonly string[], values: readonly (number | n
   });
   const last = cells[cells.length - 1]!;
   return { cells, cols: last.col + 1, monthStarts };
+}
+
+/** A labelled series, as the chart components take it (the panel translates the ids into labels). */
+export interface ChartGroup {
+  id: string;
+  label: string;
+  values: readonly (number | null)[];
+  /** A colour for this series (default: the series palette, by position). */
+  color?: string;
+}
+
+/** 1 decimal at most, no trailing zeros, in the viewer's locale. */
+export function numberFormatter(locale: string): Intl.NumberFormat {
+  return new Intl.NumberFormat(locale, { maximumFractionDigits: 1 });
 }

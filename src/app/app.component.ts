@@ -19,6 +19,7 @@ import { ConfigModalComponent } from './components/config-modal/config-modal.com
 import { AlarmModalComponent } from './components/alarm-modal/alarm-modal.component';
 import { SportaskBreakModalComponent } from './components/sportask-break-modal/sportask-break-modal.component';
 import { SportaskSkinComponent } from './components/sportask-skin/sportask-skin.component';
+import { SportaskViewComponent } from './components/sportask-view/sportask-view.component';
 import { RecurringTasksModalComponent } from './components/recurring-tasks-modal/recurring-tasks-modal.component';
 import { ProjectDetailViewComponent } from './components/project-detail-view/project-detail-view.component';
 import { ProjectsViewComponent } from './components/projects-view/projects-view.component';
@@ -46,6 +47,7 @@ type CapacitorGlobal = {
     AlarmModalComponent,
     SportaskBreakModalComponent,
     SportaskSkinComponent,
+    SportaskViewComponent,
     ProjectsViewComponent,
     ProjectDetailViewComponent,
     AdminViewComponent,
@@ -69,15 +71,15 @@ export class AppComponent {
 
   /**
    * The skin id the whole app wears right now (`data-sport-skin` on <html>), or null: while a Sportask session runs with "apply to
-   * the whole app" on, and and (phase 7) always on the Sportask panel.
+   * the whole app" on, and always on the Sportask panel.
    * It reads the raw settings defensively instead of importing the sanitiser, which would put it in the initial bundle; an
    * unknown id simply matches no CSS (a stored non-string id is stringified, so it matches nothing either). The lazy `sportask-skin` component (the tokens) is rendered only while this is set.
    */
   protected readonly wholeAppSkin = computed<string | null>(() => {
-    // TODO(phase 7): also while `this.view.current() === 'sportask'`, whatever skinWholeApp says.
-    if (!this.sportask.active()) return null;
+    const panel = this.view.current() === 'sportask';
+    if (!panel && !this.sportask.active()) return null;
     const s = (this.sportaskSettings.settings() ?? {}) as Record<string, unknown>;
-    return s['skinWholeApp'] === false ? null : String(s['skin'] ?? 'cyberpunk');
+    return !panel && s['skinWholeApp'] === false ? null : String(s['skin'] ?? 'cyberpunk');
   });
 
   constructor() {

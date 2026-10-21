@@ -840,7 +840,7 @@ The catalog maps each exercise to one of them. Per-exercise artwork is a later p
   | `heatmap` | heatmap | per day: blocks done |
   | `setsPerPattern` | stackedBars | per week: sets by movement pattern |
   | `ladderLevel` | line (stepped) | per pattern: the rung over time (replayed) |
-  | `zonesCovered` | bars | per week: blocks per body zone |
+  | `zonesCovered` | stackedBars | per week: blocks per body zone (a block counts once in every zone it works, so a stack adds up zone visits) |
   | `assessment:<id>` | line | one series per assessment (and side) |
   | `density` | line | per week: work / (work + rest) of calories blocks |
 

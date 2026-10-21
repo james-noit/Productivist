@@ -1,0 +1,35 @@
+<div class="modal-overlay smm__overlay" (mousedown)="onBackdropDown($event)" (click)="onBackdropClick($event)" (keydown)="onKeydown($event)">
+  <div #panel class="modal-panel smm" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="smm-title">
+    <header class="smm__head">
+      <div class="smm__head-text">
+        <h2 id="smm-title" class="smm__title">{{ 'sportask.panel.editMarks' | translate }}</h2>
+        <p class="smm__sub">{{ subtitle() }}</p>
+      </div>
+      <button type="button" class="btn btn--ghost btn--icon btn--sm" [attr.aria-label]="'sportask.panel.close' | translate" (click)="requestClose()">
+        <app-ui-icon name="x" />
+      </button>
+    </header>
+
+    <div class="smm__body">
+      <p class="smm__lead">{{ (isTest() ? 'sportask.brk.testResult' : 'sportask.brk.marks') | translate }}</p>
+      <app-sportask-results-form [(rows)]="rows" [(feedback)]="feedback" [(rpe)]="rpe" [test]="isTest()" />
+    </div>
+
+    <footer class="smm__foot">
+      @if (confirm() === 'discard') {
+        <div class="confirm-bar" role="alertdialog" aria-labelledby="smm-confirm">
+          <p class="confirm-bar__text" id="smm-confirm">{{ 'sportask.panel.discardQ' | translate }}</p>
+          <div class="confirm-bar__actions">
+            <button #confirmFocus type="button" class="btn btn--secondary" (click)="dismissConfirm()">{{ 'sportask.panel.keepEditing' | translate }}</button>
+            <button type="button" class="btn btn--danger" (click)="discard()">{{ 'sportask.brk.discard' | translate }}</button>
+          </div>
+        </div>
+      } @else {
+        <div class="smm__actions">
+          <button type="button" class="btn btn--secondary" (click)="requestClose()">{{ 'sportask.panel.cancel' | translate }}</button>
+          <button type="button" class="btn btn--primary" [disabled]="!dirty()" (click)="save()">{{ 'sportask.panel.saveChanges' | translate }}</button>
+        </div>
+      }
+    </footer>
+  </div>
+</div>
