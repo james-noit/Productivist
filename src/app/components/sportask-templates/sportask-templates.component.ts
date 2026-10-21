@@ -5,6 +5,7 @@ import { templateAvailability } from '../../../lib/sportask/engine/template-plan
 import { buildContext } from '../../../lib/sportask/session-context';
 import { BUILTIN_TEMPLATES } from '../../../lib/sportask/templates';
 import { localize } from '../../../lib/sportask/texts';
+import { removeTemplate } from '../../../lib/sportask/data-ops';
 import { SportDataService } from '../../../services/sport-data.service';
 import type { SportTemplate, TemplateSlot } from '../../../types/sportask';
 import { SportaskTemplateEditorComponent } from '../sportask-template-editor/sportask-template-editor.component';
@@ -127,7 +128,7 @@ export class SportaskTemplatesComponent {
 
   protected remove(id: string): void {
     this.deletingId.set(null);
-    this.data.removeTemplate(id);
+    removeTemplate(this.data, id);
   }
 
   protected onKeydown(event: KeyboardEvent): void {

@@ -3,6 +3,7 @@ import { TranslatePipe } from '@ngx-translate/core';
 import { trapTab } from '../../../lib/focus-trap';
 import { CATALOG } from '../../../lib/sportask/catalog';
 import { PATTERN_ORDER, ZONE_ORDER } from '../../../lib/sportask/metrics';
+import { upsertTemplate } from '../../../lib/sportask/data-ops';
 import { SportDataService } from '../../../services/sport-data.service';
 import type { BodyZone, Dose, GoalTag, Level, MovementPattern, SportTemplate, TemplateSlot } from '../../../types/sportask';
 import { KebabMenuComponent } from '../kebab-menu/kebab-menu.component';
@@ -69,7 +70,7 @@ const fingerprint = (d: Draft): string => JSON.stringify([d.name.trim(), d.forma
  * is a fixed exercise (chosen from a searchable list) or a movement pattern with an optional tag and body zone. Follows the Task
  * Details pattern: a local draft against a snapshot, *Save* disabled until something changed and the template is valid, Ctrl/Cmd+Enter
  * saves, closing a changed draft asks first. Slots are reordered with Alt+Up/Down or the ⋯ menu. Saving goes through
- * `SportDataService.upsertTemplate`, so it syncs.
+ * `upsertTemplate` (lib/sportask/data-ops.ts), so it syncs.
  */
 @Component({
   selector: 'app-sportask-template-editor',
@@ -300,7 +301,7 @@ export class SportaskTemplateEditorComponent {
       out.restSeconds = d.rest ?? 30;
     }
     if (d.format === 'emom') out.minSeconds = EMOM_MIN_SECONDS;
-    this.data.upsertTemplate(out);
+    upsertTemplate(this.data, out);
     this.closed.emit();
   }
 

@@ -27,6 +27,7 @@ import { blockRow } from '../../../lib/sportask/session-context';
 import { resolveSkin } from '../../../lib/sportask/skins';
 import { BUILTIN_TEMPLATES } from '../../../lib/sportask/templates';
 import { loadSportaskTexts, localize } from '../../../lib/sportask/texts';
+import { addBlock } from '../../../lib/sportask/data-ops';
 import { ClockService } from '../../../services/clock.service';
 import { SettingsService } from '../../../services/settings.service';
 import { SportDataService } from '../../../services/sport-data.service';
@@ -539,7 +540,7 @@ export class SportaskBreakModalComponent {
   /** Records the block as skipped and goes back to a normal break. A *Train now* block just closes: there was no break to skip. */
   protected skip(): void {
     const p = this.pending();
-    if (p && !this.isSingle) this.data.addBlock(blockRow(p, { status: 'skipped', results: [] }));
+    if (p && !this.isSingle) addBlock(this.data, blockRow(p, { status: 'skipped', results: [] }));
     closeBreak(this.sportask);
   }
 
@@ -553,7 +554,7 @@ export class SportaskBreakModalComponent {
     if (!p || this.stage() !== 'results') return;
     const results = resultsFromRows(this.draft());
     const status = results.length > 0 && results.every((r) => r.done) ? 'done' : 'partial';
-    this.data.addBlock(blockRow(p, { status, results, rpe: this.rpe(), feedback: this.isTest() ? null : this.feedback() }));
+    addBlock(this.data, blockRow(p, { status, results, rpe: this.rpe(), feedback: this.isTest() ? null : this.feedback() }));
     const early = this.finishedAt() !== null;
     closeBreak(this.sportask);
     if (!andResume || this.isSingle) return;
@@ -564,7 +565,7 @@ export class SportaskBreakModalComponent {
 
   protected discard(): void {
     const p = this.pending();
-    if (p && !this.isSingle) this.data.addBlock(blockRow(p, { status: 'skipped', results: [] }));
+    if (p && !this.isSingle) addBlock(this.data, blockRow(p, { status: 'skipped', results: [] }));
     this.confirm.set(null);
     closeBreak(this.sportask);
   }

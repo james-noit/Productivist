@@ -4,6 +4,7 @@ import { trapTab } from '../../../lib/focus-trap';
 import { CATALOG } from '../../../lib/sportask/catalog';
 import { type ResultRow, resultsFromRows, rowsFromBlock, statusFromRows } from '../../../lib/sportask/results';
 import { localize } from '../../../lib/sportask/texts';
+import { updateBlock } from '../../../lib/sportask/data-ops';
 import { SportDataService } from '../../../services/sport-data.service';
 import type { Feedback, SportBlock } from '../../../types/sportask';
 import { SportaskResultsFormComponent } from '../sportask-results-form/sportask-results-form.component';
@@ -97,7 +98,7 @@ export class SportaskMarksModalComponent {
     };
     // A test has no "how it felt"; leave whatever the block had.
     if (!this.isTest()) patch.feedback = this.feedback() ?? undefined;
-    this.data.updateBlock(this.block().id, patch);
+    updateBlock(this.data, this.block().id, patch);
     this.closed.emit();
   }
 

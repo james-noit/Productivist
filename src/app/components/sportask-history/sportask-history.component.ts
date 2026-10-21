@@ -7,6 +7,7 @@ import { setExerciseIds } from '../../../lib/sportask/metrics/helpers';
 import { type PersonalRecord, personalRecords } from '../../../lib/sportask/metrics/summary';
 import { BUILTIN_TEMPLATES } from '../../../lib/sportask/templates';
 import { localize } from '../../../lib/sportask/texts';
+import { removeBlock } from '../../../lib/sportask/data-ops';
 import { SportDataService } from '../../../services/sport-data.service';
 import type { BlockStatus, SportBlock } from '../../../types/sportask';
 import { KebabMenuComponent } from '../kebab-menu/kebab-menu.component';
@@ -169,7 +170,7 @@ export class SportaskHistoryComponent {
 
   protected remove(id: string): void {
     this.deletingId.set(null);
-    this.data.removeBlock(id);
+    removeBlock(this.data, id);
     // The row (and the focus in it) is gone: keep the keyboard user in the list.
     afterNextRender(() => this.dayList()?.nativeElement.focus({ preventScroll: true }), { injector: this.injector });
   }

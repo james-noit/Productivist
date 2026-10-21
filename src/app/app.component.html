@@ -71,24 +71,11 @@
   }
 }
 
-<!-- The skin's tokens (lazy CSS) while the whole app wears it; the Sportask surfaces render their own copy. -->
-@if (wholeAppSkin()) {
+<!-- Sportask outside the views (lazy): the skin, the break modal (--modal-z 60: over every view and modal, under the alarm) and the
+     pre-generation of the next block. Rendered while a session is active, a break is open or the panel is showing. -->
+@if (sportask.active() || sportask.breakOpen() || view.current() === 'sportask') {
   @defer (on immediate) {
-    <app-sportask-skin />
-  }
-}
-
-<!-- Sportask's training block for the break (--modal-z 60): over every view and modal, under the alarm. -->
-@if (sportask.breakOpen()) {
-  @defer (on immediate) {
-    <app-sportask-break-modal />
-  }
-}
-
-<!-- Headless: prepares the next break's block during focus (the native notification names its exercise). -->
-@if (sportask.active()) {
-  @defer (on immediate) {
-    <app-sportask-prepare />
+    <app-sportask-host />
   }
 }
 
