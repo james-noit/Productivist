@@ -15,6 +15,7 @@ import { ViewService, type ConfigSection } from '../../../services/view.service'
 import { AccountSettingsComponent } from '../account-settings/account-settings.component';
 import { ForgeConnectionsSettingsComponent } from '../forge-connections-settings/forge-connections-settings.component';
 import { SportaskSettingsComponent } from '../sportask-settings/sportask-settings.component';
+import { ConfigLeaveGuard } from './config-leave-guard';
 
 const SCROLL_LOCK_CLASS = 'planning-lab-open';
 
@@ -50,11 +51,13 @@ const LANGUAGES: { id: Language; nativeName: string }[] = [
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './config-modal.component.html',
   styleUrl: './config-modal.component.css',
+  providers: [ConfigLeaveGuard],
 })
 export class ConfigModalComponent {
   private readonly view = inject(ViewService);
   readonly settings = inject(SettingsService);
   readonly accounts = inject(AccountService);
+  private readonly leaveGuard = inject(ConfigLeaveGuard);
   private readonly panel = viewChild<ElementRef<HTMLElement>>('panel');
 
   readonly section = this.view.configSection;
@@ -75,7 +78,7 @@ export class ConfigModalComponent {
   }
 
   close(): void {
-    this.view.closeConfiguration();
+    this.leaveGuard.leave(() => this.view.closeConfiguration());
   }
 
   closeOnBackdrop(event: MouseEvent): void {
@@ -88,7 +91,8 @@ export class ConfigModalComponent {
   }
 
   selectSection(section: ConfigSection): void {
-    this.section.set(section);
+    if (section === this.section()) return;
+    this.leaveGuard.leave(() => this.section.set(section));
   }
 
   setTheme(theme: Theme): void {

@@ -17,6 +17,7 @@ import { SportaskGoalFieldsComponent } from '../sportask-goal-fields/sportask-go
 import { SportaskLimitsFieldsComponent } from '../sportask-limits-fields/sportask-limits-fields.component';
 import { SportaskRhythmFieldsComponent } from '../sportask-rhythm-fields/sportask-rhythm-fields.component';
 import { SportaskStyleFieldsComponent } from '../sportask-style-fields/sportask-style-fields.component';
+import { ConfigLeaveGuard } from '../config-modal/config-leave-guard';
 import { UiIconComponent } from '../ui-icon/ui-icon.component';
 
 type Stage = 'choose' | 'quick' | 'steps';
@@ -77,6 +78,7 @@ export class SportaskSetupWizardComponent {
   private readonly lang = inject(SettingsService).language;
   private readonly injector = inject(Injector);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+  private readonly leaveGuard = inject(ConfigLeaveGuard, { optional: true });
   private readonly body = viewChild<ElementRef<HTMLElement>>('body');
 
   protected readonly steps = SETUP_STEPS;
@@ -116,6 +118,8 @@ export class SportaskSetupWizardComponent {
   protected readonly quickSummary = computed(() => this.describe(this.quick));
 
   private opener: HTMLElement | null = null;
+  /** What the Configuration modal wanted to do (change section, close) when it hit the dirty draft; done once discarding is confirmed. */
+  private pending: (() => void) | null = null;
 
   constructor() {
     // Capture phase, so it runs before the Configuration modal's own Escape listener on the same node.
@@ -130,7 +134,16 @@ export class SportaskSetupWizardComponent {
       }
     };
     document.addEventListener('keydown', onKey, true);
-    inject(DestroyRef).onDestroy(() => document.removeEventListener('keydown', onKey, true));
+    const unregister = this.leaveGuard?.register((proceed) => {
+      if (!this.dirty()) return true;
+      this.pending = proceed;
+      if (!this.question()) this.askDiscard();
+      return false;
+    });
+    inject(DestroyRef).onDestroy(() => {
+      document.removeEventListener('keydown', onKey, true);
+      unregister?.();
+    });
   }
 
   private swallow(event: Event): void {
@@ -229,6 +242,7 @@ export class SportaskSetupWizardComponent {
 
   protected keepEditing(): void {
     this.question.set(false);
+    this.pending = null;
     const opener = this.opener;
     this.opener = null;
     if (opener) afterNextRender(() => (opener.isConnected ? opener.focus() : undefined), { injector: this.injector });
@@ -237,14 +251,17 @@ export class SportaskSetupWizardComponent {
   protected discard(): void {
     this.question.set(false);
     this.opener = null;
+    const proceed = this.pending;
+    this.pending = null;
     if (this.rerun()) {
       this.cancelled.emit();
-      return;
+    } else {
+      this.draft.set(this.initial());
+      this.accepted.set(false);
+      this.index.set(0);
+      this.stage.set('choose');
+      if (!proceed) afterNextRender(() => document.querySelector<HTMLElement>('.wz__choice')?.focus(), { injector: this.injector });
     }
-    this.draft.set(this.initial());
-    this.accepted.set(false);
-    this.index.set(0);
-    this.stage.set('choose');
-    afterNextRender(() => document.querySelector<HTMLElement>('.wz__choice')?.focus(), { injector: this.injector });
+    proceed?.();
   }
 }
