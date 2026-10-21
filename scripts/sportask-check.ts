@@ -19,6 +19,7 @@ import { netKcal } from '../src/lib/sportask/kcal';
 import { createRegistry } from '../src/lib/sportask/registry';
 import { sanitizeBlock, sanitizeSettings, sanitizeTemplate, defaultSettings } from '../src/lib/sportask/sanitize';
 import { stepAt, timeline } from '../src/lib/sportask/runner';
+import { SETUP_STEPS, draftFromSettings, pickFor, quickDraft, setupPatch, stepValid } from '../src/lib/sportask/setup';
 import { SKINS } from '../src/lib/sportask/skins';
 import { BUILTIN_TEMPLATES } from '../src/lib/sportask/templates';
 import { barMax, barRects, heatLayout, heatLevel, linePath, niceTicks, plotOf, targetPath, timeScaleX } from '../src/lib/sportask/charts';
@@ -799,6 +800,38 @@ function checkSanitize(): void {
     check(sw({ enabled: false, setupDoneAt: 5 }, true) === JSON.stringify({ enabled: false, setupDone: true }) && sw({ enabled: true, setupDoneAt: 5 }) === on, 'setupDoneAt marks the setup as done');
     check(sw({ enabled: true }) === JSON.stringify({ enabled: true, setupDone: false }) && sw({ enabled: true, enrolment: enrolled }, true) === JSON.stringify({ enabled: true, setupDone: false }), 'an explicit true is on but not set up until setupDoneAt');
     check(sw({ enrolment: null }) === off, 'a null enrolment does not count');
+  }
+  {
+    // The guided setup (src/lib/sportask/setup.ts): the Quick preset, the draft from settings, the one patch Finish writes.
+    const quick = quickDraft();
+    check(same(quick.pick, { goalId: 'mobility', programId: 'deskReset', level: 1 }), 'Quick sets Improve mobility, Desk reset, level 1');
+    check(same(quick.equipment, {}) && same(quick.constraints, { lowImpact: false, noFloor: false }), 'Quick sets no equipment and no limits');
+    check(quick.rhythm.cadenceId === 'classic' && quick.rhythm.customCadence === undefined, 'Quick sets Classic 25/5');
+    check(quick.style.skin === 'cyberpunk' && quick.style.skinWholeApp && quick.style.cues && !quick.style.autoStartBreak, 'Quick sets Cyberpunk, whole app, step sounds on');
+    check(SETUP_STEPS.length === 6 && SETUP_STEPS[5] === 'summary', 'the personalised path has six steps ending in the summary');
+    const fromDefaults = draftFromSettings(defaultSettings(), false);
+    check(same(fromDefaults, quick), 'a fresh profile starts the personalised path on the Quick values');
+    check(draftFromSettings(defaultSettings(), true).pick === null, 'Run setup again keeps a free-training user free');
+    const enrolled = enrol('strength', 'microStrength', 2, '2026-03-02');
+    const base = { ...defaultSettings(), enrolment: enrolled, equipment: { dumbbells: { owned: true, weightsKg: [6, 8] } }, cadenceId: 'custom', customCadence: { focusSeconds: 1200, breakSeconds: 240, exerciseEvery: 2 } };
+    const draft = draftFromSettings(base, true);
+    check(same(draft.pick, { goalId: 'strength', programId: 'microStrength', level: 2 }) && same(draft.equipment, base.equipment) && same(draft.rhythm, { cadenceId: 'custom', customCadence: base.customCadence }), 'the draft starts from the current settings');
+    draft.equipment['dumbbells']!.weightsKg!.push(10);
+    check(same(base.equipment['dumbbells']!.weightsKg, [6, 8]), 'editing the draft never touches the settings');
+    check(pickFor('strength', 'nope').programId === GOALS.get('strength')!.programs[0]!.id && pickFor('zzz').goalId === GOALS.all[0]!.id, 'pickFor falls back to the first program and goal');
+    check(SETUP_STEPS.every((st) => stepValid(st, quick, true)) && !stepValid('summary', quick, false), 'only the summary needs the notice accepted');
+    check(!stepValid('goal', { ...quick, pick: { goalId: 'strength', programId: 'deskReset', level: 1 } }, true) && stepValid('goal', { ...quick, pick: null }, true), 'a pick must name a real program, or be free training');
+    check(!stepValid('rhythm', { ...quick, rhythm: { cadenceId: 'custom' } }, true) && !stepValid('rhythm', { ...quick, rhythm: { cadenceId: 'nope' } }, true), 'a rhythm must be a preset or a custom cadence');
+    const patch = setupPatch(quick, defaultSettings(), 1000, '2026-03-03');
+    check(patch.enabled === true && patch.setupDoneAt === 1000 && patch.disclaimerAcceptedAt === 1000, 'Finish switches on, stamps the setup and accepts the notice');
+    check(same(patch.enrolment, { goalId: 'mobility', programId: 'deskReset', level: 1, startedOn: '2026-03-03', acceptedDisclaimerAt: 1000 }), 'Finish enrols in the picked program today');
+    check(same(sanitizeSettings(patch), { ...defaultSettings(), ...patch }), 'the patch is already valid settings');
+    const keep = setupPatch({ ...draft, equipment: {} }, base, 2000, '2026-04-01');
+    check(keep.enrolment === enrolled && keep.disclaimerAcceptedAt === enrolled.acceptedDisclaimerAt, 'an unchanged program keeps its enrolment and the earlier acceptance');
+    const move = setupPatch({ ...draft, pick: pickFor('mobility') }, base, 2000, '2026-04-01');
+    check(same(move.enrolment, { goalId: 'mobility', programId: 'deskReset', level: 1, startedOn: '2026-04-01', acceptedDisclaimerAt: enrolled.acceptedDisclaimerAt }), 'a different program starts today');
+    check(setupPatch({ ...draft, pick: null }, base, 2000, '2026-04-01').enrolment === null, 'free training leaves the program');
+    check(same(setupPatch(draft, base, 2000, '2026-04-01').customCadence, base.customCadence), 'the custom cadence travels with the draft');
   }
   for (const g of [null, 5, 'x', [], { enrolment: 5, cadenceId: 7, equipment: [], constraints: 'a', customCadence: { focusSeconds: 'a' } }, { equipment: { band: 5, 'bad key!': { owned: true }, kettlebell: { owned: 'yes', weightsKg: [-1, 'a', 1e9, 12, 12] } }, customCadence: { focusSeconds: 1, breakSeconds: 1e9, exerciseEvery: 99, longBreak: { every: 1, seconds: 1 } } }]) {
     const out = sanitizeSettings(g);

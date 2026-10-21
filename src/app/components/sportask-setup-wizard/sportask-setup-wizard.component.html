@@ -1,0 +1,196 @@
+<ng-template #rows let-s let-edit="edit">
+  <dl class="wz__rows">
+    <div class="wz__row">
+      <dt>{{ 'sportask.goal.title' | translate }}</dt>
+      <dd>
+        @if (s.goal; as g) {
+          {{ g.goal }} · {{ g.program }} · {{ 'sportask.goal.levels.' + g.level | translate }}
+        } @else {
+          {{ 'sportask.goal.none' | translate }}
+        }
+      </dd>
+      @if (edit) {
+        <button type="button" class="btn btn--ghost btn--sm" (click)="goTo('goal')">{{ 'sportask.wizard.change' | translate }}<span class="visually-hidden"> · {{ 'sportask.goal.title' | translate }}</span></button>
+      }
+    </div>
+    <div class="wz__row">
+      <dt>{{ 'sportask.gear.title' | translate }}</dt>
+      <dd>
+        @if (s.gear.length) {
+          {{ s.gear.join(', ') }}
+        } @else {
+          {{ 'sportask.wizard.none' | translate }}
+        }
+      </dd>
+      @if (edit) {
+        <button type="button" class="btn btn--ghost btn--sm" (click)="goTo('gear')">{{ 'sportask.wizard.change' | translate }}<span class="visually-hidden"> · {{ 'sportask.gear.title' | translate }}</span></button>
+      }
+    </div>
+    <div class="wz__row">
+      <dt>{{ 'sportask.limits.title' | translate }}</dt>
+      <dd>
+        @for (l of s.limits; track l; let last = $last) {
+          {{ 'sportask.limits.' + l | translate }}@if (!last) {; }
+        } @empty {
+          {{ 'sportask.wizard.none' | translate }}
+        }
+      </dd>
+      @if (edit) {
+        <button type="button" class="btn btn--ghost btn--sm" (click)="goTo('limits')">{{ 'sportask.wizard.change' | translate }}<span class="visually-hidden"> · {{ 'sportask.limits.title' | translate }}</span></button>
+      }
+    </div>
+    <div class="wz__row">
+      <dt>{{ 'sportask.rhythm.title' | translate }}</dt>
+      <dd>
+        {{ s.rhythm.custom ? ('sportask.rhythm.custom' | translate) : s.rhythm.name }} · {{ 'sportask.rhythm.line' | translate: { focus: s.rhythm.focus, brk: s.rhythm.brk } }}
+      </dd>
+      @if (edit) {
+        <button type="button" class="btn btn--ghost btn--sm" (click)="goTo('rhythm')">{{ 'sportask.wizard.change' | translate }}<span class="visually-hidden"> · {{ 'sportask.rhythm.title' | translate }}</span></button>
+      }
+    </div>
+    <div class="wz__row">
+      <dt>{{ 'sportask.style.title' | translate }}</dt>
+      <dd>
+        {{ s.style.skin }}@if (s.style.wholeApp) {, {{ 'sportask.wizard.flag.wholeApp' | translate }}}@if (s.style.cues) {, {{ 'sportask.wizard.flag.cues' | translate }}}@if (s.style.autoStart) {, {{ 'sportask.wizard.flag.autoStart' | translate }}}
+      </dd>
+      @if (edit) {
+        <button type="button" class="btn btn--ghost btn--sm" (click)="goTo('style')">{{ 'sportask.wizard.change' | translate }}<span class="visually-hidden"> · {{ 'sportask.style.title' | translate }}</span></button>
+      }
+    </div>
+  </dl>
+</ng-template>
+
+<ng-template #note>
+  @if (programNote(); as n) {
+    <p class="wz__note" role="note">{{ (n === 'leave' ? 'sportask.wizard.leaveNote' : 'sportask.wizard.switchNote') | translate }}</p>
+  }
+</ng-template>
+
+<div class="wz">
+  @switch (stage()) {
+    @case ('choose') {
+      <h4 class="wz__title" id="wz-heading" tabindex="-1">{{ 'sportask.wizard.chooseTitle' | translate }}</h4>
+      <p class="ss__hint">{{ 'sportask.wizard.chooseHint' | translate }}</p>
+      <div class="wz__choices" #body>
+        <button type="button" class="wz__choice" (click)="choose('quick')">
+          <span class="wz__choice-head">
+            <app-ui-icon name="flame" [size]="18" />
+            <span class="wz__choice-name">{{ 'sportask.wizard.quickName' | translate }}</span>
+          </span>
+          <span class="wz__choice-text">{{ 'sportask.wizard.quickText' | translate }}</span>
+        </button>
+        <button type="button" class="wz__choice" (click)="choose('steps')">
+          <span class="wz__choice-head">
+            <app-ui-icon name="target" [size]="18" />
+            <span class="wz__choice-name">{{ 'sportask.wizard.fullName' | translate }}</span>
+          </span>
+          <span class="wz__choice-text">{{ 'sportask.wizard.fullText' | translate }}</span>
+        </button>
+      </div>
+      @if (rerun()) {
+        <div class="wz__footer">
+          <button type="button" class="btn btn--ghost" (click)="cancelled.emit()">{{ 'sportask.wizard.cancel' | translate }}</button>
+        </div>
+      }
+    }
+
+    @case ('quick') {
+      <h4 class="wz__title" id="wz-heading" tabindex="-1">{{ 'sportask.wizard.quickName' | translate }}</h4>
+      <p class="ss__hint">{{ 'sportask.wizard.quickIntro' | translate }}</p>
+      <div #body class="wz__body">
+        <ng-container *ngTemplateOutlet="rows; context: { $implicit: quickSummary(), edit: false }" />
+        <ng-container *ngTemplateOutlet="note" />
+        <div class="ss__notice">
+          <strong>{{ 'sportask.goal.notice' | translate }}</strong>
+          <p>{{ 'sportask.disclaimer' | translate }}</p>
+        </div>
+      </div>
+      <div class="wz__footer">
+        <button type="button" class="btn btn--ghost" (click)="back()"><app-ui-icon name="chevron-left" [size]="16" />{{ 'sportask.wizard.back' | translate }}</button>
+        <span class="wz__spacer"></span>
+        @if (rerun()) {
+          <button type="button" class="btn btn--ghost" (click)="cancel()">{{ 'sportask.wizard.cancel' | translate }}</button>
+        }
+        <button type="button" class="btn btn--primary" (click)="finish()">{{ 'sportask.wizard.acceptFinish' | translate }}</button>
+      </div>
+    }
+
+    @case ('steps') {
+      <div class="wz__progress">
+        <p class="wz__count">{{ 'sportask.wizard.step' | translate: { n: index() + 1, total: steps.length } }}</p>
+        <ol class="wz__steps" [attr.aria-label]="'sportask.wizard.steps' | translate">
+          @for (s of steps; track s; let i = $index) {
+            <li class="wz__step" [class.wz__step--done]="i < index()" [class.wz__step--on]="i === index()" [attr.aria-current]="i === index() ? 'step' : null">
+              <span class="wz__dot" aria-hidden="true">{{ i + 1 }}</span>
+              <span class="wz__step-name">{{ stepKeys[s] | translate }}</span>
+            </li>
+          }
+        </ol>
+      </div>
+      <p class="visually-hidden" role="status">{{ 'sportask.wizard.announce' | translate: { n: index() + 1, total: steps.length, name: stepKeys[step()] | translate } }}</p>
+      <h4 class="wz__title" id="wz-heading" tabindex="-1">{{ stepKeys[step()] | translate }}</h4>
+
+      <div #body class="wz__body" role="group" aria-labelledby="wz-heading">
+        @switch (step()) {
+          @case ('goal') {
+            <app-sportask-goal-fields [value]="draft().pick" [allowNone]="true" (changed)="set({ pick: $event })" />
+          }
+          @case ('gear') {
+            <app-sportask-equipment-fields [value]="draft().equipment" (changed)="set({ equipment: $event })" />
+          }
+          @case ('limits') {
+            <app-sportask-limits-fields [value]="draft().constraints" (changed)="set({ constraints: $event })" />
+          }
+          @case ('rhythm') {
+            <app-sportask-rhythm-fields [value]="draft().rhythm" (changed)="set({ rhythm: $event })" />
+          }
+          @case ('style') {
+            <app-sportask-style-fields [value]="draft().style" (changed)="set({ style: $event })" />
+          }
+          @case ('summary') {
+            <ng-container *ngTemplateOutlet="rows; context: { $implicit: summary(), edit: true }" />
+            <ng-container *ngTemplateOutlet="note" />
+            <div class="ss__notice">
+              <strong>{{ 'sportask.goal.notice' | translate }}</strong>
+              <p>{{ 'sportask.disclaimer' | translate }}</p>
+              @if (alreadyAccepted()) {
+                <p class="ss__hint">{{ 'sportask.wizard.acceptedBefore' | translate }}</p>
+              } @else {
+                <button type="button" role="switch" class="switch" [attr.aria-checked]="accepted()" (click)="accepted.set(!accepted())">
+                  <span class="switch__track"></span>
+                  <span>{{ 'sportask.goal.accept' | translate }}</span>
+                </button>
+              }
+            </div>
+          }
+        }
+      </div>
+
+      @if (question()) {
+        <div class="confirm-bar wz__footer" role="alertdialog" aria-labelledby="wz-discard">
+          <p class="confirm-bar__text" id="wz-discard">{{ 'sportask.wizard.discardQ' | translate }}</p>
+          <div class="confirm-bar__actions">
+            <button type="button" class="btn btn--secondary btn--sm" data-keep (click)="keepEditing()">{{ 'sportask.wizard.keep' | translate }}</button>
+            <button type="button" class="btn btn--danger btn--sm" (click)="discard()">{{ 'sportask.wizard.discard' | translate }}</button>
+          </div>
+        </div>
+      } @else {
+        <div class="wz__footer">
+          <button type="button" class="btn btn--ghost" (click)="back()"><app-ui-icon name="chevron-left" [size]="16" />{{ 'sportask.wizard.back' | translate }}</button>
+          <span class="wz__spacer"></span>
+          @if (last() && !valid()) {
+            <span class="ss__hint wz__need">{{ 'sportask.wizard.needAccept' | translate }}</span>
+          }
+          @if (cancelable()) {
+            <button type="button" class="btn btn--ghost" (click)="cancel()">{{ 'sportask.wizard.cancel' | translate }}</button>
+          }
+          @if (last()) {
+            <button type="button" class="btn btn--primary" [disabled]="!valid()" (click)="finish()">{{ 'sportask.wizard.finish' | translate }}</button>
+          } @else {
+            <button type="button" class="btn btn--primary" [disabled]="!valid()" (click)="next()">{{ 'sportask.wizard.next' | translate }}</button>
+          }
+        </div>
+      }
+    }
+  }
+</div>

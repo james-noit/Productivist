@@ -1,0 +1,50 @@
+<p class="ss__hint">{{ 'sportask.rhythm.hint' | translate }}</p>
+<div class="ss__rows" role="radiogroup" [attr.aria-label]="'sportask.rhythm.list' | translate">
+  @for (c of rows(); track c.id) {
+    <button type="button" role="radio" class="ss__row" [attr.aria-checked]="cadenceId() === c.id" [class.ss__row--on]="cadenceId() === c.id" (click)="pickCadence(c.id)">
+      <span class="ss__dot" aria-hidden="true"></span>
+      <span class="ss__row-text">
+        <span class="ss__row-name">{{ c.name }}</span>
+        <span class="ss__row-sub">
+          {{ 'sportask.rhythm.line' | translate: { focus: c.focus, brk: c.brk } }}@if (c.longMin) {; {{ 'sportask.rhythm.long' | translate: { min: c.longMin, n: c.longEvery } }}}@if (c.every > 1) {; {{ 'sportask.rhythm.every' | translate: { n: c.every } }}}
+        </span>
+      </span>
+    </button>
+  }
+  <button type="button" role="radio" class="ss__row" [attr.aria-checked]="cadenceId() === 'custom'" [class.ss__row--on]="cadenceId() === 'custom'" (click)="pickCadence('custom')">
+    <span class="ss__dot" aria-hidden="true"></span>
+    <span class="ss__row-name">{{ 'sportask.rhythm.custom' | translate }}</span>
+  </button>
+</div>
+@if (cadenceId() === 'custom') {
+  <div class="ss__custom">
+    <div class="field">
+      <label class="field__label" [attr.for]="uid + '-focus'">{{ 'sportask.rhythm.focus' | translate }}</label>
+      <input [id]="uid + '-focus'" class="input ss__min" type="number" inputmode="decimal" [min]="limits.focusMin" [max]="limits.focusMax" step="0.5" [value]="custom().focusSeconds / 60" (change)="onMinutes($event, 'focusSeconds')" />
+    </div>
+    <div class="field">
+      <label class="field__label" [attr.for]="uid + '-break'">{{ 'sportask.rhythm.break' | translate }}</label>
+      <input [id]="uid + '-break'" class="input ss__min" type="number" inputmode="decimal" [min]="limits.breakMin" [max]="limits.breakMax" step="0.5" [value]="custom().breakSeconds / 60" (change)="onMinutes($event, 'breakSeconds')" />
+    </div>
+    <div class="field">
+      <span class="field__label">{{ 'sportask.rhythm.exEvery' | translate }}</span>
+      <app-number-stepper [value]="custom().exerciseEvery" (valueChange)="setExerciseEvery($event)" [min]="1" [max]="8" [decreaseLabel]="'sportask.rhythm.less' | translate" [increaseLabel]="'sportask.rhythm.more' | translate" />
+    </div>
+    <div class="field">
+      <button type="button" role="switch" class="switch" [attr.aria-checked]="!!custom().longBreak" (click)="toggleLongBreak()">
+        <span class="switch__track"></span>
+        <span>{{ 'sportask.rhythm.longBreak' | translate }}</span>
+      </button>
+    </div>
+    @if (custom().longBreak; as lb) {
+      <div class="field">
+        <span class="field__label">{{ 'sportask.rhythm.longEvery' | translate }}</span>
+        <app-number-stepper [value]="lb.every" (valueChange)="setLongEvery($event)" [min]="2" [max]="12" [decreaseLabel]="'sportask.rhythm.less' | translate" [increaseLabel]="'sportask.rhythm.more' | translate" />
+      </div>
+      <div class="field">
+        <label class="field__label" [attr.for]="uid + '-long'">{{ 'sportask.rhythm.longMin' | translate }}</label>
+        <input [id]="uid + '-long'" class="input ss__min" type="number" inputmode="decimal" [min]="limits.breakMin" [max]="limits.breakMax" step="0.5" [value]="lb.seconds / 60" (change)="onMinutes($event, 'longSeconds')" />
+      </div>
+    }
+  </div>
+}

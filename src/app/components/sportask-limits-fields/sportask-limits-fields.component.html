@@ -1,0 +1,8 @@
+<button type="button" role="switch" class="switch" [attr.aria-checked]="value().lowImpact" (click)="toggle('lowImpact')">
+  <span class="switch__track"></span>
+  <span>{{ 'sportask.limits.lowImpact' | translate }}</span>
+</button>
+<button type="button" role="switch" class="switch" [attr.aria-checked]="value().noFloor" (click)="toggle('noFloor')">
+  <span class="switch__track"></span>
+  <span>{{ 'sportask.limits.noFloor' | translate }}</span>
+</button>

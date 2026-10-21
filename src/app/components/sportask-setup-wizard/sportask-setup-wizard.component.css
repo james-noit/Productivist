@@ -1,0 +1,247 @@
+:host {
+  display: block;
+}
+
+.wz {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.wz p {
+  margin: 0;
+}
+
+.ss__hint {
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+}
+
+.wz__title {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.wz__body {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* Choice cards */
+
+.wz__choices {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: 0.75rem;
+}
+
+.wz__choice {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  align-items: stretch;
+  padding: 0.85rem 1rem;
+  border: 2px solid var(--color-border);
+  border-radius: 8px;
+  background: none;
+  color: var(--color-text);
+  text-align: left;
+}
+
+.wz__choice:hover {
+  border-color: var(--color-primary);
+}
+
+.wz__choice:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.wz__choice-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.wz__choice-name {
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.wz__choice-text {
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+}
+
+/* Step indicator */
+
+.wz__progress {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.wz__count {
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.wz__steps {
+  display: flex;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.wz__step {
+  position: relative;
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+  padding-top: 0.5rem;
+  border-top: 3px solid var(--color-border);
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+}
+
+.wz__step--done {
+  border-top-color: var(--color-primary);
+}
+
+.wz__step--on {
+  flex: 3;
+  border-top-color: var(--color-primary);
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+.wz__dot {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 1.2rem;
+  height: 1.2rem;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  font-size: 0.7rem;
+}
+
+.wz__step--on .wz__dot {
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
+  color: var(--color-primary-contrast);
+}
+
+/* Only the current step shows its name; the others keep it for screen readers. */
+.wz__step:not(.wz__step--on) .wz__step-name {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.wz__step-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Summary rows */
+
+.wz__rows {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+}
+
+.wz__row {
+  display: grid;
+  grid-template-columns: 7rem minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.25rem 0.75rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.85rem;
+}
+
+.wz__row + .wz__row {
+  border-top: 1px solid var(--color-border);
+}
+
+.wz__row dt {
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.wz__row dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 599px) {
+  .wz__row {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .wz__row dt {
+    grid-column: 1 / -1;
+  }
+}
+
+.wz__note,
+.ss__notice {
+  padding: 0.7rem 0.85rem;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background-color: var(--color-surface-alt);
+  font-size: 0.8rem;
+}
+
+.ss__notice {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.ss__notice .switch {
+  align-self: flex-start;
+}
+
+/* Footer */
+
+.wz__footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  padding-top: 0.25rem;
+}
+
+.wz__footer .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.wz__spacer {
+  flex: 1;
+}
+
+.wz__need {
+  text-align: right;
+}
+
+.wz__footer.confirm-bar {
+  justify-content: space-between;
+}

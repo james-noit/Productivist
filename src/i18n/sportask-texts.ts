@@ -40,7 +40,9 @@ export const SPORTASK_TEXTS: Record<'en' | 'es', Record<string, unknown>> = {
       "leave": "Leave the program",
       "leaveQ": "Leave the program? Your history is kept.",
       "keep": "Keep",
-      "enrolled": "In the program since {{date}}."
+      "enrolled": "In the program since {{date}}.",
+      "none": "Only free training",
+      "noneText": "No program: you pick a template, or a random one, for each break."
     },
     "gear": {
       "title": "Equipment at home",
@@ -119,6 +121,39 @@ export const SPORTASK_TEXTS: Record<'en' | 'es', Record<string, unknown>> = {
       "minutes": "{{n}} min",
       "startSingle": "Start training",
       "startSingleAccept": "I accept and start"
+    },
+    "wizard": {
+      "rerun": "Run setup again",
+      "chooseTitle": "How do you want to set it up?",
+      "chooseHint": "You can change everything later in this panel.",
+      "quickName": "Quick setup",
+      "quickText": "One screen with a sensible start: mobility, no equipment, classic 25/5.",
+      "fullName": "Personalised",
+      "fullText": "Six short steps: goal, equipment, limits, rhythm, style and a summary.",
+      "quickIntro": "Quick setup sets exactly this:",
+      "step": "Step {{n}} of {{total}}",
+      "steps": "Setup steps",
+      "announce": "Step {{n}} of {{total}}: {{name}}",
+      "summaryTitle": "Summary",
+      "back": "Back",
+      "next": "Next",
+      "cancel": "Cancel",
+      "finish": "Finish",
+      "acceptFinish": "Accept and finish",
+      "needAccept": "Accept the notice to finish.",
+      "acceptedBefore": "You accepted this notice before.",
+      "change": "Change",
+      "none": "None",
+      "flag": {
+        "wholeApp": "whole app",
+        "cues": "step sounds",
+        "autoStart": "starts without confirming"
+      },
+      "leaveNote": "Finishing leaves your current program. Your history is kept.",
+      "switchNote": "Finishing switches your program. Your history is kept.",
+      "discardQ": "Discard setup?",
+      "keep": "Keep editing",
+      "discard": "Discard"
     },
     "brk": {
       "menu": "More options",
@@ -416,7 +451,9 @@ export const SPORTASK_TEXTS: Record<'en' | 'es', Record<string, unknown>> = {
       "leave": "Dejar el programa",
       "leaveQ": "¿Dejar el programa? Tu historial se conserva.",
       "keep": "Mantener",
-      "enrolled": "En el programa desde el {{date}}."
+      "enrolled": "En el programa desde el {{date}}.",
+      "none": "Solo entrenamiento libre",
+      "noneText": "Sin programa: eliges una plantilla, o una al azar, en cada pausa."
     },
     "gear": {
       "title": "Material en casa",
@@ -495,6 +532,39 @@ export const SPORTASK_TEXTS: Record<'en' | 'es', Record<string, unknown>> = {
       "minutes": "{{n}} min",
       "startSingle": "Empezar a entrenar",
       "startSingleAccept": "Acepto y empiezo"
+    },
+    "wizard": {
+      "rerun": "Repetir la configuración",
+      "chooseTitle": "¿Cómo quieres configurarlo?",
+      "chooseHint": "Podrás cambiarlo todo después en este panel.",
+      "quickName": "Configuración rápida",
+      "quickText": "Una pantalla con un buen punto de partida: movilidad, sin material, clásico 25/5.",
+      "fullName": "Personalizada",
+      "fullText": "Seis pasos breves: objetivo, material, límites, ritmo, estilo y un resumen.",
+      "quickIntro": "La configuración rápida establece exactamente esto:",
+      "step": "Paso {{n}} de {{total}}",
+      "steps": "Pasos de la configuración",
+      "announce": "Paso {{n}} de {{total}}: {{name}}",
+      "summaryTitle": "Resumen",
+      "back": "Atrás",
+      "next": "Siguiente",
+      "cancel": "Cancelar",
+      "finish": "Terminar",
+      "acceptFinish": "Aceptar y terminar",
+      "needAccept": "Acepta el aviso para terminar.",
+      "acceptedBefore": "Ya aceptaste este aviso antes.",
+      "change": "Cambiar",
+      "none": "Ninguno",
+      "flag": {
+        "wholeApp": "toda la app",
+        "cues": "sonido en cada paso",
+        "autoStart": "empieza sin confirmar"
+      },
+      "leaveNote": "Al terminar dejarás tu programa actual. Se conserva tu historial.",
+      "switchNote": "Al terminar cambiarás de programa. Se conserva tu historial.",
+      "discardQ": "¿Descartar la configuración?",
+      "keep": "Seguir editando",
+      "discard": "Descartar"
     },
     "brk": {
       "menu": "Más opciones",

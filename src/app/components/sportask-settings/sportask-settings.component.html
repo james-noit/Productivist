@@ -11,277 +11,109 @@
     </div>
 
     @if (enabled()) {
-
-      <!-- Goal -->
-      <section class="ss__block" aria-labelledby="ss-goal">
-        <h4 id="ss-goal">{{ 'sportask.goal.title' | translate }}</h4>
-        <p class="ss__hint">{{ 'sportask.goal.hint' | translate }}</p>
-        <div class="ss__cards" role="radiogroup" [attr.aria-label]="'sportask.goal.list' | translate">
-          @for (c of cards(); track c.id) {
-            <button type="button" role="radio" class="ss__card" [attr.aria-checked]="c.selected" [class.ss__card--on]="c.selected" (click)="pickGoal(c.id)">
-              <span class="ss__card-head">
-                <app-ui-icon [name]="c.icon" [size]="18" />
-                <span class="ss__card-name">{{ c.name }}</span>
-                @if (c.enrolled) {
-                  <app-ui-icon class="ss__card-check" name="check" [size]="16" />
-                }
-              </span>
-              <span class="ss__card-text">{{ c.description }}</span>
-            </button>
-          }
+      @if (!setupDone() || rerun()) {
+        <app-sportask-setup-wizard [rerun]="setupDone()" (finished)="closeWizard()" (cancelled)="closeWizard()" />
+      } @else {
+        <div class="ss__rerun">
+          <button type="button" class="btn btn--secondary btn--sm" (click)="rerun.set(true)">{{ 'sportask.wizard.rerun' | translate }}</button>
         </div>
 
-        <div class="field">
-          <span class="field__label" id="ss-program">{{ 'sportask.goal.program' | translate }}</span>
-          <div class="segmented ss__segmented" role="group" aria-labelledby="ss-program">
-            @for (p of programs(); track p.id) {
-              <button type="button" class="segmented__option" [attr.aria-pressed]="programId() === p.id" (click)="pickProgram(p.id)">{{ p.name }}</button>
-            }
-          </div>
-          <p class="ss__hint">
-            {{ programInfo().summary }}
-            {{ 'sportask.goal.length' | translate: { weeks: programInfo().weeks, days: programInfo().days } }}.
-          </p>
-        </div>
+        <!-- Goal -->
+        <section class="ss__block" aria-labelledby="ss-goal">
+          <h4 id="ss-goal">{{ 'sportask.goal.title' | translate }}</h4>
+          <app-sportask-goal-fields [value]="pick()" [enrolledGoalId]="enrolledGoalId()" (changed)="onPick($event)" />
 
-        <div class="field">
-          <span class="field__label" id="ss-level">{{ 'sportask.goal.level' | translate }}</span>
-          <div class="ss__rows" role="radiogroup" aria-labelledby="ss-level">
-            @for (l of levels; track l) {
-              <button type="button" role="radio" class="ss__row" [attr.aria-checked]="level() === l" [class.ss__row--on]="level() === l" (click)="pickLevel(l)">
-                <span class="ss__dot" aria-hidden="true"></span>
-                <span>{{ 'sportask.goal.levels.' + l | translate }}</span>
-              </button>
-            }
-          </div>
-        </div>
-
-        @if (!alreadyAccepted()) {
-          <div class="ss__notice">
-            <strong>{{ 'sportask.goal.notice' | translate }}</strong>
-            <p>{{ 'sportask.disclaimer' | translate }}</p>
-            <button type="button" role="switch" class="switch" [attr.aria-checked]="accepted()" (click)="accepted.set(!accepted())">
-              <span class="switch__track"></span>
-              <span>{{ 'sportask.goal.accept' | translate }}</span>
-            </button>
-          </div>
-        }
-
-        @if (question() === 'switch') {
-          <div class="confirm-bar" role="alertdialog" [attr.aria-label]="'sportask.goal.switchQ' | translate" (keydown)="onQuestionKeydown($event)">
-            <p class="confirm-bar__text">{{ 'sportask.goal.switchQ' | translate }}</p>
-            <div class="confirm-bar__actions">
-              <button type="button" class="btn btn--secondary btn--sm" data-keep (click)="closeQuestion()">{{ 'sportask.goal.keep' | translate }}</button>
-              <button type="button" class="btn btn--primary btn--sm" (click)="enrol()">{{ 'sportask.goal.switch' | translate }}</button>
-            </div>
-          </div>
-        } @else if (question() === 'leave') {
-          <div class="confirm-bar" role="alertdialog" [attr.aria-label]="'sportask.goal.leaveQ' | translate" (keydown)="onQuestionKeydown($event)">
-            <p class="confirm-bar__text">{{ 'sportask.goal.leaveQ' | translate }}</p>
-            <div class="confirm-bar__actions">
-              <button type="button" class="btn btn--secondary btn--sm" data-keep (click)="closeQuestion()">{{ 'sportask.goal.keep' | translate }}</button>
-              <button type="button" class="btn btn--danger btn--sm" (click)="leave()">{{ 'sportask.goal.leave' | translate }}</button>
-            </div>
-          </div>
-        } @else {
-          <div class="ss__actions">
-            @if (isCurrent()) {
-              <p class="ss__status" role="status">{{ 'sportask.goal.enrolled' | translate: { date: since() } }}</p>
-            } @else {
-              <button type="button" class="btn btn--primary" [disabled]="!canStart()" (click)="start()">
-                {{ (enrolment() ? 'sportask.goal.switch' : 'sportask.goal.start') | translate }}
-              </button>
-              @if (!canStart()) {
-                <p class="ss__hint">{{ 'sportask.goal.needAccept' | translate }}</p>
-              }
-            }
-            @if (enrolment()) {
-              <button type="button" class="btn btn--danger btn--ghost" (click)="askLeave()">{{ 'sportask.goal.leave' | translate }}</button>
-            }
-          </div>
-        }
-      </section>
-
-      <!-- Equipment -->
-      <section class="ss__block" aria-labelledby="ss-gear">
-        <h4 id="ss-gear">{{ 'sportask.gear.title' | translate }}</h4>
-        <p class="ss__hint">{{ 'sportask.gear.hint' | translate }}</p>
-        <ul class="ss__list">
-          @for (e of equipmentRows(); track e.id) {
-            <li class="ss__item">
-              <div class="ss__item-head">
-                <app-ui-icon [name]="e.icon" [size]="20" />
-                <span class="ss__item-name">{{ e.name }}</span>
-                <button type="button" role="switch" class="switch ss__item-switch" [attr.aria-checked]="e.owned" [attr.aria-label]="e.name" (click)="toggleOwned(e.id)">
-                  <span class="switch__track"></span>
-                </button>
-              </div>
-              @if (e.owned && e.details === 'weights') {
-                <div class="ss__details">
-                  <span class="field__label">{{ 'sportask.gear.weights' | translate }}</span>
-                  <div class="ss__chips">
-                    @for (kg of e.weights; track kg) {
-                      <span class="ss__chip">
-                        {{ kg }} kg
-                        <button type="button" class="ss__chip-x" [attr.aria-label]="'sportask.gear.weightRemove' | translate: { kg: kg }" (click)="removeWeight(e.id, kg)">
-                          <app-ui-icon name="x" [size]="12" />
-                        </button>
-                      </span>
-                    }
-                    @if (e.weights.length < 12) {
-                      <span class="ss__add">
-                        <input
-                          class="input ss__kg"
-                          type="number"
-                          inputmode="decimal"
-                          min="0.5"
-                          max="500"
-                          step="0.5"
-                          [attr.aria-label]="'sportask.gear.weightNew' | translate"
-                          placeholder="kg"
-                          [value]="weightDrafts()[e.id] ?? ''"
-                          (input)="setWeightDraft(e.id, $any($event.target).value)"
-                          (keydown)="onWeightKeydown($event, e.id)"
-                        />
-                        <button type="button" class="btn btn--secondary btn--sm" (click)="addWeight(e.id)">{{ 'sportask.gear.weightAdd' | translate }}</button>
-                      </span>
-                    }
-                  </div>
-                </div>
-              } @else if (e.owned && e.details === 'bandStrengths') {
-                <div class="ss__details">
-                  <span class="field__label" [id]="'ss-bands-' + e.id">{{ 'sportask.gear.bands' | translate }}</span>
-                  <div class="ss__chips" role="group" [attr.aria-labelledby]="'ss-bands-' + e.id">
-                    @for (b of bandStrengths; track b) {
-                      <button type="button" class="filter-chip" [attr.aria-pressed]="e.bands.includes(b)" (click)="toggleBand(e.id, b)">
-                        {{ 'sportask.gear.band.' + b | translate }}
-                      </button>
-                    }
-                  </div>
-                </div>
-              }
-            </li>
-          }
-        </ul>
-      </section>
-
-      <!-- Constraints -->
-      <section class="ss__block" aria-labelledby="ss-limits">
-        <h4 id="ss-limits">{{ 'sportask.limits.title' | translate }}</h4>
-        <button type="button" role="switch" class="switch" [attr.aria-checked]="settings().constraints.lowImpact" (click)="setConstraint('lowImpact')">
-          <span class="switch__track"></span>
-          <span>{{ 'sportask.limits.lowImpact' | translate }}</span>
-        </button>
-        <button type="button" role="switch" class="switch" [attr.aria-checked]="settings().constraints.noFloor" (click)="setConstraint('noFloor')">
-          <span class="switch__track"></span>
-          <span>{{ 'sportask.limits.noFloor' | translate }}</span>
-        </button>
-      </section>
-
-      <!-- Default rhythm -->
-      <section class="ss__block" aria-labelledby="ss-rhythm">
-        <h4 id="ss-rhythm">{{ 'sportask.rhythm.title' | translate }}</h4>
-        <p class="ss__hint">{{ 'sportask.rhythm.hint' | translate }}</p>
-        <div class="ss__rows" role="radiogroup" [attr.aria-label]="'sportask.rhythm.list' | translate">
-          @for (c of cadenceRows(); track c.id) {
-            <button type="button" role="radio" class="ss__row" [attr.aria-checked]="cadenceId() === c.id" [class.ss__row--on]="cadenceId() === c.id" (click)="pickCadence(c.id)">
-              <span class="ss__dot" aria-hidden="true"></span>
-              <span class="ss__row-text">
-                <span class="ss__row-name">{{ c.name }}</span>
-                <span class="ss__row-sub">
-                  {{ 'sportask.rhythm.line' | translate: { focus: c.focus, brk: c.brk } }}@if (c.longMin) {; {{ 'sportask.rhythm.long' | translate: { min: c.longMin, n: c.longEvery } }}}@if (c.every > 1) {; {{ 'sportask.rhythm.every' | translate: { n: c.every } }}}
-                </span>
-              </span>
-            </button>
-          }
-          <button type="button" role="radio" class="ss__row" [attr.aria-checked]="cadenceId() === 'custom'" [class.ss__row--on]="cadenceId() === 'custom'" (click)="pickCadence('custom')">
-            <span class="ss__dot" aria-hidden="true"></span>
-            <span class="ss__row-name">{{ 'sportask.rhythm.custom' | translate }}</span>
-          </button>
-        </div>
-        @if (cadenceId() === 'custom') {
-          <div class="ss__custom">
-            <div class="field">
-              <label class="field__label" for="ss-focus">{{ 'sportask.rhythm.focus' | translate }}</label>
-              <input id="ss-focus" class="input ss__min" type="number" inputmode="decimal" [min]="limits.focusMin" [max]="limits.focusMax" step="0.5" [value]="custom().focusSeconds / 60" (change)="onMinutes($event, 'focusSeconds')" />
-            </div>
-            <div class="field">
-              <label class="field__label" for="ss-break">{{ 'sportask.rhythm.break' | translate }}</label>
-              <input id="ss-break" class="input ss__min" type="number" inputmode="decimal" [min]="limits.breakMin" [max]="limits.breakMax" step="0.5" [value]="custom().breakSeconds / 60" (change)="onMinutes($event, 'breakSeconds')" />
-            </div>
-            <div class="field">
-              <span class="field__label" id="ss-ex-every">{{ 'sportask.rhythm.exEvery' | translate }}</span>
-              <app-number-stepper [value]="custom().exerciseEvery" (valueChange)="setExerciseEvery($event)" [min]="1" [max]="8" [decreaseLabel]="'sportask.rhythm.less' | translate" [increaseLabel]="'sportask.rhythm.more' | translate" />
-            </div>
-            <div class="field">
-              <button type="button" role="switch" class="switch" [attr.aria-checked]="!!custom().longBreak" (click)="toggleLongBreak()">
+          @if (!alreadyAccepted()) {
+            <div class="ss__notice">
+              <strong>{{ 'sportask.goal.notice' | translate }}</strong>
+              <p>{{ 'sportask.disclaimer' | translate }}</p>
+              <button type="button" role="switch" class="switch" [attr.aria-checked]="accepted()" (click)="accepted.set(!accepted())">
                 <span class="switch__track"></span>
-                <span>{{ 'sportask.rhythm.longBreak' | translate }}</span>
+                <span>{{ 'sportask.goal.accept' | translate }}</span>
               </button>
             </div>
-            @if (custom().longBreak; as lb) {
-              <div class="field">
-                <span class="field__label">{{ 'sportask.rhythm.longEvery' | translate }}</span>
-                <app-number-stepper [value]="lb.every" (valueChange)="setLongEvery($event)" [min]="2" [max]="12" [decreaseLabel]="'sportask.rhythm.less' | translate" [increaseLabel]="'sportask.rhythm.more' | translate" />
-              </div>
-              <div class="field">
-                <label class="field__label" for="ss-long">{{ 'sportask.rhythm.longMin' | translate }}</label>
-                <input id="ss-long" class="input ss__min" type="number" inputmode="decimal" [min]="limits.breakMin" [max]="limits.breakMax" step="0.5" [value]="lb.seconds / 60" (change)="onMinutes($event, 'longSeconds')" />
-              </div>
-            }
-          </div>
-        }
-      </section>
-
-      <!-- Style -->
-      <section class="ss__block" aria-labelledby="ss-style">
-        <h4 id="ss-style">{{ 'sportask.style.title' | translate }}</h4>
-        <div class="ss__skins" role="radiogroup" [attr.aria-label]="'sportask.style.list' | translate">
-          @for (s of skinTiles(); track s.id) {
-            <button type="button" role="radio" class="ss__skin" [attr.aria-checked]="settings().skin === s.id" [class.ss__skin--on]="settings().skin === s.id" (click)="setSkin(s.id)">
-              <span class="ss__swatch" aria-hidden="true" [style.background-color]="s.preview[0]">
-                <span class="ss__swatch-bar" [style.background-color]="s.preview[1]"></span>
-                <span class="ss__swatch-dot" [style.background-color]="s.preview[2]"></span>
-              </span>
-              <span class="ss__skin-name">{{ s.name }}</span>
-              <span class="ss__row-sub">{{ (s.scheme === 'dark' ? 'sportask.style.dark' : 'sportask.style.light') | translate }}</span>
-            </button>
           }
-        </div>
-        <button type="button" role="switch" class="switch" [attr.aria-checked]="settings().skinWholeApp" (click)="toggle('skinWholeApp')">
-          <span class="switch__track"></span>
-          <span>{{ 'sportask.style.wholeApp' | translate }}</span>
-        </button>
-        <button type="button" role="switch" class="switch" [attr.aria-checked]="settings().cues" (click)="toggle('cues')">
-          <span class="switch__track"></span>
-          <span>{{ 'sportask.style.cues' | translate }}</span>
-        </button>
-        <button type="button" role="switch" class="switch" [attr.aria-checked]="settings().autoStartBreak" (click)="toggle('autoStartBreak')">
-          <span class="switch__track"></span>
-          <span>{{ 'sportask.style.autoStart' | translate }}</span>
-        </button>
-      </section>
 
-      <!-- Body weight -->
-      <section class="ss__block" aria-labelledby="ss-weight">
-        <h4 id="ss-weight">{{ 'sportask.weight.title' | translate }}</h4>
-        <p class="ss__hint">{{ 'sportask.weight.hint' | translate }}</p>
-        <div class="ss__weight">
-          <input
-            class="input ss__min"
-            type="number"
-            inputmode="decimal"
-            [min]="weightLimits.min"
-            [max]="weightLimits.max"
-            step="0.5"
-            placeholder="kg"
-            [attr.aria-labelledby]="'ss-weight'"
-            [value]="weightKg() ?? ''"
-            (change)="onWeight($event)"
-          />
-          <span class="ss__hint">{{ 'sportask.weight.unit' | translate }}</span>
-        </div>
-      </section>
+          @if (question() === 'switch') {
+            <div class="confirm-bar" role="alertdialog" [attr.aria-label]="'sportask.goal.switchQ' | translate" (keydown)="onQuestionKeydown($event)">
+              <p class="confirm-bar__text">{{ 'sportask.goal.switchQ' | translate }}</p>
+              <div class="confirm-bar__actions">
+                <button type="button" class="btn btn--secondary btn--sm" data-keep (click)="closeQuestion()">{{ 'sportask.goal.keep' | translate }}</button>
+                <button type="button" class="btn btn--primary btn--sm" (click)="enrol()">{{ 'sportask.goal.switch' | translate }}</button>
+              </div>
+            </div>
+          } @else if (question() === 'leave') {
+            <div class="confirm-bar" role="alertdialog" [attr.aria-label]="'sportask.goal.leaveQ' | translate" (keydown)="onQuestionKeydown($event)">
+              <p class="confirm-bar__text">{{ 'sportask.goal.leaveQ' | translate }}</p>
+              <div class="confirm-bar__actions">
+                <button type="button" class="btn btn--secondary btn--sm" data-keep (click)="closeQuestion()">{{ 'sportask.goal.keep' | translate }}</button>
+                <button type="button" class="btn btn--danger btn--sm" (click)="leave()">{{ 'sportask.goal.leave' | translate }}</button>
+              </div>
+            </div>
+          } @else {
+            <div class="ss__actions">
+              @if (isCurrent()) {
+                <p class="ss__status" role="status">{{ 'sportask.goal.enrolled' | translate: { date: since() } }}</p>
+              } @else {
+                <button type="button" class="btn btn--primary" [disabled]="!canStart()" (click)="start()">
+                  {{ (enrolment() ? 'sportask.goal.switch' : 'sportask.goal.start') | translate }}
+                </button>
+                @if (!canStart()) {
+                  <p class="ss__hint">{{ 'sportask.goal.needAccept' | translate }}</p>
+                }
+              }
+              @if (enrolment()) {
+                <button type="button" class="btn btn--danger btn--ghost" (click)="askLeave()">{{ 'sportask.goal.leave' | translate }}</button>
+              }
+            </div>
+          }
+        </section>
+
+        <!-- Equipment -->
+        <section class="ss__block" aria-labelledby="ss-gear">
+          <h4 id="ss-gear">{{ 'sportask.gear.title' | translate }}</h4>
+          <app-sportask-equipment-fields [value]="settings().equipment" (changed)="setEquipment($event)" />
+        </section>
+
+        <!-- Constraints -->
+        <section class="ss__block" aria-labelledby="ss-limits">
+          <h4 id="ss-limits">{{ 'sportask.limits.title' | translate }}</h4>
+          <app-sportask-limits-fields [value]="settings().constraints" (changed)="setConstraints($event)" />
+        </section>
+
+        <!-- Default rhythm -->
+        <section class="ss__block" aria-labelledby="ss-rhythm">
+          <h4 id="ss-rhythm">{{ 'sportask.rhythm.title' | translate }}</h4>
+          <app-sportask-rhythm-fields [value]="rhythm()" (changed)="setRhythm($event)" />
+        </section>
+
+        <!-- Style -->
+        <section class="ss__block" aria-labelledby="ss-style">
+          <h4 id="ss-style">{{ 'sportask.style.title' | translate }}</h4>
+          <app-sportask-style-fields [value]="style()" (changed)="setStyle($event)" />
+        </section>
+
+        <!-- Body weight -->
+        <section class="ss__block" aria-labelledby="ss-weight">
+          <h4 id="ss-weight">{{ 'sportask.weight.title' | translate }}</h4>
+          <p class="ss__hint">{{ 'sportask.weight.hint' | translate }}</p>
+          <div class="ss__weight">
+            <input
+              class="input ss__min"
+              type="number"
+              inputmode="decimal"
+              [min]="weightLimits.min"
+              [max]="weightLimits.max"
+              step="0.5"
+              placeholder="kg"
+              [attr.aria-labelledby]="'ss-weight'"
+              [value]="weightKg() ?? ''"
+              (change)="onWeight($event)"
+            />
+            <span class="ss__hint">{{ 'sportask.weight.unit' | translate }}</span>
+          </div>
+        </section>
+      }
     } @else {
       <p class="ss__about">{{ 'sportask.activate.about' | translate }}</p>
     }

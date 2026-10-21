@@ -1,41 +1,47 @@
 import { ChangeDetectionStrategy, Component, Injector, afterNextRender, computed, inject, signal } from '@angular/core';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { parseIso, todayIso } from '../../../lib/dates';
-import { CADENCES, MAX_BREAK_SECONDS, MAX_FOCUS_SECONDS, MIN_CUSTOM_FOCUS_SECONDS, MIN_DURATION_SECONDS, clampCadence, resolveCadence, type CadenceValues } from '../../../lib/sportask/cadences';
-import { EQUIPMENT } from '../../../lib/sportask/equipment';
 import { GOALS } from '../../../lib/sportask/goals';
 import { sanitizeSettings } from '../../../lib/sportask/sanitize';
 import { deactivate } from '../../../lib/sportask/session-ops';
-import { SKINS } from '../../../lib/sportask/skins';
-import { loadSportaskTexts, localize } from '../../../lib/sportask/texts';
+import { type GoalPick, type RhythmValue, type StyleValue, acceptedAt, pickFor } from '../../../lib/sportask/setup';
+import { loadSportaskTexts } from '../../../lib/sportask/texts';
 import { SettingsService } from '../../../services/settings.service';
 import { SportaskSettingsService } from '../../../services/sportask-settings.service';
 import { SportaskService } from '../../../services/sportask.service';
-import type { EquipmentItem, SportaskSettings } from '../../../types/sportask';
-import { NumberStepperComponent } from '../number-stepper/number-stepper.component';
-import { UiIconComponent, type UiIconName } from '../ui-icon/ui-icon.component';
+import type { Constraints, EquipmentInventory, SportaskSettings } from '../../../types/sportask';
+import { SportaskEquipmentFieldsComponent } from '../sportask-equipment-fields/sportask-equipment-fields.component';
+import { SportaskGoalFieldsComponent } from '../sportask-goal-fields/sportask-goal-fields.component';
+import { SportaskLimitsFieldsComponent } from '../sportask-limits-fields/sportask-limits-fields.component';
+import { SportaskRhythmFieldsComponent } from '../sportask-rhythm-fields/sportask-rhythm-fields.component';
+import { SportaskSetupWizardComponent } from '../sportask-setup-wizard/sportask-setup-wizard.component';
+import { SportaskStyleFieldsComponent } from '../sportask-style-fields/sportask-style-fields.component';
 
 type Question = 'switch' | 'leave' | null;
-type BandStrength = 'light' | 'medium' | 'heavy';
 
-const BAND_STRENGTHS: readonly BandStrength[] = ['light', 'medium', 'heavy'];
-const LEVELS: readonly (1 | 2 | 3)[] = [1, 2, 3];
-const MAX_WEIGHTS = 12;
 const MIN_WEIGHT_KG = 30;
 const MAX_WEIGHT_KG = 300;
 
-const minutes = (seconds: number): number => seconds / 60;
-
 /**
- * Configuration > Sportask: the goal and program the user is enrolled in, the equipment at home, limits, the default
- * rhythm, the style and the body weight. Lazy (inside `@defer` in the Configuration modal), like the Git forge section:
- * it reads `sanitizeSettings(raw)` and writes patches through `SportaskSettingsService.update`, which is all the sync
- * needs. The strings are a lazy chunk (`lib/sportask/texts.ts`); the first render waits for them.
+ * Configuration > Sportask: the on/off switch; while it is on and the setup is not done, the setup wizard; afterwards the goal and
+ * program the user is enrolled in, the equipment at home, limits, the default rhythm, the style and the body weight (with a
+ * *Run setup again* button that reopens the wizard prefilled). Lazy (inside `@defer` in the Configuration modal), like the Git
+ * forge section: it reads `sanitizeSettings(raw)` and writes patches through `SportaskSettingsService.update`, which is all the
+ * sync needs. The blocks are the shared `sportask-*-fields` components (also used by the wizard); the program's confirm bars
+ * stay here. The strings are a lazy chunk (`lib/sportask/texts.ts`); the first render waits for them.
  */
 @Component({
   selector: 'app-sportask-settings',
   standalone: true,
-  imports: [TranslatePipe, NumberStepperComponent, UiIconComponent],
+  imports: [
+    TranslatePipe,
+    SportaskGoalFieldsComponent,
+    SportaskEquipmentFieldsComponent,
+    SportaskLimitsFieldsComponent,
+    SportaskRhythmFieldsComponent,
+    SportaskStyleFieldsComponent,
+    SportaskSetupWizardComponent,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './sportask-settings.component.html',
   styleUrl: './sportask-settings.component.css',
@@ -49,19 +55,7 @@ export class SportaskSettingsComponent {
 
   readonly ready = signal(false);
 
-  protected readonly goals = GOALS.all;
-  protected readonly equipment = EQUIPMENT.all;
-  protected readonly cadences = CADENCES.all;
-  protected readonly skins = SKINS.all;
-  protected readonly levels = LEVELS;
-  protected readonly bandStrengths = BAND_STRENGTHS;
   protected readonly weightLimits = { min: MIN_WEIGHT_KG, max: MAX_WEIGHT_KG };
-  protected readonly limits = {
-    focusMin: minutes(MIN_CUSTOM_FOCUS_SECONDS),
-    focusMax: minutes(MAX_FOCUS_SECONDS),
-    breakMin: minutes(MIN_DURATION_SECONDS),
-    breakMax: minutes(MAX_BREAK_SECONDS),
-  };
 
   readonly weightKg = this.store.weightKg;
   protected readonly lang = this.appSettings.language;
@@ -73,33 +67,37 @@ export class SportaskSettingsComponent {
   readonly settings = computed(() => sanitizeSettings(this.store.settings()));
   readonly enrolment = computed(() => this.settings().enrolment);
 
+  /** The wizard is open over the settings (*Run setup again*). */
+  readonly rerun = signal(false);
+  readonly setupDone = this.store.setupDone;
+
   // Draft of the goal block: what the cards are showing, which is not yet (or no longer) the stored enrolment.
-  private readonly draftGoalId = signal<string | null>(null);
-  private readonly draftProgramId = signal<string | null>(null);
-  private readonly draftLevel = signal<1 | 2 | 3 | null>(null);
+  private readonly draft = signal<GoalPick | null>(null);
   readonly accepted = signal(false);
   readonly question = signal<Question>(null);
 
-  readonly goalId = computed(() => this.draftGoalId() ?? this.enrolment()?.goalId ?? GOALS.all[0]!.id);
-  readonly goal = computed(() => GOALS.get(this.goalId()) ?? GOALS.all[0]!);
-  readonly programId = computed(() => {
-    const goal = this.goal();
-    const wanted = this.draftProgramId() ?? (this.enrolment()?.goalId === goal.id ? this.enrolment()?.programId : undefined);
-    return goal.programs.find((p) => p.id === wanted)?.id ?? goal.programs[0]!.id;
+  readonly pick = computed<GoalPick>(() => {
+    const e = this.enrolment();
+    return this.draft() ?? (e ? pickFor(e.goalId, e.programId, e.level) : pickFor(GOALS.all[0]!.id));
   });
-  readonly program = computed(() => this.goal().programs.find((p) => p.id === this.programId())!);
-  readonly level = computed<1 | 2 | 3>(() => this.draftLevel() ?? this.enrolment()?.level ?? 1);
+  readonly rhythm = computed<RhythmValue>(() => {
+    const s = this.settings();
+    return s.customCadence ? { cadenceId: s.cadenceId, customCadence: s.customCadence } : { cadenceId: s.cadenceId };
+  });
+  readonly style = computed<StyleValue>(() => {
+    const s = this.settings();
+    return { skin: s.skin, skinWholeApp: s.skinWholeApp, cues: s.cues, autoStartBreak: s.autoStartBreak };
+  });
+  readonly enrolledGoalId = computed(() => this.enrolment()?.goalId ?? null);
 
   /** True while the cards show exactly what the user is enrolled in. */
   readonly isCurrent = computed(() => {
     const e = this.enrolment();
-    return !!e && e.goalId === this.goalId() && e.programId === this.programId() && e.level === this.level();
+    const p = this.pick();
+    return !!e && e.goalId === p.goalId && e.programId === p.programId && e.level === p.level;
   });
   /** The notice was accepted before: the settings keep it when a program is left, the enrolment carries a copy. */
-  private readonly acceptedAt = computed(() => {
-    const s = this.settings();
-    return s.disclaimerAcceptedAt ?? ((s.enrolment?.acceptedDisclaimerAt ?? 0) > 0 ? s.enrolment!.acceptedDisclaimerAt : 0);
-  });
+  private readonly acceptedAt = computed(() => acceptedAt(this.settings()));
   readonly alreadyAccepted = computed(() => this.acceptedAt() > 0);
   readonly canStart = computed(() => this.alreadyAccepted() || this.accepted());
   readonly since = computed(() => {
@@ -108,75 +106,15 @@ export class SportaskSettingsComponent {
     return date ? new Intl.DateTimeFormat(this.lang(), { dateStyle: 'medium' }).format(date) : '';
   });
 
-  readonly cards = computed(() => {
-    const lang = this.lang();
-    const enrolledId = this.enrolment()?.goalId;
-    return this.goals.map((g) => ({
-      id: g.id,
-      icon: g.icon as UiIconName,
-      name: localize(g.name, lang),
-      description: localize(g.description, lang),
-      selected: g.id === this.goalId(),
-      enrolled: g.id === enrolledId,
-    }));
-  });
-  readonly programs = computed(() => {
-    const lang = this.lang();
-    return this.goal().programs.map((p) => ({ id: p.id, name: localize(p.name, lang) }));
-  });
-  readonly programInfo = computed(() => {
-    const p = this.program();
-    return { summary: localize(p.summary, this.lang()), weeks: p.weeks, days: p.daysPerWeek };
-  });
-
-  readonly equipmentRows = computed(() => {
-    const lang = this.lang();
-    const inventory = this.settings().equipment;
-    return this.equipment.map((e) => {
-      const item: EquipmentItem = inventory[e.id] ?? { owned: false };
-      return { id: e.id, icon: e.icon as UiIconName, name: localize(e.name, lang), details: e.details, owned: item.owned, weights: item.weightsKg ?? [], bands: item.bandStrengths ?? [] };
-    });
-  });
-  /** The weight being typed, per equipment id. */
-  readonly weightDrafts = signal<Readonly<Record<string, string | undefined>>>({});
-
-  // Default rhythm.
-  readonly cadenceId = computed(() => this.settings().cadenceId);
-  /** The values the custom fields show (the stored custom cadence, or the current preset to start from). */
-  readonly custom = computed<CadenceValues>(() => {
-    const s = this.settings();
-    return s.customCadence ?? resolveCadence({ cadenceId: s.cadenceId, customCadence: undefined });
-  });
-  readonly cadenceRows = computed(() => {
-    const lang = this.lang();
-    return this.cadences.map((c) => ({
-      id: c.id,
-      name: localize(c.name, lang),
-      focus: this.fmt(minutes(c.focusSeconds)),
-      brk: this.fmt(minutes(c.breakSeconds)),
-      longMin: c.longBreak ? this.fmt(minutes(c.longBreak.seconds)) : null,
-      longEvery: c.longBreak?.every ?? 0,
-      every: c.exerciseEvery,
-    }));
-  });
-
-  readonly skinTiles = computed(() => {
-    const lang = this.lang();
-    return this.skins.map((s) => ({ id: s.id, name: localize(s.name, lang), scheme: s.colorScheme, preview: s.preview }));
-  });
-
   constructor() {
     void loadSportaskTexts(this.translate).then(() => this.ready.set(true));
-  }
-
-  private fmt(n: number): string {
-    return new Intl.NumberFormat(this.lang(), { maximumFractionDigits: 1 }).format(n);
   }
 
   /** Turning it off also stops a running session, an armed plan and an open *Train now* block; the data is kept. */
   toggleEnabled(): void {
     const next = !this.enabled();
     this.store.update({ enabled: next });
+    this.rerun.set(false);
     if (!next) {
       this.question.set(null);
       deactivate(this.sportask);
@@ -189,21 +127,9 @@ export class SportaskSettingsComponent {
 
   // --- Goal -----------------------------------------------------------------------------------------------------
 
-  pickGoal(id: string): void {
+  onPick(p: GoalPick | null): void {
     this.question.set(null);
-    if (id === this.goalId()) return;
-    this.draftGoalId.set(id);
-    this.draftProgramId.set(null);
-  }
-
-  pickProgram(id: string): void {
-    this.question.set(null);
-    this.draftProgramId.set(id);
-  }
-
-  pickLevel(level: 1 | 2 | 3): void {
-    this.question.set(null);
-    this.draftLevel.set(level);
+    if (p) this.draft.set(p);
   }
 
   /** Enrols (first time) or opens the "switch?" question (already enrolled in something else). */
@@ -216,7 +142,7 @@ export class SportaskSettingsComponent {
   enrol(): void {
     const acceptedAt = this.acceptedAt() || Date.now();
     this.patch({
-      enrolment: { goalId: this.goalId(), programId: this.programId(), level: this.level(), startedOn: todayIso(), acceptedDisclaimerAt: acceptedAt },
+      enrolment: { goalId: this.pick().goalId, programId: this.pick().programId, level: this.pick().level, startedOn: todayIso(), acceptedDisclaimerAt: acceptedAt },
       disclaimerAcceptedAt: acceptedAt,
     });
     this.closeQuestion();
@@ -224,9 +150,7 @@ export class SportaskSettingsComponent {
 
   leave(): void {
     this.patch({ enrolment: null });
-    this.draftGoalId.set(null);
-    this.draftProgramId.set(null);
-    this.draftLevel.set(null);
+    this.draft.set(null);
     this.accepted.set(false);
     this.closeQuestion();
   }
@@ -258,104 +182,30 @@ export class SportaskSettingsComponent {
     this.closeQuestion();
   }
 
-  // --- Equipment --------------------------------------------------------------------------------------------------
+  // --- Blocks (the shared field components; each emits its new slice) ---------------------------------------------------
 
-  private setItem(id: string, change: Partial<EquipmentItem>): void {
-    const inventory = this.settings().equipment;
-    const item: EquipmentItem = inventory[id] ?? { owned: false };
-    this.patch({ equipment: { ...inventory, [id]: { ...item, ...change } } });
+  setEquipment(equipment: EquipmentInventory): void {
+    this.patch({ equipment });
   }
 
-  toggleOwned(id: string): void {
-    this.setItem(id, { owned: !(this.settings().equipment[id]?.owned ?? false) });
+  setConstraints(constraints: Constraints): void {
+    this.patch({ constraints });
   }
 
-  setWeightDraft(id: string, value: string): void {
-    this.weightDrafts.update((d) => ({ ...d, [id]: value }));
+  setRhythm(r: RhythmValue): void {
+    this.patch(r.customCadence ? { cadenceId: r.cadenceId, customCadence: r.customCadence } : { cadenceId: r.cadenceId });
   }
 
-  addWeight(id: string): void {
-    const kg = Math.round(Number((this.weightDrafts()[id] ?? '').replace(',', '.')) * 100) / 100;
-    if (!(kg > 0 && kg <= 500)) return;
-    const current = this.settings().equipment[id]?.weightsKg ?? [];
-    if (current.length < MAX_WEIGHTS && !current.includes(kg)) {
-      this.setItem(id, { weightsKg: [...current, kg].sort((a, b) => a - b) });
-    }
-    this.setWeightDraft(id, '');
+  setStyle(s: StyleValue): void {
+    this.patch(s);
   }
 
-  removeWeight(id: string, kg: number): void {
-    this.setItem(id, { weightsKg: (this.settings().equipment[id]?.weightsKg ?? []).filter((w) => w !== kg) });
-  }
+  // --- Setup wizard -------------------------------------------------------------------------------------------------------
 
-  onWeightKeydown(event: KeyboardEvent, id: string): void {
-    if (event.key !== 'Enter') return;
-    event.preventDefault();
-    event.stopPropagation();
-    this.addWeight(id);
-  }
-
-  toggleBand(id: string, strength: BandStrength): void {
-    const current = this.settings().equipment[id]?.bandStrengths ?? [];
-    const next = current.includes(strength) ? current.filter((b) => b !== strength) : BAND_STRENGTHS.filter((b) => b === strength || current.includes(b));
-    this.setItem(id, { bandStrengths: next });
-  }
-
-  // --- Constraints, style ------------------------------------------------------------------------------------------
-
-  setConstraint(key: 'lowImpact' | 'noFloor'): void {
-    const c = this.settings().constraints;
-    this.patch({ constraints: { ...c, [key]: !c[key] } });
-  }
-
-  setSkin(id: string): void {
-    this.patch({ skin: id });
-  }
-
-  toggle(key: 'skinWholeApp' | 'cues' | 'autoStartBreak'): void {
-    this.patch({ [key]: !this.settings()[key] });
-  }
-
-  // --- Rhythm -------------------------------------------------------------------------------------------------------
-
-  pickCadence(id: string): void {
-    if (id === 'custom') this.patch({ cadenceId: 'custom', customCadence: this.custom() });
-    else this.patch({ cadenceId: id });
-  }
-
-  private setCustom(change: Partial<CadenceValues>, clear?: 'longBreak'): void {
-    const next: CadenceValues = { ...this.custom(), ...change };
-    if (clear) delete next.longBreak;
-    this.patch({ cadenceId: 'custom', customCadence: clampCadence(next) });
-  }
-
-  /** A length typed in minutes (half minutes allowed); the clamped value is written back so the box never lies. */
-  onMinutes(event: Event, field: 'focusSeconds' | 'breakSeconds' | 'longSeconds'): void {
-    const input = event.target as HTMLInputElement;
-    const n = Number(input.value.replace(',', '.'));
-    const current = this.custom();
-    if (input.value.trim() === '' || !Number.isFinite(n)) {
-      input.value = String(minutes(field === 'longSeconds' ? (current.longBreak?.seconds ?? 0) : current[field]));
-      return;
-    }
-    if (field === 'longSeconds') this.setCustom({ longBreak: { every: current.longBreak?.every ?? 4, seconds: n * 60 } });
-    else this.setCustom({ [field]: n * 60 });
-    const stored = this.custom();
-    input.value = String(minutes(field === 'longSeconds' ? (stored.longBreak?.seconds ?? 0) : stored[field]));
-  }
-
-  toggleLongBreak(): void {
-    if (this.custom().longBreak) this.setCustom({}, 'longBreak');
-    else this.setCustom({ longBreak: { every: 4, seconds: 900 } });
-  }
-
-  setLongEvery(value: number | null): void {
-    const lb = this.custom().longBreak;
-    if (lb && value !== null) this.setCustom({ longBreak: { ...lb, every: value } });
-  }
-
-  setExerciseEvery(value: number | null): void {
-    if (value !== null) this.setCustom({ exerciseEvery: value });
+  /** Closes the wizard (finished or cancelled) and puts focus on *Run setup again*. */
+  closeWizard(): void {
+    this.rerun.set(false);
+    afterNextRender(() => document.querySelector<HTMLElement>('.ss__rerun button')?.focus(), { injector: this.injector });
   }
 
   // --- Weight ---------------------------------------------------------------------------------------------------------

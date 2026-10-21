@@ -1,0 +1,53 @@
+<p class="ss__hint">{{ 'sportask.goal.hint' | translate }}</p>
+<div class="ss__cards" role="radiogroup" [attr.aria-label]="'sportask.goal.list' | translate">
+  @for (c of cards(); track c.id) {
+    <button type="button" role="radio" class="ss__card" [attr.aria-checked]="c.selected" [class.ss__card--on]="c.selected" (click)="pickGoal(c.id)">
+      <span class="ss__card-head">
+        <app-ui-icon [name]="c.icon" [size]="18" />
+        <span class="ss__card-name">{{ c.name }}</span>
+        @if (c.enrolled) {
+          <app-ui-icon class="ss__card-check" name="check" [size]="16" />
+        }
+      </span>
+      <span class="ss__card-text">{{ c.description }}</span>
+    </button>
+  }
+  @if (allowNone()) {
+    <button type="button" role="radio" class="ss__card" [attr.aria-checked]="value() === null" [class.ss__card--on]="value() === null" (click)="pickNone()">
+      <span class="ss__card-head">
+        <app-ui-icon name="dumbbell" [size]="18" />
+        <span class="ss__card-name">{{ 'sportask.goal.none' | translate }}</span>
+      </span>
+      <span class="ss__card-text">{{ 'sportask.goal.noneText' | translate }}</span>
+    </button>
+  }
+</div>
+
+@if (value(); as v) {
+  <div class="field">
+    <span class="field__label" [id]="uid + '-program'">{{ 'sportask.goal.program' | translate }}</span>
+    <div class="segmented ss__segmented" role="group" [attr.aria-labelledby]="uid + '-program'">
+      @for (p of programs(); track p.id) {
+        <button type="button" class="segmented__option" [attr.aria-pressed]="v.programId === p.id" (click)="pickProgram(p.id)">{{ p.name }}</button>
+      }
+    </div>
+    @if (programInfo(); as info) {
+      <p class="ss__hint">
+        {{ info.summary }}
+        {{ 'sportask.goal.length' | translate: { weeks: info.weeks, days: info.days } }}.
+      </p>
+    }
+  </div>
+
+  <div class="field">
+    <span class="field__label" [id]="uid + '-level'">{{ 'sportask.goal.level' | translate }}</span>
+    <div class="ss__rows" role="radiogroup" [attr.aria-labelledby]="uid + '-level'">
+      @for (l of levels; track l) {
+        <button type="button" role="radio" class="ss__row" [attr.aria-checked]="v.level === l" [class.ss__row--on]="v.level === l" (click)="pickLevel(l)">
+          <span class="ss__dot" aria-hidden="true"></span>
+          <span>{{ 'sportask.goal.levels.' + l | translate }}</span>
+        </button>
+      }
+    </div>
+  </div>
+}
