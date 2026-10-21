@@ -1,4 +1,4 @@
-import type { Constraints, Enrolment, EquipmentInventory, LocalizedText, SportBlock } from '../../../types/sportask';
+import type { Constraints, Enrolment, EquipmentInventory, LocalizedText, SportBlock, SportProfile } from '../../../types/sportask';
 import type { Catalog } from '../engine/context';
 
 /** Inclusive local days ('YYYY-MM-DD'). */
@@ -13,6 +13,8 @@ export interface MetricEnv {
   /** Body weight in kg, or null: the calorie metric is then flagged `missing: 'weight'`. */
   weightKg: number | null;
   enrolment: Enrolment | null;
+  /** The user's status (0.25): the ladder replay starts from it and the weekly targets scale with it. */
+  profile?: SportProfile;
   /** The effective inventory and limits, for the ladder replay (a rung counts only when an alternative is usable). */
   equipment: EquipmentInventory;
   constraints: Constraints;

@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, Injector, afterNextRender, computed
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { parseIso, todayIso } from '../../../lib/dates';
 import { GOALS } from '../../../lib/sportask/goals';
+import { hasProfile } from '../../../lib/sportask/profile';
 import { sanitizeSettings } from '../../../lib/sportask/sanitize';
 import { deactivate } from '../../../lib/sportask/session-ops';
 import { type GoalPick, type RhythmValue, type StyleValue, acceptedAt, pickFor } from '../../../lib/sportask/setup';
@@ -9,9 +10,10 @@ import { loadSportaskTexts } from '../../../lib/sportask/texts';
 import { SettingsService } from '../../../services/settings.service';
 import { SportaskSettingsService } from '../../../services/sportask-settings.service';
 import { SportaskService } from '../../../services/sportask.service';
-import type { Constraints, EquipmentInventory, SportaskSettings } from '../../../types/sportask';
+import type { Constraints, EquipmentInventory, SportProfile, SportaskSettings } from '../../../types/sportask';
 import { SportaskEquipmentFieldsComponent } from '../sportask-equipment-fields/sportask-equipment-fields.component';
 import { SportaskGoalFieldsComponent } from '../sportask-goal-fields/sportask-goal-fields.component';
+import { SportaskProfileFieldsComponent } from '../sportask-profile-fields/sportask-profile-fields.component';
 import { SportaskLimitsFieldsComponent } from '../sportask-limits-fields/sportask-limits-fields.component';
 import { SportaskRhythmFieldsComponent } from '../sportask-rhythm-fields/sportask-rhythm-fields.component';
 import { SportaskSetupWizardComponent } from '../sportask-setup-wizard/sportask-setup-wizard.component';
@@ -36,6 +38,7 @@ const MAX_WEIGHT_KG = 300;
   imports: [
     TranslatePipe,
     SportaskGoalFieldsComponent,
+    SportaskProfileFieldsComponent,
     SportaskEquipmentFieldsComponent,
     SportaskLimitsFieldsComponent,
     SportaskRhythmFieldsComponent,
@@ -88,6 +91,7 @@ export class SportaskSettingsComponent {
     const s = this.settings();
     return { skin: s.skin, skinWholeApp: s.skinWholeApp, cues: s.cues, autoStartBreak: s.autoStartBreak };
   });
+  readonly profile = computed<SportProfile>(() => this.settings().profile ?? {});
   readonly enrolledGoalId = computed(() => this.enrolment()?.goalId ?? null);
 
   /** True while the cards show exactly what the user is enrolled in. */
@@ -183,6 +187,11 @@ export class SportaskSettingsComponent {
   }
 
   // --- Blocks (the shared field components; each emits its new slice) ---------------------------------------------------
+
+  /** An empty profile is stored as absent (the wire rule: optional fields only when set). */
+  setProfile(profile: SportProfile): void {
+    this.patch({ profile: hasProfile(profile) ? profile : undefined });
+  }
 
   setEquipment(equipment: EquipmentInventory): void {
     this.patch({ equipment });

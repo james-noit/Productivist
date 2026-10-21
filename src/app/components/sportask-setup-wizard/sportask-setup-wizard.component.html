@@ -14,6 +14,19 @@
       }
     </div>
     <div class="wz__row">
+      <dt>{{ 'sportask.profile.title' | translate }}</dt>
+      <dd>
+        @for (l of s.profile; track l.key; let last = $last) {
+          {{ 'sportask.profile.' + l.key | translate: { n: l.n } }}@if (!last) {; }
+        } @empty {
+          {{ (edit ? 'sportask.wizard.none' : 'sportask.wizard.profileLater') | translate }}
+        }
+      </dd>
+      @if (edit) {
+        <button type="button" class="btn btn--ghost btn--sm" (click)="goTo('profile')">{{ 'sportask.wizard.change' | translate }}<span class="visually-hidden"> · {{ 'sportask.profile.title' | translate }}</span></button>
+      }
+    </div>
+    <div class="wz__row">
       <dt>{{ 'sportask.gear.title' | translate }}</dt>
       <dd>
         @if (s.gear.length) {
@@ -134,6 +147,9 @@
         @switch (step()) {
           @case ('goal') {
             <app-sportask-goal-fields [value]="draft().pick" [allowNone]="true" (changed)="set({ pick: $event })" />
+          }
+          @case ('profile') {
+            <app-sportask-profile-fields [value]="draft().profile" (changed)="set({ profile: $event })" />
           }
           @case ('gear') {
             <app-sportask-equipment-fields [value]="draft().equipment" (changed)="set({ equipment: $event })" />

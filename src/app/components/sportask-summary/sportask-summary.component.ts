@@ -3,6 +3,7 @@ import { TranslatePipe } from '@ngx-translate/core';
 import { addDays, startOfWeek } from '../../../lib/dates';
 import { CATALOG } from '../../../lib/sportask/catalog';
 import { weekStats } from '../../../lib/sportask/metrics/summary';
+import { SportaskTargetsComponent } from '../sportask-targets/sportask-targets.component';
 import { SportaskMetricChartComponent } from '../sportask-metric-chart/sportask-metric-chart.component';
 import { SportPanelState } from '../sportask-view/sport-panel.state';
 import { UiIconComponent } from '../ui-icon/ui-icon.component';
@@ -14,7 +15,7 @@ const HEAT_WEEKS = 12;
 @Component({
   selector: 'app-sportask-summary',
   standalone: true,
-  imports: [TranslatePipe, SportaskMetricChartComponent, UiIconComponent],
+  imports: [TranslatePipe, SportaskMetricChartComponent, SportaskTargetsComponent, UiIconComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './sportask-summary.component.html',
   styleUrl: './sportask-summary.component.css',

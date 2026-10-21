@@ -1,0 +1,87 @@
+:host {
+  display: block;
+  min-width: 0;
+}
+
+.st {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  min-width: 0;
+  padding: 0.9rem 1rem;
+  border: var(--sport-card-border, 1px solid var(--color-border));
+  border-radius: var(--sport-radius-sm, 8px);
+  background-color: var(--sport-card-bg, var(--color-surface));
+  box-shadow: var(--sport-card-shadow, none);
+}
+
+.st__title {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.st__hint {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.78rem;
+}
+
+.st__list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: 0.85rem 1.25rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.st__item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  min-width: 0;
+}
+
+.st__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.15rem 0.75rem;
+}
+
+.st__label {
+  min-width: 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.st__value {
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text);
+}
+
+.st__bar {
+  height: 0.45rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background-color: var(--color-surface-alt);
+  border: 1px solid var(--color-border);
+}
+
+.st__fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background-color: var(--color-primary);
+}
+
+.st__bar--met .st__fill {
+  background-color: var(--color-capacity-safe);
+}
+
+.st__more {
+  align-self: flex-start;
+}

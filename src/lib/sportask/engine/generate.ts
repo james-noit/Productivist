@@ -1,6 +1,7 @@
 import type { BlockMeta, BlockPlan, BlockStep, SportaskSession, SportaskSettings, SportTemplate } from '../../../types/sportask';
 import { BUILTIN_TEMPLATES } from '../templates';
 import { GOALS } from '../goals';
+import { adaptation } from './adapt';
 import { type AnyGoal, type AssessmentDef, type GenerationContext } from './context';
 import { available } from './filter';
 import { finalizePlan, slotsFor, slotSteps } from './fit';
@@ -73,8 +74,11 @@ function planAssessment(def: AssessmentDef, ctx: GenerationContext, goal: AnyGoa
 
 function runGoal(ctx: GenerationContext, goal: AnyGoal, program: AnyGoal['programs'][number], week: number, warm: boolean, meta: BlockMeta): GeneratedBlock {
   const phase = phaseFor(program, week);
-  const plan = goal.generator.generate(ctx, { ...phase.params, warmup: warm });
-  const base: BlockMeta = { ...meta, origin: 'goal', goalId: goal.id, programId: program.id, programWeek: week, ...(phase.note ? { phaseNote: phase.note } : {}) };
+  const adapt = adaptation(ctx, goal.id);
+  const params = goal.adapt ? goal.adapt(phase.params, adapt) : phase.params;
+  const plan = goal.generator.generate(ctx, { ...params, warmup: warm });
+  const adapted: BlockMeta['adapted'] | undefined = adapt.reason && goal.adapt ? { reason: adapt.reason, ...(adapt.reason === 'return' && adapt.away !== null ? { days: adapt.away } : {}) } : undefined;
+  const base: BlockMeta = { ...meta, origin: 'goal', goalId: goal.id, programId: program.id, programWeek: week, ...(phase.note ? { phaseNote: phase.note } : {}), ...(adapted ? { adapted } : {}) };
   return hasSteps(plan) ? { plan, meta: base } : fallbackBlock(ctx, warm, base);
 }
 
@@ -92,7 +96,7 @@ function planGoal(ctx: GenerationContext, settings: SettingsLike, opts: Generate
 
   if (!warm) {
     const params = { ...phaseFor(program, position.week).params, warmup: false };
-    for (const id of pendingAssessmentIds(ctx, program, position)) {
+    for (const id of pendingAssessmentIds(ctx, program, position, goal.id)) {
       const def = ctx.catalog.assessments.get(id);
       const plan = def ? planAssessment(def, ctx, goal, params) : null;
       if (plan && def) return { plan, meta: { origin: 'goal', goalId: goal.id, programId: program.id, programWeek: position.week, assessmentId: def.id } };

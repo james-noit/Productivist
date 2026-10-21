@@ -5,6 +5,7 @@ import { type LadderParams, ladderIndex, replayLadders } from '../engine/progres
 import { phaseFor, programWeek } from '../engine/schedule';
 import { GOALS } from '../goals';
 import { netKcal, workSecondsDone } from '../kcal';
+import { baseWeeklyMinutes } from '../targets';
 import { counted, dayKeys, doneSteps, inRange, setExerciseIds, weekIndexer, weekKeys } from './helpers';
 import type { AssessmentSummary, DateRange, MetricDef, MetricEnv, Series, SeriesGroup } from './types';
 
@@ -53,8 +54,9 @@ function weeklyTargets(keys: readonly string[], env: MetricEnv): (number | null)
   const program = goal.programs.find((p) => p.id === e.programId) ?? goal.programs[0]!;
   return keys.map((w) => {
     if (addDays(w, 6) < e.startedOn) return null;
-    const params = phaseFor(program, programWeek(e.startedOn, w > e.startedOn ? w : e.startedOn, program.weeks).week).params as { weeklyActiveMinutes?: number };
-    return params.weeklyActiveMinutes ?? null;
+    const params = phaseFor(program, programWeek(e.startedOn, w > e.startedOn ? w : e.startedOn, program.weeks).week).params;
+    // The plan for that week, scaled to the user's days and activity (0.25); the Summary's target card also adapts it to their results.
+    return baseWeeklyMinutes(goal, program.daysPerWeek, params, { profile: env.profile });
   });
 }
 
@@ -228,6 +230,7 @@ export const ladderLevel: MetricDef = {
         history: history.filter((b) => b.date <= end),
         todayBlocks: [],
         enrolment: e,
+        ...(env.profile ? { profile: env.profile } : {}),
         rng: () => 0.5,
       };
       const states = replayLadders(ctx, params);

@@ -58,6 +58,44 @@ export const SPORTASK_TEXTS: Record<'en' | 'es', Record<string, unknown>> = {
         "heavy": "Heavy"
       }
     },
+    "profile": {
+      "title": "About you",
+      "hint": "Optional. Sportask uses these answers to start you at the right level and to set weekly objectives. Skip anything you are unsure about. A number you give replaces the level you picked for that movement.",
+      "activity": "How active are you outside Sportask?",
+      "activities": {
+        "low": "Hardly at all",
+        "some": "1 to 2 days a week",
+        "regular": "3 or more days a week"
+      },
+      "days": "Days a week you want to train",
+      "daysAuto": "Program's",
+      "daysHint": "Never more than the program plans. On the other days it gives you an easy mobility block.",
+      "baseline": "Quick baseline",
+      "baselineHint": "No need to test yourself now: give your best recent guess, with good form. Leave it empty if you are not sure.",
+      "pushUps": "Floor push-ups in a row (0 if none)",
+      "squats": "Bodyweight squats in a row",
+      "plank": "Plank hold (seconds)",
+      "reach": "Bending forward with straight legs, I can reach",
+      "reaches": {
+        "far": "Not my toes",
+        "near": "My toes",
+        "touch": "The floor with my palms"
+      },
+      "clear": "Clear my answers",
+      "changeNote": "Changing these updates your starting levels and objectives from your next block. Your history is kept.",
+      "short": {
+        "low": "Hardly active",
+        "some": "Active 1 to 2 days a week",
+        "regular": "Active 3+ days a week",
+        "far": "Toes out of reach",
+        "near": "Reaches the toes",
+        "touch": "Palms to the floor",
+        "days": "{{n}} days a week",
+        "pushUps": "{{n}} push-ups",
+        "squats": "{{n}} squats",
+        "plank": "{{n}} s plank"
+      }
+    },
     "limits": {
       "title": "Limits",
       "lowImpact": "No jumping (low impact)",
@@ -85,6 +123,7 @@ export const SPORTASK_TEXTS: Record<'en' | 'es', Record<string, unknown>> = {
       "list": "Skins",
       "dark": "Dark",
       "light": "Light",
+      "theme": "Follows your theme",
       "wholeApp": "Apply to the whole app during a session",
       "cues": "Sound for each step",
       "autoStart": "Start the block without confirming"
@@ -130,7 +169,8 @@ export const SPORTASK_TEXTS: Record<'en' | 'es', Record<string, unknown>> = {
       "quickName": "Quick setup",
       "quickText": "One screen with a sensible start: mobility, no equipment, classic 25/5.",
       "fullName": "Personalised",
-      "fullText": "Six short steps: goal, equipment, limits, rhythm, style and a summary.",
+      "fullText": "Seven short steps: goal, about you, equipment, limits, rhythm, style and a summary.",
+      "profileLater": "Not set (add it later in Configuration)",
       "quickIntro": "Quick setup sets exactly this:",
       "step": "Step {{n}} of {{total}}",
       "steps": "Setup steps",
@@ -169,6 +209,11 @@ export const SPORTASK_TEXTS: Record<'en' | 'es', Record<string, unknown>> = {
         "warmup": "Warm-up · {{goal}} · week {{week}}"
       },
       "restDay": "Rest day: this block is easy so you recover. Train anyway if you feel like it.",
+      "adapt": {
+        "return": "Welcome back after {{days}} days: a lighter dose to ease in.",
+        "ease": "Your last blocks felt hard, so this one is a little lighter.",
+        "push": "Your last blocks felt easy, so this one asks a little more."
+      },
       "trainAnyway": "Train anyway",
       "fallback": {
         "mobility": "With these limits the usual exercises do not fit, so this block is mobility.",
@@ -253,6 +298,25 @@ export const SPORTASK_TEXTS: Record<'en' | 'es', Record<string, unknown>> = {
         "history": "No blocks yet. Your first one, and its results, will be listed here."
       },
       "goPomodoro": "Go to the Pomodoro",
+      "targets": {
+        "title": "Your objectives",
+        "intro": "Weekly, from your goal, your answers in Configuration and how your blocks are going.",
+        "days": "Training days this week",
+        "minutes": "Active minutes this week",
+        "minutesNote": "Rises when you reach it, eases when a week was too much.",
+        "kcal": "Calories this week (estimate)",
+        "kcalNote": "From your minutes target, your weight and the exercises you can do.",
+        "of": "{{current}} of {{target}}",
+        "ofMin": "{{current}} of {{target}} min",
+        "ofKcal": "≈ {{current}} of {{target}} kcal",
+        "rung": "Next step in {{movement}}",
+        "rungTop": "{{movement}}: top step",
+        "rungNow": "Now: {{name}}",
+        "test": "Aim: {{target}} {{unit}}",
+        "testDone": "Best so far: {{current}} {{unit}}",
+        "testNow": "Now {{current}} {{unit}} (first test {{first}} {{unit}})",
+        "addProfile": "Tell Sportask about you"
+      },
       "tile": {
         "title": "This week",
         "blocks": "Blocks",
@@ -470,6 +534,44 @@ export const SPORTASK_TEXTS: Record<'en' | 'es', Record<string, unknown>> = {
         "heavy": "Fuerte"
       }
     },
+    "profile": {
+      "title": "Sobre ti",
+      "hint": "Opcional. Sportask usa estas respuestas para empezarte en el nivel adecuado y fijar objetivos semanales. Salta lo que no sepas. Un número que des sustituye al nivel que elegiste para ese movimiento.",
+      "activity": "¿Cuánta actividad haces fuera de Sportask?",
+      "activities": {
+        "low": "Casi ninguna",
+        "some": "1 o 2 días a la semana",
+        "regular": "3 o más días a la semana"
+      },
+      "days": "Días a la semana que quieres entrenar",
+      "daysAuto": "Los del programa",
+      "daysHint": "Nunca más de los que plantea el programa. Los demás días te da un bloque suave de movilidad.",
+      "baseline": "Punto de partida rápido",
+      "baselineHint": "No hace falta que te pongas a prueba ahora: di tu mejor estimación reciente, con buena técnica. Déjalo vacío si no lo sabes.",
+      "pushUps": "Flexiones en el suelo seguidas (0 si ninguna)",
+      "squats": "Sentadillas con el peso del cuerpo seguidas",
+      "plank": "Plancha mantenida (segundos)",
+      "reach": "Al inclinarme con las piernas rectas, llego a",
+      "reaches": {
+        "far": "No llego a los pies",
+        "near": "Los pies",
+        "touch": "El suelo con las palmas"
+      },
+      "clear": "Borrar mis respuestas",
+      "changeNote": "Al cambiarlas, tus niveles de partida y tus objetivos se actualizan desde el próximo bloque. Se conserva tu historial.",
+      "short": {
+        "low": "Casi sin actividad",
+        "some": "Activo 1 o 2 días a la semana",
+        "regular": "Activo 3 o más días a la semana",
+        "far": "No llega a los pies",
+        "near": "Llega a los pies",
+        "touch": "Palmas al suelo",
+        "days": "{{n}} días a la semana",
+        "pushUps": "{{n}} flexiones",
+        "squats": "{{n}} sentadillas",
+        "plank": "Plancha de {{n}} s"
+      }
+    },
     "limits": {
       "title": "Restricciones",
       "lowImpact": "Sin saltos (bajo impacto)",
@@ -497,6 +599,7 @@ export const SPORTASK_TEXTS: Record<'en' | 'es', Record<string, unknown>> = {
       "list": "Estilos",
       "dark": "Oscuro",
       "light": "Claro",
+      "theme": "Sigue tu tema",
       "wholeApp": "Aplicar a toda la app durante la sesión",
       "cues": "Sonidos de cada paso",
       "autoStart": "Empezar el bloque sin confirmar"
@@ -542,7 +645,8 @@ export const SPORTASK_TEXTS: Record<'en' | 'es', Record<string, unknown>> = {
       "quickName": "Configuración rápida",
       "quickText": "Una pantalla con un buen punto de partida: movilidad, sin material, clásico 25/5.",
       "fullName": "Personalizada",
-      "fullText": "Seis pasos breves: objetivo, material, límites, ritmo, estilo y un resumen.",
+      "fullText": "Siete pasos breves: objetivo, sobre ti, material, límites, ritmo, estilo y un resumen.",
+      "profileLater": "Sin indicar (añádelo luego en Configuración)",
       "quickIntro": "La configuración rápida establece exactamente esto:",
       "step": "Paso {{n}} de {{total}}",
       "steps": "Pasos de la configuración",
@@ -581,6 +685,11 @@ export const SPORTASK_TEXTS: Record<'en' | 'es', Record<string, unknown>> = {
         "warmup": "Calentamiento · {{goal}} · semana {{week}}"
       },
       "restDay": "Día de descanso: este bloque es suave para que te recuperes. Entrena igualmente si te apetece.",
+      "adapt": {
+        "return": "Bienvenido de vuelta tras {{days}} días: una dosis más suave para retomar.",
+        "ease": "Tus últimos bloques se sintieron duros, así que este es un poco más suave.",
+        "push": "Tus últimos bloques se sintieron fáciles, así que este pide un poco más."
+      },
       "trainAnyway": "Entrenar igualmente",
       "fallback": {
         "mobility": "Con estas restricciones no caben los ejercicios habituales, así que este bloque es de movilidad.",
@@ -665,6 +774,25 @@ export const SPORTASK_TEXTS: Record<'en' | 'es', Record<string, unknown>> = {
         "history": "Todavía no hay bloques. El primero, con sus resultados, se listará aquí."
       },
       "goPomodoro": "Ir al Pomodoro",
+      "targets": {
+        "title": "Tus objetivos",
+        "intro": "Semanales, según tu objetivo, tus respuestas en Configuración y cómo van tus bloques.",
+        "days": "Días de entrenamiento esta semana",
+        "minutes": "Minutos activos esta semana",
+        "minutesNote": "Sube cuando lo alcanzas y baja si una semana fue demasiado.",
+        "kcal": "Calorías esta semana (estimación)",
+        "kcalNote": "A partir de tu objetivo de minutos, tu peso y los ejercicios que puedes hacer.",
+        "of": "{{current}} de {{target}}",
+        "ofMin": "{{current}} de {{target}} min",
+        "ofKcal": "≈ {{current}} de {{target}} kcal",
+        "rung": "Siguiente paso en {{movement}}",
+        "rungTop": "{{movement}}: último paso",
+        "rungNow": "Ahora: {{name}}",
+        "test": "Meta: {{target}} {{unit}}",
+        "testDone": "Mejor marca: {{current}} {{unit}}",
+        "testNow": "Ahora {{current}} {{unit}} (primer test {{first}} {{unit}})",
+        "addProfile": "Cuéntale a Sportask sobre ti"
+      },
       "tile": {
         "title": "Esta semana",
         "blocks": "Bloques",

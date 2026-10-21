@@ -69,6 +69,13 @@
           }
         </section>
 
+        <!-- About you -->
+        <section class="ss__block" aria-labelledby="ss-profile">
+          <h4 id="ss-profile">{{ 'sportask.profile.title' | translate }}</h4>
+          <app-sportask-profile-fields [value]="profile()" (changed)="setProfile($event)" />
+          <p class="ss__hint">{{ 'sportask.profile.changeNote' | translate }}</p>
+        </section>
+
         <!-- Equipment -->
         <section class="ss__block" aria-labelledby="ss-gear">
           <h4 id="ss-gear">{{ 'sportask.gear.title' | translate }}</h4>

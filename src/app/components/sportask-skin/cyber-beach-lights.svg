@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 640" preserveAspectRatio="xMidYMax slice">
+<defs>
+<radialGradient id="o"><stop offset="0" stop-color="#ff9a52" stop-opacity=".55"/><stop offset="1" stop-color="#ff9a52" stop-opacity="0"/></radialGradient>
+<radialGradient id="t"><stop offset="0" stop-color="#5fe0dc" stop-opacity=".5"/><stop offset="1" stop-color="#5fe0dc" stop-opacity="0"/></radialGradient>
+<radialGradient id="r"><stop offset="0" stop-color="#ff7a59" stop-opacity=".9"/><stop offset="1" stop-color="#ff7a59" stop-opacity="0"/></radialGradient>
+</defs>
+<g transform="rotate(-7 640 596)"><ellipse cx="640" cy="454" rx="70" ry="22" fill="url(#o)"/><ellipse cx="640" cy="480" rx="44" ry="26" fill="url(#t)"/></g>
+<circle cx="257" cy="184" r="14" fill="url(#r)"/><circle cx="257" cy="184" r="2.2" fill="#ffb59a"/>
+<circle cx="490" cy="156" r="14" fill="url(#r)"/><circle cx="490" cy="156" r="2.2" fill="#ffb59a"/>
+<circle cx="1039" cy="176" r="14" fill="url(#r)"/><circle cx="1039" cy="176" r="2.2" fill="#ffb59a"/>
+<circle cx="1313" cy="190" r="14" fill="url(#r)"/><circle cx="1313" cy="190" r="2.2" fill="#ffb59a"/>
+<circle cx="1465" cy="222" r="14" fill="url(#r)"/><circle cx="1465" cy="222" r="2.2" fill="#ffb59a"/>
+<circle cx="7.5" cy="325" r="9" fill="url(#o)" opacity=".7"/>
+<circle cx="109.5" cy="376" r="9" fill="url(#o)" opacity=".7"/>
+<circle cx="232.5" cy="373" r="9" fill="url(#o)" opacity=".7"/>
+<circle cx="388.5" cy="347" r="9" fill="url(#t)" opacity=".7"/>
+<circle cx="568.5" cy="387" r="9" fill="url(#o)" opacity=".7"/>
+<circle cx="1330.5" cy="352" r="9" fill="url(#t)" opacity=".7"/>
+</svg>

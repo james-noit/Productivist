@@ -11,8 +11,10 @@ import type {
   LocalizedText,
   MetricKind,
   SportBlock,
+  SportProfile,
 } from '../../../types/sportask';
 import type { Registry } from '../registry';
+import type { Adaptation } from './adapt';
 
 export interface AssessmentDef {
   id: string;
@@ -45,6 +47,8 @@ export interface GenerationContext {
   history: readonly SportBlock[];      // every non-deleted block, oldest first
   todayBlocks: readonly SportBlock[];
   enrolment: Enrolment | null;
+  /** What the user said about their current status (0.25); absent = the program as it always was. */
+  profile?: SportProfile;
   rng: () => number;                   // mulberry32(seed of blockId)
 }
 
@@ -77,6 +81,17 @@ export interface ProgramDef<P> {
   assessmentWeeks: number[];
   assessmentIds: string[];
 }
+/**
+ * What a goal's weekly objectives are made of (`targets.ts` turns it into numbers): the weekly active minutes of the program at its own
+ * days a week, the ladders whose next rung is a goal, the assessments whose improvement is one, and whether to estimate kcal.
+ */
+export interface TargetSpec<P> {
+  weeklyMinutes: (params: P) => number;
+  ladders?: string[];
+  assessments?: string[];
+  kcal?: boolean;
+}
+
 export interface GoalDef<P> {
   id: string;
   tag: GoalTag;
@@ -88,6 +103,9 @@ export interface GoalDef<P> {
   progression: ProgressionModel<P>;
   metricIds: string[];
   restDayGoalId?: string;
+  /** Scales the phase's parameters to this person right now (`engine/adapt.ts`); absent = used as they are. Must return a new object. */
+  adapt?: (params: P, a: Adaptation) => P;
+  targets?: TargetSpec<P>;
 }
 /** The registry stores goals with their parameter type erased; defineGoal keeps each one checked. */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

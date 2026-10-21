@@ -6,14 +6,17 @@
         <span class="ss__swatch-dot" [style.background-color]="s.preview[2]"></span>
       </span>
       <span class="ss__skin-name">{{ s.name }}</span>
-      <span class="ss__row-sub">{{ (s.scheme === 'dark' ? 'sportask.style.dark' : 'sportask.style.light') | translate }}</span>
+      <span class="ss__row-sub">{{ (s.scheme === 'dark' ? 'sportask.style.dark' : s.scheme === 'light' ? 'sportask.style.light' : 'sportask.style.theme') | translate }}</span>
     </button>
   }
 </div>
-<button type="button" role="switch" class="switch" [attr.aria-checked]="value().skinWholeApp" (click)="toggle('skinWholeApp')">
-  <span class="switch__track"></span>
-  <span>{{ 'sportask.style.wholeApp' | translate }}</span>
-</button>
+<!-- The app's own theme already covers the whole app: the switch would do nothing. -->
+@if (value().skin !== appSkin) {
+  <button type="button" role="switch" class="switch" [attr.aria-checked]="value().skinWholeApp" (click)="toggle('skinWholeApp')">
+    <span class="switch__track"></span>
+    <span>{{ 'sportask.style.wholeApp' | translate }}</span>
+  </button>
+}
 <button type="button" role="switch" class="switch" [attr.aria-checked]="value().cues" (click)="toggle('cues')">
   <span class="switch__track"></span>
   <span>{{ 'sportask.style.cues' | translate }}</span>

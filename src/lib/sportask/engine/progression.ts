@@ -1,4 +1,7 @@
+import { diffDays } from '../../dates';
 import type { Dose, ExerciseDef, LadderDef, SportBlock } from '../../../types/sportask';
+import { desiredRung } from '../profile';
+import { effortOf } from './adapt';
 import type { AssessmentDef, Catalog, GenerationContext, ProgressionModel } from './context';
 import { available, ownedWeights } from './filter';
 
@@ -10,6 +13,8 @@ export interface LadderParams {
 
 export interface LadderState {
   rung: number;
+  /** The rung the replay started on (the level, or the profile's baseline), for the weekly objectives. */
+  from: number;
   /** Lowest value recorded in the last block that worked this rung (reset on a rung or load change). */
   lastValue?: number;
   lastLoad?: number;
@@ -63,9 +68,36 @@ export function settleRung(ladder: LadderDef, rung: number, ctx: GenerationConte
   return down >= 0 ? down : nextUsable(ladder, r, 1, ctx);
 }
 
-/** The usable rung a program level starts on (level 1 -> rung 0, 2 -> 1, 3 -> 2). */
-export function startRung(ladder: LadderDef, level: number, ctx: GenerationContext): number {
-  return settleRung(ladder, level - 1, ctx);
+/**
+ * The usable rung a ladder starts on: from the profile's baseline when it measured this movement (or one it follows), otherwise from
+ * the program level (1 -> rung 0, 2 -> 1, 3 -> 2) tempered by how active the user is (`profile.ts`).
+ */
+export function startRung(ladder: LadderDef, ctx: GenerationContext): number {
+  return settleRung(ladder, desiredRung(ladder.id, ctx.enrolment?.level ?? 1, ctx.profile), ctx);
+}
+
+/** Days away after which the dose starts again from the bottom of the range, and after which a rung (or two) is given back. */
+export const RESET_AFTER_DAYS = 14;
+export const STEP_BACK_AFTER_DAYS = 21;
+export const STEP_BACK_TWO_AFTER_DAYS = 56;
+
+/** A long absence (PLAN 0.25): the dose restarts at the bottom of the range, and a rung (two after eight weeks) is given back. */
+function applyAbsence(states: Map<string, LadderState>, gapDays: number, ctx: GenerationContext): void {
+  if (gapDays < RESET_AFTER_DAYS) return;
+  const back = gapDays >= STEP_BACK_TWO_AFTER_DAYS ? 2 : gapDays >= STEP_BACK_AFTER_DAYS ? 1 : 0;
+  for (const [id, state] of states) {
+    state.successes = 0;
+    state.failures = 0;
+    state.lastValue = undefined;
+    const ladder = ctx.catalog.ladders.get(id);
+    if (!ladder) continue;
+    for (let i = 0; i < back; i++) {
+      const down = nextUsable(ladder, state.rung, -1, ctx);
+      if (down < 0) break;
+      state.rung = down;
+      state.lastLoad = undefined;
+    }
+  }
 }
 
 function rangeOf(ex: ExerciseDef, params: LadderParams): { min: number; max: number } {
@@ -79,10 +111,9 @@ function resultFor(block: SportBlock, index: number) {
 /** Replays the goal's history into the current state of every ladder (PLAN section 8.3). Pure; needs no stored state. */
 export function replayLadders(ctx: GenerationContext, params: LadderParams): Map<string, LadderState> {
   const states = new Map<string, LadderState>();
-  const level = ctx.enrolment?.level ?? 1;
   for (const ladder of ctx.catalog.ladders.all) {
-    const rung = startRung(ladder, level, ctx);
-    if (rung >= 0) states.set(ladder.id, { rung, successes: 0, failures: 0 });
+    const rung = startRung(ladder, ctx);
+    if (rung >= 0) states.set(ladder.id, { rung, from: rung, successes: 0, failures: 0 });
   }
   const goalId = ctx.enrolment?.goalId;
   if (!goalId) return states;
@@ -91,7 +122,10 @@ export function replayLadders(ctx: GenerationContext, params: LadderParams): Map
     .filter((b) => b.origin === 'goal' && b.goalId === goalId && (b.status === 'done' || b.status === 'partial') && b.kind !== 'warmup')
     .sort((a, b) => a.startedAt - b.startedAt);
 
+  let lastDate: string | null = null;
   for (const block of blocks) {
+    if (lastDate !== null) applyAbsence(states, diffDays(lastDate, block.date), ctx);
+    lastDate = block.date;
     if (block.kind === 'test') {
       applyAssessment(block, ctx, params, states, where);
       continue;
@@ -114,9 +148,10 @@ export function replayLadders(ctx: GenerationContext, params: LadderParams): Map
       const state = states.get(ladderId)!;
       const range = rangeOf(list[0]!.ex, params);
       const values = list.map((o) => o.value);
-      const failure = values.some((v) => v < range.min) || block.feedback === 'tooHard';
+      const effort = effortOf(block);
+      const failure = values.some((v) => v < range.min) || effort === 1;
       const success = !failure && values.every((v) => v >= range.max);
-      const extra = block.feedback === 'tooEasy' && !failure ? 1 : 0;
+      const extra = effort === -1 && !failure ? 1 : 0;
       if (failure) {
         state.failures += 1;
         state.successes = 0;
@@ -152,6 +187,8 @@ export function replayLadders(ctx: GenerationContext, params: LadderParams): Map
       }
     }
   }
+  // Still away today: the same absence rules apply to the block about to be made.
+  if (lastDate !== null) applyAbsence(states, diffDays(lastDate, ctx.today), ctx);
   return states;
 }
 
@@ -194,6 +231,10 @@ function applyAssessment(
   if (best > range.max) {
     const up = nextUsable(ladder, state.rung, 1, ctx);
     if (up >= 0) moveTo(state, up);
+  } else if (best < range.min) {
+    // A re-test is evidence both ways: a result below the range means the rung is too hard for now.
+    const down = nextUsable(ladder, state.rung, -1, ctx);
+    if (down >= 0) moveTo(state, down);
   }
 }
 

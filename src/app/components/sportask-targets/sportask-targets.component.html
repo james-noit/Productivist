@@ -1,0 +1,25 @@
+@if (rows().length > 0) {
+  <section class="st" aria-labelledby="st-title">
+    <h3 class="st__title" id="st-title">{{ 'sportask.panel.targets.title' | translate }}</h3>
+    <p class="st__hint">{{ 'sportask.panel.targets.intro' | translate }}</p>
+    <ul class="st__list">
+      @for (r of rows(); track r.id) {
+        <li class="st__item">
+          <div class="st__head">
+            <span class="st__label">{{ r.label }}</span>
+            <span class="st__value">{{ r.value }}</span>
+          </div>
+          <div class="st__bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" [attr.aria-valuenow]="r.percent" [attr.aria-label]="r.label" [class.st__bar--met]="r.met">
+            <span class="st__fill" [style.width.%]="r.percent"></span>
+          </div>
+          @if (r.detail) {
+            <span class="st__hint">{{ r.detail }}</span>
+          }
+        </li>
+      }
+    </ul>
+    @if (!hasProfile()) {
+      <button type="button" class="btn btn--ghost btn--sm st__more" (click)="openConfiguration()">{{ 'sportask.panel.targets.addProfile' | translate }}</button>
+    }
+  </section>
+}

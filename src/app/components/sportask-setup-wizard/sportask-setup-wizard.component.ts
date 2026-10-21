@@ -8,12 +8,14 @@ import { EQUIPMENT } from '../../../lib/sportask/equipment';
 import { GOALS } from '../../../lib/sportask/goals';
 import { sanitizeSettings } from '../../../lib/sportask/sanitize';
 import { SETUP_STEPS, type SetupDraft, type SetupStep, acceptedAt, draftFromSettings, quickDraft, setupPatch, stepValid } from '../../../lib/sportask/setup';
-import { SKINS } from '../../../lib/sportask/skins';
+import { APP_SKIN, SKINS } from '../../../lib/sportask/skins';
 import { localize } from '../../../lib/sportask/texts';
+import type { SportProfile } from '../../../types/sportask';
 import { SettingsService } from '../../../services/settings.service';
 import { SportaskSettingsService } from '../../../services/sportask-settings.service';
 import { SportaskEquipmentFieldsComponent } from '../sportask-equipment-fields/sportask-equipment-fields.component';
 import { SportaskGoalFieldsComponent } from '../sportask-goal-fields/sportask-goal-fields.component';
+import { SportaskProfileFieldsComponent } from '../sportask-profile-fields/sportask-profile-fields.component';
 import { SportaskLimitsFieldsComponent } from '../sportask-limits-fields/sportask-limits-fields.component';
 import { SportaskRhythmFieldsComponent } from '../sportask-rhythm-fields/sportask-rhythm-fields.component';
 import { SportaskStyleFieldsComponent } from '../sportask-style-fields/sportask-style-fields.component';
@@ -25,6 +27,8 @@ type Stage = 'choose' | 'quick' | 'steps';
 /** What the summary and the Quick screen print, as plain data (the template composes the sentences with the translate pipe). */
 interface Summary {
   goal: { goal: string; program: string; level: 1 | 2 | 3 } | null;
+  /** The answers given in "About you" as translation keys under `sportask.profile` (+ a number for the template to interpolate); empty = none. */
+  profile: { key: string; n?: number }[];
   gear: string[];
   limits: ('lowImpact' | 'noFloor')[];
   rhythm: { custom: boolean; name: string; focus: number; brk: number };
@@ -34,12 +38,25 @@ interface Summary {
 /** The title string of each step: the settings blocks' own titles, so the wizard and the page name things the same. */
 const STEP_KEYS: Record<SetupStep, string> = {
   goal: 'sportask.goal.title',
+  profile: 'sportask.profile.title',
   gear: 'sportask.gear.title',
   limits: 'sportask.limits.title',
   rhythm: 'sportask.rhythm.title',
   style: 'sportask.style.title',
   summary: 'sportask.wizard.summaryTitle',
 };
+
+/** The profile's answers as `{ key, n }` lines for the summary (keys under `sportask.profile`). */
+function profileLines(p: SportProfile): { key: string; n?: number }[] {
+  const out: { key: string; n?: number }[] = [];
+  if (p.activity) out.push({ key: `short.${p.activity}` });
+  if (p.daysPerWeek !== undefined) out.push({ key: 'short.days', n: p.daysPerWeek });
+  if (p.pushUps !== undefined) out.push({ key: 'short.pushUps', n: p.pushUps });
+  if (p.squats !== undefined) out.push({ key: 'short.squats', n: p.squats });
+  if (p.plankSeconds !== undefined) out.push({ key: 'short.plank', n: p.plankSeconds });
+  if (p.reach) out.push({ key: `short.${p.reach}` });
+  return out;
+}
 
 const minutes = (seconds: number): number => Math.round((seconds / 60) * 10) / 10;
 
@@ -59,6 +76,7 @@ const minutes = (seconds: number): number => Math.round((seconds / 60) * 10) / 1
     TranslatePipe,
     UiIconComponent,
     SportaskGoalFieldsComponent,
+    SportaskProfileFieldsComponent,
     SportaskEquipmentFieldsComponent,
     SportaskLimitsFieldsComponent,
     SportaskRhythmFieldsComponent,
@@ -164,6 +182,7 @@ export class SportaskSetupWizardComponent {
     });
     return {
       goal: d.pick && goal ? { goal: localize(goal.name, lang), program: localize(goal.programs.find((p) => p.id === d.pick!.programId)?.name, lang), level: d.pick.level } : null,
+      profile: profileLines(d.profile),
       gear,
       limits: (['lowImpact', 'noFloor'] as const).filter((k) => d.constraints[k]),
       rhythm: {
@@ -172,7 +191,7 @@ export class SportaskSetupWizardComponent {
         focus: minutes(cadence.focusSeconds),
         brk: minutes(cadence.breakSeconds),
       },
-      style: { skin: localize(SKINS.get(d.style.skin)?.name, lang), wholeApp: d.style.skinWholeApp, cues: d.style.cues, autoStart: d.style.autoStartBreak },
+      style: { skin: localize(SKINS.get(d.style.skin)?.name, lang), wholeApp: d.style.skinWholeApp && d.style.skin !== APP_SKIN, cues: d.style.cues, autoStart: d.style.autoStartBreak },
     };
   }
 

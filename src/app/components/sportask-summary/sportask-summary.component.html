@@ -12,6 +12,7 @@
       </button>
     </div>
   </section>
+  <app-sportask-targets />
 } @else {
   <dl class="ss__tiles" [attr.aria-label]="'sportask.panel.tile.title' | translate">
     @for (t of tiles(); track t.id) {
@@ -24,6 +25,8 @@
       </div>
     }
   </dl>
+
+  <app-sportask-targets />
 
   <section class="ss__card">
     <h3 class="ss__title">{{ 'sportask.panel.heat' | translate: { n: 12 } }}</h3>

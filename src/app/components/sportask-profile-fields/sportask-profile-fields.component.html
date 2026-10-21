@@ -1,0 +1,61 @@
+<p class="ss__hint">{{ 'sportask.profile.hint' | translate }}</p>
+
+<div class="field">
+  <span class="field__label" [id]="uid + '-activity'">{{ 'sportask.profile.activity' | translate }}</span>
+  <div class="segmented spf__segmented" role="group" [attr.aria-labelledby]="uid + '-activity'">
+    @for (a of activities; track a) {
+      <button type="button" class="segmented__option" [attr.aria-pressed]="value().activity === a" (click)="pickActivity(a)">
+        {{ 'sportask.profile.activities.' + a | translate }}
+      </button>
+    }
+  </div>
+</div>
+
+<div class="field">
+  <span class="field__label" [id]="uid + '-days'">{{ 'sportask.profile.days' | translate }}</span>
+  <div class="spf__days" role="group" [attr.aria-labelledby]="uid + '-days'">
+    <app-number-stepper
+      [value]="value().daysPerWeek ?? null"
+      (valueChange)="setDays($event)"
+      [min]="limits.daysPerWeek.min"
+      [max]="limits.daysPerWeek.max"
+      [emptyText]="'sportask.profile.daysAuto' | translate"
+      [decreaseLabel]="'sportask.rhythm.less' | translate"
+      [increaseLabel]="'sportask.rhythm.more' | translate"
+    />
+    <span class="ss__hint">{{ 'sportask.profile.daysHint' | translate }}</span>
+  </div>
+</div>
+
+<fieldset class="spf__baseline">
+  <legend class="field__label">{{ 'sportask.profile.baseline' | translate }}</legend>
+  <p class="ss__hint">{{ 'sportask.profile.baselineHint' | translate }}</p>
+  <div class="spf__grid">
+    <div class="field">
+      <label class="field__label" [attr.for]="uid + '-push'">{{ 'sportask.profile.pushUps' | translate }}</label>
+      <input [id]="uid + '-push'" class="input spf__num" type="number" inputmode="numeric" [min]="limits.pushUps.min" [max]="limits.pushUps.max" step="1" [value]="value().pushUps ?? ''" (change)="setNumber('pushUps', $event)" />
+    </div>
+    <div class="field">
+      <label class="field__label" [attr.for]="uid + '-squat'">{{ 'sportask.profile.squats' | translate }}</label>
+      <input [id]="uid + '-squat'" class="input spf__num" type="number" inputmode="numeric" [min]="limits.squats.min" [max]="limits.squats.max" step="1" [value]="value().squats ?? ''" (change)="setNumber('squats', $event)" />
+    </div>
+    <div class="field">
+      <label class="field__label" [attr.for]="uid + '-plank'">{{ 'sportask.profile.plank' | translate }}</label>
+      <input [id]="uid + '-plank'" class="input spf__num" type="number" inputmode="numeric" [min]="limits.plankSeconds.min" [max]="limits.plankSeconds.max" step="1" [value]="value().plankSeconds ?? ''" (change)="setNumber('plankSeconds', $event)" />
+    </div>
+  </div>
+  <div class="field">
+    <span class="field__label" [id]="uid + '-reach'">{{ 'sportask.profile.reach' | translate }}</span>
+    <div class="segmented spf__segmented" role="group" [attr.aria-labelledby]="uid + '-reach'">
+      @for (r of reaches; track r) {
+        <button type="button" class="segmented__option" [attr.aria-pressed]="value().reach === r" (click)="pickReach(r)">
+          {{ 'sportask.profile.reaches.' + r | translate }}
+        </button>
+      }
+    </div>
+  </div>
+</fieldset>
+
+@if (any()) {
+  <button type="button" class="btn btn--ghost btn--sm" (click)="clear()">{{ 'sportask.profile.clear' | translate }}</button>
+}

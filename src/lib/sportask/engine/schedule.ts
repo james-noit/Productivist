@@ -1,4 +1,6 @@
 import { addDays, diffDays, startOfWeek } from '../../dates';
+import { trainingDays } from '../profile';
+import { returnDate } from './adapt';
 import type { GenerationContext, PhaseDef, ProgramDef } from './context';
 
 export interface ProgramPosition {
@@ -37,27 +39,38 @@ function isGoalWork(b: { origin: string; goalId?: string; status: string }, goal
 
 /**
  * Whether today counts as a training day of the program: until `daysPerWeek` distinct days of this ISO week have a done/partial block
- * of the goal, every day is one; after that only the days already trained are.
+ * of the goal, every day is one; after that only the days already trained are. `daysPerWeek` is the program's, or fewer if the user
+ * asked for fewer days in their profile (0.25).
  */
 export function isTrainingDay(ctx: GenerationContext, program: ProgramDef<unknown>, goalId: string): boolean {
   const monday = startOfWeek(ctx.today);
   const days = new Set<string>();
   for (const b of ctx.history) if (b.date >= monday && b.date <= ctx.today && isGoalWork(b, goalId)) days.add(b.date);
-  return days.has(ctx.today) || days.size < program.daysPerWeek;
+  return days.has(ctx.today) || days.size < trainingDays(program.daysPerWeek, ctx.profile);
 }
 
+/** Days away after which the user's return makes the tests due again whatever the program week (a re-baseline, PLAN 0.25), and how long that lasts. */
+export const RETEST_AFTER_DAYS = 21;
+export const RETEST_WINDOW_DAYS = 14;
+
 /**
- * The assessments pending today, in program order: it is an assessment week, today already has a done block, no test ran today, and the
- * assessment was not recorded yet in this program week. The caller still checks that it fits and that an exercise is available.
+ * The assessments pending today, in program order: today already has a done block, no test ran today, and either it is an assessment
+ * week and the assessment was not recorded yet in this program week, or the user came back after `RETEST_AFTER_DAYS` away within the last
+ * `RETEST_WINDOW_DAYS` and the assessment was not recorded since (one a day, until they are all done: tests move the baseline after a
+ * break). The caller still checks that it fits and that an exercise is available.
  */
-export function pendingAssessmentIds(ctx: GenerationContext, program: ProgramDef<unknown>, position: ProgramPosition): string[] {
-  if (!program.assessmentWeeks.includes(position.week)) return [];
+export function pendingAssessmentIds(ctx: GenerationContext, program: ProgramDef<unknown>, position: ProgramPosition, goalId?: string): string[] {
   if (!ctx.todayBlocks.some((b) => b.status === 'done')) return [];
   if (ctx.todayBlocks.some((b) => b.kind === 'test')) return [];
-  const weekEnd = addDays(position.weekStart, 6);
+  const back = goalId ? returnDate(ctx.history, goalId, RETEST_AFTER_DAYS) : null;
+  const returning = back !== null && diffDays(back, ctx.today) <= RETEST_WINDOW_DAYS;
+  const inWeek = program.assessmentWeeks.includes(position.week);
+  if (!inWeek && !returning) return [];
+  const from = inWeek ? position.weekStart : back!;
+  const to = inWeek ? addDays(position.weekStart, 6) : ctx.today;
   const recorded = new Set<string>();
   for (const b of ctx.history) {
-    if (b.kind === 'test' && b.assessmentId && b.status !== 'skipped' && b.date >= position.weekStart && b.date <= weekEnd) recorded.add(b.assessmentId);
+    if (b.kind === 'test' && b.assessmentId && b.status !== 'skipped' && b.date >= from && b.date <= to) recorded.add(b.assessmentId);
   }
   return program.assessmentIds.filter((id) => !recorded.has(id));
 }

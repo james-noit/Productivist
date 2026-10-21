@@ -183,6 +183,19 @@ export const CALORIES_GOAL = defineGoal<CaloriesParams>({
   ],
   generator,
   progression,
+  // 0.25: the work interval grows or shrinks with the person (the work+rest period stays), and a tired or untrained day drops the impact.
+  adapt: (p, a) => {
+    const work = Math.min(55, Math.max(15, Math.round(p.work * a.factor)));
+    return {
+      ...p,
+      work,
+      rest: Math.max(10, p.rest + (p.work - work)),
+      maxLevel: (a.factor < 0.85 ? Math.min(p.maxLevel, 2) : p.maxLevel) as Level,
+      allowHighImpact: p.allowHighImpact && a.factor >= 0.8,
+      weeklyActiveMinutes: Math.round((p.weeklyActiveMinutes * a.factor) / 5) * 5,
+    };
+  },
+  targets: { weeklyMinutes: (p) => p.weeklyActiveMinutes, kcal: true, assessments: ['calCardio60'] },
   metricIds: ['activeMinutes', 'netKcal', 'density', 'assessment:calCardio60', 'adherence'],
   restDayGoalId: 'mobility',
 });
