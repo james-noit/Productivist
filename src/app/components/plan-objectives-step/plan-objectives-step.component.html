@@ -199,6 +199,7 @@
           {{ 'planningLab.emptyObjective.' + (totals().empty === 1 ? 'one' : 'other') | translate: { n: totals().empty } }}
         </span>
       }
+      <app-plan-sportask-switch class="pstep__sportask" />
     </div>
     <div class="pstep__buttons">
       <button type="button" class="btn btn--secondary" [disabled]="!totals().tasks" (click)="goLots()">

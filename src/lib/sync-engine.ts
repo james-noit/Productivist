@@ -2,6 +2,7 @@ import type { ProjectSource } from '../types/forge';
 import type { FlowLayout, FlowLink, FlowLinkKind, FlowPosition, Horizon, Objective, ObjectiveStatus } from '../types/flow';
 import type { Milestone, Project } from '../types/project';
 import type { Recurrence, RecurrenceMode, RecurrenceUnit } from '../types/recurrence';
+import type { BlockKind, BlockStatus, BlockStep, Feedback, SportBlock, SportTemplate, StepResult, TemplateSlot } from '../types/sportask';
 import type { Priority, TaskStatus, Todo } from '../types/todo';
 
 /**
@@ -237,6 +238,40 @@ export interface RecurrenceWire extends WireRow {
   lastDate?: string | null;
 }
 
+export interface SportBlockWire extends WireRow {
+  startedAt: number;
+  date: string;
+  origin: 'goal' | 'free';
+  kind: BlockKind;
+  blockSeconds: number;
+  prepSeconds: number;
+  steps: unknown[];
+  results: unknown[];
+  status: BlockStatus;
+  catalogVersion: number;
+  createdAt: number;
+  /** Optional on the wire: absent or null means none (the backend sends null for unset ones). */
+  goalId?: string | null;
+  programId?: string | null;
+  programWeek?: number | null;
+  templateId?: string | null;
+  assessmentId?: string | null;
+  rpe?: number | null;
+  feedback?: Feedback | null;
+}
+
+export interface SportTemplateWire extends WireRow {
+  name: string;
+  slots: unknown[];
+  format: SportTemplate['format'];
+  order: number;
+  createdAt: number;
+  /** Optional on the wire: absent or null means none. */
+  workSeconds?: number | null;
+  restSeconds?: number | null;
+  minSeconds?: number | null;
+}
+
 const KEYS = ['kind', 'host', 'repoId', 'repoPath', 'number', 'url', 'remoteUpdatedAt', 'remoteState'] as const;
 const OPTION_KEYS = ['includeClosed', 'onlyAssignedToMe', 'importMilestones', 'labelsAsTags', 'lastSyncedAt'] as const;
 
@@ -259,6 +294,32 @@ export function canonicalSource(s: object): ProjectSource {
   }
   return out as unknown as ProjectSource;
 }
+
+/**
+ * Sportask's JSON arrays (`steps`, `results`, `slots`) are stored as Postgres JSONB, which reorders object keys and the
+ * backend returns `null` for nothing, so each element is rebuilt here with its keys in a fixed order and optionals only
+ * when set: a row's content hash is then the same before and after a round trip. These duplicate the shape knowledge of
+ * `lib/sportask/sanitize.ts` on purpose (importing it would pull lazy code into the initial bundle); they assume the
+ * elements came from this app or passed the sanitiser, and carry through only the keys they know.
+ */
+const DOSE_KEYS = ['reps', 'seconds'];
+const STEP_KEYS = ['exerciseId', 'workSeconds', 'restSeconds', 'target', 'side', 'loadKg', 'round'];
+const RESULT_KEYS = ['stepIndex', 'done', 'value', 'loadKg'];
+const SLOT_KEYS = ['exerciseId', 'dose', 'pattern', 'tag', 'zone', 'maxLevel'];
+const BLOCK_OPTIONAL = ['goalId', 'programId', 'programWeek', 'templateId', 'assessmentId', 'rpe', 'feedback'];
+const TEMPLATE_OPTIONAL = ['workSeconds', 'restSeconds', 'minSeconds'];
+
+/** The listed keys of `o`, in that order, skipping unset ones (`null` too); a dose (`target`, `dose`) is picked the same way. */
+function pick(o: object, keys: readonly string[]): Loose {
+  const x = o as Loose;
+  const out: Loose = {};
+  for (const key of keys) if (x[key] != null) out[key] = key === 'target' || key === 'dose' ? pick(x[key] as object, DOSE_KEYS) : x[key];
+  return out;
+}
+
+export const canonicalSteps = (steps: readonly BlockStep[]): BlockStep[] => steps.map((s) => pick(s, STEP_KEYS) as unknown as BlockStep);
+export const canonicalResults = (results: readonly StepResult[]): StepResult[] => results.map((r) => pick(r, RESULT_KEYS) as unknown as StepResult);
+export const canonicalSlots = (slots: readonly TemplateSlot[]): TemplateSlot[] => slots.map((s) => pick(s, SLOT_KEYS) as unknown as TemplateSlot);
 
 type Content<W extends WireRow> = Omit<W, 'updatedAt' | 'deleted'>;
 
@@ -517,6 +578,88 @@ export const recurrenceCodec = {
     unit: 'day',
     mode: 'schedule',
     startDate: '1970-01-01',
+    order: 0,
+    createdAt: 0,
+  }),
+};
+
+export const sportBlockCodec = {
+  toWire: (b: SportBlock): Content<SportBlockWire> => ({
+    id: b.id,
+    startedAt: b.startedAt,
+    date: b.date,
+    origin: b.origin,
+    kind: b.kind,
+    blockSeconds: b.blockSeconds,
+    prepSeconds: b.prepSeconds,
+    steps: canonicalSteps(b.steps),
+    results: canonicalResults(b.results),
+    status: b.status,
+    catalogVersion: b.catalogVersion,
+    createdAt: b.createdAt,
+    // Only when set, like Todo.status: an always-present key would change the hash of every row.
+    ...pick(b, BLOCK_OPTIONAL),
+  }),
+  fromWire: (w: SportBlockWire): SportBlock =>
+    ({
+      id: w.id,
+      startedAt: w.startedAt,
+      date: w.date,
+      origin: w.origin,
+      kind: w.kind,
+      blockSeconds: w.blockSeconds,
+      prepSeconds: w.prepSeconds,
+      steps: canonicalSteps((w.steps ?? []) as BlockStep[]),
+      results: canonicalResults((w.results ?? []) as StepResult[]),
+      status: w.status,
+      catalogVersion: w.catalogVersion,
+      createdAt: w.createdAt,
+      updatedAt: w.updatedAt,
+      ...pick(w, BLOCK_OPTIONAL),
+    }) as SportBlock,
+  // Valid placeholders: the backend's checks apply to tombstones too.
+  tombstone: (id: string): Content<SportBlockWire> => ({
+    id,
+    startedAt: 0,
+    date: '1970-01-01',
+    origin: 'free',
+    kind: 'train',
+    blockSeconds: 1,
+    prepSeconds: 0,
+    steps: [],
+    results: [],
+    status: 'skipped',
+    catalogVersion: 0,
+    createdAt: 0,
+  }),
+};
+
+export const sportTemplateCodec = {
+  toWire: (t: SportTemplate): Content<SportTemplateWire> => ({
+    id: t.id,
+    name: t.name,
+    slots: canonicalSlots(t.slots),
+    format: t.format,
+    order: t.order,
+    createdAt: t.createdAt,
+    ...pick(t, TEMPLATE_OPTIONAL),
+  }),
+  fromWire: (w: SportTemplateWire): SportTemplate =>
+    ({
+      id: w.id,
+      name: w.name,
+      slots: canonicalSlots((w.slots ?? []) as TemplateSlot[]),
+      format: w.format,
+      order: w.order,
+      createdAt: w.createdAt,
+      updatedAt: w.updatedAt,
+      ...pick(w, TEMPLATE_OPTIONAL),
+    }) as SportTemplate,
+  tombstone: (id: string): Content<SportTemplateWire> => ({
+    id,
+    name: '-',
+    slots: [{ pattern: 'core' }],
+    format: 'sequence',
     order: 0,
     createdAt: 0,
   }),

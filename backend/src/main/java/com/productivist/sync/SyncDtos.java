@@ -24,6 +24,8 @@ public final class SyncDtos {
     private static final String PRIORITY = "low|medium|high";
     /** A local calendar day, e.g. 2026-10-10. */
     private static final String DATE = "\\d{4}-\\d{2}-\\d{2}";
+    /** Sportask vocabulary (goal, program, kind, ... ids) is free text of this shape, so new content needs no migration. */
+    private static final String VOCAB = "[A-Za-z0-9_.-]{1,64}";
 
     public record ProjectDto(
             @NotBlank @Size(max = 64) String id,
@@ -166,6 +168,50 @@ public final class SyncDtos {
             long updatedAt,
             boolean deleted) {}
 
+    /**
+     * One Sportask training block (src/types/sportask.ts {@code SportBlock}): the plan ({@code steps}) and the user's marks
+     * ({@code results}) of one break. Every optional is a wrapper or reference type and nullable on the wire: the client
+     * emits only the keys that are set, and Jackson 3 rejects an absent primitive. {@code steps} and {@code results} are
+     * JSON arrays whose element shapes {@link SyncService} checks. Only {@code status} is an enumeration; the
+     * vocabulary ids are free text on purpose.
+     */
+    public record SportBlockDto(
+            @NotBlank @Size(max = 64) String id,
+            Long startedAt,
+            @Pattern(regexp = DATE) String date,
+            @Pattern(regexp = VOCAB) String origin,
+            @Pattern(regexp = VOCAB) String goalId,
+            @Pattern(regexp = VOCAB) String programId,
+            @Min(1) @Max(520) Integer programWeek,
+            @Size(max = 64) String templateId,
+            @Pattern(regexp = VOCAB) String kind,
+            @Pattern(regexp = VOCAB) String assessmentId,
+            @Min(1) @Max(7200) Integer blockSeconds,
+            @Min(0) @Max(120) Integer prepSeconds,
+            JsonNode steps,
+            JsonNode results,
+            @Pattern(regexp = "done|partial|skipped") String status,
+            @Min(1) @Max(10) Integer rpe,
+            @Pattern(regexp = "[A-Za-z0-9_.-]{1,32}") String feedback,
+            @Min(0) Integer catalogVersion,
+            long createdAt,
+            long updatedAt,
+            boolean deleted) {}
+
+    /** A user's free-training template; {@code slots} is a JSON array whose element shapes {@link SyncService} checks. */
+    public record SportTemplateDto(
+            @NotBlank @Size(max = 64) String id,
+            @Size(max = 200) String name,
+            JsonNode slots,
+            @Pattern(regexp = "[A-Za-z0-9_.-]{1,32}") String format,
+            @Min(5) @Max(600) Integer workSeconds,
+            @Min(0) @Max(600) Integer restSeconds,
+            @Min(0) @Max(7200) Integer minSeconds,
+            double order,
+            long createdAt,
+            long updatedAt,
+            boolean deleted) {}
+
     /** The per-user JSON blobs: settings, daily planner and multitask state. */
     public record StateDto(
             JsonNode settings,
@@ -185,6 +231,9 @@ public final class SyncDtos {
             @Valid List<@Valid FlowLayoutDto> flowLayouts,
             // Nullable as well, for clients older than recurring tasks.
             @Valid List<@Valid RecurrenceDto> recurrences,
+            // Nullable as well, for clients older than Sportask.
+            @Valid List<@Valid SportBlockDto> sportBlocks,
+            @Valid List<@Valid SportTemplateDto> sportTemplates,
             @Valid StateDto state) {}
 
     public record PushResponse(long cursor) {}
@@ -199,5 +248,7 @@ public final class SyncDtos {
             List<FlowLinkDto> flowLinks,
             List<FlowLayoutDto> flowLayouts,
             List<RecurrenceDto> recurrences,
+            List<SportBlockDto> sportBlocks,
+            List<SportTemplateDto> sportTemplates,
             StateDto state) {}
 }

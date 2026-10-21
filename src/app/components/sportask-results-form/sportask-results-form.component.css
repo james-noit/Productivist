@@ -1,0 +1,101 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.srf__rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+/* The skin tokens (--sport-*) are inherited from the surface this sits in; without a skin the fallbacks are the app's own. */
+.srf__row {
+  border: var(--sport-card-border, 1px solid var(--color-border));
+  border-radius: var(--sport-radius-sm, 8px);
+  padding: 0.55rem 0.7rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  background-color: var(--sport-card-bg, var(--color-surface));
+  box-shadow: var(--sport-card-shadow, none);
+}
+
+.srf__row--off .srf__row-name {
+  color: var(--color-text-muted);
+  text-decoration: line-through;
+}
+
+.srf__row-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.srf__check {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.srf__check input {
+  width: 1.15rem;
+  height: 1.15rem;
+  accent-color: var(--color-primary);
+}
+
+.srf__chip {
+  display: inline-block;
+  padding: 0 0.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+
+.srf__row-fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.25rem;
+}
+
+.srf__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.srf__field-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.srf__big {
+  width: 8rem;
+  font-size: 1.4rem;
+  font-weight: 700;
+  height: 3rem;
+}
+
+.srf__feel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  align-items: flex-start;
+}
+
+.srf__rpe {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}

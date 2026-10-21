@@ -1,0 +1,362 @@
+/* Above the Plan-my-day wizard and Task Details, under the ringing alarm (200). */
+.sbm-overlay {
+  --modal-z: 60;
+}
+
+.sbm {
+  --modal-max-width: 560px;
+  --modal-max-height: min(92vh, 760px);
+  --modal-radius: var(--sport-radius, 12px);
+  --modal-padding: 0;
+  --modal-gap: 0;
+  position: relative;
+  overflow: hidden;
+  max-height: var(--modal-max-height);
+}
+
+.sbm:focus {
+  outline: none;
+}
+
+/* The skin (tokens: sportask-skin.component.css): outline, shadow and the drawing behind the content. */
+.sbm.sport-skin {
+  border: var(--sport-outline, 1px solid var(--color-border));
+  box-shadow: var(--sport-shadow, none);
+  background-image: var(--sport-bg-pattern, none);
+  background-size: var(--sport-bg-size, auto);
+  background-position: var(--sport-bg-position, 0 0);
+  background-repeat: var(--sport-bg-repeat, no-repeat);
+}
+
+/* A bright line sweeping down the preview once (cyberpunk only: the token exists only without prefers-reduced-motion). */
+.sbm[data-stage='preview']::after {
+  content: var(--sport-scan-content, none);
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, var(--sport-stroke, var(--color-primary)), transparent);
+  box-shadow: 0 0 14px 2px var(--sport-stroke, var(--color-primary));
+  pointer-events: none;
+  animation: var(--sport-scan-anim, none);
+}
+
+.sbm__head {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 1rem 1rem 0.5rem;
+}
+
+.sbm__head-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.sbm__title {
+  margin: 0;
+  font-size: 1.15rem;
+  font-family: var(--sport-font-display, inherit);
+  text-transform: var(--sport-title-case, none);
+  letter-spacing: var(--sport-title-tracking, normal);
+  transform: var(--sport-title-transform, none);
+  transform-origin: left bottom;
+  line-height: 1.25;
+}
+
+.sbm__pain {
+  margin: 0.2rem 0 0;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
+.sbm__body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0.5rem 1rem 1rem;
+}
+
+.sbm__foot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border-top: 1px solid var(--color-border);
+  background-color: var(--sport-foot-bg, var(--color-surface));
+}
+
+.sbm__note,
+.sbm__lead {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+}
+
+.sbm__lead {
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+.sbm__banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+  flex-wrap: wrap;
+  padding: 0.6rem 0.75rem;
+  border: var(--sport-card-border, 1px solid var(--color-border));
+  border-left: 3px solid var(--color-capacity-safe);
+  border-radius: var(--sport-radius-sm, 8px);
+  background-color: var(--color-surface-alt);
+  box-shadow: var(--sport-card-shadow, none);
+}
+
+.sbm__banner p {
+  margin: 0;
+  font-size: 0.9rem;
+  flex: 1 1 14rem;
+}
+
+.sbm__steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.sbm__step {
+  --sk-pict-size: 40px;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.4rem 0.6rem;
+  border: var(--sport-card-border, 1px solid var(--color-border));
+  border-radius: var(--sport-radius-sm, 8px);
+  background-color: var(--sport-card-bg, var(--color-surface));
+  box-shadow: var(--sport-card-shadow, none);
+}
+
+.sbm__step-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.3rem 0.5rem;
+}
+
+.sbm__step-name {
+  font-weight: 600;
+  font-family: var(--sport-font-display, inherit);
+  letter-spacing: var(--sport-title-tracking, normal);
+}
+
+.sbm__step-dose {
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+.sbm__chip {
+  display: inline-block;
+  padding: 0 0.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+
+.sbm__total {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+/* ---- running ---- */
+
+.sbm__run {
+  align-items: center;
+  text-align: center;
+  gap: 0.5rem;
+}
+
+.sbm__phase {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.sbm__hero {
+  --sk-pict-size: 132px;
+  margin: 0.25rem 0;
+}
+
+.sbm__name {
+  margin: 0;
+  font-size: 1.4rem;
+  font-family: var(--sport-font-display, inherit);
+  text-transform: var(--sport-title-case, none);
+  letter-spacing: var(--sport-title-tracking, normal);
+  transform: var(--sport-title-transform, none);
+}
+
+.sbm__facts {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 0.4rem 0.75rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.sbm__cue {
+  margin: 0;
+  max-width: 28rem;
+  color: var(--color-text-muted);
+  font-size: 0.95rem;
+}
+
+.sbm__count {
+  position: relative;
+  margin: 0.5rem 0;
+  padding: 0 0.45em;
+  font-size: 4rem;
+  line-height: 1.1;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  font-family: var(--sport-font-display, inherit);
+  color: var(--color-primary);
+  text-shadow: var(--sport-glow, none);
+}
+
+/* Yoga: a ring around the numbers that breathes (the animation token exists only without prefers-reduced-motion). */
+.sbm__count::before {
+  content: var(--sport-ring-content, none);
+  position: absolute;
+  inset: 0;
+  border: 2px solid var(--color-capacity-safe);
+  border-radius: 999px;
+  opacity: 0.7;
+  pointer-events: none;
+  animation: var(--sport-ring-anim, none);
+}
+
+/* The neon flickers once when the step changes: the index parity alternates the two identical animations so the new step restarts it. */
+.sbm__run[data-parity='0'] .sbm__count {
+  animation: var(--sport-flicker-a, none);
+}
+
+.sbm__run[data-parity='1'] .sbm__count {
+  animation: var(--sport-flicker-b, none);
+}
+
+.sbm__count--paused {
+  opacity: 0.55;
+}
+
+.sbm__run[data-kind='rest'] .sbm__count,
+.sbm__run[data-kind='breathe'] .sbm__count {
+  color: var(--color-capacity-safe);
+  text-shadow: var(--sport-glow-rest, none);
+}
+
+.sbm__strip {
+  display: flex;
+  gap: 3px;
+  width: 100%;
+  max-width: 28rem;
+}
+
+.sbm__seg {
+  flex-basis: 0;
+  min-width: 6px;
+  height: 6px;
+  border-radius: 3px;
+  background-color: var(--color-border);
+}
+
+.sbm__seg[data-state='past'] {
+  background-color: var(--color-capacity-safe);
+}
+
+.sbm__seg[data-state='current'] {
+  background-color: var(--color-primary);
+  box-shadow: var(--sport-seg-glow, none);
+}
+
+.sbm__next,
+.sbm__left {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+}
+
+.sbm__next {
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+/* ---- results ---- */
+
+.sbm__loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1rem;
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+/* The phone: a full-screen sheet that respects the notch and the home indicator. */
+@media (max-width: 600px) {
+  .sbm-overlay {
+    padding: 0;
+    align-items: stretch;
+  }
+
+  .sbm,
+  .sbm.sport-skin {
+    --modal-max-width: none;
+    --modal-max-height: none;
+    --modal-radius: 0;
+    height: 100%;
+    border: none;
+    box-shadow: none;
+    padding-top: env(safe-area-inset-top);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+
+  .sbm__foot {
+    padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+  }
+
+  .sbm__foot .btn {
+    flex: 1 1 auto;
+  }
+
+  .sbm__count {
+    font-size: 3.4rem;
+  }
+
+  .sbm__hero {
+    --sk-pict-size: 104px;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .sbm__count {
+    transition: opacity 0.2s;
+  }
+}

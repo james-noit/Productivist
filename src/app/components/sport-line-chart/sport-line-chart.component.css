@@ -1,0 +1,10 @@
+.line__path {
+  stroke-width: 2.5;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.line__mark {
+  stroke: var(--color-surface);
+  stroke-width: 1.5;
+}

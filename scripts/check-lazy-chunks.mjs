@@ -50,7 +50,35 @@ const NEVER_INITIAL = ['src/lib/flow-graph.ts', component('objective-chip')];
  * `lib/recurrence.ts` are deliberately in the initial bundle, these are not. The Tasks and projects page (and
  * the pieces only it uses: cards, rows, drawer, floating button, inbox, kebab menu, page maths) and the shared form widgets stay out of it too.
  */
+// Everything under src/lib/sportask/ (the pure Sportask domain: catalog, engine, sanitiser...) is lazy, as are its UI and texts.
+const walkSportask = (dir) =>
+  readdirSync(dir, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? walkSportask(`${dir}/${e.name}`) : e.name.endsWith('.ts') ? [`${dir}/${e.name}`] : []));
 const NEVER_INITIAL_UI = [
+  ...walkSportask('src/lib/sportask'),
+  'src/i18n/sportask-texts.ts',
+  component('sportask-settings'),
+  component('sportask-button'),
+  component('sportask-setup-sheet'),
+  component('plan-sportask-switch'),
+  component('sportask-break-modal'),
+  component('sportask-prepare'),
+  component('sportask-host'),
+  component('sportask-view'),
+  component('sportask-summary'),
+  component('sportask-progress'),
+  component('sportask-history'),
+  component('sportask-templates'),
+  component('sportask-template-editor'),
+  component('sportask-exercise-picker'),
+  component('sportask-marks-modal'),
+  component('sportask-results-form'),
+  component('sportask-metric-chart'),
+  component('sport-line-chart'),
+  component('sport-bar-chart'),
+  component('sport-heatmap'),
+  'src/app/components/sportask-view/sport-panel.state.ts',
+  component('sportask-pictogram'),
+  component('sportask-skin'),
   'src/lib/multitask-research.ts',
   'src/lib/bell-sounds.ts',
   component('lot-editor'),

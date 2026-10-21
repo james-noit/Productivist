@@ -1,0 +1,372 @@
+/*
+  Sportask skins (docs/sportask/PLAN.md section 9.2). Global on purpose (ViewEncapsulation.None) and keyed by `data-sport-skin`:
+
+    :root[data-sport-skin='x']        the whole app, while a session runs and "apply to the whole app" is on (AppComponent)
+    .sport-skin[data-sport-skin='x']  a Sportask surface (break modal, setup sheet), always, whatever the whole-app option says
+
+  Each block redefines EVERY --color-* token of style.css :root (the Flow horizon aliases included, because a var() alias is
+  resolved where it is declared and would otherwise keep the page theme's colours) and the two gradient tokens, sets color-scheme,
+  and adds the skin's own --sport-* tokens, which the Sportask components read:
+
+    --sport-radius, --sport-radius-sm      panel / card corner radius
+    --sport-outline, --sport-shadow        panel border and shadow
+    --sport-card-border, -shadow, -bg      the cards inside a panel
+    --sport-control-border                 borders of inputs, switches and chips (3:1 on the surface, see below)
+    --sport-font-display + title-*         the display face and how titles are set
+    --sport-glow, --sport-glow-filter      neon glow as text-shadow / as filter
+    --sport-bg-pattern (+ -size, -position, -repeat)   the panel's background drawing
+    --sport-stroke*, --sport-ink*, --sport-soft-opacity  the pictograms
+    --sport-series-1..9                   the chart series colours (sport-*-chart)
+    --sport-*-anim, --sport-ring-*         motion; defined ONLY under prefers-reduced-motion: no-preference, so it is off otherwise
+
+  A third skin = one more pair of blocks here and a SKINS entry. The fonts are bundled (see below). No remote URLs and no inline script (Thunderbird CSP); the one image is a data: URI of under 1 kB.
+
+  Contrast, WCAG 2.x, measured with a script (relative luminance of the sRGB values; text 4.5:1, large text and UI parts 3:1).
+  The plan's first colours that failed were changed: powerYoga primary #c4572f -> #b84e27 (white on it 4.42 -> 5.05),
+  powerYoga muted #7c6670 -> #6c5762 (on sand 4.25 -> 5.34), cyberpunk primary-contrast white -> ink (white on #ff2e88 was 3.50).
+*/
+
+/*
+  Fonts: Orbitron (cyberpunk display face) and Quicksand (power yoga), both SIL OFL 1.1, latin subset, one weight each (700: titles,
+  numbers and buttons all ask for bold; a request for 600 resolves to it). The woff2 files come from the npm packages
+  @fontsource/orbitron 5.3.0 and @fontsource/quicksand 5.3.0 (copied, not a dependency) and live in src/fonts/ next to
+  Cookie, with their licences (OFL-Orbitron.txt, OFL-Quicksand.txt). The url() is relative to this file, so Angular emits them
+  as assets of this lazy chunk: the browser fetches a face only when an element that uses it is rendered, i.e. when a skin applies.
+  The stacks in --sport-font-display keep working (system faces) if a file ever fails to load.
+*/
+@font-face {
+  font-family: 'Orbitron';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('../../../fonts/orbitron-latin-700.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Quicksand';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('../../../fonts/quicksand-latin-700.woff2') format('woff2');
+}
+
+/* ---------------------------------------------------------------------------------------------------------------------------
+   Cyberpunk (cartoon neon), dark.
+   text on bg 17.42, on surface 16.02, on surface-alt 14.33 | muted on bg 9.07, surface 8.34, surface-alt 7.46
+   primary-contrast (ink) on primary 5.81, on high 7.21 | primary on surface 5.09 | text on a pressed chip 13.67
+   high on surface 6.33 | capacity-safe on surface 12.53 | accent on surface 11.43
+   control border on surface 4.03, on bg 4.39 (UI parts need 3) | decorative border on surface 1.55 (hairlines only, exempt)
+   --------------------------------------------------------------------------------------------------------------------------- */
+:root[data-sport-skin='cyberpunk'],
+.sport-skin[data-sport-skin='cyberpunk'] {
+  --color-bg: #0f0a1f;
+  --color-surface: #1a1233;
+  --color-surface-alt: #251a47;
+  --color-text: #f4f1ff;
+  --color-text-muted: #b7a9e6;
+  --color-border: #3d2d73;
+  --color-primary: #ff2e88;
+  --color-primary-contrast: #07040f;
+  --color-low: #19e3ff;
+  --color-medium: #ffe14d;
+  --color-high: #ff6b4a;
+  --color-capacity-safe: #3df5a0;
+  --color-capacity-elevated: #c8f542;
+  --color-capacity-high: #ffb02e;
+  --color-capacity-critical: #ff4d6d;
+  --color-quadrant-do-first: #ff4d6d;
+  --color-quadrant-schedule: #19e3ff;
+  --color-quadrant-delegate: #ffe14d;
+  --color-quadrant-eliminate: #8a7fc0;
+  --color-horizon-short: var(--color-quadrant-schedule);
+  --color-horizon-medium: var(--color-capacity-safe);
+  --color-horizon-long: var(--color-primary);
+  --gradient-primary: linear-gradient(135deg, #ff2e88, #19e3ff);
+  --gradient-accent: linear-gradient(135deg, #19e3ff, #3df5a0);
+  color-scheme: dark;
+
+  --sport-ink: #07040f;
+  --sport-radius: 10px;
+  --sport-radius-sm: 6px;
+  --sport-outline: 3px solid #07040f;
+  --sport-shadow: 0 0 0 2px #ff2e88, 6px 6px 0 2px #07040f, 0 0 32px rgb(255 46 136 / 0.35);
+  --sport-card-border: 2px solid #07040f;
+  --sport-card-shadow: 3px 3px 0 #07040f;
+  --sport-card-bg: #251a47;
+  --sport-control-border: #7d6bc2;
+  --sport-btn-radius: 6px;
+  --sport-btn-border: 2px solid #07040f;
+  --sport-btn-shadow: 3px 3px 0 #07040f;
+  --sport-btn-secondary-border: 2px solid #19e3ff;
+  --sport-btn-case: uppercase;
+  --sport-btn-tracking: 0.05em;
+  --sport-foot-bg: rgb(26 18 51 / 0.78);
+  --sport-font-display: 'Orbitron', 'Audiowide', ui-monospace, 'SF Mono', 'Cascadia Mono', 'Roboto Mono', monospace;
+  --sport-title-case: uppercase;
+  --sport-title-tracking: 0.06em;
+  --sport-title-transform: skewX(-6deg);
+  --sport-glow: 0 0 6px rgb(255 46 136 / 0.9), 0 0 18px rgb(255 46 136 / 0.55);
+  --sport-glow-rest: 0 0 6px rgb(61 245 160 / 0.9), 0 0 18px rgb(61 245 160 / 0.5);
+  --sport-glow-filter: drop-shadow(0 0 2px #19e3ff) drop-shadow(0 0 7px rgb(25 227 255 / 0.65));
+  --sport-seg-glow: 0 0 8px #ff2e88;
+  /* A faint perspective grid rising from a vanishing point below the panel: rays and rungs, faded out towards the top. */
+  --sport-bg-pattern:
+    linear-gradient(to bottom, #1a1233 0%, rgb(26 18 51 / 0) 58%),
+    repeating-linear-gradient(to top, rgb(25 227 255 / 0.11) 0 1px, transparent 1px 15px),
+    repeating-conic-gradient(from 0deg at 50% 128%, rgb(255 46 136 / 0.16) 0 0.45deg, transparent 0.45deg 6deg);
+  --sport-bg-size: auto;
+  --sport-bg-position: 0 0;
+  --sport-bg-repeat: no-repeat;
+  --sport-stroke: #19e3ff;
+  --sport-stroke-width: 3;
+  --sport-ink-width: 6.6;
+  --sport-soft-opacity: 0.55;
+  /* Chart series (sport-line-chart, sport-bar-chart): nine hues that stay apart from each other. Contrast of each (1..9) on the page /
+     surface / card (= surface-alt, where the charts sit), measured; 3:1 is needed for graphics, the lowest is 4.55:
+     1 5.54 5.09 4.55 | 2 12.43 11.43 10.23 | 3 13.63 12.53 11.21 | 4 10.62 9.76 8.73 | 5 6.16 5.66 5.06
+     6 14.89 13.69 12.24 | 7 6.13 5.64 5.04 | 8 7.55 6.94 6.21 | 9 15.32 14.08 12.60 */
+  --sport-series-1: #ff2e88;
+  --sport-series-2: #19e3ff;
+  --sport-series-3: #3df5a0;
+  --sport-series-4: #ffb02e;
+  --sport-series-5: #9b7bff;
+  --sport-series-6: #ffe14d;
+  --sport-series-7: #5b8cff;
+  --sport-series-8: #ff7a59;
+  --sport-series-9: #c8f542;
+}
+
+/* ---------------------------------------------------------------------------------------------------------------------------
+   Power yoga, light: sand, terracotta and sage.
+   text on bg 12.26, on surface 12.89, on surface-alt 10.81 | muted on bg 6.05, surface 6.36, surface-alt 5.34
+   primary-contrast (white) on primary 5.05, on high 6.37 | primary on surface 4.86 | text on a pressed chip 10.49
+   high on surface 6.13 | capacity-safe on surface 4.53 | accent (teal) on surface 5.06
+   control border on surface 3.49, on bg 3.32 (UI parts need 3) | decorative border on surface 1.33 (hairlines only, exempt)
+   --------------------------------------------------------------------------------------------------------------------------- */
+:root[data-sport-skin='powerYoga'],
+.sport-skin[data-sport-skin='powerYoga'] {
+  --color-bg: #fbf4ea;
+  --color-surface: #fffaf3;
+  --color-surface-alt: #f3e5d3;
+  --color-text: #3b2a35;
+  --color-text-muted: #6c5762;
+  --color-border: #ead9c4;
+  --color-primary: #b84e27;
+  --color-primary-contrast: #ffffff;
+  --color-low: #4f7f4a;
+  --color-medium: #a5671a;
+  --color-high: #a83a25;
+  --color-capacity-safe: #4f7f4a;
+  --color-capacity-elevated: #8a8a2c;
+  --color-capacity-high: #bd781c;
+  --color-capacity-critical: #b83f2a;
+  --color-quadrant-do-first: #b83f2a;
+  --color-quadrant-schedule: #3f7384;
+  --color-quadrant-delegate: #bd781c;
+  --color-quadrant-eliminate: #8a7570;
+  --color-horizon-short: var(--color-quadrant-schedule);
+  --color-horizon-medium: var(--color-capacity-safe);
+  --color-horizon-long: var(--color-primary);
+  --gradient-primary: linear-gradient(135deg, #b84e27, #bd781c);
+  --gradient-accent: linear-gradient(135deg, #7f9f7a, #3f7384);
+  color-scheme: light;
+
+  --sport-ink: #3b2a35;
+  --sport-radius: 24px;
+  --sport-radius-sm: 18px;
+  --sport-outline: 1px solid #ead9c4;
+  --sport-shadow: 0 8px 24px rgb(60 30 20 / 0.08), 0 24px 60px rgb(60 30 20 / 0.12);
+  --sport-card-border: 1px solid #ead9c4;
+  --sport-card-shadow: 0 4px 14px rgb(60 30 20 / 0.06);
+  --sport-card-bg: #f3e5d3;
+  --sport-control-border: #a0806a;
+  --sport-btn-radius: 999px;
+  --sport-btn-border: 1px solid transparent;
+  --sport-btn-shadow: 0 4px 12px rgb(184 78 39 / 0.22);
+  --sport-btn-secondary-border: 1px solid #a0806a;
+  --sport-btn-case: none;
+  --sport-btn-tracking: 0.01em;
+  --sport-foot-bg: #fffaf3;
+  --sport-font-display: 'Quicksand', 'Nunito', ui-rounded, 'SF Pro Rounded', system-ui, sans-serif;
+  --sport-title-case: none;
+  --sport-title-tracking: 0.01em;
+  --sport-title-transform: none;
+  --sport-glow: none;
+  --sport-glow-rest: none;
+  --sport-glow-filter: none;
+  --sport-seg-glow: none;
+  /* A sun and mandala drawn in two strokes of terracotta, top right, with a saffron warmth behind it (about 0.9 kB). */
+  --sport-bg-pattern:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120' fill='none' stroke='%23b84e27' stroke-opacity='.26' stroke-width='1.2' stroke-linecap='round'%3E%3Ccircle cx='60' cy='60' r='14'/%3E%3Ccircle cx='60' cy='60' r='25'/%3E%3Ccircle cx='60' cy='60' r='39' stroke-dasharray='2 5'/%3E%3Cpath d='M60 5v14M60 101v14M5 60h14M101 60h14M21 21l10 10M89 89l10 10M99 21L89 31M31 89L21 99'/%3E%3Cpath d='M60 36c8 8 8 16 0 24-8-8-8-16 0-24zM84 60c-8 8-16 8-24 0 8-8 16-8 24 0zM60 84c-8-8-8-16 0-24 8 8 8 16 0 24zM36 60c8-8 16-8 24 0-8 8-16 8-24 0z'/%3E%3C/svg%3E"),
+    radial-gradient(circle at 100% 0, rgb(234 161 59 / 0.2), transparent 55%);
+  --sport-bg-size: 200px 200px, auto;
+  --sport-bg-position: right -44px top -44px, 0 0;
+  --sport-bg-repeat: no-repeat;
+  --sport-stroke: #b84e27;
+  --sport-stroke-width: 3.4;
+  --sport-ink-width: 0;
+  --sport-soft-opacity: 0.45;
+  /* Chart series: nine hues that stay apart from each other. Contrast of each (1..9) on the page / surface / card (= surface-alt, where
+     the charts sit), measured; 3:1 is needed for graphics, the lowest is 3.49 (series 9 on the card), so none fails:
+     1 4.63 4.86 4.08 | 2 4.81 5.06 4.24 | 3 4.30 4.53 3.80 | 4 4.51 4.74 3.97 | 5 4.99 5.25 4.40
+     6 4.93 5.19 4.35 | 7 4.90 5.15 4.32 | 8 3.98 4.19 3.51 | 9 3.96 4.16 3.49 */
+  --sport-series-1: #b84e27;
+  --sport-series-2: #3f7384;
+  --sport-series-3: #4f7f4a;
+  --sport-series-4: #a1620c;
+  --sport-series-5: #7a5c9e;
+  --sport-series-6: #b0446e;
+  --sport-series-7: #5468a8;
+  --sport-series-8: #7d7d22;
+  --sport-series-9: #8a7570;
+  --sport-ring-content: '';
+}
+
+/* ---------------------------------------------------------------------------------------------------------------------------
+   Motion. Defined only when the user has not asked for less: under prefers-reduced-motion: reduce none of these tokens exists,
+   so every `animation: var(--sport-…, none)` in the components falls back to none (the yoga ring stays, still).
+   The flicker comes in two identical copies (-a, -b) that the break modal alternates by step index, so a new step restarts it.
+   --------------------------------------------------------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: no-preference) {
+  :root[data-sport-skin='cyberpunk'],
+  .sport-skin[data-sport-skin='cyberpunk'] {
+    --sport-flicker-a: sk-flicker-a 0.7s steps(1, end) 1;
+    --sport-flicker-b: sk-flicker-b 0.7s steps(1, end) 1;
+    --sport-scan-content: '';
+    --sport-scan-anim: sk-scan 1.5s ease-out 1 both;
+  }
+
+  :root[data-sport-skin='powerYoga'],
+  .sport-skin[data-sport-skin='powerYoga'] {
+    --sport-ring-anim: sk-breathe 4s ease-in-out infinite;
+  }
+}
+
+@keyframes sk-flicker-a {
+  0% {
+    opacity: 0.25;
+  }
+  12% {
+    opacity: 1;
+  }
+  22% {
+    opacity: 0.4;
+  }
+  34% {
+    opacity: 1;
+  }
+  46% {
+    opacity: 0.65;
+  }
+  58%,
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes sk-flicker-b {
+  0% {
+    opacity: 0.25;
+  }
+  12% {
+    opacity: 1;
+  }
+  22% {
+    opacity: 0.4;
+  }
+  34% {
+    opacity: 1;
+  }
+  46% {
+    opacity: 0.65;
+  }
+  58%,
+  100% {
+    opacity: 1;
+  }
+}
+
+/* One bright line sweeping down the panel. */
+@keyframes sk-scan {
+  0% {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100vh);
+    opacity: 0;
+  }
+}
+
+@keyframes sk-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.04);
+  }
+}
+
+/* ---------------------------------------------------------------------------------------------------------------------------
+   The shared controls inside a skinned surface (buttons, fields, chips, switches). Colours already follow the tokens above; this
+   gives them the skin's shape. Scoped to the surface so the whole-app mode changes colours only, never the layout of other views.
+   --------------------------------------------------------------------------------------------------------------------------- */
+.sport-skin .btn {
+  border-radius: var(--sport-btn-radius, 8px);
+  text-transform: var(--sport-btn-case, none);
+  letter-spacing: var(--sport-btn-tracking, normal);
+}
+
+.sport-skin .btn--primary,
+.sport-skin .btn--danger:not(.btn--ghost) {
+  border: var(--sport-btn-border, 1px solid transparent);
+  box-shadow: var(--sport-btn-shadow, none);
+}
+
+.sport-skin .btn--secondary {
+  border: var(--sport-btn-secondary-border, 1px solid var(--color-border));
+}
+
+.sport-skin .btn--secondary:not(:disabled),
+.sport-skin .btn--primary:not(:disabled) {
+  font-family: var(--sport-font-display, inherit);
+}
+
+.sport-skin .btn--primary:active:not(:disabled),
+.sport-skin .btn--secondary:active:not(:disabled) {
+  transform: translate(1px, 1px);
+}
+
+.sport-skin .input,
+.sport-skin .select,
+.sport-skin .textarea,
+.sport-skin .segmented,
+.sport-skin .filter-chip {
+  border-color: var(--sport-control-border, var(--color-border));
+}
+
+.sport-skin .input,
+.sport-skin .select,
+.sport-skin .textarea {
+  border-radius: var(--sport-radius-sm, 8px);
+}
+
+.sport-skin .switch__track {
+  background-color: var(--sport-control-border, var(--color-border));
+}
+
+.sport-skin .switch[aria-checked='true'] .switch__track {
+  background-color: var(--color-primary);
+}
+
+/* The priority badges print white text in style.css; on the neon and saffron fills that fails AA, so the whole-app skin switches
+   them to the skin's own contrast colour (cyberpunk: ink on neon 7.21 to 15.61; yoga: white on the darkened fills 4.61 to 6.37). */
+:root[data-sport-skin] .badge--low,
+:root[data-sport-skin] .badge--medium,
+:root[data-sport-skin] .badge--high {
+  color: var(--color-primary-contrast);
+}

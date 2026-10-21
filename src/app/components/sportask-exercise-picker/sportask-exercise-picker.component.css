@@ -1,0 +1,74 @@
+:host {
+  display: block;
+  min-width: 0;
+}
+
+.sep {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.sep__head {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.sep__search {
+  flex: 1;
+  min-width: 0;
+}
+
+.sep__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 22rem;
+  overflow-y: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--sport-radius-sm, 8px);
+  background-color: var(--color-surface);
+}
+
+.sep__row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: none;
+  border-bottom: 1px solid var(--color-border);
+  border-radius: 0;
+  background: transparent;
+  color: var(--color-text);
+  text-align: left;
+  flex-wrap: wrap;
+}
+
+.sep__row:hover,
+.sep__row:focus-visible {
+  background-color: var(--color-surface-alt);
+}
+
+.sep__row--current .sep__name {
+  color: var(--color-primary);
+}
+
+.sep__name {
+  font-weight: 600;
+}
+
+.sep__meta {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
+.sep__none {
+  padding: 0.75rem;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}

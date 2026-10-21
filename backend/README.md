@@ -23,12 +23,12 @@ Schema is managed by Flyway (`src/main/resources/db/migration`).
 |---|---|---|
 | POST | `/api/auth/signup` `{email, password}` | Creates the account (password 8+ characters, at most 72 bytes) and returns `{email, token}`. 409 if the email is taken. No email confirmation. |
 | POST | `/api/auth/login` `{email, password}` | Returns `{email, token}`; 401 for any wrong email or password. |
-| DELETE | `/api/account` `{password}` | Deletes the caller's own account and every synced row under it (projects, tasks, Flow data, recurrences, settings), and with it every session, so all devices are signed out. 204 on success; 400 for a missing password; 403 for a wrong one (not 401, which clients read as an expired session); 409 for the admin account. |
+| DELETE | `/api/account` `{password}` | Deletes the caller's own account and every synced row under it (projects, tasks, Flow data, recurrences, Sportask blocks and templates, settings), and with it every session, so all devices are signed out. 204 on success; 400 for a missing password; 403 for a wrong one (not 401, which clients read as an expired session); 409 for the admin account. |
 | GET | `/api/sync?since=<cursor>` | Rows changed after `cursor` (0 = all), tombstones included, plus `state` if changed. Returns the next `cursor`. |
-| POST | `/api/sync` | Upserts `{projects, milestones, todos, objectives, flowLinks, flowLayouts, recurrences, state}` (the Flow and recurrence lists are optional, so older clients keep working; a todo may carry `recurrenceId`; a project, milestone or todo imported from a Git forge may carry `source`, see below). Last-write-wins on each row's `updatedAt`. Returns `{cursor}`. |
+| POST | `/api/sync` | Upserts `{projects, milestones, todos, objectives, flowLinks, flowLayouts, recurrences, sportBlocks, sportTemplates, state}` (the Flow, recurrence and Sportask lists are optional, so older clients keep working; a todo may carry `recurrenceId`; a project, milestone or todo imported from a Git forge may carry `source`, see below). Last-write-wins on each row's `updatedAt`. Returns `{cursor}`. |
 | POST | `/api/forge/relay` `{url, method?, headers?}` | Signed-in users only. Fetches one Git forge API URL on the caller's behalf, for Gitea/Forgejo servers whose CORS settings block the browser, and answers `{status, headers, body}` with the forge's own status inside (see *Forge relay* below). The relay's own refusals are plain HTTP errors: 400 (target not allowed), 413 (response over 5 MB), 429 (busy), 502/504 (upstream failed or timed out). |
 | GET | `/api/admin/me` | Admin only (403 for everyone else): `{email}`. The frontend uses it to decide whether to show the admin view. |
-| GET | `/api/admin/stats` | Admin only: account, session, task and project totals. |
+| GET | `/api/admin/stats` | Admin only: account, session, task, project, objective, recurring-series and Sportask-block totals. |
 | GET | `/api/admin/users?query=&page=&size=` | Admin only: accounts newest first, filtered by email substring, with their task/project/session counts (never their content). |
 | PATCH | `/api/admin/users/{id}` `{email?, password?}` | Admin only: change the email and/or set a password (which also closes the user's sessions). 409 if the email is taken. |
 | DELETE | `/api/admin/users/{id}/sessions` | Admin only: sign the user out everywhere. |
@@ -46,7 +46,7 @@ delete their own account through these endpoints, and admin actions are logged (
 
 - Ids are client-generated. Deleting = pushing the row with `deleted: true` (a tombstone only needs `id`, `updatedAt` and the primitive fields zeroed; content is not required).
 - First login merge: push local data, then pull. Equal ids are resolved by `updatedAt`.
-- `state` holds `settings`, `dailyPlan`, `multitask` (free-form JSON), `currentTaskId`, `hasCustomOrder`.
+- `state` holds `settings`, `dailyPlan`, `multitask` (free-form JSON), `currentTaskId`, `hasCustomOrder`. The user's Sportask settings travel inside `settings.sportask`, only once the user has changed them (the backend does not look inside).
 - Fields are required in the JSON (including `done`, `deleted`, `updatedAt`); a missing one is a 400.
 
 ## Known gaps
@@ -75,6 +75,32 @@ Two services plus Postgres; only the frontend has a public domain.
   is `https://localhost` on Android and `capacitor://localhost` on iOS, so both must be in `CORS_ALLOWED_ORIGINS`.
   The default in `application.yml` already has them, but a `CORS_ALLOWED_ORIGINS` variable set on Railway replaces
   the default: add them there too, or the apps' requests are rejected.
+
+### Sportask (`sport_blocks`, `sport_templates`)
+
+Training in the Pomodoro breaks (`docs/sportask/PLAN.md`). Two synced tables (`V8__sportask.sql`; same conventions as the others:
+client ids, last-write-wins on `updated_at`, tombstones, `seq` cursor), carried by the optional `sportBlocks` and
+`sportTemplates` lists of push and pull. A client without Sportask simply omits them.
+
+- **`sport_blocks`**: one row per break with exercise (`SyncDtos.SportBlockDto`): `startedAt`, `date` (`YYYY-MM-DD`), `origin`, `kind`,
+  `blockSeconds` (1..7200), `prepSeconds` (0..120), `steps`, `results`, `status` (`done|partial|skipped`), `catalogVersion`, and
+  optionally `goalId`, `programId`, `programWeek` (1..520), `templateId`, `assessmentId`, `rpe` (1..10), `feedback`. The client emits an
+  optional only when it is set; every optional is a wrapper type (`Integer`, `String`), never a primitive, because Jackson 3 rejects an
+  absent primitive record component and with it the whole push. Blocks are about 0.5 kB each and are never pruned.
+- **`sport_templates`**: the user's own free-training templates (`SportTemplateDto`): `name` (1..200), `slots`, `format`, optional
+  `workSeconds` (5..600), `restSeconds` (0..600), `minSeconds` (0..7200), `order`. Built-in templates live in the client.
+- **The vocabulary is free text on purpose.** Goal, program, kind, origin, assessment, exercise, pattern and template ids only have to
+  match `^[A-Za-z0-9_.-]{1,64}$` (`templateId`: up to 64 characters), so adding a goal or an exercise never needs a migration. Only `status`
+  is an enumeration, because it is structural.
+- **JSON columns.** `steps` and `results` (JSONB arrays, at most 120 elements) and `slots` (1..40) are validated by `SyncService`, shape
+  and size, not vocabulary. A step needs `exerciseId` (string, up to 64), `workSeconds` and `restSeconds` (integers 0..3600) and may
+  carry `target` (`reps` 1..1000 and/or `seconds` 1..3600), `side` (`left|right`), `loadKg` (0..500) and `round` (1..100). A result needs
+  `stepIndex` (integer 0..119) and a boolean `done`, and may carry `value` (-1000..100000) and `loadKg` (0..500). A slot needs an
+  `exerciseId` or a `pattern` (strings up to 64) and may carry `dose`, `tag`, `zone` and `maxLevel` (1..5). Each column is capped at
+  32 kB of JSON text. An invalid row answers 400 and rolls back the push, like every other invalid row here (the client sanitises what it
+  sends, so this only guards hand-made requests). Postgres JSONB reorders object keys, so the client rebuilds each element in a fixed key
+  order before hashing (`canonicalSteps`, `canonicalResults`, `canonicalSlots` in `sync-engine.ts`).
+- Body weight (used for the calorie estimate) is health data: it stays on the device and is neither synced nor exported.
 
 ### Forge import (`source`)
 

@@ -232,6 +232,33 @@ export function prepare(ctx: AudioContext, id: BellSoundId): void {
   if (id === 'alarmClock') void loadSample(ctx);
 }
 
+// ---- cues ------------------------------------------------------------------------------------------------------
+
+export type CueId = 'step' | 'countdown' | 'end';
+
+const CUES: Record<CueId, Voice[]> = {
+  countdown: [{ freq: 660, start: 0, dur: 0.09, gain: 0.3, type: 'triangle' }],
+  step: [
+    { freq: 880, start: 0, dur: 0.1, gain: 0.35, type: 'triangle' },
+    { freq: 1175, start: 0.11, dur: 0.14, gain: 0.35, type: 'triangle' },
+  ],
+  end: [
+    { freq: 660, start: 0, dur: 0.12, gain: 0.35, type: 'triangle' },
+    { freq: 880, start: 0.13, dur: 0.12, gain: 0.35, type: 'triangle' },
+    { freq: 1320, start: 0.26, dur: 0.15, gain: 0.35, type: 'triangle' },
+  ],
+};
+
+/** A short tone (80-150 ms each) for Sportask's step changes and 3-2-1; silent when the context cannot run. */
+export function cue(ctx: AudioContext, id: CueId): void {
+  if (ctx.state !== 'running') return;
+  const master = ctx.createGain();
+  master.gain.value = 0.7;
+  master.connect(ctx.destination);
+  for (const v of CUES[id]) voice(ctx, master, v);
+  setTimeout(() => master.disconnect(), 800);
+}
+
 // ---- ring ------------------------------------------------------------------------------------------------------
 
 /**

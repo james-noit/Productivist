@@ -1,0 +1,70 @@
+.skb {
+  position: relative;
+  display: inline-flex;
+}
+
+.skb__btn {
+  gap: 0.4rem;
+  border-radius: 999px;
+}
+
+.skb__btn[aria-pressed='true'] {
+  background-color: var(--color-surface-alt);
+  border-color: var(--color-primary);
+  color: var(--color-text);
+}
+
+.skb__sum {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+.skb__overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 19;
+}
+
+.skb__panel {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 20;
+  min-width: 15rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.06), 0 4px 12px rgb(0 0 0 / 0.12);
+}
+
+.skb__what {
+  margin: 0;
+  font-weight: 600;
+}
+
+.skb__rhythm {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+.skb__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+@media (max-width: 600px) {
+  .skb__text {
+    display: none;
+  }
+
+  .skb__panel {
+    max-width: calc(100vw - 2rem);
+  }
+}

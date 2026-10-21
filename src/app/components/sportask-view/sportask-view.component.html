@@ -1,0 +1,68 @@
+<main class="sv sport-skin" [attr.data-sport-skin]="state.skin()">
+  <app-sportask-skin />
+  <header class="sv__header">
+    <div class="sv__heading">
+      <h2 class="sv__title">{{ 'config.sportask' | translate }}</h2>
+      @if (state.ready()) {
+        @if (line(); as parts) {
+          <p class="sv__line">
+            @for (p of parts; track $index) {
+              <span>{{ p }}</span>
+            }
+          </p>
+        } @else {
+          <p class="sv__line sv__line--muted"><span>{{ 'sportask.panel.noGoal' | translate }}</span></p>
+        }
+      }
+    </div>
+    @if (state.ready()) {
+      <div class="sv__actions">
+        @if (!state.enrolment()) {
+          <button type="button" class="btn btn--secondary sv__cta" (click)="state.openConfiguration()">{{ 'sportask.panel.pickGoal' | translate }}</button>
+        }
+        <button type="button" class="btn btn--primary" [disabled]="sportask.breakOpen()" (click)="training.set(true)">{{ 'sportask.panel.trainNow' | translate }}</button>
+      </div>
+    }
+  </header>
+
+  @if (state.ready()) {
+    <div class="tabs" role="tablist" [attr.aria-label]="'sportask.panel.tabsLabel' | translate" (keydown)="onTabKeydown($event)">
+      @for (t of tabs; track t) {
+        <button
+          type="button"
+          role="tab"
+          class="tabs__tab"
+          [id]="'sv-tab-' + t"
+          [attr.data-tab]="t"
+          [attr.aria-selected]="state.tab() === t"
+          [attr.aria-controls]="'sv-panel'"
+          [attr.tabindex]="state.tab() === t ? 0 : -1"
+          (click)="select(t)"
+        >
+          {{ 'sportask.panel.tab.' + t | translate }}
+        </button>
+      }
+    </div>
+
+    <div class="sv__panel" id="sv-panel" role="tabpanel" [attr.aria-labelledby]="'sv-tab-' + state.tab()">
+      @switch (state.tab()) {
+        @case ('summary') {
+          <app-sportask-summary />
+        }
+        @case ('progress') {
+          <app-sportask-progress />
+        }
+        @case ('history') {
+          <app-sportask-history />
+        }
+        @case ('templates') {
+          <app-sportask-templates />
+        }
+      }
+    </div>
+  }
+</main>
+
+@if (training()) {
+  <app-sportask-setup-sheet [single]="true" (closed)="training.set(false)" />
+}

@@ -1,0 +1,41 @@
+<div class="chart" #frame>
+  <svg class="chart__svg" [attr.width]="svgWidth()" [attr.height]="svgHeight()" [attr.viewBox]="'0 0 ' + svgWidth() + ' ' + svgHeight()" role="img" [attr.aria-label]="summary()">
+    <title>{{ summary() }}</title>
+    @for (m of months(); track m.x) {
+      <text class="chart__tick" [attr.x]="m.x" y="11">{{ m.label }}</text>
+    }
+    @for (w of weekdays(); track $index) {
+      <text class="chart__tick" x="0" [attr.y]="w.y" dominant-baseline="middle">{{ w.label }}</text>
+    }
+    @for (c of cells(); track c.date) {
+      <rect class="heat__cell" [attr.data-level]="c.level" [attr.x]="c.x" [attr.y]="c.y" [attr.width]="cell()" [attr.height]="cell()" rx="3"><title>{{ c.title }}</title></rect>
+    }
+  </svg>
+  <div class="heat__legend" aria-hidden="true">
+    <span>{{ lessLabel() }}</span>
+    @for (l of levels; track l) {
+      <span class="heat__swatch" [attr.data-level]="l"></span>
+    }
+    <span>{{ moreLabel() }}</span>
+  </div>
+  <!-- A block wrapper: a table ignores the 1px width of .visually-hidden and would widen the page. -->
+  <div class="visually-hidden">
+    <table>
+      <caption>{{ title() }}</caption>
+      <thead>
+        <tr>
+          <th scope="col"></th>
+          <th scope="col">{{ unit() }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (row of table(); track row.date) {
+          <tr>
+            <th scope="row">{{ row.label }}</th>
+            <td>{{ row.value }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>

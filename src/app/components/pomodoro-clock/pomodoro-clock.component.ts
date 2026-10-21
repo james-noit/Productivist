@@ -4,6 +4,8 @@ import { TranslatePipe } from '@ngx-translate/core';
 import { SettingsService } from '../../../services/settings.service';
 import { TodosService } from '../../../services/todos.service';
 import { ClockService } from '../../../services/clock.service';
+import { SportaskService } from '../../../services/sportask.service';
+import { SportaskButtonComponent } from '../sportask-button/sportask-button.component';
 import { ClockSettingsComponent } from '../clock-settings/clock-settings.component';
 import { BoxClockComponent } from '../box-clock/box-clock.component';
 import { TaskDetailModalComponent } from '../task-detail-modal/task-detail-modal.component';
@@ -20,6 +22,7 @@ const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
     FormsModule,
     TranslatePipe,
     ClockSettingsComponent,
+    SportaskButtonComponent,
     BoxClockComponent,
     TaskDetailModalComponent,
     TaskProjectTagComponent,
@@ -33,12 +36,14 @@ export class PomodoroClockComponent {
   readonly settings = inject(SettingsService);
   readonly todos = inject(TodosService);
   readonly clock = inject(ClockService);
+  readonly sportask = inject(SportaskService);
 
   readonly radius = RADIUS;
   readonly circumference = CIRCUMFERENCE;
 
+  // Clamped: a phase that was already running when a Sportask session changed the lengths can have more time left than the new total.
   readonly progress = computed(() =>
-    this.clock.totalSeconds() === 0 ? 0 : 1 - this.clock.remainingSeconds() / this.clock.totalSeconds(),
+    this.clock.totalSeconds() === 0 ? 0 : Math.min(1, Math.max(0, 1 - this.clock.remainingSeconds() / this.clock.totalSeconds())),
   );
 
   readonly dashOffset = computed(() => this.circumference * (1 - this.progress()));

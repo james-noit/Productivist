@@ -1,0 +1,75 @@
+@if (series(); as s) {
+  <section class="smc" [attr.data-metric]="metricId()">
+    @if (heading()) {
+      <h3 class="smc__title">{{ title() }}</h3>
+    }
+    @if (note()) {
+      <p class="smc__note">{{ note() }}</p>
+    }
+
+    @if (s.missing === 'weight') {
+      <p class="smc__empty">
+        {{ 'sportask.panel.needWeight' | translate }}
+        <button type="button" class="btn btn--ghost btn--sm" (click)="state.openConfiguration()">{{ 'sportask.panel.addWeight' | translate }}</button>
+      </p>
+    } @else if (!hasData()) {
+      <p class="smc__empty">{{ (isAssessment() ? 'sportask.panel.noTests' : 'sportask.panel.noData') | translate }}</p>
+    } @else {
+      @if (summaries().length > 0) {
+        <ul class="smc__sums">
+          @for (sum of summaries(); track sum.id) {
+            <li class="smc__sum">
+              @if (sum.side) {
+                <span class="smc__side">{{ sum.side }}</span>
+              }
+              <span>{{ 'sportask.panel.best' | translate }} <strong>{{ sum.best }}</strong></span>
+              <span class="smc__delta" [class.smc__delta--up]="sum.improved === true" [class.smc__delta--down]="sum.improved === false">
+                {{ 'sportask.panel.sinceFirst' | translate }} <strong>{{ sum.delta }}</strong>
+              </span>
+            </li>
+          }
+        </ul>
+      }
+      @switch (s.kind) {
+        @case ('line') {
+          <app-sport-line-chart
+            [title]="title()"
+            [keys]="s.keys"
+            [groups]="groups()"
+            [unit]="unit()"
+            [locale]="state.lang()"
+            [stepped]="s.stepped === true"
+            [min]="lineBounds().min"
+            [max]="lineBounds().max"
+          />
+        }
+        @case ('heatmap') {
+          <app-sport-heatmap
+            [title]="title()"
+            [keys]="s.keys"
+            [values]="s.groups[0]!.values"
+            [locale]="state.lang()"
+            [unit]="unit()"
+            [lessLabel]="'sportask.panel.less' | translate"
+            [moreLabel]="'sportask.panel.more' | translate"
+          />
+        }
+        @default {
+          <app-sport-bar-chart
+            [title]="title()"
+            [keys]="s.keys"
+            [groups]="groups()"
+            [stacked]="s.kind === 'stackedBars'"
+            [targets]="s.targets ?? null"
+            [targetLabel]="'sportask.panel.target' | translate"
+            [unit]="unit()"
+            [locale]="state.lang()"
+          />
+        }
+      }
+      @if (changedNote()) {
+        <p class="smc__note smc__note--changed" role="note">{{ changedNote() }}</p>
+      }
+    }
+  </section>
+}

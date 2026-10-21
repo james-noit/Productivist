@@ -8,6 +8,7 @@
         {{ 'clock.break' | translate }}
       </button>
       <app-clock-settings />
+      <app-sportask-button source="pomodoro" />
     </div>
 
     <div class="clock__main">
@@ -38,7 +39,7 @@
           <button
             type="button"
             class="clock__stepper-btn"
-            [disabled]="!clock.canDecreaseDuration()"
+            [disabled]="!clock.canDecreaseDuration() || sportask.active()"
             [attr.aria-label]="'clock.decreaseLarge' | translate"
             [title]="'clock.decreaseLarge' | translate"
             (click)="clock.adjustDuration(-300)"
@@ -48,7 +49,7 @@
           <button
             type="button"
             class="clock__stepper-btn"
-            [disabled]="!clock.canDecreaseDuration()"
+            [disabled]="!clock.canDecreaseDuration() || sportask.active()"
             [attr.aria-label]="'clock.decreaseSmall' | translate"
             [title]="'clock.decreaseSmall' | translate"
             (click)="clock.adjustDuration(-30)"
@@ -63,7 +64,7 @@
           <button
             type="button"
             class="clock__stepper-btn"
-            [disabled]="!clock.canIncreaseDuration()"
+            [disabled]="!clock.canIncreaseDuration() || sportask.active()"
             [attr.aria-label]="'clock.increaseSmall' | translate"
             [title]="'clock.increaseSmall' | translate"
             (click)="clock.adjustDuration(30)"
@@ -73,7 +74,7 @@
           <button
             type="button"
             class="clock__stepper-btn"
-            [disabled]="!clock.canIncreaseDuration()"
+            [disabled]="!clock.canIncreaseDuration() || sportask.active()"
             [attr.aria-label]="'clock.increaseLarge' | translate"
             [title]="'clock.increaseLarge' | translate"
             (click)="clock.adjustDuration(300)"
@@ -193,7 +194,7 @@
     <app-task-picker (pick)="selectTask($event)" (close)="taskModalOpen.set(false)" />
   }
 
-  @if (clock.sessionModalOpen()) {
+  @if (clock.sessionModalOpen() && !sportask.breakOpen()) {
     <div class="modal-overlay clock__overlay">
       <div class="modal-panel clock__modal" role="dialog" aria-modal="true" [attr.aria-label]="'clock.timeUp' | translate">
         <h3>{{ (clock.mode() === 'break' ? 'clock.timeUpFocusTitle' : 'clock.timeUpBreakTitle') | translate }}</h3>

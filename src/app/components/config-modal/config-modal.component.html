@@ -84,6 +84,13 @@
               <app-forge-connections-settings />
             }
           </section>
+        } @else if (section() === 'sportask') {
+          <section class="config-modal__section" aria-labelledby="config-sportask">
+            <h3 id="config-sportask">{{ 'config.sportask' | translate }}</h3>
+            @defer (on immediate) {
+              <app-sportask-settings />
+            }
+          </section>
         } @else {
           <section class="config-modal__section" aria-labelledby="config-account">
             <h3 id="config-account">{{ 'config.account' | translate }}</h3>

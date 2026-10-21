@@ -1,0 +1,34 @@
+<div class="sep" (keydown)="onKeydown($event)">
+  <div class="sep__head">
+    <input
+      #search
+      type="search"
+      class="input sep__search"
+      [value]="query()"
+      [placeholder]="'sportask.panel.tpl.searchExercise' | translate"
+      [attr.aria-label]="'sportask.panel.tpl.searchExercise' | translate"
+      autocomplete="off"
+      (input)="onInput($event)"
+      (keydown.enter)="$event.preventDefault(); pickFirst()"
+    />
+    <button type="button" class="btn btn--ghost btn--sm" (click)="cancelled.emit()">{{ 'sportask.panel.cancel' | translate }}</button>
+  </div>
+  <ul #list class="sep__list" [attr.aria-label]="'sportask.panel.tpl.exercises' | translate">
+    @for (e of results().rows; track e.id) {
+      <li>
+        <button type="button" class="sep__row" [class.sep__row--current]="e.id === current()" (click)="picked.emit(e.id)">
+          <span class="sep__name">{{ e.name }}</span>
+          <span class="sep__meta">{{ e.meta }}@if (e.gear) { · {{ e.gear }} }</span>
+          @if (e.id === current()) {
+            <app-ui-icon name="check" [size]="16" />
+          }
+        </button>
+      </li>
+    } @empty {
+      <li class="sep__none">{{ 'sportask.panel.tpl.noMatch' | translate }}</li>
+    }
+    @if (results().more > 0) {
+      <li class="sep__none">{{ 'sportask.panel.tpl.keepTyping' | translate: { n: results().more } }}</li>
+    }
+  </ul>
+</div>

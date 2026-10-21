@@ -1,0 +1,40 @@
+<div class="skb">
+  <button
+    type="button"
+    class="btn btn--secondary btn--sm skb__btn"
+    [attr.aria-pressed]="active()"
+    [attr.aria-haspopup]="active() ? 'dialog' : null"
+    [attr.aria-expanded]="active() ? menuOpen() : null"
+    [attr.aria-label]="active() ? ('config.sportask' | translate) + ' ' + rhythm() : ('config.sportask' | translate)"
+    [title]="'config.sportask' | translate"
+    (click)="click()"
+  >
+    <app-ui-icon name="dumbbell" [size]="16" />
+    <span class="skb__text">{{ 'config.sportask' | translate }}</span>
+    @if (active()) {
+      <span class="skb__sum">{{ rhythm() }}</span>
+    }
+  </button>
+
+  @if (menuOpen()) {
+    <div class="skb__overlay" (click)="closeMenu()"></div>
+    <div class="skb__panel" role="dialog" [attr.aria-label]="'config.sportask' | translate" (keydown)="onMenuKeydown($event)">
+      @if (ready()) {
+        @if (what(); as w) {
+          <p class="skb__what">{{ w.key | translate: { name: w.name } }}</p>
+        }
+        <p class="skb__rhythm">{{ 'sportask.btn.rhythm' | translate: { rhythm: rhythm() } }}</p>
+        <div class="skb__actions">
+          <button type="button" class="btn btn--secondary btn--sm" (click)="change()">{{ 'sportask.btn.change' | translate }}</button>
+          <button type="button" class="btn btn--ghost btn--sm" (click)="leave()">{{ 'sportask.btn.leave' | translate }}</button>
+        </div>
+      }
+    </div>
+  }
+
+  @if (sheetOpen()) {
+    @defer (on immediate) {
+      <app-sportask-setup-sheet [source]="source()" (closed)="sheetOpen.set(false)" />
+    }
+  }
+</div>

@@ -1,0 +1,63 @@
+<div class="chart" #frame>
+  <svg class="chart__svg" [attr.width]="width()" [attr.height]="height" [attr.viewBox]="'0 0 ' + width() + ' ' + height" role="img" [attr.aria-label]="summary()">
+    <title>{{ summary() }}</title>
+    @for (t of yTicks(); track t.value) {
+      <line class="chart__grid" [attr.x1]="plot().left" [attr.x2]="plot().right" [attr.y1]="t.y" [attr.y2]="t.y" />
+      <text class="chart__tick" [attr.x]="plot().left - 6" [attr.y]="t.y" text-anchor="end" dominant-baseline="middle">{{ t.label }}</text>
+    }
+    <line class="chart__axis" [attr.x1]="plot().left" [attr.x2]="plot().right" [attr.y1]="plot().bottom" [attr.y2]="plot().bottom" />
+    @for (t of xTicks(); track t.key) {
+      <text class="chart__tick" [attr.x]="t.x" [attr.y]="plot().bottom + 16" text-anchor="middle">{{ t.label }}</text>
+    }
+    @for (line of lines(); track line.id) {
+      <path class="line__path" [attr.d]="line.path" [attr.stroke]="line.color" [attr.stroke-dasharray]="line.dashed ? '6 4' : null" fill="none" />
+      @for (m of line.marks; track $index) {
+        @switch (line.shape) {
+          @case ('square') {
+            <rect class="line__mark" [attr.x]="m.x - 4" [attr.y]="m.y - 4" width="8" height="8" [attr.fill]="line.color"><title>{{ m.title }}</title></rect>
+          }
+          @case ('diamond') {
+            <rect class="line__mark" [attr.x]="m.x - 4" [attr.y]="m.y - 4" width="8" height="8" [attr.fill]="line.color" [attr.transform]="'rotate(45 ' + m.x + ' ' + m.y + ')'"><title>{{ m.title }}</title></rect>
+          }
+          @default {
+            <circle class="line__mark" [attr.cx]="m.x" [attr.cy]="m.y" r="4.5" [attr.fill]="line.color"><title>{{ m.title }}</title></circle>
+          }
+        }
+      }
+    }
+  </svg>
+  @if (lines().length > 1) {
+    <ul class="chart__legend">
+      @for (line of lines(); track line.id) {
+        <li>
+          <span class="chart__swatch chart__swatch--line" [class.chart__swatch--dashed]="line.dashed" [style.--swatch]="line.color"></span>
+          {{ line.label }}
+        </li>
+      }
+    </ul>
+  }
+  <!-- A block wrapper: a table ignores the 1px width of .visually-hidden and would widen the page. -->
+  <div class="visually-hidden">
+    <table>
+      <caption>{{ title() }}</caption>
+      <thead>
+        <tr>
+          <th scope="col"></th>
+          @for (g of groups(); track g.id) {
+            <th scope="col">{{ g.label }}</th>
+          }
+        </tr>
+      </thead>
+      <tbody>
+        @for (row of table(); track row.key) {
+          <tr>
+            <th scope="row">{{ row.label }}</th>
+            @for (c of row.cells; track $index) {
+              <td>{{ c }}</td>
+            }
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>

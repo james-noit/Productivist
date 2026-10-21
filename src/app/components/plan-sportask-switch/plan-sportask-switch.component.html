@@ -1,0 +1,18 @@
+<div class="psw">
+  <button type="button" class="switch psw__switch" role="switch" [attr.aria-checked]="on()" (click)="toggle()">
+    <span class="switch__track" aria-hidden="true"></span>
+    <span>{{ 'config.sportask' | translate }}</span>
+  </button>
+  @if (on() && ready()) {
+    <button type="button" class="btn btn--ghost btn--sm psw__change" (click)="change()">{{ 'sportask.btn.change' | translate }}</button>
+  }
+</div>
+@if (on() && summary()) {
+  <p class="psw__summary">{{ summary() }}</p>
+}
+
+@if (sheetOpen()) {
+  @defer (on immediate) {
+    <app-sportask-setup-sheet class="psw__over" [planner]="true" (closed)="sheetClosed()" />
+  }
+}

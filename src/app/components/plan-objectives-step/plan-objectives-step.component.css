@@ -320,6 +320,10 @@
   color: var(--color-text-muted);
 }
 
+.pstep__sportask {
+  margin-top: 0.25rem;
+}
+
 .pstep__buttons {
   display: flex;
   flex-wrap: wrap;

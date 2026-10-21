@@ -1,13 +1,14 @@
 {
   "name": "productivist",
   "private": true,
-  "version": "0.22.1",
+  "version": "0.23.0",
   "scripts": {
     "ng": "ng",
     "dev": "ng serve",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "check:lazy": "ng build --stats-json && node scripts/check-lazy-chunks.mjs",
+    "check:sportask": "node scripts/check-sportask.mjs",
     "preview": "ng serve --configuration production",
     "build:tb": "node scripts/write-thunderbird-environment.mjs && ng build --configuration production,thunderbird --base-href ./ && node scripts/package-thunderbird.mjs",
     "build:mobile": "node scripts/write-mobile-environment.mjs && ng build --configuration production,mobile && node scripts/sync-mobile-version.mjs && cap sync",

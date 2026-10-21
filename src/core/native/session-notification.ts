@@ -1,8 +1,9 @@
-import { Injector, effect, runInInjectionContext } from '@angular/core';
+import { Injector, effect, runInInjectionContext, untracked } from '@angular/core';
 import { Capacitor } from '@capacitor/core';
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { TranslateService } from '@ngx-translate/core';
 import { ClockService } from '../../services/clock.service';
+import { SportaskService } from '../../services/sportask.service';
 
 const NOTIFICATION_ID = 1;
 const CHANNEL_ID = 'session-end';
@@ -21,6 +22,7 @@ const FOREGROUND_HANDOVER_MS = 800;
 export function startSessionNotification(injector: Injector): void {
   const clock = injector.get(ClockService);
   const translate = injector.get(TranslateService);
+  const sportask = injector.get(SportaskService);
 
   // The plugin calls are queued so a cancel can never overtake the schedule it follows.
   let queue: Promise<unknown> = Promise.resolve();
@@ -42,6 +44,14 @@ export function startSessionNotification(injector: Injector): void {
 
   const cancel = (): Promise<unknown> => LocalNotifications.cancel({ notifications: [{ id: NOTIFICATION_ID }] });
 
+  // With Sportask on, the end of a focus phase also says which exercise comes next. The name is made by the lazy
+  // `sportask-prepare` (the WebView is frozen when the notification fires), so nothing of Sportask is imported here.
+  const bodyFor = (focus: boolean): string => {
+    const base = translate.instant(focus ? 'clock.notificationBodyFocus' : 'clock.notificationBodyBreak');
+    const next = focus && sportask.active() ? sportask.nextExerciseName() : null;
+    return next ? `${base} ${translate.instant('sportask.nextUp', { name: next })}` : base;
+  };
+
   const schedule = async (endsAt: number, focus: boolean, mayAsk: boolean): Promise<void> => {
     let { display } = await LocalNotifications.checkPermissions();
     if (display !== 'granted' && mayAsk && (display === 'prompt' || display === 'prompt-with-rationale')) {
@@ -53,7 +63,7 @@ export function startSessionNotification(injector: Injector): void {
         {
           id: NOTIFICATION_ID,
           title: translate.instant(focus ? 'chip.focusEnded' : 'chip.breakEnded'),
-          body: translate.instant(focus ? 'clock.notificationBodyFocus' : 'clock.notificationBodyBreak'),
+          body: bodyFor(focus),
           schedule: { at: new Date(endsAt), allowWhileIdle: true },
           channelId: CHANNEL_ID,
           isExactNotification: false,
@@ -84,6 +94,20 @@ export function startSessionNotification(injector: Injector): void {
         if (document.visibilityState === 'visible') enqueue(cancel);
       }, Math.max(0, endsAt - Date.now() - FOREGROUND_HANDOVER_MS));
       onCleanup(() => clearTimeout(timer));
+    });
+  });
+
+  // The exercise is known some time after the phase started: schedule again with the new text (never asking for permission,
+  // and not in the last moments, when the in-app bell takes over).
+  runInInjectionContext(injector, () => {
+    effect(() => {
+      sportask.nextExerciseName();
+      untracked(() => {
+        const endsAt = clock.endsAt();
+        if (clock.running() && clock.mode() === 'focus' && endsAt !== null && endsAt - Date.now() > 3 * FOREGROUND_HANDOVER_MS) {
+          enqueue(() => schedule(endsAt, true, false));
+        }
+      });
     });
   });
 

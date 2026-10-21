@@ -14,6 +14,7 @@ import { SettingsService, type Language, type Theme } from '../../../services/se
 import { ViewService, type ConfigSection } from '../../../services/view.service';
 import { AccountSettingsComponent } from '../account-settings/account-settings.component';
 import { ForgeConnectionsSettingsComponent } from '../forge-connections-settings/forge-connections-settings.component';
+import { SportaskSettingsComponent } from '../sportask-settings/sportask-settings.component';
 
 const SCROLL_LOCK_CLASS = 'planning-lab-open';
 
@@ -45,7 +46,7 @@ const LANGUAGES: { id: Language; nativeName: string }[] = [
 @Component({
   selector: 'app-config-modal',
   standalone: true,
-  imports: [TranslatePipe, AccountSettingsComponent, ForgeConnectionsSettingsComponent],
+  imports: [TranslatePipe, AccountSettingsComponent, ForgeConnectionsSettingsComponent, SportaskSettingsComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './config-modal.component.html',
   styleUrl: './config-modal.component.css',
@@ -59,7 +60,7 @@ export class ConfigModalComponent {
   readonly section = this.view.configSection;
   readonly themes = THEMES;
   readonly languages = LANGUAGES;
-  readonly sections: ConfigSection[] = this.accounts.enabled ? ['general', 'integrations', 'account'] : ['general', 'integrations'];
+  readonly sections: ConfigSection[] = this.accounts.enabled ? ['general', 'integrations', 'sportask', 'account'] : ['general', 'integrations', 'sportask'];
 
   constructor() {
     // The account section only exists while sync is enabled.

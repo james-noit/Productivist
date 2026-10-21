@@ -34,7 +34,14 @@ export type UiIconName =
   | 'undo'
   | 'restart'
   | 'chevron-left'
-  | 'git';
+  | 'git'
+  | 'dumbbell'
+  | 'band'
+  | 'kettlebell'
+  | 'rope'
+  | 'ball'
+  | 'flame'
+  | 'stretch';
 
 /**
  * Interface icons (close, delete, add, ...) as inline SVGs on a 24px grid: 1.75 stroke, round caps and

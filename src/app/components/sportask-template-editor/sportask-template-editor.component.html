@@ -1,0 +1,169 @@
+<div class="modal-overlay ste__overlay" (mousedown)="onBackdropDown($event)" (click)="onBackdropClick($event)" (keydown)="onKeydown($event)">
+  <div #panel class="modal-panel ste" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="ste-title">
+    <header class="ste__head">
+      <h2 id="ste-title" class="ste__title">{{ (isNew() ? 'sportask.panel.tpl.newTitle' : 'sportask.panel.tpl.editTitle') | translate }}</h2>
+      <button type="button" class="btn btn--ghost btn--icon btn--sm" [attr.aria-label]="'sportask.panel.close' | translate" (click)="requestClose()">
+        <app-ui-icon name="x" />
+      </button>
+    </header>
+
+    <div class="ste__body">
+      @if (picking() !== null) {
+        <app-sportask-exercise-picker [current]="pickingCurrent()" (picked)="pick($event)" (cancelled)="cancelPicking()" />
+      } @else {
+        <div class="field">
+          <label class="field__label" for="ste-name">{{ 'sportask.panel.tpl.name' | translate }}</label>
+          <input id="ste-name" class="input" type="text" [value]="draft().name" [attr.maxlength]="nameMax" autocomplete="off" (input)="setName($event)" />
+        </div>
+
+        <div class="field">
+          <span class="field__label" id="ste-format">{{ 'sportask.panel.tpl.format' | translate }}</span>
+          <div class="segmented" role="group" aria-labelledby="ste-format">
+            @for (f of formats; track f) {
+              <button type="button" class="segmented__option" [attr.aria-pressed]="draft().format === f" (click)="setFormat(f)">
+                {{ 'sportask.panel.tpl.fmt.' + f | translate }}
+              </button>
+            }
+          </div>
+          <p class="ste__hint">{{ 'sportask.panel.tpl.fmtHint.' + draft().format | translate }}</p>
+        </div>
+
+        @if (draft().format === 'intervals') {
+          <div class="ste__pair">
+            <div class="field">
+              <span class="field__label">{{ 'sportask.panel.tpl.work' | translate }}</span>
+              <app-number-stepper
+                [value]="draft().work"
+                (valueChange)="edit({ work: $event })"
+                [min]="5"
+                [max]="600"
+                [emptyText]="'30'"
+                [decreaseLabel]="'sportask.rhythm.less' | translate"
+                [increaseLabel]="'sportask.rhythm.more' | translate"
+              />
+            </div>
+            <div class="field">
+              <span class="field__label">{{ 'sportask.panel.tpl.rest' | translate }}</span>
+              <app-number-stepper
+                [value]="draft().rest"
+                (valueChange)="edit({ rest: $event })"
+                [min]="1"
+                [max]="600"
+                [emptyText]="'30'"
+                [decreaseLabel]="'sportask.rhythm.less' | translate"
+                [increaseLabel]="'sportask.rhythm.more' | translate"
+              />
+            </div>
+          </div>
+        }
+
+        <div class="field">
+          <span class="field__label" id="ste-slots">{{ 'sportask.panel.tpl.slots' | translate }} ({{ draft().slots.length }})</span>
+          @if (draft().slots.length === 0) {
+            <p class="ste__empty">{{ 'sportask.panel.tpl.noSlots' | translate }}</p>
+          }
+          <ol class="ste__slots" aria-labelledby="ste-slots">
+            @for (r of rows(); track r.slot.uid) {
+              <li class="ste__slot" [attr.data-slot]="r.slot.uid" (keydown)="onSlotKeydown($event, r.slot.uid)">
+                <span class="ste__n" aria-hidden="true">{{ r.index + 1 }}</span>
+                @if (r.slot.kind === 'exercise') {
+                  <div class="ste__slot-main">
+                    <button type="button" class="ste__exercise" data-first [attr.aria-label]="('sportask.panel.tpl.changeExercise' | translate) + ': ' + r.name" (click)="startPicking(r.slot.uid)">
+                      {{ r.name }}
+                    </button>
+                    <div class="ste__dose">
+                      <span class="ste__dose-label">{{ 'sportask.brk.field.' + r.unit | translate }}</span>
+                      <app-number-stepper
+                        [value]="r.slot.dose"
+                        (valueChange)="editSlot(r.slot.uid, { dose: $event })"
+                        [min]="1"
+                        [max]="r.unit === 'seconds' ? 3600 : 1000"
+                        [emptyText]="'' + r.defaultDose"
+                        [decreaseLabel]="'sportask.rhythm.less' | translate"
+                        [increaseLabel]="'sportask.rhythm.more' | translate"
+                      />
+                    </div>
+                  </div>
+                } @else {
+                  <div class="ste__slot-main ste__pattern">
+                    <label class="ste__sel">
+                      <span class="ste__dose-label">{{ 'sportask.panel.tpl.pattern' | translate }}</span>
+                      <select class="select" data-first [value]="r.slot.pattern" (change)="selectValue(r.slot.uid, 'pattern', $event)">
+                        @for (p of patterns; track p) {
+                          <option [value]="p" [selected]="p === r.slot.pattern">{{ 'sportask.panel.g.' + p | translate }}</option>
+                        }
+                      </select>
+                    </label>
+                    <label class="ste__sel">
+                      <span class="ste__dose-label">{{ 'sportask.panel.tpl.tag' | translate }}</span>
+                      <select class="select" [value]="r.slot.tag" (change)="selectValue(r.slot.uid, 'tag', $event)">
+                        <option value="" [selected]="r.slot.tag === ''">{{ 'sportask.panel.tpl.any' | translate }}</option>
+                        @for (g of tags; track g) {
+                          <option [value]="g" [selected]="g === r.slot.tag">{{ 'sportask.panel.tpl.tags.' + g | translate }}</option>
+                        }
+                      </select>
+                    </label>
+                    <label class="ste__sel">
+                      <span class="ste__dose-label">{{ 'sportask.panel.tpl.zone' | translate }}</span>
+                      <select class="select" [value]="r.slot.zone" (change)="selectValue(r.slot.uid, 'zone', $event)">
+                        <option value="" [selected]="r.slot.zone === ''">{{ 'sportask.panel.tpl.any' | translate }}</option>
+                        @for (z of zones; track z) {
+                          <option [value]="z" [selected]="z === r.slot.zone">{{ 'sportask.panel.g.' + z | translate }}</option>
+                        }
+                      </select>
+                    </label>
+                  </div>
+                }
+                <app-kebab-menu #menu="kebabMenu" [label]="'sportask.panel.tpl.slotMenu' | translate: { n: r.index + 1 }">
+                  @if (!r.first) {
+                    <button type="button" class="menu-item" role="menuitem" (click)="menu.close(); move(r.slot.uid, -1)">{{ 'sportask.panel.tpl.moveUp' | translate }}</button>
+                  }
+                  @if (!r.last) {
+                    <button type="button" class="menu-item" role="menuitem" (click)="menu.close(); move(r.slot.uid, 1)">{{ 'sportask.panel.tpl.moveDown' | translate }}</button>
+                  }
+                  @if (r.slot.kind === 'exercise') {
+                    <button type="button" class="menu-item" role="menuitem" (click)="menu.close(); startPicking(r.slot.uid)">{{ 'sportask.panel.tpl.changeExercise' | translate }}</button>
+                  }
+                  <button type="button" class="menu-item menu-item--danger" role="menuitem" (click)="menu.close(); removeSlot(r.slot.uid)">{{ 'sportask.panel.tpl.removeSlot' | translate }}</button>
+                </app-kebab-menu>
+              </li>
+            }
+          </ol>
+          <div class="ste__add">
+            <button type="button" class="btn btn--secondary btn--sm" [disabled]="draft().slots.length >= maxSlots" (click)="startPicking('new')">
+              <app-ui-icon name="plus" [size]="16" />
+              {{ 'sportask.panel.tpl.addExercise' | translate }}
+            </button>
+            <button type="button" class="btn btn--secondary btn--sm" [disabled]="draft().slots.length >= maxSlots" (click)="addPatternSlot()">
+              <app-ui-icon name="plus" [size]="16" />
+              {{ 'sportask.panel.tpl.addPattern' | translate }}
+            </button>
+          </div>
+          <p class="ste__hint">{{ 'sportask.panel.tpl.reorderHint' | translate }}</p>
+        </div>
+      }
+    </div>
+
+    <footer class="ste__foot">
+      @if (confirm() === 'discard') {
+        <div class="confirm-bar" role="alertdialog" aria-labelledby="ste-confirm">
+          <p class="confirm-bar__text" id="ste-confirm">{{ 'sportask.panel.discardQ' | translate }}</p>
+          <div class="confirm-bar__actions">
+            <button #confirmFocus type="button" class="btn btn--secondary" (click)="dismissConfirm()">{{ 'sportask.panel.keepEditing' | translate }}</button>
+            <button type="button" class="btn btn--danger" (click)="discard()">{{ 'sportask.brk.discard' | translate }}</button>
+          </div>
+        </div>
+      } @else {
+        <p class="ste__problem" role="status">
+          @if (dirty() && problems().length > 0) {
+            {{ 'sportask.panel.tpl.problem.' + problems()[0] | translate }}
+          }
+        </p>
+        <div class="ste__actions">
+          <button type="button" class="btn btn--secondary" (click)="requestClose()">{{ 'sportask.panel.cancel' | translate }}</button>
+          <button type="button" class="btn btn--primary" [disabled]="!canSave()" (click)="save()">{{ 'sportask.panel.saveChanges' | translate }}</button>
+        </div>
+      }
+    </footer>
+  </div>
+</div>

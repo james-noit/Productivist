@@ -3,6 +3,7 @@ import { TranslateService } from '@ngx-translate/core';
 import { ClockService } from '../../../services/clock.service';
 import { DailyPlanService } from '../../../services/daily-plan.service';
 import { MultitaskService } from '../../../services/multitask.service';
+import { SportaskService } from '../../../services/sportask.service';
 import { TodosService } from '../../../services/todos.service';
 import { ViewService } from '../../../services/view.service';
 import { PomodoroPopoverComponent } from '../pomodoro-popover/pomodoro-popover.component';
@@ -11,7 +12,7 @@ import { PomodoroPopoverComponent } from '../pomodoro-popover/pomodoro-popover.c
  * The header's Pomodoro chip: while a session is running, or paused partway through, and the user is somewhere other
  * than the Pomodoro view, it shows the phase (a dot, or two bars when paused), the time left and, from 700px up,
  * the current task (or "Multitask · N" / the lot). It is in the initial bundle, so it stays small: no `ui-icon`, no
- * forms, inline SVG only. Its click opens `pomodoro-popover`, which is lazy. The `role="status"` note announces only
+ * forms, inline SVG only (a small dumbbell mark shows while a Sportask session is active). Its click opens `pomodoro-popover`, which is lazy. The `role="status"` note announces only
  * that a phase ended (the time itself ticks every second and is never a live region).
  */
 @Component({
@@ -26,6 +27,7 @@ export class PomodoroChipComponent {
   readonly clock = inject(ClockService);
   readonly todos = inject(TodosService);
   readonly multitask = inject(MultitaskService);
+  readonly sportask = inject(SportaskService);
   private readonly plan = inject(DailyPlanService);
   private readonly view = inject(ViewService);
   private readonly translate = inject(TranslateService);
@@ -64,7 +66,7 @@ export class PomodoroChipComponent {
         mode: multi ? `${multitask} · ${mode}` : mode,
         state: this.clock.running() ? '' : ` (${t('chip.paused')})`,
         time: this.clock.formattedTime(),
-        detail: detail ? `, ${detail}` : '',
+        detail: (detail ? `, ${detail}` : '') + (this.sportask.active() ? `, ${t('config.sportask')}` : ''),
       }),
       extra: multi ? `${multitask} · ${lotText || this.cardCount()}` : title || mode,
     };

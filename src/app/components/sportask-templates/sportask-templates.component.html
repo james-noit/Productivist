@@ -1,0 +1,83 @@
+<div class="stp" (keydown)="onKeydown($event)">
+  <div class="stp__bar">
+    <p class="stp__intro">{{ 'sportask.panel.tpl.intro' | translate }}</p>
+    <button type="button" class="btn btn--primary" (click)="create()">
+      <app-ui-icon name="plus" />
+      {{ 'sportask.panel.tpl.new' | translate }}
+    </button>
+  </div>
+
+  <section class="stp__section" aria-labelledby="stp-mine">
+    <h3 id="stp-mine" class="stp__heading">{{ 'sportask.panel.tpl.mine' | translate }}</h3>
+    @if (mine().length === 0) {
+      <p class="stp__empty">{{ 'sportask.panel.tpl.noneMine' | translate }}</p>
+    } @else {
+      <ul class="stp__list">
+        @for (c of mine(); track c.id) {
+          <li class="stp__card">
+            <div class="stp__top">
+              <h4 class="stp__name">{{ c.name }}</h4>
+              <span class="stp__format">{{ c.format }}</span>
+            </div>
+            <p class="stp__slots">{{ c.slots }}</p>
+            <p class="stp__detail">
+              {{ c.detail }}
+              @if (c.unavailable) {
+                · <span class="stp__warn">{{ 'sportask.setup.needsGear' | translate }}</span>
+              }
+            </p>
+            @if (deletingId() === c.id) {
+              <div class="confirm-bar" role="alertdialog" [attr.aria-labelledby]="'stp-del-' + c.id">
+                <p class="confirm-bar__text" [id]="'stp-del-' + c.id">{{ 'sportask.panel.tpl.deleteQ' | translate }}</p>
+                <div class="confirm-bar__actions">
+                  <button type="button" class="btn btn--secondary" (click)="keep()">{{ 'sportask.panel.keep' | translate }}</button>
+                  <button #deleteButton type="button" class="btn btn--danger" (click)="remove(c.id)">{{ 'sportask.panel.delete' | translate }}</button>
+                </div>
+              </div>
+            } @else {
+              <div class="stp__actions">
+                <button type="button" class="btn btn--secondary btn--sm" (click)="edit(c)">
+                  <app-ui-icon name="edit" [size]="16" />
+                  {{ 'sportask.panel.tpl.edit' | translate }}
+                </button>
+                <button type="button" class="btn btn--ghost btn--sm" (click)="duplicate(c)">{{ 'sportask.panel.tpl.duplicate' | translate }}</button>
+                <button type="button" class="btn btn--ghost btn--danger btn--sm" (click)="askDelete(c.id)">
+                  <app-ui-icon name="trash" [size]="16" />
+                  {{ 'sportask.panel.delete' | translate }}
+                </button>
+              </div>
+            }
+          </li>
+        }
+      </ul>
+    }
+  </section>
+
+  <section class="stp__section" aria-labelledby="stp-built">
+    <h3 id="stp-built" class="stp__heading">{{ 'sportask.panel.tpl.builtin' | translate }}</h3>
+    <ul class="stp__list">
+      @for (c of builtins(); track c.id) {
+        <li class="stp__card">
+          <div class="stp__top">
+            <h4 class="stp__name">{{ c.name }}</h4>
+            <span class="stp__format">{{ c.format }}</span>
+          </div>
+          <p class="stp__slots">{{ c.slots }}</p>
+          <p class="stp__detail">
+            {{ c.detail }}
+            @if (c.unavailable) {
+              · <span class="stp__warn">{{ 'sportask.setup.needsGear' | translate }}</span>
+            }
+          </p>
+          <div class="stp__actions">
+            <button type="button" class="btn btn--secondary btn--sm" (click)="duplicate(c)">{{ 'sportask.panel.tpl.duplicate' | translate }}</button>
+          </div>
+        </li>
+      }
+    </ul>
+  </section>
+
+  @if (editing(); as e) {
+    <app-sportask-template-editor [template]="e.template" [isNew]="e.isNew" (closed)="closeEditor()" />
+  }
+</div>
