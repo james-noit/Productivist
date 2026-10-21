@@ -1011,3 +1011,123 @@ the shared building blocks if any component became shared). `docs/sportask/PLAN.
 3. **Weight and other health data stay device-local.** Assumed so. Syncing them would need a privacy-policy update in
    `public/privacy.html`.
 4. **Entrenar ahora** (a block outside the Pomodoro) is a nice-to-have in phase 7/8.
+
+---
+
+## 16. Status
+
+**All eight phases are implemented** (0.23.0, branch `feature/sportask`). What each phase built, every deviation from the text above
+and why, what was verified and how, and what is not done.
+
+### What was built, per phase
+
+1. **Domain core** (`src/lib/sportask/**`, no Angular): registries, equipment, the catalog (mobility, strength, calories, ladders,
+   assessments), cadences, built-in templates, the engine (`generate`, filter, select, fit, progression replay, schedule, template plan),
+   the runner, `kcal` and the sanitisers; `scripts/sportask-check.ts` + `npm run check:sportask`.
+2. **Persistence and sync**: `SportaskSettingsService`, `SportDataService`, `sportBlockCodec`/`sportTemplateCodec` with the canonical
+   `steps`/`results`/`slots`, the `SyncService` diff, push and pull of both stores, `settings.sportask` in the state blob, export
+   `version: 6`, import (sanitised) and full Reset; backend `V8__sportask.sql`, DTOs, validation, admin stats, README; version 0.23.0.
+3. **Configuration > Sportask** (`sportask-settings`) and the lazy texts (`SPORTASK_TEXTS`, `loadSportaskTexts`), the eager key
+   `config.sportask`, the `dumbbell`, `band`, `kettlebell`, `rope` and `ball` icons.
+4. **Session, clock hooks and the break modal**: `SportaskService`, the hooks in `ClockService`, `cue()` in `bell-sounds`, the lazy
+   `sportask-button`, `sportask-setup-sheet`, `sportask-break-modal`, first-pass pictograms.
+5. **Plan my day entry**: `plan-sportask-switch` in the Tasks step's footer, the setup sheet's planner context, `activateArmed` in both
+   launch paths of `daily-backlog-view`.
+6. **Skins and pictograms**: `sportask-skin` (cyberpunk, powerYoga), the bundled Orbitron and Quicksand, 17 pictograms with two poses.
+7. **The panel** (`sportask-view`): Summary, Progress, History (marks editing through the shared results form), Templates (editor);
+   metrics, chart geometry, `sport-line-chart`, `sport-bar-chart`, `sport-heatmap`.
+8. **Polish**: *Train now* (a `BlockDriver` abstraction with the clock's and a local countdown), the Sportask mark in the Pomodoro chip
+   and a line in its popover, the exercise named in the mobile end-of-focus notification (via the headless `sportask-prepare`), the
+   measured contrast of the series tokens, an eager-budget pass (-2.1 kB) and the docs (AGENTS.md **Sportask** bullet, this section).
+
+### Deviations from the plan
+
+- **No `ClockService.focusCount` and no `SportaskService.bindClock`/`ClockPort`** (section 5.2). `ClockService` injects the eager
+  `SportaskService` and calls `focusEnded()` in `switchToNextMode`, which counts the break and opens the modal itself; there is no
+  effect watching a counter, so no microtask and no adapter. The DI direction is still one way (the service never injects the clock).
+- **Session operations are lazy** (`lib/sportask/session-ops.ts`: `startSession`, `activateArmed`, `closeBreak`, `startSingle`), not
+  methods of `SportaskService` (`start`, `stop`'s siblings, `armForPlanner`, `disarmPlanner`, `closeBreak`), to keep the eager class
+  within budget. Arming is `SportaskService.armed.set(options)` / `armed.set(null)`; `suppressSessionModal` is `breakOpen` itself
+  (`pomodoro-clock` hides its dialog on `!sportask.breakOpen()`). Section 6.2's stored block is a `PendingBlock` (id, plan, `startedAt`,
+  `meta` with the generator's notes, the break's length, re-roll count, `forceTrain`) rather than `{ blockId, plan, startedAt }`.
+- **Writes on the data store are lazy too** (phase 8, `lib/sportask/data-ops.ts`): `SportDataService` keeps the two signals, the export,
+  the import entry point and `reset`; `addBlock`, `updateBlock`, `removeBlock`, `upsertTemplate`, `removeTemplate` and the import's
+  sanitising loop moved out of it (-0.8 kB eager).
+- **Settings are stored raw and only synced once customised** (section 4.1/4.2): `SportaskSettingsService.customized` stays false until
+  the stored value differs from the defaults (or a pull applies one), and only then does `buildState` add `settings.sportask`; otherwise
+  every existing user's blob hash would change and be re-pushed. Lazy consumers read `sanitizeSettings(settings())`.
+- **Generators fill the whole block** (phase 1): leftover time becomes sensible filler steps (a mobility hold, breathing) instead of an
+  idle gap or one long rest, free templates repeat their slots while a round fits, and the self-check asserts there are no idle gaps.
+- **The skin mechanism** (section 9.2): the whole-app attribute and the skin component were first an `AppComponent` computed + effect
+  and three `@defer` branches; phase 8 moved them into the lazy `sportask-host` (see below). The panel, the break modal and the setup
+  sheet each render their own `<app-sportask-skin />` and carry `sport-skin` + `data-sport-skin`, so they are skinned whatever the
+  whole-app option says. The plan's first colours that failed AA were changed (powerYoga primary `#c4572f` -> `#b84e27`, muted
+  `#7c6670` -> `#6c5762`, cyberpunk primary-contrast white -> ink); the measured ratios are in the CSS comments.
+- **Series colours are new tokens** `--sport-series-1..9` (section 10 named four existing tokens): nine hues are needed for the
+  per-pattern and per-zone stacks, and two skins each define their own.
+- **Fonts**: one weight each (Orbitron 700, Quicksand 700, latin woff2 copied from `@fontsource` 5.3.0, not a dependency); a request for
+  600 resolves to it.
+- **Pictograms** (section 9.3): 17 figures built with forward kinematics from one body (same segment lengths everywhere) instead of
+  hand-written per-figure paths; per-exercise artwork is still a later phase.
+- **Results form shared** (phase 7): `sportask-results-form` (two-way models) is used by the break modal's last screen and by the
+  History's *Edit marks* dialog (`sportask-marks-modal`); rows and their conversion are in `lib/sportask/results.ts`.
+- **A rest-day block** is labelled in the preview with *Train anyway* (regenerates with the main goal), as in section 8.1; a `meta`
+  object on the pending block carries `restDay`, `fallback`, `phaseNote` and `assessmentId` for the preview and the stored row.
+- **Train now** (section 10): its state is its own `SportaskService.single` (`productivist.sportaskSingle`: the request, the block's
+  length, the pending block and the countdown), **not** `session.pending`, so it works with no session and never touches an active
+  session's counters; the countdown is persisted there so a reload resumes it. In this mode the modal shows *Save* only, *Cancel*
+  instead of *Skip* and records nothing for a block that is cancelled or discarded (a block that was never part of a break is not a
+  "skipped" one in the adherence charts). The end of the countdown plays the `end` cue, not the bell. If a focus phase ends while a
+  *Train now* block is open, the session's own break modal is not opened for that break (the counters still advance).
+- **Mobile notification** (section 6.4): the notification is scheduled when a focus phase *starts* and the WebView is frozen when it
+  fires, so generating the block "at focus end" cannot work. `sportask-prepare` (headless, lazy) makes the next exercise break's block
+  during focus and keeps it in `session.prepared` (with the break's index); the break modal takes that block as its own, so the exercise
+  named in the notification is the one shown. `core/native` only reads `SportaskService.nextExerciseName` and reschedules when it
+  changes.
+- **The plan's +3.5 kB eager target was exceeded**: +7.1 kB (312.77 -> 319.87 kB); see the budget paragraph of AGENTS.md. Most of it is
+  sync (`sync-engine` +1.6, `sync.service` +1.1), which cannot go lazy without an async diff.
+- **The backend rejects the whole push on an invalid row** (section 4.3 said "reject the row, not the whole push"): that is how every
+  other table behaves here (`400`, the transaction rolls back), and the client sanitises what it sends, so only hand-made requests hit it.
+  `backend/README.md` says so.
+- **Eager strings**: only `config.sportask` (the menu entry and the panel title reuse it); the plan's `sportask.name` and `menu.sportask`
+  were not needed.
+
+### Verified, and how
+
+- `npm run check:sportask` (1 555 148 assertions): the registries and their cross references, `generate` over every cadence, goal, phase,
+  warm-up flag and equipment/constraint combination and all built-in templates, determinism, the progression rules, `stepAt`, the codec
+  round trip with shuffled keys, the sanitisers, `netKcal`, and hand-computed samples of every metric and chart helper.
+- `npm run build` (no warnings, Initial total 319.87 kB), `npm run check:lazy`, `npm run build:tb` + `npm run tb:lint` (0 errors, 0
+  warnings; the add-on has no inline scripts in any Sportask surface), backend `mvn -q -o -DskipTests package`.
+- **Backend, live** (a throwaway Postgres 17 container and the packaged jar, `curl`-style requests with rows from the real codecs): a
+  push without the Sportask lists still succeeds; a push of two blocks and a template returns them on pull with JSONB's reordered keys
+  and `null`s for unset optionals (which is why `canonicalSteps/Results/Slots` exist); an out-of-range step answers 400; a tombstone
+  comes back `deleted`.
+- **Browser** (`openpomodoro-dev`, at 800 px and 375 px, no console errors besides the dev server's WebSocket and the optional
+  `sounds/alarm-clock.ogg` 404): plain Pomodoro without Sportask (start, Pause keeps the remainder, Reset) and Multitask without it; a
+  Sportask session on a 5 to 6 s focus / 30 to 40 s break cadence in both skins: the prepared block opens in the modal, Start, pause,
+  reload mid-block (the step and the paused time come back), *Finish now*, results, *Save and back to work* (the next focus runs and the
+  next block is prepared), *Skip* (a `skipped` row and a normal break); *Train now* with an active session running: the clock's deadline
+  and the session's counters are unchanged, pause/resume and a reload mid-countdown work, the countdown ending by itself shows the
+  results with *Save* only, a discarded block adds no row; the four panel tabs; Configuration > Sportask; Plan my day (arm in the step,
+  launch Pomodoro: a `planner` session starts, `armed` is cleared); the chip's dumbbell mark and the popover line; `nextExerciseName`
+  is filled while a session runs; no skin leaks when Sportask is off.
+- **Contrast**: every `--sport-series-1..9` colour is at least 3:1 on the page, surface and card backgrounds of both skins (lowest 3.49,
+  powerYoga series 9 on the card); nothing needed fixing.
+
+### Not done, known limitations
+
+- **The native notification text was only type-checked.** The Capacitor code cannot run in a browser or on this Linux machine: the
+  `sportask.nextUp` text, the rescheduling effect in `session-notification.ts` and the Android/iOS delivery need a device.
+- **Reduced motion was verified by reading the CSS only** (the motion tokens exist only inside `prefers-reduced-motion: no-preference`);
+  no browser was run with the preference on.
+- **Two-device sync was not exercised end to end in the UI** (the backend side was, see above; the client codecs by the self-check).
+- **The `ballSit` pictogram** (and, in general, the 17 shared pictograms) is a first-pass drawing; the `ballSit` pose reads less clearly
+  than the rest. Per-exercise artwork is a later phase.
+- **No pruning of old blocks** (about 0.5 kB each) and no profiles for equipment per place (open question 2).
+- **Calorie estimates** are approximate (METs from CONTENT.md section 6) and need the body weight, which stays on the device.
+- **Pre-generation uses the history at the start of the focus phase**: a block that arrives from another device during that focus
+  (a sync pull) is not in the prepared plan; the preparation re-runs when the number of stored blocks or templates, the settings or the
+  session change, but a progression step taken on another device in the last minutes may not be reflected.
+- A *Train now* block started while a focus phase ends skips the session's exercise for that break (see above).
+- Section 15's assumptions (skin scope, one equipment inventory, device-local weight) are unchanged.
