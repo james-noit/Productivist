@@ -332,6 +332,11 @@
    The shared controls inside a skinned surface (buttons, fields, chips, switches). Colours already follow the tokens above; this
    gives them the skin's shape. Scoped to the surface so the whole-app mode changes colours only, never the layout of other views.
    --------------------------------------------------------------------------------------------------------------------------- */
+/* `color` is inherited as a computed value, so a surface inside a light-themed page would keep that page's dark text on the skin's dark panel. */
+.sport-skin[data-sport-skin] {
+  color: var(--color-text);
+}
+
 .sport-skin .btn {
   border-radius: var(--sport-btn-radius, 8px);
   text-transform: var(--sport-btn-case, none);
