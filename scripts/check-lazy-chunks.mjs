@@ -58,6 +58,7 @@ const NEVER_INITIAL_UI = [
   component('forge-sticker'),
   ...walkSportask('src/lib/sportask'),
   'src/i18n/sportask-texts.ts',
+  'src/app/components/config-modal/config-leave-guard.ts',
   component('sportask-settings'),
   component('sportask-goal-fields'),
   component('sportask-equipment-fields'),
