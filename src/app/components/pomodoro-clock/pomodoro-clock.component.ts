@@ -5,8 +5,7 @@ import { SettingsService } from '../../../services/settings.service';
 import { TodosService } from '../../../services/todos.service';
 import { ClockService } from '../../../services/clock.service';
 import { SportaskService } from '../../../services/sportask.service';
-import { SportaskButtonComponent } from '../sportask-button/sportask-button.component';
-import { ClockSettingsComponent } from '../clock-settings/clock-settings.component';
+import { ClockModeBarComponent } from '../clock-mode-bar/clock-mode-bar.component';
 import { BoxClockComponent } from '../box-clock/box-clock.component';
 import { TaskDetailModalComponent } from '../task-detail-modal/task-detail-modal.component';
 import { TaskProjectTagComponent } from '../task-project-tag/task-project-tag.component';
@@ -21,8 +20,7 @@ const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
   imports: [
     FormsModule,
     TranslatePipe,
-    ClockSettingsComponent,
-    SportaskButtonComponent,
+    ClockModeBarComponent,
     BoxClockComponent,
     TaskDetailModalComponent,
     TaskProjectTagComponent,

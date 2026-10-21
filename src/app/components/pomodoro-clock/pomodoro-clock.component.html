@@ -1,15 +1,6 @@
 <section class="clock">
   <div class="clock__area clock__area--clock">
-    <div class="clock__modes">
-      <button type="button" [class.active]="clock.mode() === 'focus'" (click)="clock.setMode('focus')">
-        {{ 'clock.focus' | translate }}
-      </button>
-      <button type="button" [class.active]="clock.mode() === 'break'" (click)="clock.setMode('break')">
-        {{ 'clock.break' | translate }}
-      </button>
-      <app-clock-settings />
-      <app-sportask-button source="pomodoro" />
-    </div>
+    <app-clock-mode-bar source="pomodoro" />
 
     <div class="clock__main">
       <div class="clock__dial" [class.clock__dial--boxes]="settings.clockStyle() === 'boxes'">

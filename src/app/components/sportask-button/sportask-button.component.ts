@@ -25,6 +25,8 @@ type TextsModule = typeof import('../../../lib/sportask/texts');
 })
 export class SportaskButtonComponent {
   readonly source = input<'pomodoro' | 'multitask'>('pomodoro');
+  /** A round icon button (the label stays in `aria-label` and the tooltip); the rhythm still shows while a session runs. */
+  readonly compact = input(false);
 
   private readonly sportask = inject(SportaskService);
   private readonly store = inject(SportaskSettingsService);

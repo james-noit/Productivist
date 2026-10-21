@@ -22,24 +22,8 @@
 }
 
 .multitask-view__mode {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  align-items: center;
-}
-
-.multitask-view__mode button {
-  background: none;
-  border: 1px solid var(--color-border);
-  color: var(--color-text-muted);
-  border-radius: 999px;
-  padding: 0.3rem 1rem;
-}
-
-.multitask-view__mode button.active {
-  background-color: var(--color-primary);
-  color: var(--color-primary-contrast);
-  border-color: var(--color-primary);
+  width: auto;
+  flex: 0 1 auto;
 }
 
 .multitask-view__time-group {
