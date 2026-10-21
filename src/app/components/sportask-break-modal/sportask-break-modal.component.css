@@ -120,8 +120,7 @@
   flex: 1 1 14rem;
 }
 
-.sbm__steps,
-.sbm__rows {
+.sbm__steps {
   list-style: none;
   margin: 0;
   padding: 0;
@@ -309,83 +308,6 @@
 }
 
 /* ---- results ---- */
-
-.sbm__row {
-  border: var(--sport-card-border, 1px solid var(--color-border));
-  border-radius: var(--sport-radius-sm, 8px);
-  padding: 0.55rem 0.7rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  background-color: var(--sport-card-bg, var(--color-surface));
-  box-shadow: var(--sport-card-shadow, none);
-}
-
-.sbm__row--off .sbm__row-name {
-  color: var(--color-text-muted);
-  text-decoration: line-through;
-}
-
-.sbm__row-head {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
-
-.sbm__check {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.sbm__check input {
-  width: 1.15rem;
-  height: 1.15rem;
-  accent-color: var(--color-primary);
-}
-
-.sbm__row-fields {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem 1.25rem;
-}
-
-.sbm__field {
-  display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
-}
-
-.sbm__field-label {
-  font-size: 0.7rem;
-  font-weight: 600;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  color: var(--color-text-muted);
-}
-
-.sbm__big {
-  width: 8rem;
-  font-size: 1.4rem;
-  font-weight: 700;
-  height: 3rem;
-}
-
-.sbm__feel {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-  align-items: flex-start;
-}
-
-.sbm__rpe {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.3rem;
-}
 
 .sbm__loading {
   display: flex;

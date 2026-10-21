@@ -20,6 +20,7 @@ import { CATALOG } from '../../../lib/sportask/catalog';
 import { generate } from '../../../lib/sportask/engine/generate';
 import { GOALS } from '../../../lib/sportask/goals';
 import { stepAt, timeline, type RunnerState } from '../../../lib/sportask/runner';
+import { resultsFromRows, type ResultRow } from '../../../lib/sportask/results';
 import { sanitizeSettings } from '../../../lib/sportask/sanitize';
 import { closeBreak } from '../../../lib/sportask/session-ops';
 import { blockRow, buildContext } from '../../../lib/sportask/session-context';
@@ -31,10 +32,10 @@ import { SettingsService } from '../../../services/settings.service';
 import { SportDataService } from '../../../services/sport-data.service';
 import { SportaskSettingsService } from '../../../services/sportask-settings.service';
 import { SportaskService } from '../../../services/sportask.service';
-import type { BlockStep, Feedback, MetricKind, PendingBlock, StepResult } from '../../../types/sportask';
+import type { BlockStep, Feedback, MetricKind, PendingBlock } from '../../../types/sportask';
 import { KebabMenuComponent } from '../kebab-menu/kebab-menu.component';
-import { NumberStepperComponent } from '../number-stepper/number-stepper.component';
 import { SportaskPictogramComponent } from '../sportask-pictogram/sportask-pictogram.component';
+import { SportaskResultsFormComponent } from '../sportask-results-form/sportask-results-form.component';
 import { SportaskSkinComponent } from '../sportask-skin/sportask-skin.component';
 import { UiIconComponent } from '../ui-icon/ui-icon.component';
 
@@ -43,9 +44,6 @@ type Side = 'left' | 'right';
 type DoseUnit = 'reps' | 'seconds';
 
 const MAX_REROLLS = 3;
-const FEEDBACKS: readonly Feedback[] = ['tooEasy', 'ok', 'tooHard'];
-const RPES: readonly number[] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-const STEPPER_MAX: Record<MetricKind, number> = { reps: 1000, seconds: 3600, cm: 1000 };
 
 interface Dose {
   unit: DoseUnit;
@@ -78,18 +76,6 @@ interface NowView {
   next: { name: string; side: Side | null; dose: Dose | null } | null;
 }
 
-interface ResultRow {
-  key: string;
-  indexes: number[];
-  name: string;
-  side: Side | null;
-  metric: MetricKind;
-  loadable: boolean;
-  value: number | null;
-  loadKg: number | null;
-  done: boolean;
-}
-
 const pad = (n: number): string => String(n).padStart(2, '0');
 /** m:ss for the clock-like numbers. */
 export const mmss = (seconds: number): string => `${Math.floor(Math.max(0, seconds) / 60)}:${pad(Math.max(0, seconds) % 60)}`;
@@ -104,7 +90,7 @@ export const mmss = (seconds: number): string => `${Math.floor(Math.max(0, secon
 @Component({
   selector: 'app-sportask-break-modal',
   standalone: true,
-  imports: [TranslatePipe, KebabMenuComponent, NumberStepperComponent, SportaskPictogramComponent, SportaskSkinComponent, UiIconComponent],
+  imports: [TranslatePipe, KebabMenuComponent, SportaskPictogramComponent, SportaskResultsFormComponent, SportaskSkinComponent, UiIconComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './sportask-break-modal.component.html',
   styleUrl: './sportask-break-modal.component.css',
@@ -122,8 +108,6 @@ export class SportaskBreakModalComponent {
   protected readonly ready = signal(false);
   protected readonly lang = this.appSettings.language;
   protected readonly maxRerolls = MAX_REROLLS;
-  protected readonly feedbacks = FEEDBACKS;
-  protected readonly rpes = RPES;
 
   private readonly settings = computed(() => sanitizeSettings(this.store.settings()));
   /** The skin this surface wears (`data-sport-skin`), whatever the whole-app option says. */
@@ -307,7 +291,7 @@ export class SportaskBreakModalComponent {
     source: this.resultsKey,
     computation: (key) => (key ? untracked(() => this.buildRows()) : []),
   });
-  protected readonly feedback = linkedSignal<string | null, Feedback>({ source: this.resultsKey, computation: () => 'ok' });
+  protected readonly feedback = linkedSignal<string | null, Feedback | null>({ source: this.resultsKey, computation: () => 'ok' });
   protected readonly rpe = linkedSignal<string | null, number | null>({ source: this.resultsKey, computation: () => null });
 
   protected readonly allDone = computed(() => this.draft().length > 0 && this.draft().every((r) => r.done));
@@ -353,31 +337,6 @@ export class SportaskBreakModalComponent {
       rows.push(row);
     });
     return rows;
-  }
-
-  protected readonly maxOf = (metric: MetricKind): number => STEPPER_MAX[metric];
-
-  /** Writing a value means the step was done. */
-  protected setValue(key: string, value: number | null): void {
-    this.draft.update((rows) => rows.map((r) => (r.key === key ? { ...r, value, done: r.done || value !== null } : r)));
-  }
-
-  protected setNumber(key: string, event: Event): void {
-    const raw = (event.target as HTMLInputElement).value.trim().replace(',', '.');
-    const n = Number(raw);
-    this.setValue(key, raw === '' || !Number.isFinite(n) ? null : Math.min(100000, Math.max(-1000, n)));
-  }
-
-  protected setLoad(key: string, loadKg: number | null): void {
-    this.draft.update((rows) => rows.map((r) => (r.key === key ? { ...r, loadKg } : r)));
-  }
-
-  protected toggleDone(key: string): void {
-    this.draft.update((rows) => rows.map((r) => (r.key === key ? { ...r, done: !r.done } : r)));
-  }
-
-  protected setRpe(value: number): void {
-    this.rpe.update((current) => (current === value ? null : value));
   }
 
   // ---- lifecycle --------------------------------------------------------------------------------------------------------
@@ -558,16 +517,7 @@ export class SportaskBreakModalComponent {
   protected save(andResume: boolean): void {
     const p = this.pending();
     if (!p || this.stage() !== 'results') return;
-    const results: StepResult[] = [];
-    for (const row of this.draft()) {
-      for (const index of row.indexes) {
-        const result: StepResult = { stepIndex: index, done: row.done };
-        if (row.value !== null) result.value = row.value;
-        if (row.loadable && row.loadKg !== null) result.loadKg = row.loadKg;
-        results.push(result);
-      }
-    }
-    results.sort((a, b) => a.stepIndex - b.stepIndex);
+    const results = resultsFromRows(this.draft());
     const status = results.length > 0 && results.every((r) => r.done) ? 'done' : 'partial';
     this.data.addBlock(blockRow(p, { status, results, rpe: this.rpe(), feedback: this.isTest() ? null : this.feedback() }));
     const early = this.finishedAt() !== null;

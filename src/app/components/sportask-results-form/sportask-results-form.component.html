@@ -1,0 +1,74 @@
+<ul class="srf__rows">
+  @for (row of rows(); track row.key) {
+    <li class="srf__row" [class.srf__row--off]="!row.done">
+      <div class="srf__row-head">
+        <label class="srf__check">
+          <input type="checkbox" [checked]="row.done" (change)="toggleDone(row.key)" />
+          <span class="srf__row-name">{{ row.name }}</span>
+        </label>
+        @if (row.side) {
+          <span class="srf__chip">{{ 'sportask.brk.side.' + row.side | translate }}</span>
+        }
+      </div>
+      <div class="srf__row-fields">
+        <div class="srf__field">
+          <span class="srf__field-label">{{ 'sportask.brk.field.' + row.metric | translate }}</span>
+          @if (test() || row.metric === 'cm') {
+            <input
+              type="number"
+              inputmode="decimal"
+              class="input srf__big"
+              step="any"
+              [value]="row.value ?? ''"
+              [attr.aria-label]="'sportask.brk.field.' + row.metric | translate"
+              (change)="setNumber(row.key, $event)"
+            />
+          } @else {
+            <app-number-stepper
+              [value]="row.value"
+              (valueChange)="setValue(row.key, $event)"
+              [min]="1"
+              [max]="maxOf(row.metric)"
+              [decreaseLabel]="'sportask.rhythm.less' | translate"
+              [increaseLabel]="'sportask.rhythm.more' | translate"
+            />
+          }
+        </div>
+        @if (row.loadable) {
+          <div class="srf__field">
+            <span class="srf__field-label">{{ 'sportask.brk.field.kg' | translate }}</span>
+            <app-number-stepper
+              [value]="row.loadKg"
+              (valueChange)="setLoad(row.key, $event)"
+              [min]="1"
+              [max]="500"
+              [decreaseLabel]="'sportask.rhythm.less' | translate"
+              [increaseLabel]="'sportask.rhythm.more' | translate"
+            />
+          </div>
+        }
+      </div>
+    </li>
+  }
+</ul>
+
+@if (!test()) {
+  <div class="srf__feel">
+    <span class="srf__field-label" id="srf-feel">{{ 'sportask.brk.feel' | translate }}</span>
+    <div class="segmented" role="group" aria-labelledby="srf-feel">
+      @for (f of feedbacks; track f) {
+        <button type="button" class="segmented__option" [attr.aria-pressed]="feedback() === f" (click)="feedback.set(f)">
+          {{ 'sportask.brk.feedback.' + f | translate }}
+        </button>
+      }
+    </div>
+  </div>
+  <div class="srf__feel">
+    <span class="srf__field-label" id="srf-rpe">{{ 'sportask.brk.rpe' | translate }}</span>
+    <div class="srf__rpe" role="group" aria-labelledby="srf-rpe">
+      @for (n of rpes; track n) {
+        <button type="button" class="filter-chip" [attr.aria-pressed]="rpe() === n" (click)="setRpe(n)">{{ n }}</button>
+      }
+    </div>
+  </div>
+}
