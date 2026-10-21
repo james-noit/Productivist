@@ -54,6 +54,8 @@ const NEVER_INITIAL = ['src/lib/flow-graph.ts', component('objective-chip')];
 const walkSportask = (dir) =>
   readdirSync(dir, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? walkSportask(`${dir}/${e.name}`) : e.name.endsWith('.ts') ? [`${dir}/${e.name}`] : []));
 const NEVER_INITIAL_UI = [
+  'src/lib/forge-logos.ts',
+  component('forge-sticker'),
   ...walkSportask('src/lib/sportask'),
   'src/i18n/sportask-texts.ts',
   component('sportask-settings'),

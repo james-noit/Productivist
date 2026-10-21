@@ -7,8 +7,11 @@
       <li class="fcs__item">
         <div class="fcs__row">
           <div class="fcs__who">
-            <span class="fcs__name">{{ c.name }}</span>
-            <span class="fcs__host">{{ c.baseUrl }}@if (c.username) { · &#64;{{ c.username }} }</span>
+            <app-forge-sticker size="md" [flavor]="c.flavor" [seed]="c.id" />
+            <div class="fcs__text">
+              <span class="fcs__name">{{ c.name }}</span>
+              <span class="fcs__host">{{ c.baseUrl }}@if (c.username) { · &#64;{{ c.username }} }</span>
+            </div>
           </div>
           <div class="fcs__actions">
             <button type="button" class="btn btn--secondary btn--sm" [disabled]="testing() === c.id" (click)="test(c.id)">
@@ -48,7 +51,7 @@
       <span class="field__label" id="fcs-platform">{{ 'forge.accounts.platform' | translate }}</span>
       <div class="segmented fcs__segmented" role="group" aria-labelledby="fcs-platform">
         @for (f of flavors; track f.id) {
-          <button type="button" class="segmented__option" [attr.aria-pressed]="flavor().id === f.id" (click)="pickFlavor(f.id)">{{ f.name }}</button>
+          <button type="button" class="segmented__option" [attr.aria-pressed]="flavor().id === f.id" (click)="pickFlavor(f.id)"><app-forge-sticker size="sm" [flavor]="f.id" [seed]="f.id" />{{ f.name }}</button>
         }
       </div>
     </div>

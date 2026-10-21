@@ -20,12 +20,15 @@
     }
 
     <div class="prow__name">
-      <span class="prow__icon" aria-hidden="true"><app-icon [name]="p.icon" /></span>
+      <span class="prow__icon" aria-hidden="true">
+        <app-icon [name]="p.icon" />
+        @if (forge(); as f) {
+          <app-forge-sticker class="prow__sticker" size="xs" float="hover" [flavor]="f.id" [seed]="p.id" />
+        }
+      </span>
       <div class="prow__titles">
         <h3 class="prow__title">
-          <button type="button" class="prow__open" (click)="open()">{{ p.name }}@if (p.source; as src) {
-          <span class="prow__forge" role="img" [attr.title]="forgeName(src)" [attr.aria-label]="forgeName(src)"><app-ui-icon name="git" [size]="13" /></span>
-        }</button>
+          <button type="button" class="prow__open" (click)="open()">{{ p.name }}@if (forge(); as f) {<span class="visually-hidden"> · {{ f.name }}</span>}</button>
         </h3>
         @if (p.description) {
           <p class="prow__sub prow__desc">{{ p.description }}</p>

@@ -38,6 +38,7 @@
 }
 
 .pcard__icon {
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -188,9 +189,11 @@
   }
 }
 
-.pcard__forge {
-  display: inline-flex;
-  margin-left: 0.35rem;
-  vertical-align: -1px;
-  color: var(--color-text-muted);
+
+/* Stuck on the top-right corner of the icon tile; the card's stretched link and the ⋯ menu stay clickable. */
+.pcard__sticker {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  z-index: 0;
 }

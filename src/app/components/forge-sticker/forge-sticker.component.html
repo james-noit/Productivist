@@ -1,0 +1,12 @@
+<span class="sticker__ground" [class.sticker__ground--hover]="float() === 'hover'" [class.sticker__ground--always]="float() === 'always'"></span>
+<span class="sticker__face" [class.sticker__face--neutral]="!logo()" [class.sticker__face--hover]="float() === 'hover'" [class.sticker__face--always]="float() === 'always'">
+  @if (logo(); as l) {
+    <svg class="sticker__glyph" [attr.viewBox]="l.viewBox" aria-hidden="true" focusable="false">
+      @for (d of l.paths; track $index) {
+        <path fill="currentColor" [attr.d]="d" />
+      }
+    </svg>
+  } @else {
+    <app-ui-icon name="git" [size]="px() * 0.62" />
+  }
+</span>

@@ -1,0 +1,111 @@
+/*
+ * Brand colours are the one exception to "tokens only": they arrive as --sticker-face / --sticker-ink from
+ * lib/forge-logos.ts. Everything else (die-cut edge, shadows) is mixed from the theme tokens, so the four themes and
+ * the Sportask skins tint it by themselves. Only transform and opacity animate, and only without reduced motion.
+ */
+:host {
+  --sticker-radius: 30%;
+  --sticker-edge: 2px;
+  --sticker-edge-color: var(--color-surface);
+  --sticker-shadow-strength: 14%;
+  display: inline-block;
+  position: relative;
+  flex: none;
+  width: var(--sticker-size, 18px);
+  height: var(--sticker-size, 18px);
+  pointer-events: none;
+}
+
+:host(.sticker--pending) {
+  opacity: 0;
+}
+
+:host(.sticker--xs) {
+  --sticker-edge: 1.5px;
+}
+
+/* On the dark theme a surface-coloured edge would vanish (GitHub's near-black face is darker than the page), so the
+   die-cut edge becomes a pale ring, like the white border of a real sticker. */
+:host-context([data-theme='dark']) {
+  --sticker-edge-color: color-mix(in srgb, var(--color-text) 78%, var(--color-surface));
+  --sticker-shadow-strength: 22%;
+}
+
+.sticker__face {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--sticker-radius);
+  background-color: var(--sticker-face, var(--color-surface-alt));
+  color: var(--sticker-ink, var(--color-text-muted));
+  box-shadow:
+    0 0 0 var(--sticker-edge) var(--sticker-edge-color),
+    0 1px 1.5px color-mix(in srgb, var(--color-text) 10%, transparent);
+}
+
+.sticker__face--neutral {
+  --sticker-face: var(--color-surface-alt);
+  --sticker-ink: var(--color-text-muted);
+}
+
+.sticker__glyph {
+  width: 62%;
+  height: 62%;
+  display: block;
+}
+
+.sticker__ground {
+  position: absolute;
+  left: 15%;
+  bottom: -18%;
+  width: 70%;
+  height: 14%;
+  border-radius: 50%;
+  background-color: color-mix(in srgb, var(--color-text) var(--sticker-shadow-strength), transparent);
+  filter: blur(1.5px);
+  opacity: 0.55;
+}
+
+:host(.sticker--xs) .sticker__ground {
+  filter: blur(1px);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .sticker__face--always,
+  :host-context(.prow:hover) .sticker__face--hover,
+  :host-context(.prow:focus-within) .sticker__face--hover {
+    animation: sticker-float 5.6s ease-in-out infinite;
+    animation-delay: var(--sticker-delay, 0s);
+  }
+
+  .sticker__ground--always,
+  :host-context(.prow:hover) .sticker__ground--hover,
+  :host-context(.prow:focus-within) .sticker__ground--hover {
+    animation: sticker-shadow 5.6s ease-in-out infinite;
+    animation-delay: var(--sticker-delay, 0s);
+  }
+}
+
+@keyframes sticker-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(calc(var(--sticker-size, 18px) * -0.07));
+  }
+}
+
+@keyframes sticker-shadow {
+  0%,
+  100% {
+    transform: scaleX(1);
+    opacity: 0.55;
+  }
+  50% {
+    transform: scaleX(0.85);
+    opacity: 0.35;
+  }
+}

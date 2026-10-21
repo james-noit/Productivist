@@ -9,6 +9,7 @@ import { ViewService } from '../../../services/view.service';
 import { ForgeError, type ForgeFlavor, type TransportId } from '../../../types/forge';
 import { ExternalHrefDirective } from '../../directives/external-href.directive';
 import { ForgeErrorComponent } from '../forge-error/forge-error.component';
+import { ForgeStickerComponent } from '../forge-sticker/forge-sticker.component';
 
 interface TestOutcome {
   id: string;
@@ -25,7 +26,7 @@ interface TestOutcome {
 @Component({
   selector: 'app-forge-connections-settings',
   standalone: true,
-  imports: [TranslatePipe, ExternalHrefDirective, ForgeErrorComponent],
+  imports: [TranslatePipe, ExternalHrefDirective, ForgeErrorComponent, ForgeStickerComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './forge-connections-settings.component.html',
   styleUrl: './forge-connections-settings.component.css',
