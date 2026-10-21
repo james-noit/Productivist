@@ -85,6 +85,13 @@
   }
 }
 
+<!-- Headless: prepares the next break's block during focus (the native notification names its exercise). -->
+@if (sportask.active()) {
+  @defer (on immediate) {
+    <app-sportask-prepare />
+  }
+}
+
 <!-- The ringing alarm: above every view and every other modal, including Multitask, which has no session dialog. -->
 @if (clock.alarmModalOpen()) {
   @defer (on immediate) {

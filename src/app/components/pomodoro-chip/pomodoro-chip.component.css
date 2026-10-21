@@ -36,6 +36,16 @@
   border-width: 0 3px;
 }
 
+.chip__sport {
+  width: 1rem;
+  height: 0.5rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  color: var(--color-text-muted);
+}
+
 .chip__time {
   font-variant-numeric: tabular-nums;
   font-weight: 600;

@@ -1,13 +1,19 @@
-import { ChangeDetectionStrategy, Component, ElementRef, HostListener, Injector, afterNextRender, computed, inject, output, viewChild } from '@angular/core';
-import { TranslatePipe } from '@ngx-translate/core';
+import { ChangeDetectionStrategy, Component, ElementRef, HostListener, Injector, afterNextRender, computed, inject, output, signal, viewChild } from '@angular/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { trapTab } from '../../../lib/focus-trap';
 import { ClockService } from '../../../services/clock.service';
 import { DailyPlanService } from '../../../services/daily-plan.service';
 import { MultitaskService } from '../../../services/multitask.service';
 import { ProjectsService } from '../../../services/projects.service';
+import { SettingsService } from '../../../services/settings.service';
+import { SportaskSettingsService } from '../../../services/sportask-settings.service';
+import { SportaskService } from '../../../services/sportask.service';
 import { TodosService } from '../../../services/todos.service';
 import { ViewService } from '../../../services/view.service';
 import { IconComponent } from '../icon/icon.component';
+
+type GoalsModule = typeof import('../../../lib/sportask/goals');
+type TextsModule = typeof import('../../../lib/sportask/texts');
 
 /** At most this many task titles are listed in Multitask before "+N more". */
 const TITLES_SHOWN = 5;
@@ -32,6 +38,12 @@ export class PomodoroPopoverComponent {
   private readonly todos = inject(TodosService);
   private readonly plan = inject(DailyPlanService);
   private readonly projects = inject(ProjectsService);
+  private readonly sportask = inject(SportaskService);
+  private readonly sportaskStore = inject(SportaskSettingsService);
+  private readonly appSettings = inject(SettingsService);
+  private readonly translate = inject(TranslateService);
+  /** The goal names and Sportask's texts, fetched only while a session is active (this popover is lazy; they are another chunk). */
+  private readonly names = signal<{ goals: GoalsModule; texts: TextsModule } | null>(null);
   private readonly view = inject(ViewService);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly injector = inject(Injector);
@@ -76,8 +88,27 @@ export class PomodoroPopoverComponent {
     return { shown: all.slice(0, TITLES_SHOWN), more: Math.max(0, all.length - TITLES_SHOWN) };
   });
 
+  /** "Sportask · Strength · 25/5" (the goal, or free training, and the session's focus/break in minutes) while a session is active. */
+  readonly sportaskLine = computed(() => {
+    const session = this.sportask.session();
+    const loaded = this.names();
+    if (!session?.active || !loaded) return null;
+    const goalId = (this.sportaskStore.settings() as { enrolment?: { goalId?: unknown } } | null)?.enrolment?.goalId;
+    const goal = session.mode === 'goal' && typeof goalId === 'string' ? loaded.goals.GOALS.get(goalId) : undefined;
+    const what = goal ? loaded.texts.localize(goal.name, this.appSettings.language()) : this.translate.instant('sportask.btn.free');
+    const m = (s: number): string => String(Math.round((s / 60) * 10) / 10);
+    return this.translate.instant('sportask.chip', { what, rhythm: `${m(session.cadence.focusSeconds)}/${m(session.cadence.breakSeconds)}` });
+  });
+
   constructor() {
     afterNextRender(() => this.firstControl()?.focus());
+    if (this.sportask.active()) void this.loadSportask();
+  }
+
+  private async loadSportask(): Promise<void> {
+    const [goals, texts] = await Promise.all([import('../../../lib/sportask/goals'), import('../../../lib/sportask/texts')]);
+    await texts.loadSportaskTexts(this.translate);
+    this.names.set({ goals, texts });
   }
 
   private firstControl(): HTMLElement | null {

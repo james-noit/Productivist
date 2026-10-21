@@ -19,6 +19,9 @@
       } @else {
         <span class="chip__pause" aria-hidden="true"></span>
       }
+      @if (sportask.active()) {
+        <svg class="chip__sport" viewBox="0 0 16 8" aria-hidden="true"><path d="M1 2v4M3.5 1v6M6 4h4M12.5 1v6M15 2v4" /></svg>
+      }
       <span class="chip__time">{{ clock.formattedTime() }}</span>
       <span class="chip__extra" aria-hidden="true">{{ texts().extra }}</span>
     </button>

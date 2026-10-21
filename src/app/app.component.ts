@@ -18,6 +18,7 @@ import { PlanningLabModalComponent } from './components/planning-lab-modal/plann
 import { ConfigModalComponent } from './components/config-modal/config-modal.component';
 import { AlarmModalComponent } from './components/alarm-modal/alarm-modal.component';
 import { SportaskBreakModalComponent } from './components/sportask-break-modal/sportask-break-modal.component';
+import { SportaskPrepareComponent } from './components/sportask-prepare/sportask-prepare.component';
 import { SportaskSkinComponent } from './components/sportask-skin/sportask-skin.component';
 import { SportaskViewComponent } from './components/sportask-view/sportask-view.component';
 import { RecurringTasksModalComponent } from './components/recurring-tasks-modal/recurring-tasks-modal.component';
@@ -46,6 +47,7 @@ type CapacitorGlobal = {
     RecurringTasksModalComponent,
     AlarmModalComponent,
     SportaskBreakModalComponent,
+    SportaskPrepareComponent,
     SportaskSkinComponent,
     SportaskViewComponent,
     ProjectsViewComponent,
