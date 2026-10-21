@@ -1,7 +1,7 @@
 import type { BlockPlan, BlockStep, Dose, ExerciseDef, SportTemplate, TemplateSlot } from '../../../types/sportask';
 import type { GenerationContext } from './context';
 import { available } from './filter';
-import { MIN_STEP_SECONDS, finalizePlan, fitsWindow, repWork, slotWorkFor, slotsFor, slotSteps } from './fit';
+import { MIN_STEP_SECONDS, fillRemainder, finalizePlan, fitsWindow, repWork, slotWorkFor, slotsFor, slotSteps } from './fit';
 import { pickExercise } from './select';
 
 export interface ResolvedSlot {
@@ -126,11 +126,21 @@ export function planFromTemplate(t: SportTemplate, ctx: GenerationContext): Bloc
     const window = slotWorkFor(avail, list.length * r, rest);
     list = list.filter((x) => fitsWindow(x.ex, window));
     if (list.length === 0) return finalizePlan('train', prep, [], ctx.blockSeconds);
-    for (let round = 1; round <= r; round++) {
-      for (const { ex, dose } of list) {
-        steps.push(...slotSteps({ ex, ...(dose ? { target: dose } : {}), work: Math.max(1, window), rest, ...(r > 1 ? { round } : {}) }));
-      }
+    const oneRound = (round: number | undefined): BlockStep[] =>
+      list.flatMap(({ ex, dose }) => slotSteps({ ex, ...(dose ? { target: dose } : {}), work: Math.max(1, window), rest, ...(round !== undefined ? { round } : {}) }));
+    for (let round = 1; round <= r; round++) steps.push(...oneRound(r > 1 ? round : undefined));
+    // Rep-based steps are shorter than their window, so the rounds can leave minutes unused: repeat the template's slots while
+    // another whole round fits (the rounds are then numbered), and let the generic fill below take what is left.
+    const roundTime = oneRound(undefined).reduce((t, x, i, all) => t + x.workSeconds + (i < all.length - 1 ? x.restSeconds : 0), 0);
+    const spent = (): number => prep + steps.reduce((t, x, i) => t + x.workSeconds + (i < steps.length - 1 ? x.restSeconds : 0), 0);
+    let round = r;
+    while (spent() + rest + roundTime <= ctx.blockSeconds && round < 30) {
+      round += 1;
+      if (round === 2) for (const x of steps) x.round = 1;
+      steps.push(...oneRound(round));
     }
   }
+  // Whatever is still unused and is at least MIN_FILL_SECONDS becomes a few mobility holds instead of a long last rest (PLAN 8.2).
+  fillRemainder(ctx, steps, prep, steps.map((x) => x.exerciseId));
   return finalizePlan('train', prep, steps, ctx.blockSeconds);
 }

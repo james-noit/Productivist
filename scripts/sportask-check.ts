@@ -20,7 +20,11 @@ import { sanitizeBlock, sanitizeSettings, sanitizeTemplate, defaultSettings } fr
 import { stepAt, timeline } from '../src/lib/sportask/runner';
 import { SKINS } from '../src/lib/sportask/skins';
 import { BUILTIN_TEMPLATES } from '../src/lib/sportask/templates';
-import type { BlockPlan, Constraints, Enrolment, EquipmentInventory, SportBlock, SportTemplate } from '../src/types/sportask';
+import { barMax, barRects, heatLayout, heatLevel, linePath, niceTicks, plotOf, targetPath, timeScaleX } from '../src/lib/sportask/charts';
+import { METRICS, type MetricEnv } from '../src/lib/sportask/metrics';
+import { personalRecords, weekStats } from '../src/lib/sportask/metrics/summary';
+import { resultsFromRows, rowsFromBlock, statusFromRows } from '../src/lib/sportask/results';
+import type { BlockPlan, BlockStep, Constraints, Enrolment, EquipmentInventory, SportBlock, SportTemplate, StepResult } from '../src/types/sportask';
 
 const proc = (globalThis as unknown as { process: { exitCode?: number } }).process;
 let assertions = 0;
@@ -253,7 +257,7 @@ function assertPlan(plan: BlockPlan, ctx: GenerationContext, meta: BlockMeta, wa
     if (plan.kind === 'warmup') check(ex.level <= 2 && ex.impact !== 'high', `${label}: warm-up step ${s.exerciseId} level ${ex.level} / ${ex.impact}`);
     if (ex.perSide && s.side === undefined) check(meta.origin === 'free' || plan.kind === 'test' || ex.perSide === true, `${label}: per-side step without side`);
   }
-  if (meta.origin === 'goal' && plan.kind !== 'test' && meta.fallback !== 'minimal') checkNoIdleGap(plan, label);
+  if (plan.kind !== 'test' && meta.fallback !== 'minimal') checkNoIdleGap(plan, label);
   if (meta.origin === 'goal' && plan.kind !== 'test') check(plan.kind === (warm ? 'warmup' : 'train'), `${label}: kind ${plan.kind} but warm=${warm}`);
   if (plan.kind === 'test') {
     check(plan.assessmentId && CATALOG.assessments.get(plan.assessmentId), `${label}: test without a known assessment`);
@@ -924,6 +928,159 @@ function checkKcal(): void {
   check(netKcal(mk(60), CATALOG, 80) > netKcal(mk(60), CATALOG, 70), 'kcal grows with weight');
 }
 
+// ---------------------------------------------------------------- 11. panel: metrics, charts, results rows
+
+type StepSpec = [exerciseId: string, work: number, rest: number, done: boolean, value?: number, side?: 'left' | 'right'];
+
+function panelBlock(id: string, day: number, status: SportBlock['status'], o: { kind?: SportBlock['kind']; goalId?: string; assessmentId?: string; steps: StepSpec[]; origin?: SportBlock['origin'] }): SportBlock {
+  const date = addDays(MONDAY, day);
+  const steps: BlockStep[] = o.steps.map(([exerciseId, workSeconds, restSeconds, , , side]) => ({ exerciseId, workSeconds, restSeconds, ...(side ? { side } : {}) }));
+  const results: StepResult[] = status === 'skipped' ? [] : o.steps.map(([, , , done, value], stepIndex) => ({ stepIndex, done, ...(value !== undefined ? { value } : {}) }));
+  const startedAt = Date.parse(`${date}T10:00:00Z`);
+  return {
+    id, startedAt, date, origin: o.origin ?? 'goal', ...(o.goalId ? { goalId: o.goalId } : {}), kind: o.kind ?? 'train', ...(o.assessmentId ? { assessmentId: o.assessmentId } : {}),
+    blockSeconds: 300, prepSeconds: 10, steps, results, status, catalogVersion: CATALOG_VERSION, createdAt: startedAt, updatedAt: startedAt,
+  };
+}
+
+function checkPanel(): void {
+  section('11. panel: metrics, charts and result rows');
+  const W0 = 0;
+  const W1 = 7;
+  const W2 = 14;
+  // Three weeks, by hand (day numbers count from Monday of week 0).
+  const blocks: SportBlock[] = [
+    panelBlock('A', W0 + 0, 'done', { goalId: 'strength', steps: [['pushUp', 30, 10, true, 10], ['airSquat', 30, 0, true]] }),
+    panelBlock('B', W0 + 2, 'partial', { goalId: 'strength', steps: [['plank', 40, 5, true, 40], ['plank', 40, 0, false]] }),
+    panelBlock('C', W0 + 3, 'skipped', { goalId: 'strength', steps: [['airSquat', 30, 0, false]] }),
+    panelBlock('X1', W1 + 0, 'done', { goalId: 'strength', steps: [['wallPushUp', 30, 0, true, 12]] }),
+    panelBlock('X2', W1 + 1, 'done', { goalId: 'strength', steps: [['wallPushUp', 30, 0, true, 12]] }),
+    panelBlock('D', W1 + 1, 'done', { kind: 'test', goalId: 'mobility', assessmentId: 'mobKneeToWall', steps: [['kneeToWall', 60, 0, true, 8, 'left'], ['kneeToWall', 60, 0, true, 6, 'right']] }),
+    panelBlock('E', W1 + 4, 'done', { goalId: 'mobility', steps: [['chinTucks', 30, 0, true], ['deepSquatHold', 30, 0, true], ['standingHipCars', 30, 0, true, undefined, 'left'], ['standingHipCars', 30, 0, true, undefined, 'right']] }),
+    panelBlock('G', W1 + 2, 'done', { kind: 'test', goalId: 'mobility', assessmentId: 'mobToeTouch', steps: [['heelUpHamstringStretch', 30, 0, true, 20]] }),
+    panelBlock('I', W1 + 0, 'done', { goalId: 'calories', steps: [['burpee', 30, 30, true], ['jumpingJack', 30, 30, true], ['marchInPlace', 30, 120, true]] }),
+    panelBlock('J', W1 + 2, 'done', { goalId: 'calories', steps: [['jumpingJack', 20, 40, true], ['burpee', 20, 40, false], ['marchInPlace', 20, 0, true]] }),
+    panelBlock('F', W2 + 1, 'done', { kind: 'test', goalId: 'mobility', assessmentId: 'mobKneeToWall', steps: [['kneeToWall', 60, 0, true, 10, 'left'], ['kneeToWall', 60, 0, true, 9, 'right']] }),
+    panelBlock('H', W2 + 2, 'done', { kind: 'test', goalId: 'mobility', assessmentId: 'mobToeTouch', steps: [['heelUpHamstringStretch', 30, 0, true, 12]] }),
+  ];
+  const strengthEnrol = enrol('strength', 'microStrength', 1, MONDAY);
+  const env: MetricEnv = { catalog: CATALOG, weightKg: 70, enrolment: strengthEnrol, equipment: {}, constraints: CONSTRAINT_SETS[0]!, };
+  const range = { from: MONDAY, to: addDays(MONDAY, 20) };
+  const run = (id: string, e: Partial<MetricEnv> = {}, r = range) => METRICS.get(id)!.compute(blocks, r, { ...env, ...e });
+  const group = (s: ReturnType<typeof run>, id: string) => s.groups.find((g) => g.id === id)?.values;
+  const near = (a: ReadonlyArray<number | null> | undefined, b: ReadonlyArray<number | null>, label: string): void => {
+    check(a && a.length === b.length && a.every((v, i) => (v === null ? b[i] === null : b[i] !== null && Math.abs(v - b[i]!) < 1e-9)), `${label}: expected ${JSON.stringify(b)}, got ${JSON.stringify(a)}`);
+  };
+  const week = (n: number): string => addDays(MONDAY, n * 7);
+
+  for (const id of ['adherence', 'activeMinutes', 'netKcal', 'heatmap', 'setsPerPattern', 'ladderLevel', 'zonesCovered', 'density', ...CATALOG.assessments.all.map((a) => `assessment:${a.id}`)]) check(METRICS.get(id), `metric ${id} is registered`);
+  for (const g of GOALS.all) for (const id of g.metricIds) check(METRICS.get(id), `${g.id}: unknown metric ${id}`);
+
+  const adherence = run('adherence');
+  check(same(adherence.keys, [week(0), week(1), week(2)]), 'adherence: one key per week');
+  near(group(adherence, 'done'), [1, 7, 2], 'adherence done');
+  near(group(adherence, 'partial'), [1, 0, 0], 'adherence partial');
+  near(group(adherence, 'skipped'), [1, 0, 0], 'adherence skipped');
+
+  const minutes = run('activeMinutes');
+  near(group(minutes, 'minutes'), [100 / 60, 460 / 60, 150 / 60], 'active minutes');
+  check(minutes.targets === undefined, 'no target without the calories program');
+  const withTarget = run('activeMinutes', { enrolment: enrol('calories', 'burnAndMove', 1, MONDAY) });
+  check(same(withTarget.targets, [45, 45, 60]), `the calories target follows the phases: ${JSON.stringify(withTarget.targets)}`);
+  near(group(run('activeMinutes', {}, { from: addDays(MONDAY, 8), to: addDays(MONDAY, 20) }), 'minutes'), [(460 - 30 - 90) / 60, 150 / 60], 'a range starting inside a week drops the earlier days (the push-up and the circuit of day 7)');
+
+  const kcal = (b: SportBlock): number => b.steps.reduce((t, s, i) => (b.results.some((r) => r.stepIndex === i && r.done) ? t + (CATALOG.exercises.get(s.exerciseId)!.met - 1) * 70 * (s.workSeconds / 3600) : t), 0);
+  const week0Kcal = kcal(blocks[0]!) + kcal(blocks[1]!);
+  near(group(run('netKcal'), 'kcal')?.slice(0, 1), [week0Kcal], 'net kcal of week 0 (MET - 1) x kg x hours');
+  const noWeight = run('netKcal', { weightKg: null });
+  check(noWeight.missing === 'weight' && group(noWeight, 'kcal')!.every((v) => v === 0), 'net kcal without a weight is flagged, not guessed');
+
+  const heat = run('heatmap');
+  check(heat.keys.length === 21 && heat.keys[0] === MONDAY, 'heatmap: one key per day');
+  near([0, 2, 3, 7, 8, 9, 11, 15, 16, 4].map((d) => group(heat, 'blocks')![d]!), [1, 1, 0, 2, 2, 2, 1, 1, 1, 0], 'heatmap: blocks counted per day, skipped ones not');
+
+  const sets = run('setsPerPattern');
+  near(group(sets, 'push'), [1, 2, 0], 'sets: push-ups, then two wall push-ups');
+  near(group(sets, 'squat'), [1, 0, 0], 'sets: a skipped block adds none');
+  near(group(sets, 'core'), [1, 0, 0], 'sets: only the plank that was done');
+  near(group(sets, 'mobility'), [0, 3, 0], 'sets: the two sides of a hip circle are one set, tests add none');
+
+  const zones = run('zonesCovered');
+  near(group(zones, 'neck'), [0, 1, 0], 'zones: neck');
+  near(group(zones, 'hips'), [0, 1, 0], 'zones: hips counts once for a block with two hip moves');
+  near(group(zones, 'ankles'), [0, 1, 0], 'zones: ankles (tests do not count)');
+
+  const dens = run('density');
+  near(group(dens, 'density'), [null, (130 / 230) * 100, null], 'density: the last step rest is padding and not-done steps are left out');
+
+  const ladder = run('ladderLevel');
+  near(group(ladder, 'push'), [1, 2, 2], 'ladder: two perfect blocks of wall push-ups move up one rung');
+  near(group(ladder, 'squat'), [1, 1, 1], 'ladder: a rung not worked stays');
+  check(run('ladderLevel', { enrolment: null }).groups.length === 0, 'ladder without a program: nothing');
+
+  const knee = run('assessment:mobKneeToWall');
+  check(same(knee.keys, [addDays(MONDAY, 8), addDays(MONDAY, 15)]), 'assessment: one key per test day');
+  near(group(knee, 'left'), [8, 10], 'assessment left');
+  near(group(knee, 'right'), [6, 9], 'assessment right');
+  const left = knee.groups.find((g) => g.id === 'left')!.summary!;
+  check(left.first === 8 && left.last === 10 && left.best === 10 && left.delta === 2 && left.improved === true, 'assessment summary: higher is better');
+  check(same(knee.exerciseIds, ['kneeToWall']), 'assessment: the exercise used');
+  const toe = run('assessment:mobToeTouch');
+  const t = toe.groups[0]!.summary!;
+  check(toe.groups[0]!.id === 'value' && t.first === 20 && t.last === 12 && t.best === 12 && t.delta === -8 && t.improved === true, 'assessment summary: lower is better');
+  const late = run('assessment:mobKneeToWall', {}, { from: addDays(MONDAY, 10), to: addDays(MONDAY, 20) });
+  check(same(late.keys, [addDays(MONDAY, 15)]) && late.groups[0]!.summary!.first === 8, 'a range narrows the points, the summary keeps the first test');
+  check(run('assessment:strPlank').groups.length === 0, 'an assessment never taken has no series');
+
+  const stats = weekStats(blocks, addDays(MONDAY, 17), CATALOG, 70);
+  check(stats.counted === 2 && stats.offered === 2 && Math.abs(stats.activeMinutes - 2.5) < 1e-9 && stats.streak === 2 && Math.abs(stats.kcal! - (kcal(blocks[10]!) + kcal(blocks[11]!))) < 1e-9, `week stats: ${JSON.stringify(stats)}`);
+  check(weekStats(blocks, addDays(MONDAY, 17), CATALOG, null).kcal === null, 'week stats: no kcal without a weight');
+  check(weekStats(blocks, addDays(MONDAY, 9), CATALOG, 70).streak === 3, 'a streak that includes today (days 7 to 9)');
+  const w0 = weekStats(blocks, addDays(MONDAY, 3), CATALOG, 70);
+  check(w0.counted === 2 && w0.offered === 3, 'week stats: offered includes the skipped block');
+
+  const prs = personalRecords(blocks, CATALOG);
+  const pr = (id: string, metric: string) => prs.find((r) => r.exerciseId === id && r.metric === metric);
+  check(prs.length === 3 && pr('wallPushUp', 'reps')?.value === 12 && pr('wallPushUp', 'reps')?.date === addDays(MONDAY, 7) && pr('plank', 'seconds')?.value === 40 && pr('pushUp', 'reps')?.value === 10, `personal records: ${JSON.stringify(prs)}`);
+
+  // charts
+  const ticks = niceTicks(0, 7);
+  check(same(ticks.values, [0, 2, 4, 6, 8]) && ticks.max === 8 && niceTicks(0, 0).max > 0 && niceTicks(3, 3).values.length >= 2, 'nice ticks');
+  const plot = plotOf(200, 100, { left: 0, right: 0, top: 0, bottom: 0 });
+  const rects = barRects({ plot, groups: [[1, 2], [3, 0]], stacked: true, max: 4 });
+  check(rects.length === 3, 'stacked bars skip zero values');
+  const stack0 = rects.filter((r) => r.index === 0);
+  check(Math.abs(stack0[0]!.height - 25) < 1e-9 && Math.abs(stack0[1]!.height - 75) < 1e-9 && Math.abs(stack0[1]!.y + stack0[1]!.height - stack0[0]!.y) < 1e-9, 'a stack is as tall as the sum');
+  check(barMax([[1, 2], [3, 0]], true, [null, 5]) === 5 && barMax([[1, 2], [3, 0]], false) === 3, 'bar axis maximum');
+  check(barRects({ plot, groups: [[1, 2], [2, 1]], stacked: false, max: 2 }).every((r, _, all) => r.width < 100 && all.length === 4), 'grouped bars share the slot');
+  check(linePath([{ x: 0, y: 0 }, { x: 10, y: 10 }, null, { x: 30, y: 30 }]) === 'M0 0L10 10M30 30', 'a null breaks the line');
+  check(linePath([{ x: 0, y: 5 }, { x: 10, y: 1 }], true) === 'M0 5H10V1', 'a stepped line holds its value');
+  check(targetPath(plot, [2, 2, null, 4], 4) === 'M0 50H50H100M150 0H200' && targetPath(plot, [null, null], 4) === '', 'target path');
+  const x = timeScaleX(['2026-03-02', '2026-03-12'], plotOf(100, 50, { left: 0, right: 0, top: 0, bottom: 0 }));
+  check(x('2026-03-02') < x('2026-03-07') && x('2026-03-07') < x('2026-03-12') && Math.abs(x('2026-03-07') - 50) < 1e-9, 'time scale is proportional to days');
+  check(heatLevel(0, 4) === 0 && heatLevel(1, 4) === 1 && heatLevel(4, 4) === 4 && heatLevel(1, 1) === 4, 'heat levels');
+  const layout = heatLayout(heat.keys, heat.groups[0]!.values);
+  check(layout.cols === 3 && layout.cells[0]!.col === 0 && layout.cells[0]!.row === 0 && layout.cells[8]!.col === 1 && layout.cells[8]!.row === 1 && layout.cells[20]!.row === 6, 'the heat grid is weeks by weekdays');
+
+  // result rows (the Results form and "Edit marks")
+  const name = (id: string): string => CATALOG.exercises.get(id)?.name.en ?? id;
+  const rows = rowsFromBlock(blocks[1]!, CATALOG, name);
+  check(rows.length === 2 && rows[0]!.done && rows[0]!.value === 40 && !rows[1]!.done && rows[1]!.metric === 'seconds', 'rows follow the stored results');
+  check(statusFromRows(rows) === 'partial' && statusFromRows(rows.map((r) => ({ ...r, done: true }))) === 'done' && statusFromRows(rows.map((r) => ({ ...r, done: false }))) === 'skipped', 'status from the ticked rows');
+  check(same(resultsFromRows(rows), blocks[1]!.results), 'rows turn back into the same results');
+  const skippedRows = rowsFromBlock(blocks[2]!, CATALOG, name);
+  check(skippedRows.length === 1 && !skippedRows[0]!.done && resultsFromRows(skippedRows)[0]!.done === false, 'a skipped block starts with every row undone');
+  const rounds: SportBlock = { ...panelBlock('R', 0, 'done', { steps: [['pushUp', 30, 5, true, 8], ['airSquat', 30, 5, true, 10], ['pushUp', 30, 0, true, 9]] }) };
+  rounds.steps = rounds.steps.map((s, i) => ({ ...s, round: i < 2 ? 1 : 2 }));
+  const grouped = rowsFromBlock(rounds, CATALOG, name);
+  check(grouped.length === 2 && same(grouped[0]!.indexes, [0, 2]), 'a circuit repeated in rounds is one row per exercise');
+  const edited = grouped.map((r) => (r.key === grouped[0]!.key ? { ...r, value: 11 } : r));
+  check(resultsFromRows(edited).filter((r) => r.value === 11).length === 2, 'an edited value is written to every round');
+  const testRows = rowsFromBlock(blocks[5]!, CATALOG, name);
+  check(testRows.length === 2 && testRows[0]!.metric === 'cm' && testRows[1]!.side === 'right' && testRows[1]!.value === 6 && !testRows[0]!.loadable, 'a test row uses the assessment metric');
+  console.log('  metrics, summary, personal records, chart geometry and result rows match the hand-computed sample');
+}
+
 // ---------------------------------------------------------------- run
 
 try {
@@ -938,6 +1095,7 @@ try {
   checkCodecs();
   checkSanitize();
   checkKcal();
+  checkPanel();
   console.log(`\ncheck:sportask OK (${assertions} assertions)`);
 } catch (e) {
   console.error(e instanceof Error ? e.message : e);
