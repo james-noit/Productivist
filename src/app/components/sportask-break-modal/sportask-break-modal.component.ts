@@ -14,16 +14,16 @@ import {
   viewChild,
 } from '@angular/core';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
-import { createId } from '../../../core/create-id';
 import { trapTab } from '../../../lib/focus-trap';
+import { BlockDriver, ClockBlockDriver, LocalBlockDriver } from '../../../lib/sportask/block-driver';
 import { CATALOG } from '../../../lib/sportask/catalog';
-import { generate } from '../../../lib/sportask/engine/generate';
 import { GOALS } from '../../../lib/sportask/goals';
 import { stepAt, timeline, type RunnerState } from '../../../lib/sportask/runner';
 import { resultsFromRows, type ResultRow } from '../../../lib/sportask/results';
 import { sanitizeSettings } from '../../../lib/sportask/sanitize';
 import { closeBreak } from '../../../lib/sportask/session-ops';
-import { blockRow, buildContext } from '../../../lib/sportask/session-context';
+import { makePending } from '../../../lib/sportask/make-block';
+import { blockRow } from '../../../lib/sportask/session-context';
 import { resolveSkin } from '../../../lib/sportask/skins';
 import { BUILTIN_TEMPLATES } from '../../../lib/sportask/templates';
 import { loadSportaskTexts, localize } from '../../../lib/sportask/texts';
@@ -76,6 +76,9 @@ interface NowView {
   next: { name: string; side: Side | null; dose: Dose | null } | null;
 }
 
+/** A stored block that can be shown (a reload or another tab may leave a half-written or older one behind). */
+const usable = (p: PendingBlock): boolean => Array.isArray(p.plan?.steps) && p.plan.steps.length > 0 && !!p.meta;
+
 const pad = (n: number): string => String(n).padStart(2, '0');
 /** m:ss for the clock-like numbers. */
 export const mmss = (seconds: number): string => `${Math.floor(Math.max(0, seconds) / 60)}:${pad(Math.max(0, seconds) % 60)}`;
@@ -105,6 +108,13 @@ export class SportaskBreakModalComponent {
   private readonly injector = inject(Injector);
   private readonly panel = viewChild<ElementRef<HTMLElement>>('panel');
 
+  /** *Train now*: one block outside the Pomodoro, counted by its own timer. Fixed for the life of the modal. */
+  protected readonly isSingle = this.sportask.single() !== null;
+  /** What counts the block's time: the clock's break, or the block's own countdown. */
+  private readonly driver: BlockDriver = this.isSingle
+    ? new LocalBlockDriver(this.sportask, () => this.blockEnded())
+    : new ClockBlockDriver(this.clock);
+
   protected readonly ready = signal(false);
   protected readonly lang = this.appSettings.language;
   protected readonly maxRerolls = MAX_REROLLS;
@@ -113,7 +123,12 @@ export class SportaskBreakModalComponent {
   /** The skin this surface wears (`data-sport-skin`), whatever the whole-app option says. */
   protected readonly skin = computed(() => resolveSkin(this.settings().skin));
   protected readonly session = this.sportask.session;
-  protected readonly pending = computed(() => this.session()?.pending ?? null);
+  protected readonly pending = computed(() => (this.isSingle ? this.sportask.single()?.pending : this.session()?.pending) ?? null);
+  /** The time left, as MM:SS. */
+  protected readonly leftText = computed(() => {
+    const s = this.driver.remaining();
+    return `${pad(Math.floor(s / 60))}:${pad(s % 60)}`;
+  });
   protected readonly autoStarted = signal(false);
 
   /** "Finish now": the elapsed seconds when the user stopped the break early, or null. */
@@ -128,13 +143,12 @@ export class SportaskBreakModalComponent {
     const p = this.pending();
     if (!p) return 'preview';
     if (this.finishedAt() !== null) return 'results';
-    const inBreak = this.clock.mode() === 'break';
-    if (!inBreak) return 'results';
-    return this.clock.running() || this.clock.remainingSeconds() < this.clock.totalSeconds() ? 'running' : 'preview';
+    if (this.driver.ended()) return 'results';
+    return this.driver.running() || this.driver.remaining() < this.driver.total() ? 'running' : 'preview';
   });
 
   /** Seconds of the break gone by (only meaningful while running). */
-  private readonly elapsed = computed(() => Math.max(0, this.clock.totalSeconds() - this.clock.remainingSeconds()));
+  private readonly elapsed = computed(() => Math.max(0, this.driver.total() - this.driver.remaining()));
   private readonly runner = computed(() => {
     const p = this.pending();
     return p && this.stage() === 'running' ? stepAt(p.plan, this.elapsed()) : null;
@@ -215,7 +229,7 @@ export class SportaskBreakModalComponent {
     const last = steps.length - 1;
     const nextOf = (s: BlockStep | undefined | null): NowView['next'] =>
       s ? { name: this.nameOf(s.exerciseId), side: s.side ?? null, dose: this.doseOf(s) } : null;
-    if (r.phase === 'done') return this.view('breathe', last, this.clock.remainingSeconds(), null);
+    if (r.phase === 'done') return this.view('breathe', last, this.driver.remaining(), null);
     if (r.phase === 'prep') return this.view('prep', 0, r.stepRemaining, nextOf(steps[0]));
     const marked = r.phase === 'work' && this.markedDone().has(r.stepIndex);
     if (r.phase === 'rest' || marked) {
@@ -277,7 +291,7 @@ export class SportaskBreakModalComponent {
     return { key: `sportask.brk.say.${n.kind}`, params: { name: n.name, dose } };
   });
 
-  protected readonly paused = computed(() => this.stage() === 'running' && !this.clock.running());
+  protected readonly paused = computed(() => this.stage() === 'running' && !this.driver.running());
 
   // ---- results ----------------------------------------------------------------------------------------------------------
 
@@ -350,13 +364,16 @@ export class SportaskBreakModalComponent {
 
     // Make the block (or take the one a reload left behind).
     const existing = this.pending();
-    if (!existing || !Array.isArray(existing.plan?.steps) || existing.plan.steps.length === 0 || !existing.meta) this.makeBlock({});
-    else this.maybeAutoStart();
+    // Reloaded after "Finish now" in a *Train now* block: the elapsed time is what the countdown had reached.
+    if (this.isSingle && this.driver.ended() && this.driver.remaining() > 0) this.finishedAt.set(this.elapsed());
+    if (!existing || !usable(existing)) {
+      if (!this.takePrepared()) this.makeBlock({});
+    } else this.maybeAutoStart();
 
     // Self-heal: an open modal with no block (another tab cleared it, or the first attempt failed) makes one. Written in a
     // microtask, and only while the break is still open, so closing the modal never brings a block back.
     effect(() => {
-      if (this.session()?.active && !this.pending()) {
+      if ((this.isSingle || this.session()?.active) && !this.pending()) {
         queueMicrotask(() => {
           if (this.sportask.breakOpen() && !this.pending()) this.makeBlock({});
         });
@@ -374,7 +391,7 @@ export class SportaskBreakModalComponent {
     // Step cues: a tone at each change and at 3-2-1 before one, only while the block runs and the page is visible.
     effect(() => {
       const r = this.runner();
-      const running = this.clock.running();
+      const running = this.driver.running();
       untracked(() => this.cue(r, running));
     });
 
@@ -394,6 +411,7 @@ export class SportaskBreakModalComponent {
 
     inject(DestroyRef).onDestroy(() => {
       document.removeEventListener('keydown', onKey, true);
+      this.driver.dispose();
       if (previouslyFocused?.isConnected) previouslyFocused.focus();
       else document.body.focus();
     });
@@ -431,37 +449,46 @@ export class SportaskBreakModalComponent {
 
   // ---- making a block ---------------------------------------------------------------------------------------------------
 
+  /** Writes the pending block where it lives: the *Train now* block or the session. */
+  private setPending(next: PendingBlock | null): void {
+    if (this.isSingle) this.sportask.single.update((s) => (s ? { ...s, pending: next } : s));
+    else this.sportask.session.update((s) => (s ? { ...s, pending: next } : s));
+  }
+
   private makeBlock(opts: { reroll?: boolean; forceTrain?: boolean }): void {
-    const session = this.session();
-    if (!session) return;
+    const single = this.sportask.single();
+    const request = this.isSingle ? single : this.session();
+    if (!request) return;
     const previous = this.pending();
-    const blockId = createId();
-    const blockSeconds = this.clock.mode() === 'break' ? this.clock.totalSeconds() : session.cadence.breakSeconds;
-    const forceTrain = opts.forceTrain ?? previous?.forceTrain ?? false;
-    const settings = this.settings();
-    const ctx = buildContext({
-      blockId,
-      blockSeconds,
-      blocks: this.data.blocks(),
-      settings,
-      equipmentOverride: session.equipmentOverride,
-    });
-    const { plan, meta } = generate(ctx, { mode: session.mode, templateId: session.templateId }, settings, {
-      templates: this.data.templates(),
-      forceTrain,
-    });
-    const next: PendingBlock = {
-      blockId,
-      plan,
-      startedAt: null,
-      meta,
-      blockSeconds: ctx.blockSeconds,
-      rerolls: (previous?.rerolls ?? 0) + (opts.reroll ? 1 : 0),
-    };
-    if (forceTrain) next.forceTrain = true;
-    this.sportask.session.update((s) => (s ? { ...s, pending: next } : s));
+    const blockSeconds = single ? single.blockSeconds : this.clock.mode() === 'break' ? this.clock.totalSeconds() : this.session()!.cadence.breakSeconds;
+    this.setPending(
+      makePending({
+        request,
+        blockSeconds,
+        blocks: this.data.blocks(),
+        templates: this.data.templates(),
+        settings: this.settings(),
+        previous,
+        reroll: opts.reroll,
+        forceTrain: opts.forceTrain,
+      }),
+    );
     this.markedDone.set(new Set());
     this.maybeAutoStart();
+  }
+
+  /** The block `sportask-prepare` made during the focus phase, if it is for this break: the exercise the notification named. */
+  private takePrepared(): boolean {
+    const session = this.session();
+    const prepared = session?.prepared;
+    if (this.isSingle || !session || !prepared || prepared.breakIndex !== session.breaksSeen || !usable(prepared.block)) return false;
+    this.sportask.session.update((s) => {
+      if (!s) return s;
+      const { prepared: _used, ...rest } = s;
+      return { ...rest, pending: prepared.block };
+    });
+    this.maybeAutoStart();
+    return true;
   }
 
   private maybeAutoStart(): void {
@@ -477,8 +504,10 @@ export class SportaskBreakModalComponent {
   protected begin(): void {
     const p = this.pending();
     if (!p || this.stage() !== 'preview') return;
-    this.sportask.session.update((s) => (s ? { ...s, pending: { ...p, startedAt: Date.now() } } : s));
-    this.clock.start();
+    this.setPending({ ...p, startedAt: Date.now() });
+    // A user gesture: get the audio ready for the cues (the clock does the same on its own Start).
+    if (this.isSingle) this.clock.audio();
+    this.driver.start();
   }
 
   protected another(): void {
@@ -490,13 +519,13 @@ export class SportaskBreakModalComponent {
   }
 
   protected togglePause(): void {
-    if (this.clock.running()) this.clock.pause();
-    else this.clock.start();
+    if (this.driver.running()) this.driver.pause();
+    else this.driver.resume();
   }
 
   protected finishNow(): void {
     this.finishedAt.set(this.elapsed());
-    this.clock.pause();
+    this.driver.finish();
   }
 
   protected markStepDone(index: number): void {
@@ -507,11 +536,16 @@ export class SportaskBreakModalComponent {
     this.sportask.stop();
   }
 
-  /** Records the block as skipped and goes back to a normal break. */
+  /** Records the block as skipped and goes back to a normal break. A *Train now* block just closes: there was no break to skip. */
   protected skip(): void {
     const p = this.pending();
-    if (p) this.data.addBlock(blockRow(p, { status: 'skipped', results: [] }));
+    if (p && !this.isSingle) this.data.addBlock(blockRow(p, { status: 'skipped', results: [] }));
     closeBreak(this.sportask);
+  }
+
+  /** The countdown of a *Train now* block ran out by itself: the same short tone the steps use. */
+  private blockEnded(): void {
+    if (this.settings().cues && this.appSettings.bellSound() && document.visibilityState === 'visible') this.clock.playCue('end');
   }
 
   protected save(andResume: boolean): void {
@@ -522,7 +556,7 @@ export class SportaskBreakModalComponent {
     this.data.addBlock(blockRow(p, { status, results, rpe: this.rpe(), feedback: this.isTest() ? null : this.feedback() }));
     const early = this.finishedAt() !== null;
     closeBreak(this.sportask);
-    if (!andResume) return;
+    if (!andResume || this.isSingle) return;
     // The break ended by itself: the clock is already back in focus. After "Finish now" it is still in the paused break.
     if (early || this.clock.mode() === 'break') this.clock.setMode('focus');
     this.clock.startNextSession();
@@ -530,7 +564,7 @@ export class SportaskBreakModalComponent {
 
   protected discard(): void {
     const p = this.pending();
-    if (p) this.data.addBlock(blockRow(p, { status: 'skipped', results: [] }));
+    if (p && !this.isSingle) this.data.addBlock(blockRow(p, { status: 'skipped', results: [] }));
     this.confirm.set(null);
     closeBreak(this.sportask);
   }

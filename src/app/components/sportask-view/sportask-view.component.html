@@ -15,8 +15,13 @@
         }
       }
     </div>
-    @if (state.ready() && !state.enrolment()) {
-      <button type="button" class="btn btn--primary sv__cta" (click)="state.openConfiguration()">{{ 'sportask.panel.pickGoal' | translate }}</button>
+    @if (state.ready()) {
+      <div class="sv__actions">
+        @if (!state.enrolment()) {
+          <button type="button" class="btn btn--secondary sv__cta" (click)="state.openConfiguration()">{{ 'sportask.panel.pickGoal' | translate }}</button>
+        }
+        <button type="button" class="btn btn--primary" [disabled]="sportask.breakOpen()" (click)="training.set(true)">{{ 'sportask.panel.trainNow' | translate }}</button>
+      </div>
     }
   </header>
 
@@ -57,3 +62,7 @@
     </div>
   }
 </main>
+
+@if (training()) {
+  <app-sportask-setup-sheet [single]="true" (closed)="training.set(false)" />
+}

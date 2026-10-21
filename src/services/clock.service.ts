@@ -161,7 +161,7 @@ export class ClockService {
    * The AudioContext, created and resumed here rather than in the lazy chunk: called from a click handler this
    * happens inside the user gesture, which browsers require before they let a context make sound.
    */
-  private audio(): AudioContext | null {
+  audio(): AudioContext | null {
     try {
       this.audioCtx ??= new AudioContext();
       if (this.audioCtx.state === 'suspended') this.audioCtx.resume().catch(() => undefined);

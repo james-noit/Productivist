@@ -7,7 +7,7 @@ import { templateAvailability } from '../../../lib/sportask/engine/template-plan
 import { programWeek } from '../../../lib/sportask/engine/schedule';
 import { GOALS } from '../../../lib/sportask/goals';
 import { sanitizeSettings } from '../../../lib/sportask/sanitize';
-import { startSession } from '../../../lib/sportask/session-ops';
+import { startSession, startSingle } from '../../../lib/sportask/session-ops';
 import { buildContext } from '../../../lib/sportask/session-context';
 import { resolveSkin } from '../../../lib/sportask/skins';
 import { BUILTIN_TEMPLATES } from '../../../lib/sportask/templates';
@@ -26,6 +26,7 @@ import { UiIconComponent, type UiIconName } from '../ui-icon/ui-icon.component';
 type Mode = 'goal' | 'free';
 const RANDOM = 'random';
 const minutes = (seconds: number): number => seconds / 60;
+const BLOCK_LENGTHS = [60, 120, 300, 600] as const;
 
 /**
  * The setup sheet (PLAN 7.2): what to train (the goal the user is enrolled in, or free training), the rhythm, and the equipment
@@ -45,6 +46,8 @@ export class SportaskSetupSheetComponent implements OnInit {
   readonly source = input<'pomodoro' | 'multitask'>('pomodoro');
   /** Opened from the Plan-my-day wizard: the primary button saves for the plan instead of starting. */
   readonly planner = input(false);
+  /** *Train now*: one block outside the Pomodoro. The rhythm is replaced by a block length, and the button starts it. */
+  readonly single = input(false);
   readonly closed = output<void>();
 
   private readonly sportask = inject(SportaskService);
@@ -81,10 +84,13 @@ export class SportaskSetupSheetComponent implements OnInit {
   /** Owned items the session override switches off. */
   protected readonly ownedOff = signal<ReadonlySet<string>>(new Set());
   protected readonly accepted = signal(false);
+  /** *Train now*: how long the block lasts, in seconds. */
+  protected readonly blockLengths = BLOCK_LENGTHS;
+  protected readonly blockLength = signal(120);
 
   ngOnInit(): void {
     const session = this.sportask.session();
-    const existing = this.planner() ? this.sportask.armed() : session?.active ? session : null;
+    const existing = this.single() ? null : this.planner() ? this.sportask.armed() : session?.active ? session : null;
     const settings = this.settings();
     const cadence: CadenceValues = existing?.cadence ?? resolveCadence(settings);
     this.mode.set(existing?.mode ?? (settings.enrolment ? 'goal' : 'free'));
@@ -151,19 +157,22 @@ export class SportaskSetupSheetComponent implements OnInit {
     }));
   });
 
+  /** The time the block has: the break of the rhythm, or the length picked for *Train now*. */
+  private readonly blockSeconds = computed(() => (this.single() ? this.blockLength() : this.cadence().breakSeconds));
+
   protected readonly templateRows = computed(() => {
     const lang = this.lang();
-    const cadence = this.cadence();
+    const blockSeconds = this.blockSeconds();
     const ctx = buildContext({
       blockId: 'setup',
-      blockSeconds: cadence.breakSeconds,
+      blockSeconds,
       blocks: [],
       settings: this.settings(),
       equipmentOverride: this.override(),
     });
     const all = [...BUILTIN_TEMPLATES.all, ...[...this.data.templates()].sort((a, b) => a.order - b.order)];
     return all
-      .filter((t) => (t.minSeconds ?? 0) <= cadence.breakSeconds)
+      .filter((t) => (t.minSeconds ?? 0) <= blockSeconds)
       .map((t) => ({
         id: t.id,
         name: t.nameText ? localize(t.nameText, lang) : t.name,
@@ -182,7 +191,7 @@ export class SportaskSetupSheetComponent implements OnInit {
     return (s.disclaimerAcceptedAt ?? 0) <= 0 && (s.enrolment?.acceptedDisclaimerAt ?? 0) <= 0;
   });
   protected readonly canActivate = computed(() => (this.mode() === 'goal' ? this.goalCard() !== null : true) && (!this.needsAcceptance() || this.accepted()));
-  protected readonly shortBreak = computed(() => this.cadence().breakSeconds < 90);
+  protected readonly shortBreak = computed(() => this.blockSeconds() < 90);
 
   constructor() {
     const previouslyFocused = document.activeElement instanceof HTMLElement ? document.activeElement : null;
@@ -271,7 +280,8 @@ export class SportaskSetupSheetComponent implements OnInit {
       cadence: this.cadence(),
       equipmentOverride: this.override(),
     };
-    if (this.planner()) this.sportask.armed.set(options);
+    if (this.single()) startSingle(this.sportask, options, this.blockLength());
+    else if (this.planner()) this.sportask.armed.set(options);
     else startSession(this.sportask, { ...options, source: this.source() });
     this.closed.emit();
   }

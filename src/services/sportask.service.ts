@@ -1,6 +1,6 @@
 import { Injectable, computed, signal } from '@angular/core';
 import { localStorageSignal } from '../core/local-storage-signal';
-import type { SportaskSession, SportaskStartOptions } from '../types/sportask';
+import type { SingleBlock, SportaskSession, SportaskStartOptions } from '../types/sportask';
 
 /** What "start Sportask when this plan launches" remembers (the source is only known at launch). */
 export type SportaskArmed = Omit<SportaskStartOptions, 'source'>;
@@ -17,12 +17,18 @@ export class SportaskService {
   /** A session to start when the Plan-my-day plan launches (Pomodoro or Multitask): `armed.set(options)` arms it, `armed.set(null)` disarms. */
   readonly armed = localStorageSignal<SportaskArmed | null>('productivist.sportaskArmed', null);
 
+  /** "Train now": one block outside the Pomodoro (`startSingle` in `lib/sportask/session-ops.ts`); it ignores the session. */
+  readonly single = localStorageSignal<SingleBlock | null>('productivist.sportaskSingle', null);
+
+  /** The first exercise of the next break's block, once it is known (filled by the lazy `sportask-prepare`; the native end-of-focus notification names it). */
+  readonly nextExerciseName = signal<string | null>(null);
+
   readonly active = computed(() => this.session()?.active === true);
   /**
    * The break modal is showing (`AppComponent` renders it from this). It is also what hides the clock's own "session
    * complete" dialog meanwhile (`suppressSessionModal` in the plan): same signal, no second one to keep in step.
    */
-  readonly breakOpen = signal(this.session()?.pending != null); // a reload in the middle of a break brings the modal back
+  readonly breakOpen = signal(this.session()?.pending != null || this.single() != null); // a reload in the middle of a break brings the modal back
 
   /**
    * The lengths the clock uses while a session is active. A break is long when it is the every-N-th one of the
@@ -47,12 +53,13 @@ export class SportaskService {
     if (!s?.active) return;
     const breaksSeen = s.breaksSeen + 1;
     this.session.set({ ...s, breaksSeen, pending: null });
-    if (breaksSeen % s.cadence.exerciseEvery === 0) this.breakOpen.set(true);
+    if (breaksSeen % s.cadence.exerciseEvery === 0 && !this.single()) this.breakOpen.set(true);
   }
 
   /** Leaves Sportask: the clock goes back to the user's own durations (a phase that is running is not touched). */
   stop(): void {
     this.session.set(null);
+    this.single.set(null);
     this.breakOpen.set(false);
   }
 }

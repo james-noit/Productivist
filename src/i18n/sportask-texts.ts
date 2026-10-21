@@ -103,7 +103,12 @@ export const SPORTASK_TEXTS: Record<'en' | 'es', Record<string, unknown>> = {
       "activate": "Turn on Sportask",
       "activateAccept": "I accept and turn it on",
       "savePlan": "Save for the plan",
-      "savePlanAccept": "I accept and save"
+      "savePlanAccept": "I accept and save",
+      "titleSingle": "Train now",
+      "length": "Block length",
+      "minutes": "{{n}} min",
+      "startSingle": "Start training",
+      "startSingleAccept": "I accept and start"
     },
     "brk": {
       "menu": "More options",
@@ -139,6 +144,7 @@ export const SPORTASK_TEXTS: Record<'en' | 'es', Record<string, unknown>> = {
       "start": "Start",
       "another": "Another one",
       "skip": "Skip",
+      "cancel": "Cancel",
       "phase": {
         "prep": "Get ready",
         "work": "Go",
@@ -147,6 +153,7 @@ export const SPORTASK_TEXTS: Record<'en' | 'es', Record<string, unknown>> = {
       },
       "next": "Next: {{name}}",
       "left": "Break left: {{time}}",
+      "leftSingle": "Time left: {{time}}",
       "pause": "Pause",
       "resume": "Resume",
       "markDone": "Done",
@@ -177,7 +184,10 @@ export const SPORTASK_TEXTS: Record<'en' | 'es', Record<string, unknown>> = {
       "discard": "Discard",
       "discardQ": "Discard the marks?"
     },
+    "nextUp": "Next: {{name}}.",
+    "chip": "Sportask · {{what}} · {{rhythm}}",
     "panel": {
+      "trainNow": "Train now",
       "week": "Week {{n}} of {{total}}",
       "testsThisWeek": "Tests this week",
       "nextTest": "Next test: {{date}}",
@@ -459,7 +469,12 @@ export const SPORTASK_TEXTS: Record<'en' | 'es', Record<string, unknown>> = {
       "activate": "Activar Sportask",
       "activateAccept": "Acepto y lo activo",
       "savePlan": "Guardar para el plan",
-      "savePlanAccept": "Acepto y guardo"
+      "savePlanAccept": "Acepto y guardo",
+      "titleSingle": "Entrenar ahora",
+      "length": "Duración del bloque",
+      "minutes": "{{n}} min",
+      "startSingle": "Empezar a entrenar",
+      "startSingleAccept": "Acepto y empiezo"
     },
     "brk": {
       "menu": "Más opciones",
@@ -495,6 +510,7 @@ export const SPORTASK_TEXTS: Record<'en' | 'es', Record<string, unknown>> = {
       "start": "Empezar",
       "another": "Otro",
       "skip": "Saltar",
+      "cancel": "Cancelar",
       "phase": {
         "prep": "Prepárate",
         "work": "¡Vamos!",
@@ -503,6 +519,7 @@ export const SPORTASK_TEXTS: Record<'en' | 'es', Record<string, unknown>> = {
       },
       "next": "Siguiente: {{name}}",
       "left": "Pausa restante: {{time}}",
+      "leftSingle": "Tiempo restante: {{time}}",
       "pause": "Pausa",
       "resume": "Reanudar",
       "markDone": "Hecho",
@@ -533,7 +550,10 @@ export const SPORTASK_TEXTS: Record<'en' | 'es', Record<string, unknown>> = {
       "discard": "Descartar",
       "discardQ": "¿Descartar las marcas?"
     },
+    "nextUp": "Toca: {{name}}.",
+    "chip": "Sportask · {{what}} · {{rhythm}}",
     "panel": {
+      "trainNow": "Entrenar ahora",
       "week": "Semana {{n}} de {{total}}",
       "testsThisWeek": "Tests esta semana",
       "nextTest": "Próximo test: {{date}}",

@@ -17,7 +17,7 @@
           <h2 id="sbm-title" class="sbm__title">{{ heading().key | translate: heading().params }}</h2>
           <p class="sbm__pain">{{ 'sportask.brk.pain' | translate }}</p>
         </div>
-        @if (stage() !== 'results') {
+        @if (stage() !== 'results' && !isSingle) {
           <app-kebab-menu #menu="kebabMenu" [label]="'sportask.brk.menu' | translate">
             <button type="button" class="menu-item" role="menuitem" (click)="menu.close(); leave()">
               {{ 'sportask.brk.leave' | translate }}
@@ -81,7 +81,7 @@
                 {{ 'sportask.brk.another' | translate }} ({{ maxRerolls - p.rerolls }})
               </button>
             }
-            <button type="button" class="btn btn--ghost" (click)="skip()">{{ 'sportask.brk.skip' | translate }}</button>
+            <button type="button" class="btn btn--ghost" (click)="skip()">{{ (isSingle ? 'sportask.brk.cancel' : 'sportask.brk.skip') | translate }}</button>
           </footer>
         }
 
@@ -118,7 +118,7 @@
                   {{ 'sportask.brk.next' | translate: { name: next.name } }}
                 </p>
               }
-              <p class="sbm__left">{{ 'sportask.brk.left' | translate: { time: clock.formattedTime() } }}</p>
+              <p class="sbm__left">{{ (isSingle ? 'sportask.brk.leftSingle' : 'sportask.brk.left') | translate: { time: leftText() } }}</p>
             </div>
             <div class="visually-hidden" role="status" aria-live="polite">
               @if (announce(); as say) {
@@ -155,8 +155,12 @@
                 </div>
               </div>
             } @else {
-              <button type="button" class="btn btn--primary" data-first (click)="save(true)">{{ 'sportask.brk.saveBack' | translate }}</button>
-              <button type="button" class="btn btn--secondary" (click)="save(false)">{{ 'sportask.brk.save' | translate }}</button>
+              @if (isSingle) {
+                <button type="button" class="btn btn--primary" data-first (click)="save(false)">{{ 'sportask.brk.save' | translate }}</button>
+              } @else {
+                <button type="button" class="btn btn--primary" data-first (click)="save(true)">{{ 'sportask.brk.saveBack' | translate }}</button>
+                <button type="button" class="btn btn--secondary" (click)="save(false)">{{ 'sportask.brk.save' | translate }}</button>
+              }
             }
           </footer>
         }

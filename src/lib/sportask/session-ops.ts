@@ -18,8 +18,15 @@ export function activateArmed(sportask: SportaskService, source: SportaskStartOp
   if (armed) startSession(sportask, { ...armed, source });
 }
 
-/** Closes the break modal and forgets the block that was pending. */
+/** Closes the break modal and forgets the block that was pending (a *Train now* block ends with it; a session is left alone). */
 export function closeBreak(sportask: SportaskService): void {
   sportask.breakOpen.set(false);
-  sportask.session.update((s) => (s?.pending ? { ...s, pending: null } : s));
+  if (sportask.single()) sportask.single.set(null);
+  else sportask.session.update((s) => (s?.pending ? { ...s, pending: null } : s));
+}
+
+/** *Train now*: opens the break modal on one block of `blockSeconds`, counted by its own timer. The session (if any) is untouched. */
+export function startSingle(sportask: SportaskService, options: Pick<SportaskStartOptions, 'mode' | 'templateId' | 'equipmentOverride'>, blockSeconds: number): void {
+  sportask.single.set({ ...options, blockSeconds, pending: null, endAt: null, left: blockSeconds, ended: false });
+  sportask.breakOpen.set(true);
 }

@@ -13,7 +13,7 @@
   >
     @if (ready()) {
       <header class="sss__head">
-        <h2 id="sss-title" class="sss__title">{{ 'sportask.setup.title' | translate }}</h2>
+        <h2 id="sss-title" class="sss__title">{{ (single() ? 'sportask.setup.titleSingle' : 'sportask.setup.title') | translate }}</h2>
         <button type="button" class="btn btn--ghost btn--icon btn--sm" [attr.aria-label]="'sportask.setup.cancel' | translate" (click)="close()">
           <app-ui-icon name="x" />
         </button>
@@ -65,6 +65,24 @@
           }
         </section>
 
+        @if (single()) {
+          <section class="sss__section" aria-labelledby="sss-length">
+            <h3 class="sss__label" id="sss-length">{{ 'sportask.setup.length' | translate }}</h3>
+            <div class="segmented" role="group" aria-labelledby="sss-length">
+              @for (n of blockLengths; track n) {
+                <button type="button" class="segmented__option" [attr.aria-pressed]="blockLength() === n" (click)="blockLength.set(n)">
+                  {{ 'sportask.setup.minutes' | translate: { n: n / 60 } }}
+                </button>
+              }
+            </div>
+            @if (shortBreak()) {
+              <p class="sss__warn" role="note">
+                <app-ui-icon name="alert" [size]="16" />
+                {{ 'sportask.setup.shortBreak' | translate }}
+              </p>
+            }
+          </section>
+        } @else {
         <section class="sss__section" aria-labelledby="sss-rhythm">
           <h3 class="sss__label" id="sss-rhythm">{{ 'sportask.rhythm.title' | translate }}</h3>
           <div class="sss__radios" role="radiogroup" [attr.aria-label]="'sportask.rhythm.list' | translate">
@@ -138,6 +156,7 @@
             </p>
           }
         </section>
+        }
 
         @if (equipmentChips().length > 0) {
           <section class="sss__section" aria-labelledby="sss-gear">
@@ -170,7 +189,7 @@
 
       <footer class="sss__foot">
         <button type="button" class="btn btn--primary" [disabled]="!canActivate()" (click)="activate()">
-          {{ 'sportask.setup.' + (planner() ? 'savePlan' : 'activate') + (needsAcceptance() ? 'Accept' : '') | translate }}
+          {{ 'sportask.setup.' + (single() ? 'startSingle' : planner() ? 'savePlan' : 'activate') + (needsAcceptance() ? 'Accept' : '') | translate }}
         </button>
         <button type="button" class="btn btn--secondary" (click)="close()">{{ 'sportask.setup.cancel' | translate }}</button>
       </footer>

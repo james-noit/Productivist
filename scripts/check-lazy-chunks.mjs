@@ -61,6 +61,7 @@ const NEVER_INITIAL_UI = [
   component('sportask-setup-sheet'),
   component('plan-sportask-switch'),
   component('sportask-break-modal'),
+  component('sportask-prepare'),
   component('sportask-view'),
   component('sportask-summary'),
   component('sportask-progress'),

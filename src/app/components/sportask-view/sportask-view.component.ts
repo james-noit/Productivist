@@ -1,8 +1,10 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { TranslatePipe } from '@ngx-translate/core';
 import { localize } from '../../../lib/sportask/texts';
+import { SportaskService } from '../../../services/sportask.service';
 import { SportaskHistoryComponent } from '../sportask-history/sportask-history.component';
 import { SportaskProgressComponent } from '../sportask-progress/sportask-progress.component';
+import { SportaskSetupSheetComponent } from '../sportask-setup-sheet/sportask-setup-sheet.component';
 import { SportaskSkinComponent } from '../sportask-skin/sportask-skin.component';
 import { SportaskSummaryComponent } from '../sportask-summary/sportask-summary.component';
 import { SportaskTemplatesComponent } from '../sportask-templates/sportask-templates.component';
@@ -16,7 +18,7 @@ import { PANEL_TABS, type PanelTab, SportPanelState } from './sport-panel.state'
 @Component({
   selector: 'app-sportask-view',
   standalone: true,
-  imports: [TranslatePipe, SportaskSkinComponent, SportaskSummaryComponent, SportaskProgressComponent, SportaskHistoryComponent, SportaskTemplatesComponent],
+  imports: [TranslatePipe, SportaskSetupSheetComponent, SportaskSkinComponent, SportaskSummaryComponent, SportaskProgressComponent, SportaskHistoryComponent, SportaskTemplatesComponent],
   providers: [SportPanelState],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './sportask-view.component.html',
@@ -25,6 +27,9 @@ import { PANEL_TABS, type PanelTab, SportPanelState } from './sport-panel.state'
 export class SportaskViewComponent {
   protected readonly state = inject(SportPanelState);
   protected readonly tabs = PANEL_TABS;
+  protected readonly sportask = inject(SportaskService);
+  /** *Train now*: the setup sheet in its single-block mode. */
+  protected readonly training = signal(false);
 
   /** "Strength · week 3/6 · tests this week": the enrolment in one line, or null without one. */
   protected readonly line = computed(() => {

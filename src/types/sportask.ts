@@ -183,6 +183,11 @@ export interface SportaskSession {
   startedAt: number;
   breaksSeen: number;
   pending: PendingBlock | null;
+  /**
+   * The block of the next exercise break, generated during the focus phase before it (`sportask-prepare`), so the end-of-focus
+   * notification can name the exercise. The break modal takes it as its block when `breakIndex` is the break that opens it.
+   */
+  prepared?: { breakIndex: number; block: PendingBlock };
 }
 
 /** What the generator says about a block besides its steps; stored on the block row and shown in the preview. */
@@ -214,6 +219,26 @@ export interface PendingBlock {
   rerolls: number;
   /** "Train anyway" on a rest day. */
   forceTrain?: boolean;
+}
+
+/**
+ * "Train now": one block outside the Pomodoro (device-local, like the session, and independent of it: it never touches an
+ * active session's counters or the clock). It holds what the generator needs, the block itself and the block's own countdown,
+ * so a reload resumes it.
+ */
+export interface SingleBlock {
+  mode: 'goal' | 'free';
+  templateId: string | 'random' | null;
+  equipmentOverride: EquipmentInventory | null;
+  /** The block's length (1, 2, 5 or 10 minutes). */
+  blockSeconds: number;
+  pending: PendingBlock | null;
+  /** Epoch ms deadline while the countdown runs, else null. */
+  endAt: number | null;
+  /** Seconds left while the countdown is not running. */
+  left: number;
+  /** The countdown reached zero, or the user finished early. */
+  ended: boolean;
 }
 
 /** What a session (or the armed planner session) needs to start. */
