@@ -39,6 +39,11 @@
   transform-origin: left bottom;
 }
 
+.sss__title::before {
+  content: var(--sport-prompt, none);
+  color: var(--color-capacity-safe);
+}
+
 .sss__body {
   flex: 1;
   min-height: 0;
@@ -138,6 +143,45 @@
 .sss__radio small {
   color: var(--color-text-muted);
   font-size: 0.8rem;
+}
+
+.sss__tpl {
+  align-items: center;
+  padding: 0;
+  cursor: default;
+}
+
+.sss__tpl-label {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  padding: 0.45rem 0 0.45rem 0.6rem;
+  cursor: pointer;
+}
+
+.sss__tpl .btn {
+  margin-right: 0.3rem;
+}
+
+.sss__new {
+  align-self: flex-start;
+  margin-top: 0.2rem;
+}
+
+/* The template editor sits above the sheet (and above the planner's 100). The wrapper only carries the skin's tokens. */
+.sss__editor {
+  display: contents;
+  --modal-z: 110;
+}
+
+.sss__tpl.sss__radio--off {
+  opacity: 1;
+}
+
+.sss__tpl.sss__radio--off .sss__tpl-label {
+  opacity: 0.55;
 }
 
 .sss__radio--off {

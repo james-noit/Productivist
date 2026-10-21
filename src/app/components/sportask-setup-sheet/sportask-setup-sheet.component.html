@@ -53,14 +53,39 @@
                 <span>{{ 'sportask.setup.random' | translate }}</span>
               </label>
               @for (t of templateRows(); track t.id) {
-                <label class="sss__radio" [class.sss__radio--off]="!t.available">
-                  <input type="radio" name="sss-template" [disabled]="!t.available" [checked]="chosenTemplate() === t.id" (change)="templateId.set(t.id)" />
-                  <span>{{ t.name }}</span>
-                  @if (!t.available) {
-                    <small>{{ 'sportask.setup.needsGear' | translate }}</small>
-                  }
-                </label>
+                @if (t.own) {
+                  <div class="sss__radio sss__tpl" [class.sss__radio--off]="!t.available">
+                    <label class="sss__tpl-label">
+                      <input type="radio" name="sss-template" [disabled]="!t.available" [checked]="chosenTemplate() === t.id" (change)="templateId.set(t.id)" />
+                      <span>{{ t.name }}</span>
+                      @if (!t.available) {
+                        <small>{{ 'sportask.setup.needsGear' | translate }}</small>
+                      }
+                    </label>
+                    <button
+                      type="button"
+                      class="btn btn--ghost btn--icon btn--sm"
+                      [attr.aria-label]="'sportask.setup.editTpl' | translate: { name: t.name }"
+                      [attr.title]="'sportask.panel.tpl.edit' | translate"
+                      (click)="editTemplate(t.id)"
+                    >
+                      <app-ui-icon name="edit" [size]="16" />
+                    </button>
+                  </div>
+                } @else {
+                  <label class="sss__radio" [class.sss__radio--off]="!t.available">
+                    <input type="radio" name="sss-template" [disabled]="!t.available" [checked]="chosenTemplate() === t.id" (change)="templateId.set(t.id)" />
+                    <span>{{ t.name }}</span>
+                    @if (!t.available) {
+                      <small>{{ 'sportask.setup.needsGear' | translate }}</small>
+                    }
+                  </label>
+                }
               }
+              <button type="button" class="btn btn--secondary btn--sm sss__new" (click)="newTemplate()">
+                <app-ui-icon name="plus" [size]="16" />
+                {{ 'sportask.panel.tpl.new' | translate }}
+              </button>
             </div>
           }
         </section>
@@ -197,4 +222,10 @@
       <p class="sss__loading" role="status"><app-ui-icon name="dumbbell" [size]="20" /></p>
     }
   </div>
+
+  @if (editing(); as e) {
+    <div class="sss__editor sport-skin" [attr.data-sport-skin]="skin()">
+      <app-sportask-template-editor [template]="e.template" [isNew]="e.isNew" (saved)="onTemplateSaved($event)" (closed)="editing.set(null)" />
+    </div>
+  }
 </div>

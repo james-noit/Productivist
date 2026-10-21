@@ -85,6 +85,8 @@ export class SportaskTemplateEditorComponent {
   readonly template = input.required<SportTemplate>();
   readonly isNew = input(false);
   readonly closed = output<void>();
+  /** The id of the template just saved (emitted before `closed`), so a caller can select it. */
+  readonly saved = output<string>();
 
   private readonly data = inject(SportDataService);
   protected readonly state = inject(SportPanelState);
@@ -302,6 +304,7 @@ export class SportaskTemplateEditorComponent {
     }
     if (d.format === 'emom') out.minSeconds = EMOM_MIN_SECONDS;
     upsertTemplate(this.data, out);
+    this.saved.emit(out.id);
     this.closed.emit();
   }
 

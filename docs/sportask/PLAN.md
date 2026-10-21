@@ -775,7 +775,7 @@ The dose is the exercise's default (or the slot's). Free blocks are not used by 
   - Cartoon look: 3px dark ink outlines (`#07040f`), hard offset shadows `4px 4px 0 #07040f`, slightly skewed headings
     (`transform: skewX(-6deg)` on display titles only), a faint perspective grid as `--sport-bg-pattern` (CSS gradients,
     no image), and a neon glow (`text-shadow`/`drop-shadow` in primary/cyan) on the timer.
-  - Display font: **Orbitron** (OFL 1.1) for numbers and headings, bundled as `src/fonts/orbitron-*.woff2` with its
+  - Display font: **Orbitron** (replaced by JetBrains Mono in 0.24) (OFL 1.1) for numbers and headings, bundled as `src/fonts/orbitron-*.woff2` with its
     licence file; body stays system-ui.
   - Motion: the timer flickers once per step change; a scanline sweep on the preview. Both are off under
     `prefers-reduced-motion`.
@@ -1033,7 +1033,7 @@ and why, what was verified and how, and what is not done.
    `sportask-button`, `sportask-setup-sheet`, `sportask-break-modal`, first-pass pictograms.
 5. **Plan my day entry**: `plan-sportask-switch` in the Tasks step's footer, the setup sheet's planner context, `activateArmed` in both
    launch paths of `daily-backlog-view`.
-6. **Skins and pictograms**: `sportask-skin` (cyberpunk, powerYoga), the bundled Orbitron and Quicksand, 17 pictograms with two poses.
+6. **Skins and pictograms**: `sportask-skin` (cyberpunk, powerYoga), the bundled JetBrains Mono (replacing Orbitron in 0.24) and Quicksand, 17 pictograms with two poses.
 7. **The panel** (`sportask-view`): Summary, Progress, History (marks editing through the shared results form), Templates (editor);
    metrics, chart geometry, `sport-line-chart`, `sport-bar-chart`, `sport-heatmap`.
 8. **Polish**: *Train now* (a `BlockDriver` abstraction with the clock's and a local countdown), the Sportask mark in the Pomodoro chip
@@ -1065,7 +1065,7 @@ and why, what was verified and how, and what is not done.
   `#7c6670` -> `#6c5762`, cyberpunk primary-contrast white -> ink); the measured ratios are in the CSS comments.
 - **Series colours are new tokens** `--sport-series-1..9` (section 10 named four existing tokens): nine hues are needed for the
   per-pattern and per-zone stacks, and two skins each define their own.
-- **Fonts**: one weight each (Orbitron 700, Quicksand 700, latin woff2 copied from `@fontsource` 5.3.0, not a dependency); a request for
+- **Fonts**: one weight each (JetBrains Mono 700 (0.24; Orbitron before), Quicksand 700, latin woff2 copied from `@fontsource` 5.3.0, not a dependency); a request for
   600 resolves to it.
 - **Pictograms** (section 9.3): 17 figures built with forward kinematics from one body (same segment lengths everywhere) instead of
   hand-written per-figure paths; per-exercise artwork is still a later phase.
