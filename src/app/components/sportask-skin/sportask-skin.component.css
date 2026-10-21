@@ -18,8 +18,7 @@
     --sport-stroke*, --sport-ink*, --sport-soft-opacity  the pictograms
     --sport-*-anim, --sport-ring-*         motion; defined ONLY under prefers-reduced-motion: no-preference, so it is off otherwise
 
-  A third skin = one more pair of blocks here and a SKINS entry. No fonts are downloaded: see the stacks and the commented
-  @font-face below. No remote URLs and no inline script (Thunderbird CSP); the one image is a data: URI of under 1 kB.
+  A third skin = one more pair of blocks here and a SKINS entry. The fonts are bundled (see below). No remote URLs and no inline script (Thunderbird CSP); the one image is a data: URI of under 1 kB.
 
   Contrast, WCAG 2.x, measured with a script (relative luminance of the sRGB values; text 4.5:1, large text and UI parts 3:1).
   The plan's first colours that failed were changed: powerYoga primary #c4572f -> #b84e27 (white on it 4.42 -> 5.05),
@@ -27,15 +26,28 @@
 */
 
 /*
-  Fonts. Nothing is bundled yet, so the stacks below fall back to what the system has. To ship the real faces (both SIL OFL 1.1:
-  keep their licence files next to them in src/fonts/), drop the woff2 files into src/fonts/ and uncomment; the url() resolves
-  the same way style.css's Cookie face does, and nothing else needs to change:
-
-  @font-face { font-family: 'Orbitron'; font-style: normal; font-weight: 500 900; font-display: swap;
-    src: url('../../../fonts/orbitron-variable.woff2') format('woff2'); }
-  @font-face { font-family: 'Quicksand'; font-style: normal; font-weight: 400 700; font-display: swap;
-    src: url('../../../fonts/quicksand-variable.woff2') format('woff2'); }
+  Fonts: Orbitron (cyberpunk display face) and Quicksand (power yoga), both SIL OFL 1.1, latin subset, one weight each (700: titles,
+  numbers and buttons all ask for bold; a request for 600 resolves to it). The woff2 files come from the npm packages
+  @fontsource/orbitron 5.3.0 and @fontsource/quicksand 5.3.0 (copied, not a dependency) and live in src/fonts/ next to
+  Cookie, with their licences (OFL-Orbitron.txt, OFL-Quicksand.txt). The url() is relative to this file, so Angular emits them
+  as assets of this lazy chunk: the browser fetches a face only when an element that uses it is rendered, i.e. when a skin applies.
+  The stacks in --sport-font-display keep working (system faces) if a file ever fails to load.
 */
+@font-face {
+  font-family: 'Orbitron';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('../../../fonts/orbitron-latin-700.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Quicksand';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('../../../fonts/quicksand-latin-700.woff2') format('woff2');
+}
 
 /* ---------------------------------------------------------------------------------------------------------------------------
    Cyberpunk (cartoon neon), dark.
