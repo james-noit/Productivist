@@ -121,7 +121,10 @@
   --sport-stroke-width: 3;
   --sport-ink-width: 6.6;
   --sport-soft-opacity: 0.55;
-  /* Chart series (sport-line-chart, sport-bar-chart): nine hues that stay apart from each other, 4.5:1 or better on the surface (3:1 needed). */
+  /* Chart series (sport-line-chart, sport-bar-chart): nine hues that stay apart from each other. Contrast of each (1..9) on the page /
+     surface / card (= surface-alt, where the charts sit), measured; 3:1 is needed for graphics, the lowest is 4.55:
+     1 5.54 5.09 4.55 | 2 12.43 11.43 10.23 | 3 13.63 12.53 11.21 | 4 10.62 9.76 8.73 | 5 6.16 5.66 5.06
+     6 14.89 13.69 12.24 | 7 6.13 5.64 5.04 | 8 7.55 6.94 6.21 | 9 15.32 14.08 12.60 */
   --sport-series-1: #ff2e88;
   --sport-series-2: #19e3ff;
   --sport-series-3: #3df5a0;
@@ -203,7 +206,10 @@
   --sport-stroke-width: 3.4;
   --sport-ink-width: 0;
   --sport-soft-opacity: 0.45;
-  /* Chart series: nine hues that stay apart from each other, 3.5:1 or better on the surface and on the card (3:1 needed). */
+  /* Chart series: nine hues that stay apart from each other. Contrast of each (1..9) on the page / surface / card (= surface-alt, where
+     the charts sit), measured; 3:1 is needed for graphics, the lowest is 3.49 (series 9 on the card), so none fails:
+     1 4.63 4.86 4.08 | 2 4.81 5.06 4.24 | 3 4.30 4.53 3.80 | 4 4.51 4.74 3.97 | 5 4.99 5.25 4.40
+     6 4.93 5.19 4.35 | 7 4.90 5.15 4.32 | 8 3.98 4.19 3.51 | 9 3.96 4.16 3.49 */
   --sport-series-1: #b84e27;
   --sport-series-2: #3f7384;
   --sport-series-3: #4f7f4a;
