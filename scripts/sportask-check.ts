@@ -144,8 +144,12 @@ function checkRegistries(): void {
   const pictograms = new Set<string>(PICTOGRAM_IDS);
   for (const id of PICTOGRAM_IDS) {
     const p = PICTOGRAMS[id];
-    check(!!p && p.a.length > 0 && p.b.length > 0, `pictogram ${id}: both poses drawn`);
-    for (const d of [...(p?.a ?? []), ...(p?.b ?? [])]) check(/^M[-\d. ]+[aLC]/.test(d) && !d.includes('NaN'), `pictogram ${id}: a sane path`);
+    check(!!p && p.a.main.length > 0 && p.b.main.length > 0, `pictogram ${id}: both poses drawn`);
+    check(!!p && p.tempo >= 0.5 && p.tempo <= 4, `pictogram ${id}: a tempo of 0.5 to 4 s`);
+    for (const d of [...(p?.a.main ?? []), ...(p?.b.main ?? []), ...(p?.a.soft ?? []), ...(p?.b.soft ?? [])]) {
+      check(/^M[-\d. ]+[aLC]/.test(d) && !d.includes('NaN') && !d.includes('Infinity'), `pictogram ${id}: a sane path`);
+      for (const v of d.match(/-?\d+(\.\d+)?/g) ?? []) check(Math.abs(Number(v)) < 120, `pictogram ${id}: a number inside the grid (${v})`);
+    }
   }
   const equipmentIds = new Set(EQUIPMENT.all.map((e) => e.id));
   for (const ex of exercises.all) {

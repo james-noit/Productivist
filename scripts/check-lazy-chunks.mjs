@@ -62,6 +62,7 @@ const NEVER_INITIAL_UI = [
   component('plan-sportask-switch'),
   component('sportask-break-modal'),
   component('sportask-pictogram'),
+  component('sportask-skin'),
   'src/lib/multitask-research.ts',
   'src/lib/bell-sounds.ts',
   component('lot-editor'),

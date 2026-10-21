@@ -1,7 +1,9 @@
 <div class="modal-overlay sss-overlay" (mousedown)="onBackdrop($event)">
+  <app-sportask-skin />
   <div
     #panel
     class="modal-panel sss sport-skin"
+    [attr.data-sport-skin]="skin()"
     role="dialog"
     aria-modal="true"
     aria-labelledby="sss-title"

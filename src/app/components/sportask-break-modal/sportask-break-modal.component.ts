@@ -23,6 +23,7 @@ import { stepAt, timeline, type RunnerState } from '../../../lib/sportask/runner
 import { sanitizeSettings } from '../../../lib/sportask/sanitize';
 import { closeBreak } from '../../../lib/sportask/session-ops';
 import { blockRow, buildContext } from '../../../lib/sportask/session-context';
+import { resolveSkin } from '../../../lib/sportask/skins';
 import { BUILTIN_TEMPLATES } from '../../../lib/sportask/templates';
 import { loadSportaskTexts, localize } from '../../../lib/sportask/texts';
 import { ClockService } from '../../../services/clock.service';
@@ -34,6 +35,7 @@ import type { BlockStep, Feedback, MetricKind, PendingBlock, StepResult } from '
 import { KebabMenuComponent } from '../kebab-menu/kebab-menu.component';
 import { NumberStepperComponent } from '../number-stepper/number-stepper.component';
 import { SportaskPictogramComponent } from '../sportask-pictogram/sportask-pictogram.component';
+import { SportaskSkinComponent } from '../sportask-skin/sportask-skin.component';
 import { UiIconComponent } from '../ui-icon/ui-icon.component';
 
 type Stage = 'preview' | 'running' | 'results';
@@ -102,7 +104,7 @@ export const mmss = (seconds: number): string => `${Math.floor(Math.max(0, secon
 @Component({
   selector: 'app-sportask-break-modal',
   standalone: true,
-  imports: [TranslatePipe, KebabMenuComponent, NumberStepperComponent, SportaskPictogramComponent, UiIconComponent],
+  imports: [TranslatePipe, KebabMenuComponent, NumberStepperComponent, SportaskPictogramComponent, SportaskSkinComponent, UiIconComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './sportask-break-modal.component.html',
   styleUrl: './sportask-break-modal.component.css',
@@ -124,6 +126,8 @@ export class SportaskBreakModalComponent {
   protected readonly rpes = RPES;
 
   private readonly settings = computed(() => sanitizeSettings(this.store.settings()));
+  /** The skin this surface wears (`data-sport-skin`), whatever the whole-app option says. */
+  protected readonly skin = computed(() => resolveSkin(this.settings().skin));
   protected readonly session = this.sportask.session;
   protected readonly pending = computed(() => this.session()?.pending ?? null);
   protected readonly autoStarted = signal(false);

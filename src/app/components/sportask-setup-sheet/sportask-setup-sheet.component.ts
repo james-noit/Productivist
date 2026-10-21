@@ -9,6 +9,7 @@ import { GOALS } from '../../../lib/sportask/goals';
 import { sanitizeSettings } from '../../../lib/sportask/sanitize';
 import { startSession } from '../../../lib/sportask/session-ops';
 import { buildContext } from '../../../lib/sportask/session-context';
+import { resolveSkin } from '../../../lib/sportask/skins';
 import { BUILTIN_TEMPLATES } from '../../../lib/sportask/templates';
 import { loadSportaskTexts, localize } from '../../../lib/sportask/texts';
 import { todayIso } from '../../../lib/dates';
@@ -19,6 +20,7 @@ import { SportaskService } from '../../../services/sportask.service';
 import { ViewService } from '../../../services/view.service';
 import type { EquipmentInventory, SportaskStartOptions } from '../../../types/sportask';
 import { NumberStepperComponent } from '../number-stepper/number-stepper.component';
+import { SportaskSkinComponent } from '../sportask-skin/sportask-skin.component';
 import { UiIconComponent, type UiIconName } from '../ui-icon/ui-icon.component';
 
 type Mode = 'goal' | 'free';
@@ -33,7 +35,7 @@ const minutes = (seconds: number): number => seconds / 60;
 @Component({
   selector: 'app-sportask-setup-sheet',
   standalone: true,
-  imports: [TranslatePipe, NumberStepperComponent, UiIconComponent],
+  imports: [TranslatePipe, NumberStepperComponent, SportaskSkinComponent, UiIconComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './sportask-setup-sheet.component.html',
   styleUrl: './sportask-setup-sheet.component.css',
@@ -67,6 +69,8 @@ export class SportaskSetupSheetComponent implements OnInit {
 
   private readonly settings = computed(() => sanitizeSettings(this.store.settings()));
   protected readonly enrolment = computed(() => this.settings().enrolment);
+  /** The skin this surface wears (`data-sport-skin`), whatever the whole-app option says. */
+  protected readonly skin = computed(() => resolveSkin(this.settings().skin));
 
   // ---- the draft (starts from the session, the armed planner session, or the settings; filled in ngOnInit, once the inputs are set) ----
 

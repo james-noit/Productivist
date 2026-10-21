@@ -3,20 +3,23 @@ import { PICTOGRAMS } from '../../../lib/sportask/pictogram-paths';
 
 /**
  * An exercise as a stick figure on a 64px grid, two key poses (A, B) drawn with strokes. While `animate` is on the poses alternate
- * (CSS `steps(1)`); otherwise, and under `prefers-reduced-motion`, only pose A shows. The stroke follows the skin tokens
- * (`--sport-stroke`, `--sport-glow`), with plain fallbacks until a skin sets them. Decorative: the name next to it is the label.
+ * (CSS `steps(1)` at the pictogram's own tempo); otherwise, and under `prefers-reduced-motion`, only pose A shows. Each pose has a
+ * `main` layer (body and equipment) and a `soft` one (far limbs, floor), drawn twice: first an ink outline (`--sport-ink`, as wide as
+ * `--sport-ink-width`, nothing when that is 0), then the stroke itself (`--sport-stroke`, `--sport-stroke-width`, with the skin's
+ * glow filter). Plain fallbacks apply until a skin sets the tokens. Decorative: the name next to it is the label.
  */
 @Component({
   selector: 'app-sportask-pictogram',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <svg viewBox="0 0 64 64" aria-hidden="true" focusable="false" [class.sk-pict--live]="animate()">
+    <svg viewBox="0 0 64 64" aria-hidden="true" focusable="false" [class.sk-pict--live]="animate()" [style.--sk-pict-period]="tempo() + 's'">
       @for (pose of poses(); track pose.key) {
         <g [class]="'sk-pict__pose sk-pict__pose--' + pose.key">
-          @for (d of pose.paths; track $index) {
-            <path [attr.d]="d" />
-          }
+          <path class="sk-pict__ink sk-pict__soft" [attr.d]="pose.soft" />
+          <path class="sk-pict__line sk-pict__soft" [attr.d]="pose.soft" />
+          <path class="sk-pict__ink" [attr.d]="pose.main" />
+          <path class="sk-pict__line" [attr.d]="pose.main" />
         </g>
       }
     </svg>
@@ -24,21 +27,44 @@ import { PICTOGRAMS } from '../../../lib/sportask/pictogram-paths';
   styles: `
     :host {
       display: inline-flex;
+      flex: none;
       width: var(--sk-pict-size, 64px);
       height: var(--sk-pict-size, 64px);
-      color: var(--color-primary);
     }
 
     svg {
       width: 100%;
       height: 100%;
       fill: none;
-      stroke: currentColor;
-      stroke-width: var(--sport-stroke-width, 3);
       stroke-linecap: round;
       stroke-linejoin: round;
       overflow: visible;
-      filter: var(--sport-glow, none);
+    }
+
+    path {
+      fill: none;
+    }
+
+    .sk-pict__line {
+      stroke: var(--sport-stroke, var(--color-primary));
+      stroke-width: var(--sport-stroke-width, 3);
+      filter: var(--sport-glow-filter, none);
+    }
+
+    .sk-pict__ink {
+      stroke: var(--sport-ink, transparent);
+      stroke-width: var(--sport-ink-width, 0);
+    }
+
+    .sk-pict__line.sk-pict__soft {
+      stroke-width: calc(var(--sport-stroke-width, 3) * 0.78);
+      opacity: var(--sport-soft-opacity, 0.5);
+      filter: none;
+    }
+
+    .sk-pict__ink.sk-pict__soft {
+      stroke-width: calc(var(--sport-ink-width, 0) * 0.78);
+      opacity: var(--sport-soft-opacity, 0.5);
     }
 
     .sk-pict__pose--b {
@@ -57,7 +83,8 @@ import { PICTOGRAMS } from '../../../lib/sportask/pictogram-paths';
       0% {
         visibility: visible;
       }
-      50% {
+      50%,
+      100% {
         visibility: hidden;
       }
     }
@@ -66,7 +93,8 @@ import { PICTOGRAMS } from '../../../lib/sportask/pictogram-paths';
       0% {
         visibility: hidden;
       }
-      50% {
+      50%,
+      100% {
         visibility: visible;
       }
     }
@@ -89,11 +117,14 @@ export class SportaskPictogramComponent {
   readonly id = input.required<string>();
   readonly animate = input(false);
 
+  private readonly drawing = computed(() => (PICTOGRAMS as Record<string, (typeof PICTOGRAMS)[keyof typeof PICTOGRAMS] | undefined>)[this.id()] ?? PICTOGRAMS.march);
+
+  protected readonly tempo = computed(() => this.drawing().tempo);
   protected readonly poses = computed(() => {
-    const p = (PICTOGRAMS as Record<string, { a: string[]; b: string[] } | undefined>)[this.id()] ?? PICTOGRAMS.march;
+    const p = this.drawing();
     return [
-      { key: 'a', paths: p.a },
-      { key: 'b', paths: p.b },
+      { key: 'a', main: p.a.main.join(''), soft: p.a.soft.join('') },
+      { key: 'b', main: p.b.main.join(''), soft: p.b.soft.join('') },
     ];
   });
 }

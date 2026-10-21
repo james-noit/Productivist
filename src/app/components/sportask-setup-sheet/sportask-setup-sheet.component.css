@@ -11,6 +11,16 @@
   outline: none;
 }
 
+/* The skin (tokens: sportask-skin.component.css): outline, shadow and the drawing behind the content. */
+.sss.sport-skin {
+  border: var(--sport-outline, 1px solid var(--color-border));
+  box-shadow: var(--sport-shadow, none);
+  background-image: var(--sport-bg-pattern, none);
+  background-size: var(--sport-bg-size, auto);
+  background-position: var(--sport-bg-position, 0 0);
+  background-repeat: var(--sport-bg-repeat, no-repeat);
+}
+
 .sss__head {
   display: flex;
   align-items: center;
@@ -23,6 +33,10 @@
   margin: 0;
   font-size: 1.15rem;
   font-family: var(--sport-font-display, inherit);
+  text-transform: var(--sport-title-case, none);
+  letter-spacing: var(--sport-title-tracking, normal);
+  transform: var(--sport-title-transform, none);
+  transform-origin: left bottom;
 }
 
 .sss__body {
@@ -57,9 +71,10 @@
   gap: 0.75rem;
   width: 100%;
   padding: 0.7rem 0.85rem;
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
+  border: var(--sport-card-border, 1px solid var(--color-border));
+  border-radius: var(--sport-radius-sm, 8px);
   background-color: var(--color-surface-alt);
+  box-shadow: var(--sport-card-shadow, none);
 }
 
 .sss__card-text {
@@ -94,8 +109,8 @@
   align-items: flex-start;
   gap: 0.6rem;
   padding: 0.45rem 0.6rem;
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
+  border: 1px solid var(--sport-control-border, var(--color-border));
+  border-radius: var(--sport-radius-sm, 8px);
   cursor: pointer;
 }
 
@@ -179,9 +194,10 @@
   flex-direction: column;
   gap: 0.5rem;
   padding: 0.75rem;
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
+  border: var(--sport-card-border, 1px solid var(--color-border));
+  border-radius: var(--sport-radius-sm, 8px);
   background-color: var(--color-surface-alt);
+  box-shadow: var(--sport-card-shadow, none);
 }
 
 .sss__notice p {
@@ -210,6 +226,7 @@
   gap: 0.5rem;
   padding: 0.75rem 1rem;
   border-top: 1px solid var(--color-border);
+  background-color: var(--sport-foot-bg, transparent);
 }
 
 .sss__loading {
@@ -226,12 +243,14 @@
     align-items: stretch;
   }
 
-  .sss {
+  .sss,
+  .sss.sport-skin {
     --modal-max-width: none;
     --modal-max-height: none;
     --modal-radius: 0;
     height: 100%;
     border: none;
+    box-shadow: none;
     padding-top: env(safe-area-inset-top);
     padding-left: env(safe-area-inset-left);
     padding-right: env(safe-area-inset-right);

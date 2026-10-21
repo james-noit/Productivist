@@ -1,7 +1,10 @@
 <div class="modal-overlay sbm-overlay">
+  <app-sportask-skin />
   <div
     #panel
     class="modal-panel sbm sport-skin"
+    [attr.data-sport-skin]="skin()"
+    [attr.data-stage]="stage()"
     role="dialog"
     aria-modal="true"
     aria-labelledby="sbm-title"
@@ -84,7 +87,7 @@
 
         @case ('running') {
           @if (now(); as n) {
-            <div class="sbm__body sbm__run" [attr.data-kind]="n.kind">
+            <div class="sbm__body sbm__run" [attr.data-kind]="n.kind" [attr.data-parity]="n.index % 2">
               <p class="sbm__phase">{{ 'sportask.brk.phase.' + n.kind | translate }}</p>
               <app-sportask-pictogram class="sbm__hero" [id]="n.pictogram" [animate]="(n.kind === 'work' || n.kind === 'breathe') && !paused()" />
               @if (n.name) {
