@@ -1046,8 +1046,8 @@ and why, what was verified and how, and what is not done.
   `SportaskService` and calls `focusEnded()` in `switchToNextMode`, which counts the break and opens the modal itself; there is no
   effect watching a counter, so no microtask and no adapter. The DI direction is still one way (the service never injects the clock).
 - **Session operations are lazy** (`lib/sportask/session-ops.ts`: `startSession`, `activateArmed`, `closeBreak`, `startSingle`), not
-  methods of `SportaskService` (`start`, `stop`'s siblings, `armForPlanner`, `disarmPlanner`, `closeBreak`), to keep the eager class
-  within budget. Arming is `SportaskService.armed.set(options)` / `armed.set(null)`; `suppressSessionModal` is `breakOpen` itself
+  methods of `SportaskService` (`start`, `armForPlanner`, `disarmPlanner`, `activateArmed`, `closeBreak`), to keep the eager class
+  within budget (only `stop` and `focusEnded` stay on it). Arming is `SportaskService.armed.set(options)` / `armed.set(null)`; `suppressSessionModal` is `breakOpen` itself
   (`pomodoro-clock` hides its dialog on `!sportask.breakOpen()`). Section 6.2's stored block is a `PendingBlock` (id, plan, `startedAt`,
   `meta` with the generator's notes, the break's length, re-roll count, `forceTrain`) rather than `{ blockId, plan, startedAt }`.
 - **Writes on the data store are lazy too** (phase 8, `lib/sportask/data-ops.ts`): `SportDataService` keeps the two signals, the export,
