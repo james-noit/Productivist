@@ -28,7 +28,7 @@
   } @placeholder {
     <div class="view-loading" aria-hidden="true"></div>
   }
-} @else if (view.current() === 'sportask') {
+} @else if (view.current() === 'sportask' && sportaskSettings.enabled()) {
   @defer (on immediate) {
     <app-sportask-view />
   } @placeholder {

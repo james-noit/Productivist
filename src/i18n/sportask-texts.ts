@@ -8,6 +8,16 @@
 export const SPORTASK_TEXTS: Record<'en' | 'es', Record<string, unknown>> = {
   en: {
     "intro": "Turn your Pomodoro breaks into short training blocks.",
+    "activate": {
+      "label": "Activate Sportask",
+      "on": "Sportask is on. Your Pomodoro breaks can include short training blocks.",
+      "off": "Sportask is off: the menu has no Sportask entry and the Pomodoro and Multitask views work as usual.",
+      "about": "Turn it on to pick a goal, say what equipment you have and train during your breaks. If you turn it off again, your history and settings are kept."
+    },
+    "off": {
+      "text": "Sportask is off. Turn it on in Configuration › Sportask.",
+      "open": "Open Configuration"
+    },
     "disclaimer": "Sportask suggests general exercises; it is not medical advice and does not replace a professional. If you have an injury or a heart condition, are pregnant, or have not exercised in a while, check with your doctor first. Warm up, go at your own pace, and stop if you feel pain, dizziness or unusual shortness of breath. Calories are a rough estimate.",
     "goal": {
       "title": "Goal",
@@ -374,6 +384,16 @@ export const SPORTASK_TEXTS: Record<'en' | 'es', Record<string, unknown>> = {
   },
   es: {
     "intro": "Convierte las pausas del Pomodoro en bloques de entrenamiento breves.",
+    "activate": {
+      "label": "Activar Sportask",
+      "on": "Sportask está activado. Tus pausas del Pomodoro pueden incluir bloques de entrenamiento breves.",
+      "off": "Sportask está desactivado: el menú no tiene entrada de Sportask y las vistas Pomodoro y Multitarea funcionan como siempre.",
+      "about": "Actívalo para elegir un objetivo, indicar qué material tienes y entrenar durante tus pausas. Si lo desactivas de nuevo, se conservan tu historial y tus ajustes."
+    },
+    "off": {
+      "text": "Sportask está desactivado. Actívalo en Configuración › Sportask.",
+      "open": "Abrir Configuración"
+    },
     "disclaimer": "Sportask propone ejercicios generales; no es consejo médico ni sustituye a un profesional. Si tienes una lesión, una enfermedad cardiovascular, estás embarazada o hace tiempo que no haces ejercicio, consulta antes con tu médico. Calienta, respeta tu ritmo y para si notas dolor, mareo o falta de aire anormal. Las calorías son una estimación aproximada.",
     "goal": {
       "title": "Objetivo",

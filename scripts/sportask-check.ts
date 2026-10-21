@@ -12,6 +12,7 @@ import { type BlockMeta, generate } from '../src/lib/sportask/engine/generate';
 import { LADDER_PROGRESSION, isRungUsable } from '../src/lib/sportask/engine/progression';
 import { mulberry32, rngFor, seedFrom } from '../src/lib/sportask/engine/rng';
 import { phaseFor, programWeek } from '../src/lib/sportask/engine/schedule';
+import { sportaskSwitch } from '../src/lib/sportask-defaults';
 import { EQUIPMENT } from '../src/lib/sportask/equipment';
 import { GOALS } from '../src/lib/sportask/goals';
 import { netKcal } from '../src/lib/sportask/kcal';
@@ -777,9 +778,28 @@ function checkSanitize(): void {
     cues: false,
     autoStartBreak: true,
     disclaimerAcceptedAt: 1_700_000_000_000,
+    enabled: true,
+    setupDoneAt: 1_700_000_100_000,
   };
   check(same(sanitizeSettings(JSON.parse(JSON.stringify(custom))), custom), 'valid custom settings are unchanged');
   check(sanitizeSettings({ disclaimerAcceptedAt: 0 }).disclaimerAcceptedAt === undefined && sanitizeSettings({ disclaimerAcceptedAt: 'x' }).disclaimerAcceptedAt === undefined && sanitizeSettings({ disclaimerAcceptedAt: -5 }).disclaimerAcceptedAt === undefined, 'disclaimerAcceptedAt must be a positive number');
+  check(sanitizeSettings({ enabled: false }).enabled === false && sanitizeSettings({ enabled: true }).enabled === true, 'a boolean enabled is kept (false too)');
+  check(!('enabled' in sanitizeSettings(undefined)) && !('enabled' in sanitizeSettings({})) && !('setupDoneAt' in sanitizeSettings({})), 'enabled and setupDoneAt are only set when stored');
+  check(sanitizeSettings({ enabled: 'yes' }).enabled === undefined && sanitizeSettings({ enabled: 1 }).enabled === undefined && sanitizeSettings({ enabled: null }).enabled === undefined, 'enabled must be a boolean');
+  check(sanitizeSettings({ setupDoneAt: 0 }).setupDoneAt === undefined && sanitizeSettings({ setupDoneAt: 'x' }).setupDoneAt === undefined && sanitizeSettings({ setupDoneAt: -5 }).setupDoneAt === undefined && sanitizeSettings({ setupDoneAt: 1_700_000_000_000 }).setupDoneAt === 1_700_000_000_000, 'setupDoneAt must be a positive number');
+  {
+    // The read-time fallback of existing users (src/lib/sportask-defaults.ts).
+    const enrolled = enrol('strength', 'microStrength', 1, '2026-03-02');
+    const sw = (raw: unknown, used = false): string => JSON.stringify(sportaskSwitch(raw, used));
+    const off = JSON.stringify({ enabled: false, setupDone: false });
+    const on = JSON.stringify({ enabled: true, setupDone: true });
+    check(sw(undefined) === off && sw(null) === off && sw({}) === off && sw(defaults) === off && sw([]) === off, 'new users start off and not set up');
+    check(sw({ enrolment: enrolled }) === on && sw(undefined, true) === on && sw({}, true) === on, 'an enrolment, a block or a session without `enabled` means on and set up');
+    check(sw({ enabled: false, enrolment: enrolled }, true) === JSON.stringify({ enabled: false, setupDone: false }), 'an explicit false wins over the fallback');
+    check(sw({ enabled: false, setupDoneAt: 5 }, true) === JSON.stringify({ enabled: false, setupDone: true }) && sw({ enabled: true, setupDoneAt: 5 }) === on, 'setupDoneAt marks the setup as done');
+    check(sw({ enabled: true }) === JSON.stringify({ enabled: true, setupDone: false }) && sw({ enabled: true, enrolment: enrolled }, true) === JSON.stringify({ enabled: true, setupDone: false }), 'an explicit true is on but not set up until setupDoneAt');
+    check(sw({ enrolment: null }) === off, 'a null enrolment does not count');
+  }
   for (const g of [null, 5, 'x', [], { enrolment: 5, cadenceId: 7, equipment: [], constraints: 'a', customCadence: { focusSeconds: 'a' } }, { equipment: { band: 5, 'bad key!': { owned: true }, kettlebell: { owned: 'yes', weightsKg: [-1, 'a', 1e9, 12, 12] } }, customCadence: { focusSeconds: 1, breakSeconds: 1e9, exerciseEvery: 99, longBreak: { every: 1, seconds: 1 } } }]) {
     const out = sanitizeSettings(g);
     check(same(sanitizeSettings(JSON.parse(JSON.stringify(out))), out), 'garbage settings become stable valid settings');

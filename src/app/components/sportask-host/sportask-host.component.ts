@@ -1,5 +1,6 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, untracked } from '@angular/core';
 import { sanitizeSettings } from '../../../lib/sportask/sanitize';
+import { deactivate } from '../../../lib/sportask/session-ops';
 import { resolveSkin } from '../../../lib/sportask/skins';
 import { SportaskSettingsService } from '../../../services/sportask-settings.service';
 import { SportaskService } from '../../../services/sportask.service';
@@ -42,13 +43,22 @@ export class SportaskHostComponent {
 
   /** The skin id the whole app wears right now, or null. An unknown stored id resolves to the default skin. */
   protected readonly skin = computed<string | null>(() => {
-    const panel = this.view.current() === 'sportask';
+    const panel = this.view.current() === 'sportask' && this.settings.enabled();
     if (!panel && !this.sportask.active()) return null;
     const s = sanitizeSettings(this.settings.settings());
     return !panel && !s.skinWholeApp ? null : resolveSkin(s.skin);
   });
 
   constructor() {
+    // Sportask switched off (here or, through sync, on another device) while a session runs, a break is open or the panel is the
+    // stored view: stop the session and leave the panel. (`AppComponent` already shows Pomodoro instead of the panel meanwhile.)
+    effect(() => {
+      if (this.settings.enabled()) return;
+      untracked(() => {
+        deactivate(this.sportask);
+        if (this.view.current() === 'sportask') this.view.setView('pomodoro');
+      });
+    });
     effect((onCleanup) => {
       const skin = this.skin();
       if (skin) document.documentElement.dataset['sportSkin'] = skin;

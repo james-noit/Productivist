@@ -4,20 +4,21 @@ import { SettingsService } from '../../../services/settings.service';
 import { SportaskSettingsService } from '../../../services/sportask-settings.service';
 import { SportaskService } from '../../../services/sportask.service';
 import { UiIconComponent } from '../ui-icon/ui-icon.component';
+import { SportaskOffHintComponent } from '../sportask-off-hint/sportask-off-hint.component';
 import { SportaskSetupSheetComponent } from '../sportask-setup-sheet/sportask-setup-sheet.component';
 
 type GoalsModule = typeof import('../../../lib/sportask/goals');
 type TextsModule = typeof import('../../../lib/sportask/texts');
 
 /**
- * The *Sportask* button of the Pomodoro and Multitask views. Off: opens the setup sheet. On: shown pressed with the rhythm
+ * The *Sportask* button of the Pomodoro and Multitask views. Sportask switched off (Configuration): the button stays but is `aria-disabled` and shows `sportask-off-hint`. Not started: opens the setup sheet. Active: shown pressed with the rhythm
  * (25/5), and a small popover offers *Change...* (the sheet) and *Leave Sportask*. The sheet is deferred; the strings and the
  * goal names are fetched only when the popover opens, so the view itself carries almost nothing.
  */
 @Component({
   selector: 'app-sportask-button',
   standalone: true,
-  imports: [TranslatePipe, UiIconComponent, SportaskSetupSheetComponent],
+  imports: [TranslatePipe, UiIconComponent, SportaskOffHintComponent, SportaskSetupSheetComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './sportask-button.component.html',
   styleUrl: './sportask-button.component.css',
@@ -30,6 +31,7 @@ export class SportaskButtonComponent {
   private readonly appSettings = inject(SettingsService);
   private readonly translate = inject(TranslateService);
 
+  protected readonly enabled = this.store.enabled;
   protected readonly active = this.sportask.active;
   protected readonly menuOpen = signal(false);
   protected readonly sheetOpen = signal(false);

@@ -9,6 +9,7 @@ import { ProjectsService } from '../services/projects.service';
 import { RecurrenceService } from '../services/recurrence.service';
 import { AccountService } from '../services/account.service';
 import { SportaskService } from '../services/sportask.service';
+import { SportaskSettingsService } from '../services/sportask-settings.service';
 import { AppHeaderComponent } from './components/app-header/app-header.component';
 import { PomodoroClockComponent } from './components/pomodoro-clock/pomodoro-clock.component';
 import { TodoListComponent } from './components/todo-list/todo-list.component';
@@ -60,6 +61,7 @@ export class AppComponent {
   readonly clock = inject(ClockService);
   readonly accounts = inject(AccountService);
   readonly sportask = inject(SportaskService);
+  readonly sportaskSettings = inject(SportaskSettingsService);
   private readonly translate = inject(TranslateService);
   private readonly injector = inject(Injector);
 

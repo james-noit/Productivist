@@ -5,10 +5,12 @@ import { CADENCES, MAX_BREAK_SECONDS, MAX_FOCUS_SECONDS, MIN_CUSTOM_FOCUS_SECOND
 import { EQUIPMENT } from '../../../lib/sportask/equipment';
 import { GOALS } from '../../../lib/sportask/goals';
 import { sanitizeSettings } from '../../../lib/sportask/sanitize';
+import { deactivate } from '../../../lib/sportask/session-ops';
 import { SKINS } from '../../../lib/sportask/skins';
 import { loadSportaskTexts, localize } from '../../../lib/sportask/texts';
 import { SettingsService } from '../../../services/settings.service';
 import { SportaskSettingsService } from '../../../services/sportask-settings.service';
+import { SportaskService } from '../../../services/sportask.service';
 import type { EquipmentItem, SportaskSettings } from '../../../types/sportask';
 import { NumberStepperComponent } from '../number-stepper/number-stepper.component';
 import { UiIconComponent, type UiIconName } from '../ui-icon/ui-icon.component';
@@ -40,6 +42,7 @@ const minutes = (seconds: number): number => seconds / 60;
 })
 export class SportaskSettingsComponent {
   private readonly store = inject(SportaskSettingsService);
+  private readonly sportask = inject(SportaskService);
   private readonly appSettings = inject(SettingsService);
   private readonly injector = inject(Injector);
   private readonly translate = inject(TranslateService);
@@ -62,6 +65,9 @@ export class SportaskSettingsComponent {
 
   readonly weightKg = this.store.weightKg;
   protected readonly lang = this.appSettings.language;
+
+  /** The feature switch. Off hides everything below it and the rest of the app's Sportask surfaces. */
+  readonly enabled = this.store.enabled;
 
   /** The stored settings, with defaults filled in. */
   readonly settings = computed(() => sanitizeSettings(this.store.settings()));
@@ -165,6 +171,16 @@ export class SportaskSettingsComponent {
 
   private fmt(n: number): string {
     return new Intl.NumberFormat(this.lang(), { maximumFractionDigits: 1 }).format(n);
+  }
+
+  /** Turning it off also stops a running session, an armed plan and an open *Train now* block; the data is kept. */
+  toggleEnabled(): void {
+    const next = !this.enabled();
+    this.store.update({ enabled: next });
+    if (!next) {
+      this.question.set(null);
+      deactivate(this.sportask);
+    }
   }
 
   private patch(p: Partial<SportaskSettings>): void {

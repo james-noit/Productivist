@@ -26,3 +26,9 @@
 .psw__over {
   --modal-z: 100;
 }
+
+.psw__switch[aria-disabled='true'] {
+  color: var(--color-text-muted);
+  cursor: default;
+  opacity: 0.7;
+}

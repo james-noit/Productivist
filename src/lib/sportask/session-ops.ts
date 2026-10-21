@@ -30,3 +30,12 @@ export function startSingle(sportask: SportaskService, options: Pick<SportaskSta
   sportask.single.set({ ...options, blockSeconds, pending: null, endAt: null, left: blockSeconds, ended: false });
   sportask.breakOpen.set(true);
 }
+
+/**
+ * Sportask was switched off: stops a running session and an open *Train now* block, and drops a plan armed for the planner.
+ * The synced data (blocks, templates, the rest of the settings) is not touched, so switching it on again brings the history back.
+ */
+export function deactivate(sportask: SportaskService): void {
+  sportask.stop();
+  sportask.armed.set(null);
+}

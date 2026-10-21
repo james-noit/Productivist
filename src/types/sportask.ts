@@ -160,6 +160,10 @@ export interface Enrolment {
 
 /** Synced settings, stored as `settings.sportask` in the state blob. */
 export interface SportaskSettings {
+  /** The feature switch (Configuration > Sportask). Absent in settings written before 0.24: see `sportaskSwitch` in `lib/sportask-defaults.ts`. */
+  enabled?: boolean;
+  /** When the guided setup (or "Quick setup") was finished; epoch ms. Absent = not done yet, unless this device already used Sportask. */
+  setupDoneAt?: number;
   enrolment: Enrolment | null;
   cadenceId: string;
   customCadence?: Omit<CadencePreset, 'id' | 'name'>;

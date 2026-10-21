@@ -60,6 +60,7 @@ const NEVER_INITIAL_UI = [
   'src/i18n/sportask-texts.ts',
   component('sportask-settings'),
   component('sportask-button'),
+  component('sportask-off-hint'),
   component('sportask-setup-sheet'),
   component('plan-sportask-switch'),
   component('sportask-break-modal'),

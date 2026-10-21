@@ -15,7 +15,7 @@
     <div class="app-menu__panel" role="menu">
       <div class="app-menu__group">
         <span class="app-menu__group-label">{{ 'menu.views' | translate }}</span>
-        @for (v of viewEntries; track v.id) {
+        @for (v of viewEntries(); track v.id) {
           <button
             type="button"
             role="menuitem"
