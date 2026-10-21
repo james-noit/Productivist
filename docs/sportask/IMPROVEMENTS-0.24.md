@@ -36,3 +36,10 @@ Files: `src/fonts/` (add JetBrains Mono, remove Orbitron), `sportask-skin` CSS a
 
 ### Phase D: docs and version
 `package.json` 0.24.0 (+ lockfile and `node scripts/sync-mobile-version.mjs` like previous bumps), AGENTS.md **Sportask** bullet updated (switch, `enabled`/`setupDoneAt`, gating, stepper, extracted blocks, font), `PLAN.md` Status gets a 0.24 subsection, final regression (`build`, `check:lazy`, `check:sportask`, `build:tb`, `tb:lint`; browser smoke test of Pomodoro/Multitask with Sportask off and on).
+
+## Status
+
+**Done** (0.24.0, branch `feature/sportask-0.24`, phases A to D). What was built, the decisions and deviations, how it was verified and the known
+limitations are in the **0.24** subsection of [`PLAN.md`](PLAN.md) Status. Two additions beyond this plan, both found in phase D: the
+discard question now also covers changing the Configuration section or closing the modal with a dirty setup draft (`ConfigLeaveGuard`), and
+skinned surfaces set their own text colour (the cyberpunk setup sheet was unreadable on the light theme). Initial total 320.31 kB (+0.44 kB).
