@@ -1188,8 +1188,8 @@ Plan: [`IMPROVEMENTS-0.24.md`](IMPROVEMENTS-0.24.md); branch `feature/sportask-0
 
 **Not done, known limitations**
 
-- Spanish was checked by reading the strings, not clicked through in the browser for the wizard and the hint; reduced motion for the caret was
-  verified from the CSS only.
+- Phase D did not click through the wizard and the hint in Spanish (the strings are `{ en, es }` in `SPORTASK_TEXTS`, and the self-check
+  asserts they exist); reduced motion for the caret was verified from the CSS only.
 - The wizard and the off hint were not run on a real phone (375 px emulation only); two-device sync of `enabled`/`setupDoneAt` was not exercised
   in the UI (the codec and sanitiser are covered by the self-check).
 - Turning Sportask off does not prune data and leaves the panel's stored tab and the sheet's settings as they are; turning it on again returns to
