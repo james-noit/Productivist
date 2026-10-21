@@ -81,6 +81,10 @@ export function sanitizeSettings(raw: unknown): SportaskSettings {
   };
   const accepted = real(raw['disclaimerAcceptedAt'], 0, 8.64e15);
   if (accepted !== undefined && accepted > 0) out.disclaimerAcceptedAt = accepted;
+  // Optional: only kept when set (an absent `enabled` is resolved at read time, see `sportaskSwitch`).
+  if (typeof raw['enabled'] === 'boolean') out.enabled = raw['enabled'];
+  const setupDoneAt = real(raw['setupDoneAt'], 0, 8.64e15);
+  if (setupDoneAt !== undefined && setupDoneAt > 0) out.setupDoneAt = setupDoneAt;
   const c = raw['customCadence'];
   if (isRec(c) && isNum(c['focusSeconds']) && isNum(c['breakSeconds'])) {
     const lb = c['longBreak'];

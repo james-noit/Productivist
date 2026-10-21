@@ -1,7 +1,9 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, computed, inject, signal } from '@angular/core';
 import { localStorageSignal } from '../core/local-storage-signal';
-import { SPORTASK_DEFAULTS } from '../lib/sportask-defaults';
+import { SPORTASK_DEFAULTS, sportaskSwitch } from '../lib/sportask-defaults';
 import type { SportaskSettings } from '../types/sportask';
+import { SportDataService } from './sport-data.service';
+import { SportaskService } from './sportask.service';
 
 const KEY = 'productivist.sportask';
 const DEFAULTS_JSON = JSON.stringify(SPORTASK_DEFAULTS);
@@ -37,8 +39,24 @@ export class SportaskSettingsService {
    */
   readonly customized = signal(storedDiffersFromDefaults());
 
+  // Neither injected service depends on this one (the clock injects `SportaskService`, never the reverse), so there is no cycle.
+  private readonly data = inject(SportDataService);
+  private readonly sportask = inject(SportaskService);
+
+  private readonly resolved = computed(() => sportaskSwitch(this.settings(), this.data.blocks().length > 0 || this.sportask.active()));
+
+  /** Sportask is switched on (Configuration > Sportask). Read from the raw settings; see `sportaskSwitch` for the fallback of existing users. */
+  readonly enabled = computed(() => this.resolved().enabled);
+  /** The guided setup is done (or this device already used Sportask before the switch existed). */
+  readonly setupDone = computed(() => this.resolved().setupDone);
+
+  /** The first write also stores what the fallback resolved (`enabled`, `setupDoneAt`), so a later change to the data cannot flip the switch. */
   update(patch: Partial<SportaskSettings>): void {
-    this.settings.update((current) => ({ ...(isObject(current) ? current : SPORTASK_DEFAULTS), ...patch }));
+    const r = this.resolved();
+    // Object.assign, not spreads: the build turns each spread into a helper call.
+    this.settings.update((current) =>
+      Object.assign({ enabled: r.enabled, setupDoneAt: r.setupDone ? Date.now() : undefined }, isObject(current) ? current : SPORTASK_DEFAULTS, patch),
+    );
     this.customized.set(true);
   }
 

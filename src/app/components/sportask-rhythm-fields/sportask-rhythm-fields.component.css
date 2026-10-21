@@ -1,0 +1,104 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.6rem;
+  align-self: stretch;
+  max-width: 100%;
+}
+
+:host > * {
+  max-width: 100%;
+}
+
+p {
+  margin: 0;
+}
+
+.ss__hint {
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+}
+
+.ss__rows {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  align-self: stretch;
+  width: 100%;
+}
+
+.ss__row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: none;
+  color: var(--color-text);
+  text-align: left;
+  font-size: 0.85rem;
+}
+
+.ss__row--on {
+  border-color: var(--color-primary);
+  border-width: 2px;
+  padding: calc(0.5rem - 1px) calc(0.75rem - 1px);
+}
+
+.ss__row-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.ss__row-name {
+  font-weight: 600;
+}
+
+.ss__row-sub {
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+}
+
+.ss__dot {
+  flex: none;
+  width: 0.9rem;
+  height: 0.9rem;
+  border: 2px solid var(--color-border);
+  border-radius: 50%;
+}
+
+.ss__row--on .ss__dot {
+  border-color: var(--color-primary);
+  background: radial-gradient(circle, var(--color-primary) 0 45%, transparent 50%);
+}
+
+.ss__row:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.field {
+  align-self: stretch;
+}
+
+
+.ss__custom {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.25rem;
+  padding: 0.7rem 0.85rem;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  align-self: stretch;
+}
+
+.ss__custom .field {
+  align-self: auto;
+}
+
+.ss__min {
+  width: 6rem;
+}

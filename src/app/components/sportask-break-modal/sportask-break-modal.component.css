@@ -209,6 +209,11 @@
   transform: var(--sport-title-transform, none);
 }
 
+.sbm__name::before {
+  content: var(--sport-prompt, none);
+  color: var(--color-capacity-safe);
+}
+
 .sbm__facts {
   margin: 0;
   display: flex;
@@ -238,6 +243,12 @@
   font-family: var(--sport-font-display, inherit);
   color: var(--color-primary);
   text-shadow: var(--sport-glow, none);
+}
+
+/* Cyberpunk: a blinking caret after the numbers (the animation token exists only without prefers-reduced-motion, so it stays still then). */
+.sbm__count::after {
+  content: var(--sport-caret, none);
+  animation: var(--sport-caret-anim, none);
 }
 
 /* Yoga: a ring around the numbers that breathes (the animation token exists only without prefers-reduced-motion). */

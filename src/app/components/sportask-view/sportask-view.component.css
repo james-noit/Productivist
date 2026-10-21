@@ -38,6 +38,11 @@
   letter-spacing: var(--sport-title-tracking, normal);
 }
 
+.sv__title::before {
+  content: var(--sport-prompt, none);
+  color: var(--color-capacity-safe);
+}
+
 .sv__line {
   display: flex;
   flex-wrap: wrap;

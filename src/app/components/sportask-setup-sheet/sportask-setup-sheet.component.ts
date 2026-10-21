@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, type OnInit, ElementRef, Injector, afterNextRender, computed, inject, input, output, signal, viewChild } from '@angular/core';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { createId } from '../../../core/create-id';
 import { trapTab } from '../../../lib/focus-trap';
 import { CADENCES, MAX_BREAK_SECONDS, MAX_FOCUS_SECONDS, MIN_CUSTOM_FOCUS_SECONDS, MIN_DURATION_SECONDS, clampCadence, resolveCadence, type CadenceValues } from '../../../lib/sportask/cadences';
 import { EQUIPMENT } from '../../../lib/sportask/equipment';
@@ -18,9 +19,11 @@ import { SportDataService } from '../../../services/sport-data.service';
 import { SportaskSettingsService } from '../../../services/sportask-settings.service';
 import { SportaskService } from '../../../services/sportask.service';
 import { ViewService } from '../../../services/view.service';
-import type { EquipmentInventory, SportaskStartOptions } from '../../../types/sportask';
+import type { EquipmentInventory, SportTemplate, SportaskStartOptions } from '../../../types/sportask';
 import { NumberStepperComponent } from '../number-stepper/number-stepper.component';
 import { SportaskSkinComponent } from '../sportask-skin/sportask-skin.component';
+import { SportaskTemplateEditorComponent } from '../sportask-template-editor/sportask-template-editor.component';
+import { SportPanelState } from '../sportask-view/sport-panel.state';
 import { UiIconComponent, type UiIconName } from '../ui-icon/ui-icon.component';
 
 type Mode = 'goal' | 'free';
@@ -36,7 +39,9 @@ const BLOCK_LENGTHS = [60, 120, 300, 600] as const;
 @Component({
   selector: 'app-sportask-setup-sheet',
   standalone: true,
-  imports: [TranslatePipe, NumberStepperComponent, SportaskSkinComponent, UiIconComponent],
+  imports: [TranslatePipe, NumberStepperComponent, SportaskSkinComponent, SportaskTemplateEditorComponent, UiIconComponent],
+  // The template editor (shared with the panel's Templates tab) reads its labels from the panel state.
+  providers: [SportPanelState],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './sportask-setup-sheet.component.html',
   styleUrl: './sportask-setup-sheet.component.css',
@@ -176,6 +181,7 @@ export class SportaskSetupSheetComponent implements OnInit {
       .map((t) => ({
         id: t.id,
         name: t.nameText ? localize(t.nameText, lang) : t.name,
+        own: !t.builtin,
         available: templateAvailability(t, ctx).available,
       }));
   });
@@ -209,6 +215,26 @@ export class SportaskSetupSheetComponent implements OnInit {
   }
 
   // ---- edits ---------------------------------------------------------------------------------------------------------------
+
+  // ---- own templates (edited in the same editor as the panel's Templates tab, above the sheet) ----------------------------------
+
+  protected readonly editing = signal<{ template: SportTemplate; isNew: boolean } | null>(null);
+
+  protected newTemplate(): void {
+    const now = Date.now();
+    const order = this.data.templates().reduce((m, t) => Math.max(m, t.order), 0) + 1;
+    this.editing.set({ template: { id: createId(), name: '', slots: [], format: 'sequence', order, createdAt: now, updatedAt: now }, isNew: true });
+  }
+
+  protected editTemplate(id: string): void {
+    const template = this.data.templates().find((t) => t.id === id);
+    if (template) this.editing.set({ template, isNew: false });
+  }
+
+  /** The saved template becomes the selected one (the list already reflects it: it reads the same store). */
+  protected onTemplateSaved(id: string): void {
+    this.templateId.set(id);
+  }
 
   protected setMode(mode: Mode): void {
     this.mode.set(mode);

@@ -14,6 +14,16 @@
   color: var(--color-text);
 }
 
+.skb__btn[aria-disabled='true'] {
+  color: var(--color-text-muted);
+  border-style: dashed;
+  cursor: default;
+}
+
+.skb__btn[aria-disabled='true']:hover {
+  background-color: var(--color-surface);
+}
+
 .skb__sum {
   font-variant-numeric: tabular-nums;
   font-weight: 700;

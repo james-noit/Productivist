@@ -13,6 +13,7 @@
     --sport-card-border, -shadow, -bg      the cards inside a panel
     --sport-control-border                 borders of inputs, switches and chips (3:1 on the surface, see below)
     --sport-font-display + title-*         the display face and how titles are set
+    --sport-prompt, --sport-caret          cyberpunk's code-editor touches: a "> " before titles, a "_" after the timer (blinks only without reduced motion)
     --sport-glow, --sport-glow-filter      neon glow as text-shadow / as filter
     --sport-bg-pattern (+ -size, -position, -repeat)   the panel's background drawing
     --sport-stroke*, --sport-ink*, --sport-soft-opacity  the pictograms
@@ -27,19 +28,19 @@
 */
 
 /*
-  Fonts: Orbitron (cyberpunk display face) and Quicksand (power yoga), both SIL OFL 1.1, latin subset, one weight each (700: titles,
-  numbers and buttons all ask for bold; a request for 600 resolves to it). The woff2 files come from the npm packages
-  @fontsource/orbitron 5.3.0 and @fontsource/quicksand 5.3.0 (copied, not a dependency) and live in src/fonts/ next to
-  Cookie, with their licences (OFL-Orbitron.txt, OFL-Quicksand.txt). The url() is relative to this file, so Angular emits them
+  Fonts: JetBrains Mono (cyberpunk, a coding face) and Quicksand (power yoga), both SIL OFL 1.1, latin subset, one weight each (700:
+  titles, numbers and buttons all ask for bold; a request for 600 resolves to it). The woff2 files come from the npm packages
+  @fontsource/jetbrains-mono 5.3.0 and @fontsource/quicksand 5.3.0 (copied, not a dependency) and live in src/fonts/ next to
+  Cookie, with their licences (OFL-JetBrainsMono.txt, OFL-Quicksand.txt). The url() is relative to this file, so Angular emits them
   as assets of this lazy chunk: the browser fetches a face only when an element that uses it is rendered, i.e. when a skin applies.
   The stacks in --sport-font-display keep working (system faces) if a file ever fails to load.
 */
 @font-face {
-  font-family: 'Orbitron';
+  font-family: 'JetBrains Mono';
   font-style: normal;
   font-weight: 700;
   font-display: swap;
-  src: url('../../../fonts/orbitron-latin-700.woff2') format('woff2');
+  src: url('../../../fonts/jetbrains-mono-latin-700.woff2') format('woff2');
 }
 
 @font-face {
@@ -51,7 +52,7 @@
 }
 
 /* ---------------------------------------------------------------------------------------------------------------------------
-   Cyberpunk (cartoon neon), dark.
+   Cyberpunk (neon, coding face), dark.
    text on bg 17.42, on surface 16.02, on surface-alt 14.33 | muted on bg 9.07, surface 8.34, surface-alt 7.46
    primary-contrast (ink) on primary 5.81, on high 7.21 | primary on surface 5.09 | text on a pressed chip 13.67
    high on surface 6.33 | capacity-safe on surface 12.53 | accent on surface 11.43
@@ -85,6 +86,7 @@
   --gradient-accent: linear-gradient(135deg, #19e3ff, #3df5a0);
   color-scheme: dark;
 
+  font-variant-numeric: tabular-nums;
   --sport-ink: #07040f;
   --sport-radius: 10px;
   --sport-radius-sm: 6px;
@@ -98,13 +100,16 @@
   --sport-btn-border: 2px solid #07040f;
   --sport-btn-shadow: 3px 3px 0 #07040f;
   --sport-btn-secondary-border: 2px solid #19e3ff;
-  --sport-btn-case: uppercase;
-  --sport-btn-tracking: 0.05em;
+  --sport-btn-case: none;
+  --sport-btn-tracking: normal;
   --sport-foot-bg: rgb(26 18 51 / 0.78);
-  --sport-font-display: 'Orbitron', 'Audiowide', ui-monospace, 'SF Mono', 'Cascadia Mono', 'Roboto Mono', monospace;
-  --sport-title-case: uppercase;
-  --sport-title-tracking: 0.06em;
-  --sport-title-transform: skewX(-6deg);
+  /* A coding face, set plainly: no uppercase, no skew, no tracking. The code-editor touches are the prompt and the caret below. */
+  --sport-font-display: 'JetBrains Mono', ui-monospace, 'SF Mono', 'Cascadia Code', 'Fira Code', Menlo, Consolas, monospace;
+  --sport-title-case: none;
+  --sport-title-tracking: normal;
+  --sport-title-transform: none;
+  --sport-prompt: '> ';
+  --sport-caret: '_';
   --sport-glow: 0 0 6px rgb(255 46 136 / 0.9), 0 0 18px rgb(255 46 136 / 0.55);
   --sport-glow-rest: 0 0 6px rgb(61 245 160 / 0.9), 0 0 18px rgb(61 245 160 / 0.5);
   --sport-glow-filter: drop-shadow(0 0 2px #19e3ff) drop-shadow(0 0 7px rgb(25 227 255 / 0.65));
@@ -234,11 +239,23 @@
     --sport-flicker-b: sk-flicker-b 0.7s steps(1, end) 1;
     --sport-scan-content: '';
     --sport-scan-anim: sk-scan 1.5s ease-out 1 both;
+    --sport-caret-anim: sk-caret 1.1s steps(1, end) infinite;
   }
 
   :root[data-sport-skin='powerYoga'],
   .sport-skin[data-sport-skin='powerYoga'] {
     --sport-ring-anim: sk-breathe 4s ease-in-out infinite;
+  }
+}
+
+@keyframes sk-caret {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
   }
 }
 
@@ -315,6 +332,11 @@
    The shared controls inside a skinned surface (buttons, fields, chips, switches). Colours already follow the tokens above; this
    gives them the skin's shape. Scoped to the surface so the whole-app mode changes colours only, never the layout of other views.
    --------------------------------------------------------------------------------------------------------------------------- */
+/* `color` is inherited as a computed value, so a surface inside a light-themed page would keep that page's dark text on the skin's dark panel. */
+.sport-skin[data-sport-skin] {
+  color: var(--color-text);
+}
+
 .sport-skin .btn {
   border-radius: var(--sport-btn-radius, 8px);
   text-transform: var(--sport-btn-case, none);

@@ -1,9 +1,10 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal, untracked } from '@angular/core';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { SettingsService } from '../../../services/settings.service';
 import { SportDataService } from '../../../services/sport-data.service';
 import { SportaskSettingsService } from '../../../services/sportask-settings.service';
 import { SportaskService } from '../../../services/sportask.service';
+import { SportaskOffHintComponent } from '../sportask-off-hint/sportask-off-hint.component';
 import { SportaskSetupSheetComponent } from '../sportask-setup-sheet/sportask-setup-sheet.component';
 
 type GoalsModule = typeof import('../../../lib/sportask/goals');
@@ -11,7 +12,7 @@ type TemplatesModule = typeof import('../../../lib/sportask/templates');
 type TextsModule = typeof import('../../../lib/sportask/texts');
 
 /**
- * The *Sportask* switch in the footer of Plan my day's step 3 (PLAN 7.3): on means "start a Sportask session when this plan
+ * The *Sportask* switch in the footer of Plan my day's step 3 (PLAN 7.3). While Sportask is switched off in Configuration it is muted and `aria-disabled` and shows `sportask-off-hint` instead. On means "start a Sportask session when this plan
  * launches" (`SportaskService.armed`, which the launch functions of `daily-backlog-view` hand to `activateArmed`). Turning it
  * on with nothing armed opens the setup sheet in planner context; *Change...* reopens it; turning it off disarms. The sheet
  * sits above the wizard (`--modal-z`) and handles its own Escape. Lazy: the strings and the goal and template names are
@@ -20,7 +21,7 @@ type TextsModule = typeof import('../../../lib/sportask/texts');
 @Component({
   selector: 'app-plan-sportask-switch',
   standalone: true,
-  imports: [TranslatePipe, SportaskSetupSheetComponent],
+  imports: [TranslatePipe, SportaskOffHintComponent, SportaskSetupSheetComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './plan-sportask-switch.component.html',
   styleUrl: './plan-sportask-switch.component.css',
@@ -32,6 +33,7 @@ export class PlanSportaskSwitchComponent {
   private readonly appSettings = inject(SettingsService);
   private readonly translate = inject(TranslateService);
 
+  protected readonly enabled = this.store.enabled;
   protected readonly armed = this.sportask.armed;
   protected readonly on = computed(() => this.armed() !== null);
   protected readonly sheetOpen = signal(false);
@@ -41,6 +43,10 @@ export class PlanSportaskSwitchComponent {
   constructor() {
     // An armed plan from an earlier visit: the summary needs the strings and names.
     if (this.armed()) void this.load();
+    // Sportask was switched off (here, or on another device) while a plan was armed: the launch must not start a session.
+    effect(() => {
+      if (!this.enabled()) untracked(() => this.armed.set(null));
+    });
   }
 
   protected readonly summary = computed(() => {

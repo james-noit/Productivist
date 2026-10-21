@@ -15,6 +15,13 @@ import { SportaskService } from '../../../services/sportask.service';
 
 const RESET_PHRASE = 'confirm reset';
 
+/** The views every user has (Admin is added by the template while the account is the admin's), then Sportask. */
+const VIEW_ENTRIES: readonly { id: AppView; label: string }[] = [
+  { id: 'projects', label: 'menu.projects' },
+  { id: 'pomodoro', label: 'menu.pomodoro' },
+  { id: 'sportask', label: 'config.sportask' },
+];
+
 @Component({
   selector: 'app-app-menu',
   standalone: true,
@@ -63,12 +70,8 @@ export class AppMenuComponent {
     if (!this.host.nativeElement.contains(event.target as Node)) this.close();
   }
 
-  /** The views every user has (Admin is added by the template while the account is the admin's). */
-  readonly viewEntries: readonly { id: AppView; label: string }[] = [
-    { id: 'projects', label: 'menu.projects' },
-    { id: 'pomodoro', label: 'menu.pomodoro' },
-    { id: 'sportask', label: 'config.sportask' },
-  ];
+  /** The Sportask entry shows only while Sportask is switched on (Configuration > Sportask). */
+  readonly viewEntries = computed(() => (this.sportaskSettings.enabled() ? VIEW_ENTRIES : VIEW_ENTRIES.slice(0, 2)));
 
   isActive(id: AppView): boolean {
     const current = this.view.current();

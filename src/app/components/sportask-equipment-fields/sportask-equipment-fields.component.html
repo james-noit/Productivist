@@ -1,0 +1,58 @@
+<p class="ss__hint">{{ 'sportask.gear.hint' | translate }}</p>
+<ul class="ss__list">
+  @for (e of rows(); track e.id) {
+    <li class="ss__item">
+      <div class="ss__item-head">
+        <app-ui-icon [name]="e.icon" [size]="20" />
+        <span class="ss__item-name">{{ e.name }}</span>
+        <button type="button" role="switch" class="switch ss__item-switch" [attr.aria-checked]="e.owned" [attr.aria-label]="e.name" (click)="toggleOwned(e.id)">
+          <span class="switch__track"></span>
+        </button>
+      </div>
+      @if (e.owned && e.details === 'weights') {
+        <div class="ss__details">
+          <span class="field__label">{{ 'sportask.gear.weights' | translate }}</span>
+          <div class="ss__chips">
+            @for (kg of e.weights; track kg) {
+              <span class="ss__chip">
+                {{ kg }} kg
+                <button type="button" class="ss__chip-x" [attr.aria-label]="'sportask.gear.weightRemove' | translate: { kg: kg }" (click)="removeWeight(e.id, kg)">
+                  <app-ui-icon name="x" [size]="12" />
+                </button>
+              </span>
+            }
+            @if (e.weights.length < maxWeights) {
+              <span class="ss__add">
+                <input
+                  class="input ss__kg"
+                  type="number"
+                  inputmode="decimal"
+                  min="0.5"
+                  max="500"
+                  step="0.5"
+                  [attr.aria-label]="'sportask.gear.weightNew' | translate"
+                  placeholder="kg"
+                  [value]="weightDrafts()[e.id] ?? ''"
+                  (input)="setWeightDraft(e.id, $any($event.target).value)"
+                  (keydown)="onWeightKeydown($event, e.id)"
+                />
+                <button type="button" class="btn btn--secondary btn--sm" (click)="addWeight(e.id)">{{ 'sportask.gear.weightAdd' | translate }}</button>
+              </span>
+            }
+          </div>
+        </div>
+      } @else if (e.owned && e.details === 'bandStrengths') {
+        <div class="ss__details">
+          <span class="field__label" [id]="'ss-bands-' + e.id">{{ 'sportask.gear.bands' | translate }}</span>
+          <div class="ss__chips" role="group" [attr.aria-labelledby]="'ss-bands-' + e.id">
+            @for (b of bandStrengths; track b) {
+              <button type="button" class="filter-chip" [attr.aria-pressed]="e.bands.includes(b)" (click)="toggleBand(e.id, b)">
+                {{ 'sportask.gear.band.' + b | translate }}
+              </button>
+            }
+          </div>
+        </div>
+      }
+    </li>
+  }
+</ul>

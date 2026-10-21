@@ -775,7 +775,7 @@ The dose is the exercise's default (or the slot's). Free blocks are not used by 
   - Cartoon look: 3px dark ink outlines (`#07040f`), hard offset shadows `4px 4px 0 #07040f`, slightly skewed headings
     (`transform: skewX(-6deg)` on display titles only), a faint perspective grid as `--sport-bg-pattern` (CSS gradients,
     no image), and a neon glow (`text-shadow`/`drop-shadow` in primary/cyan) on the timer.
-  - Display font: **Orbitron** (OFL 1.1) for numbers and headings, bundled as `src/fonts/orbitron-*.woff2` with its
+  - Display font: **Orbitron** (replaced by JetBrains Mono in 0.24) (OFL 1.1) for numbers and headings, bundled as `src/fonts/orbitron-*.woff2` with its
     licence file; body stays system-ui.
   - Motion: the timer flickers once per step change; a scanline sweep on the preview. Both are off under
     `prefers-reduced-motion`.
@@ -1033,7 +1033,7 @@ and why, what was verified and how, and what is not done.
    `sportask-button`, `sportask-setup-sheet`, `sportask-break-modal`, first-pass pictograms.
 5. **Plan my day entry**: `plan-sportask-switch` in the Tasks step's footer, the setup sheet's planner context, `activateArmed` in both
    launch paths of `daily-backlog-view`.
-6. **Skins and pictograms**: `sportask-skin` (cyberpunk, powerYoga), the bundled Orbitron and Quicksand, 17 pictograms with two poses.
+6. **Skins and pictograms**: `sportask-skin` (cyberpunk, powerYoga), the bundled JetBrains Mono (replacing Orbitron in 0.24) and Quicksand, 17 pictograms with two poses.
 7. **The panel** (`sportask-view`): Summary, Progress, History (marks editing through the shared results form), Templates (editor);
    metrics, chart geometry, `sport-line-chart`, `sport-bar-chart`, `sport-heatmap`.
 8. **Polish**: *Train now* (a `BlockDriver` abstraction with the clock's and a local countdown), the Sportask mark in the Pomodoro chip
@@ -1065,7 +1065,7 @@ and why, what was verified and how, and what is not done.
   `#7c6670` -> `#6c5762`, cyberpunk primary-contrast white -> ink); the measured ratios are in the CSS comments.
 - **Series colours are new tokens** `--sport-series-1..9` (section 10 named four existing tokens): nine hues are needed for the
   per-pattern and per-zone stacks, and two skins each define their own.
-- **Fonts**: one weight each (Orbitron 700, Quicksand 700, latin woff2 copied from `@fontsource` 5.3.0, not a dependency); a request for
+- **Fonts**: one weight each (JetBrains Mono 700 (0.24; Orbitron before), Quicksand 700, latin woff2 copied from `@fontsource` 5.3.0, not a dependency); a request for
   600 resolves to it.
 - **Pictograms** (section 9.3): 17 figures built with forward kinematics from one body (same segment lengths everywhere) instead of
   hand-written per-figure paths; per-exercise artwork is still a later phase.
@@ -1131,3 +1131,66 @@ and why, what was verified and how, and what is not done.
   session change, but a progression step taken on another device in the last minutes may not be reflected.
 - A *Train now* block started while a focus phase ends skips the session's exercise for that break (see above).
 - Section 15's assumptions (skin scope, one equipment inventory, device-local weight) are unchanged.
+
+### 0.24: on/off switch, guided setup, coding font, editable templates
+
+Plan: [`IMPROVEMENTS-0.24.md`](IMPROVEMENTS-0.24.md); branch `feature/sportask-0.24`, one commit per phase (A to D). Version 0.24.0.
+
+**What was built**
+
+- **A, switch and gating.** `SportaskSettings.enabled` and `setupDoneAt` (both optional, synced inside `settings.sportask`, only stored when set;
+  `sanitize` accepts a real boolean and a positive number). `sportaskSwitch(raw, usedElsewhere)` in `lib/sportask-defaults.ts` is the read-time
+  rule behind the eager `SportaskSettingsService.enabled`/`setupDone` computeds: an explicit `enabled` wins, otherwise a stored enrolment, any
+  block or an active session means "existing user" (on, set up), and new users start off; the first settings write persists what it resolved.
+  Off: no menu entry, the `sportask` view branch does not render, `deactivate()` (lazy `session-ops`) stops the session, the armed plan and an open
+  *Train now* block, the data stays. The Pomodoro and Multitask `sportask-button` and the Plan-my-day `plan-sportask-switch` become
+  `aria-disabled` and show the shared lazy `sportask-off-hint` (tooltip with *Open Configuration*) on hover, focus or click.
+- **B, setup stepper.** The blocks of `sportask-settings` were extracted into `sportask-goal-fields`, `-equipment-fields`, `-limits-fields`,
+  `-rhythm-fields` and `-style-fields` (value in, `changed` out) and are shared by the page and the new lazy `sportask-setup-wizard` (Quick setup
+  or six personalised steps on a local draft, one `update()` on *Finish*). Configuration shows switch, then wizard until set up, then settings
+  with *Run setup again*. Pure logic in `lib/sportask/setup.ts`, with self-check assertions (1 555 178 now).
+- **C, font and templates.** JetBrains Mono 700 replaces Orbitron on the cyberpunk skin (plain, no uppercase or skew; `> ` prompt on titles and
+  a blinking `_` after the timer through `--sport-prompt`/`--sport-caret`, still under reduced motion), Orbitron and its licence removed.
+  The setup sheet's free-training list has *Edit* on each own template and *New template*, using the shared editor (`--modal-z: 110`); the editor's
+  new `saved` output makes the saved template the selection.
+- **D, docs, version and two fixes.** Discard guard (below), the skin text colour (below), `config-leave-guard.ts` added to the lazy-chunk list,
+  AGENTS.md and these notes, version 0.24.0 (`package.json`, lockfile, Android and iOS fields, build 2400).
+
+**Decisions and deviations**
+
+- Existing users are never sent through the stepper: the fallback counts them as set up, and writes `enabled`/`setupDoneAt` on their first change.
+- The off controls are `aria-disabled`, not `disabled`, so they can show the hint; a click opens the hint instead of the sheet.
+- The wizard's draft is read once from the settings (a sync pull while it is open must not reset what was typed); *Quick setup* is a single screen
+  that prints exactly what it sets, and *Run setup again* keeps a free-training user free.
+- **Discard guard (D).** Phase B only protected Escape and *Cancel*; changing the Configuration section or closing the modal dropped a dirty draft
+  silently. `ConfigLeaveGuard` (`config-modal/config-leave-guard.ts`, provided by the modal, injected optionally by the wizard) lets the wizard
+  answer first: the modal's `close()` and `selectSection()` hand it what they want to do, the wizard shows *Discard setup?*, and *Discard* runs it
+  (*Keep editing* drops it). The other sections are unaffected and no eager code changed.
+- **Skin text colour (D).** Found while testing the setup sheet in Plan my day on the light theme: a skinned surface inherited the page's
+  *computed* dark text colour on its dark cyberpunk panel (the dark theme hid it). `.sport-skin[data-sport-skin]` now sets `color: var(--color-text)`.
+  This affected the break modal's inherited text too; it dates from 0.23.
+- The Templates tab's *Edit* has no `@defer` between click and editor (the editor is a direct import), so there was no avoidable lazy hop to remove;
+  the delay seen in the dev build is the dev server's chunk fetch, and it was not timed.
+
+**Verified, and how**
+
+- `npm run build` (0 warnings, Initial total **320.31 kB**, +0.44 kB over 0.23's 319.87 kB, all of it the eager switch: `sportaskSwitch`, the two
+  computeds, the menu gating and the view branch), `npm run check:lazy`, `npm run check:sportask`, `npm run build:tb` + `npm run tb:lint` (0 errors,
+  0 warnings), backend `mvn -q -o -DskipTests package` (unaffected).
+- **Browser** (`openpomodoro-dev`, 800 px and 375 px): Sportask off: Pomodoro start, pause keeps the remainder (1495/1497 s), reset (1500 s);
+  Multitask the same; both entry controls `aria-disabled`, the hint at 375 px, *Open Configuration* from it; the switch, Quick/Personalised, the
+  six steps and *Run setup again* (desktop and 375 px); the discard question on Escape, Cancel, a section change and the x, with *Keep editing*
+  and *Discard* both behaving (and *Discard* carrying out the section change or the close). Sportask on: a break end to end in cyberpunk (preview,
+  start, countdown, *Finish now*, results, *Save and back to work*, block stored, next focus running); the four panel tabs; Configuration > Sportask;
+  Plan my day (arm in the step, *Save for the plan*, launch Pomodoro: a `planner` session starts and `armed` is cleared). Template *New* and *Edit*
+  from the setup sheet in the Plan-my-day context (editor above the sheet, the new template selected) and at 375 px. Console: only the optional
+  `sounds/alarm-clock.ogg` 404s. Every localStorage key touched was restored from a snapshot.
+
+**Not done, known limitations**
+
+- Phase D did not click through the wizard and the hint in Spanish (the strings are `{ en, es }` in `SPORTASK_TEXTS`, and the self-check
+  asserts they exist); reduced motion for the caret was verified from the CSS only.
+- The wizard and the off hint were not run on a real phone (375 px emulation only); two-device sync of `enabled`/`setupDoneAt` was not exercised
+  in the UI (the codec and sanitiser are covered by the self-check).
+- Turning Sportask off does not prune data and leaves the panel's stored tab and the sheet's settings as they are; turning it on again returns to
+  the setup state the settings say (set up stays set up).

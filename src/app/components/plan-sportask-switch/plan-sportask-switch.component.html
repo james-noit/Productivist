@@ -1,13 +1,23 @@
 <div class="psw">
-  <button type="button" class="switch psw__switch" role="switch" [attr.aria-checked]="on()" (click)="toggle()">
-    <span class="switch__track" aria-hidden="true"></span>
-    <span>{{ 'config.sportask' | translate }}</span>
-  </button>
-  @if (on() && ready()) {
-    <button type="button" class="btn btn--ghost btn--sm psw__change" (click)="change()">{{ 'sportask.btn.change' | translate }}</button>
+  @if (enabled()) {
+    <button type="button" class="switch psw__switch" role="switch" [attr.aria-checked]="on()" (click)="toggle()">
+      <span class="switch__track" aria-hidden="true"></span>
+      <span>{{ 'config.sportask' | translate }}</span>
+    </button>
+    @if (on() && ready()) {
+      <button type="button" class="btn btn--ghost btn--sm psw__change" (click)="change()">{{ 'sportask.btn.change' | translate }}</button>
+    }
+  } @else {
+    <!-- Sportask is off: the switch stays, muted and aria-disabled (not disabled, so it still takes hover and focus), with a hint. -->
+    <app-sportask-off-hint #hint>
+      <button type="button" class="switch psw__switch psw__switch--off" role="switch" aria-checked="false" aria-disabled="true" [attr.aria-describedby]="hint.describedBy()">
+        <span class="switch__track" aria-hidden="true"></span>
+        <span>{{ 'config.sportask' | translate }}</span>
+      </button>
+    </app-sportask-off-hint>
   }
 </div>
-@if (on() && summary()) {
+@if (enabled() && on() && summary()) {
   <p class="psw__summary">{{ summary() }}</p>
 }
 

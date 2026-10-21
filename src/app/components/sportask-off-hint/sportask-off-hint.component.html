@@ -1,0 +1,16 @@
+<ng-content />
+@if (open() && ready()) {
+  <div
+    class="soh__panel"
+    role="tooltip"
+    [id]="id"
+    [class.soh__panel--above]="pos()?.above"
+    [style.left.px]="pos()?.left ?? 0"
+    [style.top.px]="pos()?.top ?? 0"
+    [style.visibility]="pos() ? null : 'hidden'"
+    (mousedown)="$event.preventDefault()"
+  >
+    <p class="soh__text">{{ 'sportask.off.text' | translate }}</p>
+    <button type="button" class="btn btn--secondary btn--sm soh__open" (click)="openConfiguration()">{{ 'sportask.off.open' | translate }}</button>
+  </div>
+}
