@@ -9,15 +9,15 @@ import type { AnyGoal, GenerationContext } from '../src/lib/sportask/engine/cont
 import { MIN_FILL_SECONDS } from '../src/lib/sportask/engine/fit';
 import { available } from '../src/lib/sportask/engine/filter';
 import { type BlockMeta, generate } from '../src/lib/sportask/engine/generate';
-import { LADDER_PROGRESSION, isRungUsable } from '../src/lib/sportask/engine/progression';
+import { LADDER_PROGRESSION, isRungUsable, replayLadders } from '../src/lib/sportask/engine/progression';
 import { mulberry32, rngFor, seedFrom } from '../src/lib/sportask/engine/rng';
-import { phaseFor, programWeek } from '../src/lib/sportask/engine/schedule';
+import { pendingAssessmentIds, phaseFor, programWeek } from '../src/lib/sportask/engine/schedule';
 import { sportaskSwitch } from '../src/lib/sportask-defaults';
 import { EQUIPMENT } from '../src/lib/sportask/equipment';
 import { GOALS } from '../src/lib/sportask/goals';
 import { netKcal } from '../src/lib/sportask/kcal';
 import { createRegistry } from '../src/lib/sportask/registry';
-import { sanitizeBlock, sanitizeSettings, sanitizeTemplate, defaultSettings } from '../src/lib/sportask/sanitize';
+import { sanitizeBlock, sanitizeProfile, sanitizeSettings, sanitizeTemplate, defaultSettings } from '../src/lib/sportask/sanitize';
 import { stepAt, timeline } from '../src/lib/sportask/runner';
 import { SETUP_STEPS, draftFromSettings, pickFor, quickDraft, setupPatch, stepValid } from '../src/lib/sportask/setup';
 import { SKINS } from '../src/lib/sportask/skins';
@@ -26,7 +26,11 @@ import { barMax, barRects, heatLayout, heatLevel, linePath, niceTicks, plotOf, t
 import { METRICS, type MetricEnv } from '../src/lib/sportask/metrics';
 import { personalRecords, weekStats } from '../src/lib/sportask/metrics/summary';
 import { resultsFromRows, rowsFromBlock, statusFromRows } from '../src/lib/sportask/results';
-import type { BlockPlan, BlockStep, Constraints, Enrolment, EquipmentInventory, SportBlock, SportTemplate, StepResult } from '../src/types/sportask';
+import { adaptation, daysAway, effortOf, returnFactor } from '../src/lib/sportask/engine/adapt';
+import { ACTIVITY_LEVELS, REACH_LEVELS, capacityFactor, desiredRung, hasProfile, trainingDays } from '../src/lib/sportask/profile';
+import { adaptedMinutes, baseWeeklyMinutes, goalTargets, nextTestTarget } from '../src/lib/sportask/targets';
+import { SPORTASK_TEXTS } from '../src/i18n/sportask-texts';
+import type { BlockPlan, BlockStep, Constraints, Enrolment, EquipmentInventory, SportBlock, SportProfile, SportTemplate, StepResult } from '../src/types/sportask';
 
 const proc = (globalThis as unknown as { process: { exitCode?: number } }).process;
 let assertions = 0;
@@ -80,6 +84,7 @@ interface CtxOptions {
   history?: readonly SportBlock[];
   todayBlocks?: readonly SportBlock[];
   enrolment?: Enrolment | null;
+  profile?: SportProfile;
 }
 function makeCtx(o: CtxOptions): GenerationContext {
   const today = o.today ?? addDays(MONDAY, 2);
@@ -94,6 +99,7 @@ function makeCtx(o: CtxOptions): GenerationContext {
     history: o.history ?? o.todayBlocks ?? [],
     todayBlocks: o.todayBlocks ?? [],
     enrolment: o.enrolment ?? null,
+    ...(o.profile ? { profile: o.profile } : {}),
     rng: rngFor(o.blockId),
   };
 }
@@ -216,7 +222,7 @@ function checkRegistries(): void {
   }
   for (const c of CADENCES.all) check(c.focusSeconds > 0 && c.breakSeconds > 0 && c.exerciseEvery >= 1, `${c.id}: cadence values`);
   check(breakSecondsFor(resolveCadence({ cadenceId: 'classic' }), 4) === 900 && breakSecondsFor(resolveCadence({ cadenceId: 'classic' }), 3) === 300, 'long break every 4th');
-  check(SKINS.all.length === 2, 'two skins');
+  check(SKINS.all.length === 3, 'three skins');
   console.log(`  ${exercises.all.length} exercises, ${CATALOG.ladders.all.length} ladders, ${CATALOG.assessments.all.length} assessments, ${BUILTIN_TEMPLATES.all.length} templates, ${GOALS.all.length} goals`);
 }
 
@@ -807,8 +813,8 @@ function checkSanitize(): void {
     check(same(quick.pick, { goalId: 'mobility', programId: 'deskReset', level: 1 }), 'Quick sets Improve mobility, Desk reset, level 1');
     check(same(quick.equipment, {}) && same(quick.constraints, { lowImpact: false, noFloor: false }), 'Quick sets no equipment and no limits');
     check(quick.rhythm.cadenceId === 'classic' && quick.rhythm.customCadence === undefined, 'Quick sets Classic 25/5');
-    check(quick.style.skin === 'cyberpunk' && quick.style.skinWholeApp && quick.style.cues && !quick.style.autoStartBreak, 'Quick sets Cyberpunk, whole app, step sounds on');
-    check(SETUP_STEPS.length === 6 && SETUP_STEPS[5] === 'summary', 'the personalised path has six steps ending in the summary');
+    check(quick.style.skin === 'app' && quick.style.cues && !quick.style.autoStartBreak, "Quick sets the app's own theme, step sounds on");
+    check(SETUP_STEPS.length === 7 && SETUP_STEPS[1] === 'profile' && SETUP_STEPS[6] === 'summary', 'the personalised path has seven steps: goal, about you, ... ending in the summary');
     const fromDefaults = draftFromSettings(defaultSettings(), false);
     check(same(fromDefaults, quick), 'a fresh profile starts the personalised path on the Quick values');
     check(draftFromSettings(defaultSettings(), true).pick === null, 'Run setup again keeps a free-training user free');
@@ -1134,6 +1140,345 @@ function checkPanel(): void {
   console.log('  metrics, summary, personal records, chart geometry and result rows match the hand-computed sample');
 }
 
+
+// ---------------------------------------------------------------- 12. adaptive programs (0.25)
+
+const flat = (o: unknown, prefix = ''): string[] =>
+  o && typeof o === 'object' ? Object.entries(o as Record<string, unknown>).flatMap(([k, v]) => flat(v, `${prefix}${k}.`)) : [prefix.slice(0, -1)];
+
+let adaptCounter = 0;
+/** A stored goal block on a given day: one step, one value, optionally an effort rating. */
+function dayBlock(exerciseId: string, value: number, date: string, o: { goalId?: string; kind?: SportBlock['kind']; assessmentId?: string; feedback?: SportBlock['feedback']; rpe?: number; status?: SportBlock['status']; work?: number } = {}): SportBlock {
+  const startedAt = Date.parse(`${date}T10:00:00Z`) + adaptCounter++;
+  const b: SportBlock = {
+    id: `ad${adaptCounter}`, startedAt, date, origin: 'goal', goalId: o.goalId ?? 'strength', kind: o.kind ?? 'train', blockSeconds: 120, prepSeconds: 10,
+    steps: [{ exerciseId, workSeconds: o.work ?? 30, restSeconds: 0 }], results: [{ stepIndex: 0, done: true, value }], status: o.status ?? 'done', catalogVersion: CATALOG_VERSION, createdAt: startedAt, updatedAt: startedAt,
+  };
+  if (o.assessmentId) b.assessmentId = o.assessmentId;
+  if (o.feedback) b.feedback = o.feedback;
+  if (o.rpe !== undefined) b.rpe = o.rpe;
+  return b;
+}
+
+function checkAdaptive(): void {
+  section('12. adaptive programs (0.25)');
+  const strengthParams = GOALS.get('strength')!.programs[0]!.phases[0]!.params;
+  const D0 = '2026-03-02';
+  const day = (n: number): string => addDays(D0, n);
+  const rungOf = (ladder: string, o: { history?: SportBlock[]; level?: 1 | 2 | 3; today?: string; profile?: SportProfile; equipment?: EquipmentInventory; constraints?: Constraints }): number => {
+    const ctx = makeCtx({ blockId: 'ad', blockSeconds: 60, today: o.today ?? day(1), equipment: o.equipment ?? {}, constraints: o.constraints ?? CONSTRAINT_SETS[0]!, history: o.history ?? [], enrolment: enrol('strength', 'microStrength', o.level ?? 1, D0), ...(o.profile ? { profile: o.profile } : {}) });
+    return LADDER_PROGRESSION.levels(ctx, strengthParams).get(ladder)!;
+  };
+
+  // ---- the profile: baseline rungs, capacity, training days
+  for (const level of [1, 2, 3] as const) for (const l of CATALOG.ladders.all) check(desiredRung(l.id, level, undefined) === level - 1, 'no profile: the level alone picks the rung, exactly as before 0.25');
+  check(desiredRung('push', 1, { daysPerWeek: 3 }) === 0, 'an answer that is not a baseline changes nothing');
+  check(desiredRung('push', 1, { pushUps: 0 }) === 1 && desiredRung('push', 1, { pushUps: 2 }) === 2 && desiredRung('push', 1, { pushUps: 12 }) === 3 && desiredRung('push', 1, { pushUps: 45 }) === 4, 'push-ups in a row set the push rung (never the top)');
+  check(desiredRung('squat', 3, { squats: 5 }) === 0 && desiredRung('squat', 1, { squats: 20 }) === 1 && desiredRung('squat', 1, { squats: 80 }) === 2, 'squats set the squat rung (never the jumping one)');
+  check(desiredRung('core', 1, { plankSeconds: 10 }) === 0 && desiredRung('core', 1, { plankSeconds: 45 }) === 1 && desiredRung('core', 1, { plankSeconds: 200 }) === 2, 'plank seconds set the core rung');
+  check(desiredRung('pull', 1, { pushUps: 45 }) === 1 && desiredRung('pull', 3, { pushUps: 0 }) === 0 && desiredRung('hinge', 1, { squats: 80 }) === 1 && desiredRung('lunge', 3, { squats: 3 }) === 0, 'pull, hinge and lunge follow the closest measured movement, one rung at most');
+  check(desiredRung('pushVertical', 1, { pushUps: 45 }) === 1 && desiredRung('pushVertical', 1, { pushUps: 12 }) === 0, 'overhead push follows the push-ups');
+  check(desiredRung('pull', 2, { activity: 'low' }) === 0 && desiredRung('pull', 1, { activity: 'regular' }) === 1 && desiredRung('pull', 3, { activity: 'regular' }) === 2 && desiredRung('pull', 2, { activity: 'some' }) === 1, 'unmeasured ladders start from the level, shifted by the activity (within rungs 0 to 2)');
+  for (const l of CATALOG.ladders.all) for (const level of [1, 2, 3]) for (const p of [{}, { pushUps: 0 }, { pushUps: 100, squats: 200, plankSeconds: 600 }, { activity: 'low' as const }, { activity: 'regular' as const }]) {
+    const r = desiredRung(l.id, level, p);
+    check(Number.isInteger(r) && r >= 0 && r < l.rungs.length, `desiredRung stays on the ladder (${l.id})`);
+  }
+  check(capacityFactor('mobility', 1, undefined) === 1 && capacityFactor('calories', 1, {}) === 1, 'level 1 without a profile is the program as it was');
+  check(capacityFactor('mobility', 2, undefined) > 1 && capacityFactor('mobility', 3, undefined) > capacityFactor('mobility', 2, undefined), 'a higher level asks more of mobility and calories (the level used to do nothing there)');
+  check(capacityFactor('calories', 1, { activity: 'low' }) < 1 && capacityFactor('calories', 1, { activity: 'regular' }) > 1, 'activity scales the capacity');
+  check(capacityFactor('mobility', 1, { reach: 'far' }) < 1 && capacityFactor('mobility', 1, { reach: 'touch' }) > 1 && capacityFactor('calories', 1, { reach: 'far' }) === 1, 'the toe reach only matters for mobility');
+  check(capacityFactor('mobility', 3, { activity: 'regular', reach: 'touch' }) === 1.3 && capacityFactor('mobility', 1, { activity: 'low', reach: 'far' }) >= 0.8, 'capacity is clamped to 0.8..1.3');
+  check(trainingDays(5, undefined) === 5 && trainingDays(5, { daysPerWeek: 3 }) === 3 && trainingDays(5, { daysPerWeek: 7 }) === 5 && trainingDays(7, { daysPerWeek: 1 }) === 1, 'training days: what the user wants, never more than the program');
+  check(!hasProfile(undefined) && !hasProfile({}) && hasProfile({ pushUps: 0 }) && hasProfile({ activity: 'low' }), 'a profile with only zeros still counts as an answer');
+
+  // ---- sanitising the profile (untrusted: imports, sync pulls, localStorage)
+  check(sanitizeProfile(null) === null && sanitizeProfile('x') === null && sanitizeProfile([]) === null && sanitizeProfile({}) === null && sanitizeProfile({ activity: 'extreme', reach: 3, pushUps: 'a', daysPerWeek: NaN }) === null, 'garbage profiles are dropped');
+  check(same(sanitizeProfile({ activity: 'some', daysPerWeek: 99, pushUps: -4, squats: 1e9, plankSeconds: 12.6, reach: 'near', extra: 1 }), { activity: 'some', daysPerWeek: 7, pushUps: 0, squats: 200, plankSeconds: 13, reach: 'near' }), 'numbers are rounded and clamped, unknown keys dropped');
+  check(Object.keys(sanitizeProfile({ reach: 'touch', plankSeconds: 30, activity: 'low', pushUps: 5, squats: 4, daysPerWeek: 3 })!).join() === 'activity,daysPerWeek,pushUps,squats,plankSeconds,reach', 'a fixed key order, whatever order it arrived in');
+  for (const a of ACTIVITY_LEVELS) check(sanitizeProfile({ activity: a })!.activity === a, 'every activity level is kept');
+  for (const r of REACH_LEVELS) check(sanitizeProfile({ reach: r })!.reach === r, 'every reach level is kept');
+  check(!('profile' in sanitizeSettings(undefined)) && !('profile' in sanitizeSettings({})) && !('profile' in sanitizeSettings({ profile: {} })) && !('profile' in sanitizeSettings({ profile: 5 })), 'the profile key only exists when something is set (the wire rule)');
+  const withProfile = sanitizeSettings({ profile: { pushUps: 7, activity: 'regular', bogus: true } });
+  check(same(withProfile.profile, { activity: 'regular', pushUps: 7 }) && same(sanitizeSettings(JSON.parse(JSON.stringify(withProfile))), withProfile), 'a stored profile survives the sanitiser and a JSON round trip');
+  check(JSON.stringify(defaultSettings()) === JSON.stringify({ ...defaultSettings() }) && !JSON.stringify(defaultSettings()).includes('profile'), 'the defaults (and so every existing blob hash) carry no profile');
+
+  // ---- the guided setup carries the profile
+  {
+    const quick = quickDraft();
+    check(same(quick.profile, {}) && !('profile' in setupPatch(quick, defaultSettings(), 1, '2026-03-03')) === false && setupPatch(quick, defaultSettings(), 1, '2026-03-03').profile === undefined, 'Quick setup gives no profile and Finish writes it as absent');
+    check(SETUP_STEPS.every((st) => stepValid(st, quick, true)) && stepValid('profile', { ...quick, profile: { pushUps: 3 } }, false), 'every profile answer is optional');
+    const base = { ...defaultSettings(), profile: { activity: 'low' as const, daysPerWeek: 3 } };
+    const draft = draftFromSettings(base, false);
+    check(same(draft.profile, base.profile), 'the draft starts from the stored profile');
+    draft.profile.pushUps = 9;
+    check(!('pushUps' in base.profile), 'editing the draft never touches the settings');
+    const patch = setupPatch(draft, base, 5, '2026-03-03');
+    check(same(patch.profile, { activity: 'low', daysPerWeek: 3, pushUps: 9 }) && same(sanitizeSettings({ ...base, ...patch }).profile, patch.profile), 'Finish writes the answers and they are valid settings');
+    check(setupPatch({ ...draft, profile: {} }, base, 5, '2026-03-03').profile === undefined, 'clearing every answer clears the stored profile');
+  }
+
+  // ---- the ladders start from the baseline and report where they started
+  {
+    const history: SportBlock[] = [];
+    check(rungOf('push', { profile: { pushUps: 12 }, history }) === 3 && rungOf('push', { history }) === 0, 'a baseline of 12 push-ups starts on the floor push-up; without it, the level decides');
+    check(rungOf('squat', { profile: { squats: 40 } }) === 2 && rungOf('core', { profile: { plankSeconds: 100 } }) === 2 && rungOf('pull', { profile: { pushUps: 45 } }) === 1, 'squat, core and pull baselines');
+    check(rungOf('push', { profile: { pushUps: 2 }, constraints: { lowImpact: false, noFloor: true } }) === 1, 'a baseline rung the equipment cannot do settles on a usable one');
+    const ctx = makeCtx({ blockId: 'from', blockSeconds: 60, today: day(1), enrolment: enrol('strength', 'microStrength', 1, D0), profile: { pushUps: 12 }, history: [dayBlock('pushUp', 12, D0), dayBlock('pushUp', 12, D0)] });
+    const st = replayLadders(ctx, strengthParams).get('push')!;
+    check(st.from === 3 && st.rung === 4, 'the state remembers the rung it started from');
+    const legacy = rungOf('push', { level: 2, history: [dayBlock('deskPushUp', 12, D0), dayBlock('deskPushUp', 12, D0)] });
+    check(legacy === 2, 'without a profile the replay is what it was');
+  }
+
+  // ---- days away
+  {
+    const two = [dayBlock('wallPushUp', 12, D0), dayBlock('wallPushUp', 12, D0)];
+    check(rungOf('push', { history: two, today: day(10) }) === 1, 'ten days away keeps the rung gained');
+    check(rungOf('push', { history: two, today: day(15) }) === 1, 'two weeks away keeps the rung too');
+    const high = [dayBlock('deskPushUp', 12, D0), dayBlock('deskPushUp', 12, D0)];
+    check(rungOf('push', { level: 2, history: high, today: day(1) }) === 2 && rungOf('push', { level: 2, history: high, today: day(22) }) === 1, 'three weeks away gives back one rung');
+    check(rungOf('push', { level: 3, today: day(70) }) === 2, 'no history: nothing to step back from');
+    const long = [dayBlock('kneePushUp', 9, D0)];
+    check(rungOf('push', { level: 3, history: long, today: day(60) }) === 0, 'eight weeks away gives back two rungs');
+    check(rungOf('push', { level: 3, history: long, today: day(30) }) === 1, 'a month away gives back one');
+    // a gap between two blocks counts the same way as a gap before today, and a block after it plays on the stepped-back rung
+    const gap = [dayBlock('kneePushUp', 9, D0), dayBlock('deskPushUp', 12, day(30)), dayBlock('deskPushUp', 12, day(31))];
+    check(rungOf('push', { level: 3, history: gap, today: day(31) }) === 2, 'back after a gap: the stepped-back rung is where the new successes count (two successes climb again)');
+    // the dose restarts at the bottom of the range after two weeks away
+    const doseAt = (history: SportBlock[], today: string): number | undefined => {
+      const ctx = makeCtx({ blockId: 'dose', blockSeconds: 60, today, enrolment: enrol('strength', 'microStrength', 1, D0), history });
+      return LADDER_PROGRESSION.dose(CATALOG.exercises.get('wallPushUp')!, 0, ctx, strengthParams).target.reps;
+    };
+    const mid = [dayBlock('wallPushUp', 10, D0)];
+    check(doseAt(mid, day(2)) === 11 && doseAt(mid, day(16)) === 8, 'last value + 1 normally; back at the bottom of the range after two weeks away');
+    // fuzz: absences never break the ladder invariants
+    const rnd = mulberry32(25);
+    for (let h = 0; h < 60; h++) {
+      const history: SportBlock[] = [];
+      let d = 0;
+      for (let i = 0; i < 30; i++) {
+        d += rnd() < 0.2 ? 14 + Math.floor(rnd() * 70) : Math.floor(rnd() * 3);
+        const ctx = makeCtx({ blockId: 'abs', blockSeconds: 60, today: day(d), enrolment: enrol('strength', 'microStrength', (1 + Math.floor(rnd() * 3)) as 1 | 2 | 3, D0), history, profile: rnd() < 0.5 ? { pushUps: Math.floor(rnd() * 40), squats: Math.floor(rnd() * 60), plankSeconds: Math.floor(rnd() * 120) } : undefined });
+        const levels = LADDER_PROGRESSION.levels(ctx, strengthParams);
+        for (const l of CATALOG.ladders.all) {
+          const r = levels.get(l.id)!;
+          check(r >= 0 && r < l.rungs.length && isRungUsable(l, r, ctx), 'absence fuzz: a valid, usable rung');
+        }
+        const lid = [...levels.keys()][Math.floor(rnd() * levels.size)]!;
+        const ex = CATALOG.ladders.get(lid)!.rungs[levels.get(lid)!]![0]!;
+        history.push(dayBlock(ex, rnd() < 0.5 ? 40 : 2, day(d), { feedback: rnd() < 0.1 ? 'tooHard' : undefined }));
+      }
+    }
+  }
+
+  // ---- effort: the rating counts, not only the chip
+  {
+    check(effortOf({}) === 0 && effortOf({ feedback: 'ok' }) === 0 && effortOf({ feedback: 'tooHard' }) === 1 && effortOf({ feedback: 'tooEasy' }) === -1, 'effort from the chip');
+    check(effortOf({ rpe: 9 }) === 1 && effortOf({ rpe: 10 }) === 1 && effortOf({ rpe: 3 }) === -1 && effortOf({ rpe: 6 }) === 0, 'effort from the 1 to 10 rating');
+    check(effortOf({ feedback: 'ok', rpe: 9 }) === 1 && effortOf({ feedback: 'tooHard', rpe: 2 }) === 1, 'the default chip does not hide a high rating, an explicit chip wins over the number');
+    const hard = [dayBlock('deskPushUp', 12, D0, { rpe: 9 }), dayBlock('deskPushUp', 12, day(1), { rpe: 10 })];
+    check(rungOf('push', { level: 2, history: hard, today: day(2) }) === 0, 'two very hard blocks count as two failures even at the top of the range');
+    const easy = [dayBlock('deskPushUp', 9, D0, { rpe: 2 }), dayBlock('deskPushUp', 12, day(1))];
+    check(rungOf('push', { level: 2, history: easy, today: day(2) }) === 2, 'a very easy rating counts as an extra success');
+    check(rungOf('push', { level: 2, history: [dayBlock('deskPushUp', 12, D0, { rpe: 6 }), dayBlock('deskPushUp', 12, day(1), { rpe: 7 })], today: day(2) }) === 2, 'a middle rating changes nothing');
+  }
+
+  // ---- a re-test is evidence both ways
+  {
+    const test = (value: number, ex = 'deskPushUp'): SportBlock => dayBlock(ex, value, D0, { kind: 'test', assessmentId: 'strMaxPushUps', work: 60 });
+    check(rungOf('push', { level: 2, history: [test(3)], today: day(1) }) === 0, 'a push-up test under the range gives back a rung');
+    check(rungOf('push', { level: 2, history: [test(9)], today: day(1) }) === 1, 'a test inside the range changes nothing');
+    check(rungOf('push', { level: 2, history: [test(30)], today: day(1) }) === 2, 'a test above the range still moves up (one rung)');
+    check(rungOf('push', { level: 1, history: [test(2, 'wallPushUp')], today: day(1) }) === 0, 'never below rung 0');
+  }
+
+  // ---- adaptation: capacity, absence, recent effort
+  {
+    const A = (o: { level?: 1 | 2 | 3; history?: SportBlock[]; today?: string; profile?: SportProfile; goal?: string }) =>
+      adaptation(makeCtx({ blockId: 'a', blockSeconds: 60, today: o.today ?? day(40), enrolment: enrol(o.goal ?? 'mobility', 'deskReset', o.level ?? 1, D0), history: o.history ?? [], ...(o.profile ? { profile: o.profile } : {}) }), o.goal ?? 'mobility');
+    const base = A({});
+    check(base.factor === 1 && base.dynamic === 1 && base.reason === undefined && base.away === null, 'a new user at level 1 gets the program as it is');
+    check(A({ level: 3 }).capacity === 1.2 && A({ profile: { activity: 'low' } }).factor === 0.9, 'capacity scales the factor');
+    check(returnFactor(null) === 1 && returnFactor(6) === 1 && returnFactor(7) === 0.9 && returnFactor(14) === 0.8 && returnFactor(27) === 0.8 && returnFactor(28) === 0.7, 'the dose steps back with the days away');
+    const blocks = (dates: number[], o: Parameters<typeof dayBlock>[3] = {}): SportBlock[] => dates.map((n) => dayBlock('chinTucks', 20, day(n), { goalId: 'mobility', ...o }));
+    check(daysAway(blocks([0, 3]), day(10), 'mobility') === 7 && daysAway(blocks([3]), day(3), 'mobility') === null && daysAway(blocks([3]), day(10), 'strength') === null, 'days away: the last block before today, of the same goal');
+    check(daysAway([dayBlock('chinTucks', 20, day(2), { goalId: 'mobility', status: 'skipped' })], day(10), 'mobility') === null, 'a skipped block is not training');
+    const away8 = A({ history: blocks([0, 2]), today: day(10) });
+    check(away8.away === 8 && away8.dynamic === 0.9 && away8.reason === 'return' && Math.abs(away8.factor - 0.9) < 1e-9, 'eight days away: a lighter dose, reason "return"');
+    check(A({ history: blocks([0]), today: day(40) }).dynamic === 0.7 && A({ history: blocks([0]), today: day(40), profile: { activity: 'low', reach: 'far' } }).factor >= 0.6, 'a long absence never takes the dose below 0.6');
+    const hardRun = blocks([30, 31, 32, 33], { feedback: 'tooHard' });
+    const ease = A({ history: hardRun, today: day(34) });
+    check(ease.reason === 'ease' && ease.dynamic === 0.9 && ease.away === 1, 'recent hard blocks ease the dose');
+    const easyRun = blocks([30, 31, 32, 33], { rpe: 2 });
+    check(A({ history: easyRun, today: day(34) }).reason === 'push' && A({ history: easyRun, today: day(34) }).dynamic === 1.1, 'recent easy blocks push it a little');
+    check(A({ history: blocks([31, 32], { feedback: 'tooHard' }), today: day(34) }).reason === undefined, 'two blocks are too few to judge');
+    check(A({ history: [...blocks([20, 21, 22, 23], { feedback: 'tooHard' })], today: day(34) }).reason === 'return' || A({ history: blocks([20, 21, 22, 23], { feedback: 'tooHard' }), today: day(34) }).away! >= 7, 'old ratings (over three weeks) are not judged as recent');
+    check(A({ history: [...blocks([30, 31], { feedback: 'tooHard' }), ...blocks([32, 33], { feedback: 'tooEasy' })], today: day(34) }).reason === undefined, 'mixed ratings cancel out');
+    check(A({ history: blocks([30, 31, 32, 33], { feedback: 'tooHard', kind: 'test' }), today: day(34) }).reason === undefined && A({ history: blocks([30, 31, 32, 33], { feedback: 'tooHard', goalId: 'strength' }), today: day(34) }).reason === undefined, 'tests and other goals are not the goal\'s recent effort');
+  }
+
+  // ---- generation uses it
+  {
+    const mob = enrol('mobility', 'deskReset', 1, day(-60));
+      const mk = (id: string, o: { profile?: SportProfile; history?: SportBlock[]; level?: 1 | 2 | 3 }) => {
+      const e = { ...mob, level: o.level ?? 1 };
+      const ctx = makeCtx({ blockId: id, blockSeconds: 300, today: day(40), enrolment: e, history: o.history ?? [], todayBlocks: [], ...(o.profile ? { profile: o.profile } : {}) });
+      // not a warm-up, so the hold scaling is visible
+      const warmed = [dayBlock('chinTucks', 20, day(40), { goalId: 'mobility' })];
+      return generate({ ...ctx, history: [...(o.history ?? []), ...warmed], todayBlocks: warmed }, { mode: 'goal', templateId: null }, { enrolment: e });
+    };
+    let lighter = 0;
+    for (let i = 0; i < 30; i++) {
+      const plain = mk(`mob${i}`, {});
+      const far = mk(`mob${i}`, { profile: { reach: 'far', activity: 'low' } });
+      const strong = mk(`mob${i}`, { level: 3, profile: { reach: 'touch', activity: 'regular' } });
+      check(plain.meta.adapted === undefined && far.meta.adapted === undefined, 'capacity alone is not a reason worth telling');
+      // The picks come from the same seed, so compare the same exercise's hold in each plan (the block's length limits the rest).
+      for (const step of plain.plan.steps) {
+        const twin = (plan: BlockPlan): number | undefined => plan.steps.find((x) => x.exerciseId === step.exerciseId && x.target?.seconds !== undefined)?.target?.seconds;
+        if (step.target?.seconds === undefined || twin(far.plan) === undefined || twin(strong.plan) === undefined) continue;
+        check(twin(far.plan)! <= step.target.seconds && twin(strong.plan)! >= step.target.seconds, `weaker people hold less, stronger ones more (${step.exerciseId}: ${twin(far.plan)} ${step.target.seconds} ${twin(strong.plan)})`);
+        if (twin(far.plan)! < step.target.seconds) lighter++;
+      }
+      assertPlan(far.plan, makeCtx({ blockId: `mob${i}`, blockSeconds: 300, today: day(40), enrolment: mob }), far.meta, false, 'adapted mobility');
+    }
+    check(lighter > 0, 'the holds really get shorter for a low-capacity profile');
+    const back = mk('back', { history: [dayBlock('chinTucks', 20, day(30), { goalId: 'mobility' })] });
+    check(back.meta.adapted?.reason === 'return' && back.meta.adapted.days === 10, 'coming back is named in the block\'s notes, with the days');
+    check(mk('back', { history: [dayBlock('chinTucks', 20, day(30), { goalId: 'mobility' })] }).meta.adapted?.days === 10, 'deterministic');
+
+    // calories: the work interval follows the person, the work+rest period stays
+    const cal = enrol('calories', 'burnAndMove', 1, addDays(MONDAY, -14));
+    const calCtx = (profile?: SportProfile, level: 1 | 2 | 3 = 1): GenerationContext => {
+      const warmed = [dayBlock('jumpingJack', 20, MONDAY, { goalId: 'calories' })];
+      return makeCtx({ blockId: 'calad', blockSeconds: 300, today: addDays(MONDAY, 2), enrolment: { ...cal, level }, history: warmed, todayBlocks: warmed.map((b) => ({ ...b, date: addDays(MONDAY, 2) })), ...(profile ? { profile } : {}) });
+    };
+    const w = (c: GenerationContext): number => generate(c, { mode: 'goal', templateId: null }, { enrolment: c.enrolment }).plan.steps[0]!.workSeconds;
+    check(w(calCtx({ activity: 'low' })) < w(calCtx()) && w(calCtx(undefined, 3)) > w(calCtx()), 'calorie intervals follow activity and level');
+    const lowPlan = generate(calCtx({ activity: 'low' }), { mode: 'goal', templateId: null }, { enrolment: cal }).plan;
+    check(lowPlan.steps[0]!.workSeconds + lowPlan.steps[0]!.restSeconds === 60, 'the work+rest period stays 60 s');
+
+    // training days: three days a week means a fourth day is a rest day
+    const enrolS = enrol('strength', 'microStrength', 1, addDays(MONDAY, -9));
+    const hist: SportBlock[] = [];
+    for (let d = 0; d < 3; d++) hist.push(dayBlock('airSquat', 10, addDays(MONDAY, d)));
+    const fourth = makeCtx({ blockId: 'fourth', blockSeconds: 120, today: addDays(MONDAY, 3), equipment: EQUIPMENT_SETS['all']!, enrolment: enrolS, history: hist, profile: { daysPerWeek: 3 } });
+    check(generate(fourth, { mode: 'goal', templateId: null }, { enrolment: enrolS }).meta.restDay === true, 'a profile of three days makes the fourth day a rest day');
+    const fourthPlain = { ...fourth, profile: undefined };
+    check(generate(fourthPlain, { mode: 'goal', templateId: null }, { enrolment: enrolS }).meta.restDay !== true, 'without it the program\'s five days apply');
+
+    // strength after a long absence: fewer sets a day
+    const sets = (ctx: GenerationContext): number => generate(ctx, { mode: 'goal', templateId: null }, { enrolment: enrolS }).plan.steps.length;
+    check(sets(makeCtx({ blockId: 'sa', blockSeconds: 300, today: addDays(MONDAY, 2), equipment: EQUIPMENT_SETS['all']!, enrolment: enrolS })) >= 1, 'strength still generates a plan');
+    const awayCtx = makeCtx({ blockId: 'sb', blockSeconds: 300, today: addDays(MONDAY, 2), equipment: EQUIPMENT_SETS['all']!, enrolment: enrolS, history: [dayBlock('airSquat', 10, addDays(MONDAY, -20))] });
+    const awayPlan = generate(awayCtx, { mode: 'goal', templateId: null }, { enrolment: enrolS });
+    check(awayPlan.meta.adapted?.reason === 'return' && awayPlan.meta.adapted.days === 22 && awayPlan.plan.steps.length >= 1, 'strength names the return too');
+  }
+
+  // ---- a test is due again after a long absence, outside the program's test weeks
+  {
+    const program = GOALS.get('strength')!.programs[0]!;
+    const start = '2026-03-02';
+    const today = addDays(start, 7 * 8 + 2); // program week 3 of the second cycle: not a test week
+    const enrolS = enrol('strength', 'microStrength', 1, start);
+    const todayDone = dayBlock('airSquat', 10, today);
+    const mkCtx = (history: SportBlock[]): GenerationContext => makeCtx({ blockId: 'rt', blockSeconds: 300, today, enrolment: enrolS, history: [...history, todayDone], todayBlocks: [todayDone] });
+    const pos = programWeek(start, today, program.weeks);
+    check(!program.assessmentWeeks.includes(pos.week), 'the fixture day is not in a test week');
+    check(pendingAssessmentIds(mkCtx([dayBlock('airSquat', 10, addDays(today, -3))]), program, pos, 'strength').length === 0, 'no test outside the test weeks when training steadily');
+    const away = pendingAssessmentIds(mkCtx([dayBlock('airSquat', 10, addDays(today, -30))]), program, pos, 'strength');
+    check(same(away, program.assessmentIds), 'after three weeks away every test of the program is due again');
+    const retested = [dayBlock('airSquat', 10, addDays(today, -30)), dayBlock('deskPushUp', 12, addDays(today, -1), { kind: 'test', assessmentId: 'strMaxPushUps' })];
+    check(!pendingAssessmentIds(mkCtx(retested), program, pos, 'strength').includes('strMaxPushUps') && pendingAssessmentIds(mkCtx(retested), program, pos, 'strength').length === program.assessmentIds.length - 1, 'a test taken in the last four weeks is not repeated');
+    const ctxNoGoal = mkCtx([dayBlock('airSquat', 10, addDays(today, -30))]);
+    check(pendingAssessmentIds(ctxNoGoal, program, pos).length === 0, 'without a goal id there is no return rule (the old call)');
+  }
+
+  // ---- objectives
+  {
+    check(nextTestTarget(10, 'reps', true) === 13 && nextTestTarget(30, 'seconds', true) === 38 && nextTestTarget(2, 'reps', true) === 4, 'higher-is-better targets: 25% or at least a few units');
+    check(nextTestTarget(12, 'cm', false) === 9 && nextTestTarget(3, 'cm', false) === 1 && nextTestTarget(1, 'cm', false) === 0 && nextTestTarget(0, 'cm', false) === 0 && nextTestTarget(-3, 'cm', false) === -3, 'distance targets shrink and stop at zero (or when fingers already overlap)');
+    check(adaptedMinutes(30, []) === 30 && adaptedMinutes(30, [30, 30]) === 35 && adaptedMinutes(30, [5, 5]) === 20 && adaptedMinutes(30, [30, 5]) === 25, 'minutes target: +10% after a week that hit 90%, -20% after one under half');
+    check(adaptedMinutes(30, new Array<number>(40).fill(1000)) === 45 && adaptedMinutes(30, new Array<number>(40).fill(0)) === 20 && adaptedMinutes(5, [0]) === 10, 'minutes target stays within 1.5x and 0.6x of the plan (and at least 10)');
+    const cals = GOALS.get('calories')!;
+    check(baseWeeklyMinutes(cals, 6, { weeklyActiveMinutes: 45 }, {}) === 45 && baseWeeklyMinutes(cals, 6, { weeklyActiveMinutes: 45 }, { profile: { daysPerWeek: 3 } }) === 25 && baseWeeklyMinutes(cals, 6, { weeklyActiveMinutes: 45 }, { profile: { activity: 'low' } }) === 35 && baseWeeklyMinutes(cals, 6, { weeklyActiveMinutes: 45 }, { profile: { activity: 'regular' } }) === 55, 'the plan\'s weekly minutes scale to the days and the activity');
+    check(baseWeeklyMinutes(GOALS.get('strength')!, 5, { setsPerPatternPerDay: 2 }, {}) === 20 && baseWeeklyMinutes(GOALS.get('mobility')!, 7, { holdSeconds: 40 }, {}) === 30, 'strength and mobility plans');
+
+    const input = (o: { goal: string; level?: 1 | 2 | 3; profile?: SportProfile; history?: SportBlock[]; today?: string; weightKg?: number | null; equipment?: EquipmentInventory; constraints?: Constraints; startedOn?: string }) => ({
+      settings: { ...defaultSettings(), enrolment: enrol(o.goal, GOALS.get(o.goal)!.programs[0]!.id, o.level ?? 1, o.startedOn ?? MONDAY), ...(o.profile ? { profile: o.profile } : {}), ...(o.equipment ? { equipment: o.equipment } : {}), ...(o.constraints ? { constraints: o.constraints } : {}) },
+      history: o.history ?? [],
+      today: o.today ?? addDays(MONDAY, 2),
+      catalog: CATALOG,
+      weightKg: o.weightKg ?? null,
+    });
+    check(goalTargets({ ...input({ goal: 'strength' }), settings: defaultSettings() }).length === 0, 'free training has no objectives');
+    const empty = goalTargets(input({ goal: 'strength' }));
+    check(same(empty.map((t) => t.id), ['days', 'minutes', 'rung:push', 'rung:squat', 'rung:core']), `strength objectives: days, minutes, three ladders, got ${empty.map((t) => t.id)}`);
+    check(empty.every((t) => t.progress === 0 && t.current === (t.kind === 'rung' ? 0 : 0)) && empty[0]!.target === 5 && empty[1]!.target === 20, 'a new user: nothing done, the program\'s own days and minutes');
+    const custom = goalTargets(input({ goal: 'strength', profile: { daysPerWeek: 3, activity: 'regular', pushUps: 12, squats: 20 } }));
+    check(custom[0]!.target === 3 && custom[1]!.target === 15, 'days and minutes follow the profile');
+    const push = custom.find((t) => t.id === 'rung:push')!;
+    check(push.from === 3 && push.current === 3 && push.target === 5 && push.progress === 0 && push.currentExerciseId === 'pushUp' && push.targetExerciseId === 'archerPushUp', `push objective: ${JSON.stringify(push)}`);
+    const week = [dayBlock('pushUp', 12, MONDAY, { work: 60 }), dayBlock('pushUp', 12, addDays(MONDAY, 1), { work: 60 }), dayBlock('airSquat', 12, addDays(MONDAY, 1), { work: 120 })];
+    const half = goalTargets(input({ goal: 'strength', profile: { pushUps: 12 }, history: week }));
+    const pushHalf = half.find((t) => t.id === 'rung:push')!;
+    check(half[0]!.current === 2 && half[0]!.progress === 0.4 && Math.abs(half[1]!.current - 4) < 1e-9 && Math.abs(half[1]!.progress - 0.2) < 1e-9, `days and minutes this week: ${JSON.stringify(half.slice(0, 2))}`);
+    check(pushHalf.current === 4 && pushHalf.from === 3 && pushHalf.target === 5 && pushHalf.progress === 0.5, `two good push-up blocks: one rung up, halfway to the objective, got ${JSON.stringify(pushHalf)}`);
+    const lastWeek = [dayBlock('airSquat', 10, addDays(MONDAY, -14), { work: 60 * 30 }), dayBlock('airSquat', 10, addDays(MONDAY, -7), { work: 60 * 30 })];
+    check(goalTargets(input({ goal: 'strength', history: lastWeek, today: addDays(MONDAY, 3) }))[1]!.target === 20, 'the first week with a block is never judged (it is partial)');
+    const three = [dayBlock('airSquat', 10, addDays(MONDAY, -21), { work: 60 }), dayBlock('airSquat', 10, addDays(MONDAY, -14), { work: 60 * 30 }), dayBlock('airSquat', 10, addDays(MONDAY, -7), { work: 60 * 30 })];
+    check(goalTargets(input({ goal: 'strength', history: three, today: addDays(MONDAY, 3) }))[1]!.target === 25, `two complete weeks above 90% raise the minutes target (20 -> 22 -> 24.2 -> 25), got ${JSON.stringify(goalTargets(input({ goal: 'strength', history: three, today: addDays(MONDAY, 3) }))[1])}`);
+    const topInput = input({ goal: 'strength', history: [dayBlock('plank', 40, MONDAY), dayBlock('plank', 40, addDays(MONDAY, 1))], profile: { plankSeconds: 100 } });
+    const core = goalTargets(topInput).find((t) => t.id === 'rung:core')!;
+    check(core.from === 2 && core.current >= 2, 'a plank baseline of 100 s starts the core ladder at rung 2');
+    const lowGear = goalTargets(input({ goal: 'strength', constraints: { lowImpact: true, noFloor: true } })).find((t) => t.id === 'rung:push')!;
+    check(lowGear.target <= 3 && lowGear.target >= lowGear.current, `with no floor work the push objective never aims at a rung the user cannot do, got ${lowGear.target}`);
+
+    const calsAll = goalTargets(input({ goal: 'calories', weightKg: 70 }));
+    check(same(calsAll.map((t) => t.id), ['days', 'minutes', 'kcal']) && calsAll[1]!.target === 45 && calsAll[2]!.target > 0 && calsAll[2]!.target % 10 === 0, `calories objectives with a weight: ${JSON.stringify(calsAll.map((t) => [t.id, t.target]))}`);
+    check(!goalTargets(input({ goal: 'calories' })).some((t) => t.kind === 'kcal'), 'no calorie objective without a body weight');
+    const heavy = goalTargets(input({ goal: 'calories', weightKg: 100 })).find((t) => t.kind === 'kcal')!.target;
+    check(heavy > calsAll[2]!.target, 'the calorie objective scales with the body weight');
+    const lowImpact = goalTargets(input({ goal: 'calories', weightKg: 70, constraints: { lowImpact: true, noFloor: false } })).find((t) => t.kind === 'kcal')!.target;
+    check(lowImpact > 0 && lowImpact <= calsAll[2]!.target, 'a low-impact limit lowers the estimate (the exercises it allows are gentler)');
+
+    const testBlock = (value: number, dayN: number, assessmentId: string, ex: string): SportBlock => dayBlock(ex, value, addDays(MONDAY, dayN), { goalId: 'mobility', kind: 'test', assessmentId });
+    const toe = (values: number[]): SportBlock[] => values.map((v, i) => testBlock(v, i * 7, 'mobToeTouch', 'heelUpHamstringStretch'));
+    const mobT = (history: SportBlock[]) => goalTargets(input({ goal: 'mobility', history, today: addDays(MONDAY, 40) })).find((t) => t.id === 'test:mobToeTouch');
+    check(mobT([]) === undefined, 'no objective for a test that was never taken');
+    const t1 = mobT(toe([18]))!;
+    check(t1.from === 18 && t1.current === 18 && t1.target === 13 && t1.progress === 0 && !t1.met && t1.higherIsBetter === false, 'toe touch: 25% closer than the first test');
+    const t2 = mobT(toe([18, 14]))!;
+    check(t2.target === 13 && Math.abs(t2.progress - 0.8) < 1e-9, 'progress is the share of the way there');
+    const t3 = mobT(toe([18, 14, 12]))!;
+    check(t3.from === 18 && t3.target === 9 && t3.progress === 0 && !t3.met, `a reached target is replaced by the next one from that result, got ${JSON.stringify(t3)}`);
+    const t4 = mobT(toe([5, 0]))!;
+    check(t4.met && t4.progress === 1 && t4.target === 0, 'touching the floor leaves nothing to improve');
+    const squatT = goalTargets(input({ goal: 'mobility', history: [testBlock(30, 0, 'mobDeepSquat', 'deepSquatHold'), testBlock(40, 7, 'mobDeepSquat', 'deepSquatHold')], today: addDays(MONDAY, 40) })).find((t) => t.id === 'test:mobDeepSquat')!;
+    check(squatT.target === 50 && squatT.higherIsBetter === true && squatT.progress === 0 && squatT.from === 30 && squatT.current === 40, `a hold: 30 -> aim 38 -> reached 40 -> aim 50, got ${JSON.stringify(squatT)}`);
+    check(goalTargets(input({ goal: 'mobility' })).map((t) => t.id).join() === 'days,minutes' && goalTargets(input({ goal: 'mobility' }))[0]!.target === 7, 'mobility: days and minutes until a test is taken');
+    const sidesBlock: SportBlock = { ...testBlock(8, 0, 'mobKneeToWall', 'kneeToWall'), steps: [{ exerciseId: 'kneeToWall', workSeconds: 60, restSeconds: 0, side: 'left' }, { exerciseId: 'kneeToWall', workSeconds: 60, restSeconds: 0, side: 'right' }], results: [{ stepIndex: 0, done: true, value: 8 }, { stepIndex: 1, done: true, value: 6 }] };
+    check(goalTargets(input({ goal: 'mobility', history: [sidesBlock], today: addDays(MONDAY, 40) })).find((t) => t.id === 'test:mobKneeToWall')!.current === 7, 'a per-side test uses the mean of its sides');
+
+    // the active-minutes chart target follows the same plan
+    const env2: MetricEnv = { catalog: CATALOG, weightKg: null, enrolment: enrol('calories', 'burnAndMove', 1, MONDAY), equipment: {}, constraints: CONSTRAINT_SETS[0]!, profile: { daysPerWeek: 3 } };
+    const t = METRICS.get('activeMinutes')!.compute([], { from: MONDAY, to: addDays(MONDAY, 20) }, env2).targets;
+    check(same(t, [25, 25, 30]), `the chart target scales to the days a week: ${JSON.stringify(t)}`);
+  }
+
+  // ---- strings: every new text exists in both languages
+  {
+    const en = new Set(flat(SPORTASK_TEXTS.en));
+    const es = new Set(flat(SPORTASK_TEXTS.es));
+    for (const k of en) check(es.has(k), `missing in Spanish: sportask.${k}`);
+    for (const k of es) check(en.has(k), `missing in English: sportask.${k}`);
+    for (const k of ['profile.title', 'profile.hint', 'profile.short.plank', 'brk.adapt.return', 'brk.adapt.ease', 'brk.adapt.push', 'panel.targets.title', 'panel.targets.testNow', 'wizard.profileLater']) check(en.has(k), `the 0.25 key ${k} exists`);
+    const text = (lang: 'en' | 'es', path: string): string => path.split('.').reduce<unknown>((o, k) => (o as Record<string, unknown>)[k], SPORTASK_TEXTS[lang]) as string;
+    for (const a of ACTIVITY_LEVELS) check(text('en', `profile.activities.${a}`) && text('es', `profile.short.${a}`), `texts for activity ${a}`);
+    for (const r of REACH_LEVELS) check(text('en', `profile.reaches.${r}`) && text('es', `profile.short.${r}`), `texts for reach ${r}`);
+  }
+}
+
 // ---------------------------------------------------------------- run
 
 try {
@@ -1149,6 +1494,7 @@ try {
   checkSanitize();
   checkKcal();
   checkPanel();
+  checkAdaptive();
   console.log(`\ncheck:sportask OK (${assertions} assertions)`);
 } catch (e) {
   console.error(e instanceof Error ? e.message : e);

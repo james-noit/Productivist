@@ -1,15 +1,6 @@
 <main #root class="multitask-view" tabindex="-1">
   <div class="multitask-view__clock-strip">
-    <div class="multitask-view__mode">
-      <button type="button" [class.active]="clock.mode() === 'focus'" (click)="clock.setMode('focus')">
-        {{ 'clock.focus' | translate }}
-      </button>
-      <button type="button" [class.active]="clock.mode() === 'break'" (click)="clock.setMode('break')">
-        {{ 'clock.break' | translate }}
-      </button>
-      <app-clock-settings />
-      <app-sportask-button source="multitask" />
-    </div>
+    <app-clock-mode-bar class="multitask-view__mode" source="multitask" />
 
     <div class="multitask-view__time-group">
       <div class="multitask-view__stepper" role="group" [attr.aria-label]="'clock.adjustDuration' | translate">

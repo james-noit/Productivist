@@ -102,6 +102,7 @@ export class SportPanelState {
     enrolment: this.enrolment(),
     equipment: this.settings().equipment,
     constraints: this.settings().constraints,
+    ...(this.settings().profile ? { profile: this.settings().profile } : {}),
   }));
 
   /** The metric ids to chart: the goal's, or the free-training ones without an enrolment. */

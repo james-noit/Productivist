@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, untracked } from '@angular/core';
 import { sanitizeSettings } from '../../../lib/sportask/sanitize';
 import { deactivate } from '../../../lib/sportask/session-ops';
-import { resolveSkin } from '../../../lib/sportask/skins';
+import { APP_SKIN, resolveSkin } from '../../../lib/sportask/skins';
 import { SportaskSettingsService } from '../../../services/sportask-settings.service';
 import { SportaskService } from '../../../services/sportask.service';
 import { ViewService } from '../../../services/view.service';
@@ -46,7 +46,9 @@ export class SportaskHostComponent {
     const panel = this.view.current() === 'sportask' && this.settings.enabled();
     if (!panel && !this.sportask.active()) return null;
     const s = sanitizeSettings(this.settings.settings());
-    return !panel && !s.skinWholeApp ? null : resolveSkin(s.skin);
+    const skin = resolveSkin(s.skin);
+    // The app's own theme needs no attribute (and must not get the skins' badge override).
+    return skin === APP_SKIN || (!panel && !s.skinWholeApp) ? null : skin;
   });
 
   constructor() {

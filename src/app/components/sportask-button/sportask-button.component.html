@@ -3,6 +3,7 @@
     <button
       type="button"
       class="btn btn--secondary btn--sm skb__btn"
+      [class.skb__btn--compact]="compact()"
       [attr.aria-pressed]="active()"
       [attr.aria-haspopup]="active() ? 'dialog' : null"
       [attr.aria-expanded]="active() ? menuOpen() : null"
@@ -11,7 +12,9 @@
       (click)="click()"
     >
       <app-ui-icon name="dumbbell" [size]="16" />
-      <span class="skb__text">{{ 'config.sportask' | translate }}</span>
+      @if (!compact()) {
+        <span class="skb__text">{{ 'config.sportask' | translate }}</span>
+      }
       @if (active()) {
         <span class="skb__sum">{{ rhythm() }}</span>
       }
@@ -46,12 +49,15 @@
       <button
         type="button"
         class="btn btn--secondary btn--sm skb__btn skb__btn--off"
+        [class.skb__btn--compact]="compact()"
         aria-disabled="true"
         [attr.aria-describedby]="hint.describedBy()"
         [attr.aria-label]="'config.sportask' | translate"
       >
         <app-ui-icon name="dumbbell" [size]="16" />
-        <span class="skb__text">{{ 'config.sportask' | translate }}</span>
+        @if (!compact()) {
+          <span class="skb__text">{{ 'config.sportask' | translate }}</span>
+        }
       </button>
     </app-sportask-off-hint>
   </div>

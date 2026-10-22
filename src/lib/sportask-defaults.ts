@@ -9,7 +9,7 @@ export const SPORTASK_DEFAULTS: Readonly<SportaskSettings> = {
   cadenceId: 'classic',
   equipment: {},
   constraints: { lowImpact: false, noFloor: false },
-  skin: 'cyberpunk',
+  skin: 'app',
   skinWholeApp: true,
   cues: true,
   autoStartBreak: false,

@@ -165,6 +165,8 @@ export class SportaskBreakModalComponent {
   protected readonly isTest = computed(() => this.pending()?.plan.kind === 'test');
   protected readonly isRestDay = computed(() => this.pending()?.meta.restDay === true);
   protected readonly fallback = computed(() => this.pending()?.meta.fallback ?? null);
+  /** Why the dose differs from the program's (0.25): back after days away, or the recent effort ratings. */
+  protected readonly adapted = computed(() => this.pending()?.meta.adapted ?? null);
   protected readonly phaseNote = computed(() => localize(this.pending()?.meta.phaseNote, this.lang()));
   protected readonly testInfo = computed(() => {
     const a = this.assessment();

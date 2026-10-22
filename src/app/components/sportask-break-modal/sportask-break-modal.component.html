@@ -40,6 +40,9 @@
             @if (fallback(); as f) {
               <p class="sbm__note" role="note">{{ 'sportask.brk.fallback.' + f | translate }}</p>
             }
+            @if (adapted(); as a) {
+              <p class="sbm__note" role="note">{{ 'sportask.brk.adapt.' + a.reason | translate: { days: a.days } }}</p>
+            }
             @if (phaseNote()) {
               <p class="sbm__note">{{ phaseNote() }}</p>
             }

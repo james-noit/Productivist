@@ -21,9 +21,8 @@ import { todayIso } from '../../../lib/dates';
 import { FINDINGS, findingIndexForDay } from '../../../lib/multitask-research';
 import { MultitaskTaskRowComponent } from '../multitask-task-row/multitask-task-row.component';
 import { MultitaskTaskDrawerComponent } from '../multitask-task-drawer/multitask-task-drawer.component';
-import { ClockSettingsComponent } from '../clock-settings/clock-settings.component';
+import { ClockModeBarComponent } from '../clock-mode-bar/clock-mode-bar.component';
 import { SportaskService } from '../../../services/sportask.service';
-import { SportaskButtonComponent } from '../sportask-button/sportask-button.component';
 import { EffectivityCardComponent } from '../effectivity-card/effectivity-card.component';
 import { UiIconComponent } from '../ui-icon/ui-icon.component';
 import { SideDrawerComponent } from '../side-drawer/side-drawer.component';
@@ -44,8 +43,7 @@ function capacityColorVar(count: number): string {
     TranslatePipe,
     MultitaskTaskRowComponent,
     MultitaskTaskDrawerComponent,
-    ClockSettingsComponent,
-    SportaskButtonComponent,
+    ClockModeBarComponent,
     EffectivityCardComponent,
     UiIconComponent,
     SideDrawerComponent,

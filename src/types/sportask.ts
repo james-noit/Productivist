@@ -158,6 +158,29 @@ export interface Enrolment {
   acceptedDisclaimerAt: number;
 }
 
+/** How much the user exercises outside Sportask: almost none, one or two days a week, three or more. */
+export type ActivityLevel = 'low' | 'some' | 'regular';
+/** Toes with straight legs: cannot get near, close, touches the floor. */
+export type ReachLevel = 'far' | 'near' | 'touch';
+
+/**
+ * What the user says about their current physical status (the optional "About you" step, 0.25). Every field is optional and the
+ * whole object is absent until one is set; it travels inside `settings.sportask`. The program starts from it and adapts around it
+ * (starting rung of each ladder, dose, weekly targets); nothing else about progress is stored: that is derived from the history.
+ */
+export interface SportProfile {
+  activity?: ActivityLevel;
+  /** Days a week the user wants to train, 1 to 7. */
+  daysPerWeek?: number;
+  /** Floor push-ups in a row with good form (0 = none yet), 0 to 100. */
+  pushUps?: number;
+  /** Bodyweight squats in a row, 0 to 200. */
+  squats?: number;
+  /** Plank hold in seconds, 0 to 600. */
+  plankSeconds?: number;
+  reach?: ReachLevel;
+}
+
 /** Synced settings, stored as `settings.sportask` in the state blob. */
 export interface SportaskSettings {
   /** The feature switch (Configuration > Sportask). Absent in settings written before 0.24: see `sportaskSwitch` in `lib/sportask-defaults.ts`. */
@@ -174,6 +197,8 @@ export interface SportaskSettings {
   cues: boolean;
   autoStartBreak: boolean;
   disclaimerAcceptedAt?: number;       // epoch ms; kept when leaving a program (Enrolment.acceptedDisclaimerAt is a copy)
+  /** The user's current physical status and training days (0.25); absent until something is set. */
+  profile?: SportProfile;
 }
 
 /** Device-local, never synced. */
@@ -208,6 +233,8 @@ export interface BlockMeta {
   /** The requested block could not be made with these constraints. */
   fallback?: 'mobility' | 'minimal';
   phaseNote?: LocalizedText;
+  /** The dose was adapted to how the user is doing (0.25): coming back after days away, or the recent effort ratings. */
+  adapted?: { reason: 'return' | 'ease' | 'push'; days?: number };
 }
 
 /** The block of the current break, kept in the session so a reload (or another tab) resumes it. */

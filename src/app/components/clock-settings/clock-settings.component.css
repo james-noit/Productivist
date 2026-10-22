@@ -4,23 +4,33 @@
 }
 
 .clock-settings__trigger {
-  padding: 0.4rem;
+  padding: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  width: 2.5rem;
-  height: 2.5rem;
-  border: none;
-  outline: 2px solid #555;
-  color: var(--color-text);
-  background: linear-gradient(135deg, #f5e6d3, #e8d4c0);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+  width: 2.25rem;
+  height: 2.25rem;
+  border: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  background: none;
   cursor: pointer;
+  transition: background-color 0.15s, color 0.15s, border-color 0.15s;
 }
 
-.clock-settings__trigger:hover {
-  filter: brightness(0.9);
+.clock-settings__trigger:hover,
+.clock-settings__trigger[aria-expanded='true'] {
+  background-color: var(--color-surface-alt);
+  color: var(--color-text);
+}
+
+.clock-settings__trigger[aria-expanded='true'] {
+  border-color: var(--color-primary);
+}
+
+.clock-settings__trigger:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
 }
 
 .clock-settings__overlay {

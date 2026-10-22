@@ -63,6 +63,8 @@ const NEVER_INITIAL_UI = [
   component('sportask-goal-fields'),
   component('sportask-equipment-fields'),
   component('sportask-limits-fields'),
+  component('sportask-profile-fields'),
+  component('sportask-targets'),
   component('sportask-rhythm-fields'),
   component('sportask-style-fields'),
   component('sportask-setup-wizard'),

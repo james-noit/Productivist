@@ -1194,3 +1194,115 @@ Plan: [`IMPROVEMENTS-0.24.md`](IMPROVEMENTS-0.24.md); branch `feature/sportask-0
   in the UI (the codec and sanitiser are covered by the self-check).
 - Turning Sportask off does not prune data and leaves the panel's stored tab and the sheet's settings as they are; turning it on again returns to
   the setup state the settings say (set up stays set up).
+
+### 0.25: adaptive programs
+
+Branch `feature/sportask-0.24` (uncommitted when this was written). The request: review how the programs flow end to end and make them adapt to the
+user's current capabilities and preferences. This section is the review, the plan and the status. Same rules as everywhere: derived from the history,
+only the user's own answers are stored, everything new is pure code under `lib/sportask/**` (lazy), one optional synced field that follows the wire rule.
+
+**Review: where the programs did not adapt** (each point was checked in the code, ranked by how much it matters)
+
+1. **The starting level was one flat label** (`Enrolment.level` 1/2/3) turned into `level - 1` on *every* ladder alike (`startRung`). Nothing asked what the
+   user can actually do, so a person with 15 push-ups and no squat habit started both on the same rung.
+2. **The level did nothing at all for two of three goals.** Mobility and calories have `levels: () => new Map()` and read no level: picking "I train
+   regularly" gave the same holds and the same intervals as "Starting from zero". Their dose was a function of the program phase only.
+3. **No handling of absence.** `programWeek` is calendar time, so after three weeks away the user lands in a later (harder) phase; the ladder replay never
+   looked at dates, so the rung and the dose (`last value + 1`) resumed exactly where they stopped; a test was never offered to re-baseline.
+4. **Effort was captured and mostly ignored.** `rpe` was stored on every block and read by nothing; the *Easy/Good/Hard* chip only fed the strength ladder
+   replay. Mobility holds and calorie intervals never reacted to "too hard" or "too easy", and the chip defaults to *Good*, so an explicit high effort
+   rating was invisible next to it.
+5. **Assessments only moved strength ladders up.** A test above the range moved one rung up; a bad result did nothing, the plank test fed no ladder, and the mobility
+   and calorie tests (the only measurements of those goals) changed nothing in the program.
+6. **No objectives.** The only target in the app was the calories program's `weeklyActiveMinutes`, a fixed line on one chart, identical for everyone. Mobility and
+   strength had none, the Summary showed totals with nothing to measure them against, and nothing said what "progress" would be for this user.
+7. **The training days were the program's, not the user's** (`daysPerWeek` 7/5/6). A user who wants three days a week got rest-day mobility only after five.
+8. **Limits only filter** (`lowImpact`, `noFloor`): they remove exercises, but the weekly volume, the calorie estimate and the intensity do not change with them.
+9. **The calorie goal ignores who is doing it**: no activity level, a target in minutes that does not grow or shrink with how the weeks go, and no kcal objective
+   even when the weight is known.
+
+**What was built** (everything pure is in `lib/sportask/`, nothing in the initial bundle: 320.31 kB before and after)
+
+- **"About you" (the user's current status).** New optional synced `SportaskSettings.profile?: SportProfile` (`types/sportask.ts`): `activity` (`low | some |
+  regular`), `daysPerWeek` (1..7), a quick baseline `pushUps`, `squats`, `plankSeconds` and `reach` (`far | near | touch`, toes with straight legs). Every field is
+  optional, the object is absent until one is set (`hasProfile`; clearing every answer writes `profile: undefined`, which JSON drops), `sanitizeProfile`
+  validates it (clamps, rounds, drops unknown keys, fixed key order) and `sanitizeSettings` keeps it only when something is left. It travels inside
+  `settings.sportask`, which the backend stores as free JSON, so there is **no migration and no backend change**; `SPORTASK_DEFAULTS` is untouched, so no
+  existing blob changes its hash. The UI is one shared presentational block, `sportask-profile-fields`, used as the new second step of the personalised
+  wizard (`SETUP_STEPS` is now `goal, profile, gear, limits, rhythm, style, summary`, with a summary row) and as a new section in Configuration > Sportask.
+  Quick setup stays one screen and sets no profile (it says so); *Run setup again* starts from the stored answers.
+- **Starting level from the baseline** (`profile.ts`, `startRung` in `engine/progression.ts`). A measured push-up, squat or plank count sets the rung of its own ladder
+  through small tables (`0` push-ups starts on the desk push-up, 10 on the floor push-up, 30 on feet-elevated; never the top rung or the jumping squat); pull,
+  hinge, lunge and overhead push follow the closest measured movement by one rung at most; any ladder with no measure starts from the picked level tempered by the
+  activity (`-1` for hardly active, `+1` for 3+ days, within rungs 0 to 2). **No profile gives exactly `level - 1`, as before** (asserted for every ladder and level).
+  The replay records `LadderState.from`, the rung it started on. For mobility and calories, `capacityFactor(goal, level, profile)` (level 1 = 1.0, 2 = 1.1, 3 = 1.2;
+  activity 0.9/1/1.1; for mobility the reach 0.9/1/1.1; clamped to 0.8..1.3) scales the dose, so the level finally does something there.
+- **Adaptive dose** (`engine/adapt.ts`, `GoalDef.adapt`). `adaptation(ctx, goalId)` returns `capacity` (above), `dynamic` and their product `factor` (0.6..1.3).
+  `dynamic` combines a **return factor** (7 days away 0.9, 14 0.8, 28 0.7, from the last counted block of the goal before today) and a **recent-effort nudge**
+  (the last five goal training blocks within three weeks, at least three: mean effort >= +0.5 eases to 0.9, <= -0.5 pushes to 1.1). `effortOf(block)` reads the chip *and*
+  the 1..10 rating (>= 9 hard, <= 3 easy; an explicit chip wins over the number, a high rating wins over the default *Good*). Each goal says how it uses it: mobility scales
+  `holdSeconds` and `repsScale` (and caps the level at 2 when the factor is under 0.85); calories scale `work` and keep the work+rest period (and drop impact and
+  the level cap when the factor is low); strength applies only `dynamic` (the ladders already carry the level): fewer sets a day and more rest after a break or hard
+  blocks. `generate` records `BlockMeta.adapted` (`return` with the days, `ease`, `push`) and the break modal's preview says why ("Welcome back after 12 days: a lighter
+  dose to ease in."). The reason is only for the preview: it is not stored on the block row.
+- **Return after a break in the ladder replay.** `replayLadders` now looks at the dates: a gap of 14+ days between two blocks (or between the last block and today)
+  restarts the dose at the bottom of the range and clears the streaks, 21+ days gives back one rung, 56+ two (never below a usable rung); the replay of the blocks after
+  the gap plays on the stepped-back rung, so the climb is the normal one. Effort in the replay now goes through `effortOf`, so a very hard rating counts as a failure and a
+  very easy one as an extra success.
+- **Re-assessment.** A test result *below* the rung's range now gives a rung back (it only ever moved up). After 21+ days away, the program's tests are due again
+  whatever the program week (one a day, none repeated since the return, for 14 days: `returnDate` + `pendingAssessmentIds(..., goalId)`), so the baseline is measured again
+  instead of guessed. The week-based test schedule is unchanged.
+- **Training days from the user.** `isTrainingDay` uses `min(program.daysPerWeek, profile.daysPerWeek)`: with three days a week the fourth day of a strength or
+  calories week is a rest-day mobility block, as the program's own limit was before.
+- **Objectives** (`targets.ts`, `GoalDef.targets`, the Summary's new "Your objectives" card, `sportask-targets`). Weekly and derived, nothing stored: *training days* against the
+  days the user wants; *active minutes* against the program's weekly minutes scaled to those days and the activity (`baseWeeklyMinutes`) and then adapted from the complete weeks so far
+  (+10% after a week at 90%, -20% after one under half, within 0.6x..1.5x: `adaptedMinutes`); for calories with a body weight a *kcal* objective from that minutes target and the
+  average MET of the exercises the user's equipment and limits allow (so `lowImpact` lowers it); for strength the **next rung** of push, squat and core (two above where the replay started, or one above
+  where the user is, with the partial credit of the current streak, naming both exercises); for mobility and calories a **test objective** (25% better than the first result, at
+  least a few units, then re-aimed from each result that reached it; distances stop at zero). The active-minutes chart's target line uses the same plan (scaled, not adapted).
+- **Verification script.** `scripts/sportask-check.ts` section 12 (see below) and the lazy-chunk list in `scripts/check-lazy-chunks.mjs` (`sportask-profile-fields`, `sportask-targets`).
+- No catalog change, so `CATALOG_VERSION` stays 1. New strings are in `SPORTASK_TEXTS` (en and es; the script now asserts that both languages have exactly the same keys).
+
+**Decisions and deviations**
+
+- Baseline numbers are self-reported guesses, deliberately not a forced test at setup; the first real test (week 1, or after a long absence) corrects them in either direction.
+- The picked *level* is kept: it is the fallback for any ladder the baseline does not cover, and the only lever mobility and calories had. A number the user gives replaces it for that movement.
+- The weekly objectives never raise the program's own prescription for the *days* (`min`), and the minutes target is capped at 1.5x the plan so a streak cannot run away.
+- Quick setup (and so *Run setup again* through Quick) clears the profile, like it resets equipment and limits ("sets exactly this"); the summary row says "Not set".
+- Effort uses the existing `feedback` and `rpe` fields, no new capture: the results form is unchanged.
+
+**Verified, and how**
+
+- `npm run check:sportask`: **1 555 595 assertions**, all passing (they were 1 555 178 before): the profile tables and clamps for every ladder, level and answer; `sanitizeProfile` and the wire rule (the key
+  exists only when set, fixed key order, JSON round trip); the setup draft, patch and steps; baseline starting rungs and `from`; absences (steps back, dose reset, gap between blocks, a 60-run fuzz that
+  the ladders stay valid and usable); effort from the chip and the rating in the replay; tests moving a rung down; `adaptation` (capacity, return, effort, clamps, tests and other goals ignored);
+  generation (holds and calorie intervals follow the profile, the period stays 60 s, the return note, three days a week, strength after a break); the return re-test; the minutes plan and its adaptation;
+  every objective kind, with a hand-computed example each; the chart target; en/es string parity.
+- `npm run build` (0 warnings, **Initial total 320.31 kB**, +0.00 kB), `npm run check:lazy` passes.
+- **Browser** (`openpomodoro-dev`, desktop and 375 px, a seeded strength profile): Summary shows the objectives card with the right numbers (days 2 of 4, minutes, next steps in push, squat and
+  core); Configuration > Sportask shows "About you" and every control writes the profile (toggling an answer off clears it, *Clear my answers* removes the key from storage); the wizard has seven steps,
+  step 2 is "About you", the summary row and the Quick screen's "Not set" line render; no horizontal overflow at 375 px. Seeded keys were removed afterwards.
+
+**Not done, known limitations**
+
+- **Program phases still advance by the calendar.** After a long absence the dose is reduced and a rung is given back, but week 5 is still week 5; "pause the program while the user is away" (a program week counted in trained weeks) is the next
+  structural improvement and needs a stored or derived program clock.
+- The baseline tables and the +/-10-20% steps are reasoned defaults, not validated by a coach; they are constants (`profile.ts`, `adapt.ts`, `targets.ts`) in one place each.
+- Changing the profile after the program started re-derives the starting rungs, and the replay restarts from them (results logged on a rung other than the new current one are ignored, as always). It is a
+  re-baseline, not a bug, but it can move a rung; the settings note says so.
+- The minutes adaptation replays the *current* phase's plan over every past week; the chart's target line is the plan, the card's is the adapted one, so they can differ.
+- `lowImpact`/`noFloor` still only filter exercises (and, through the pool, lower the kcal estimate); an explicit "gentle" limit that scales volume was left out. Joint-specific limits (knees, shoulders) likewise.
+- The plank test still feeds no ladder (it would need `ladderId` on the assessment, a catalog change and a `CATALOG_VERSION` bump).
+- The expected number of blocks per day is not used: the cadence's block length shapes each block, but the daily/weekly volume targets are not tied to how many breaks the user actually has (they adapt only after a few weeks of results).
+- Effort needs the user to rate: with the default *Good* and no 1..10 rating there is nothing to adapt to (by design: no guessing); a one-tap "how hard?" with no default would be the next capture change.
+- The adaptive `meta.adapted` note is shown in the preview only.
+- Spanish and a real phone were not exercised in the browser (the strings are asserted for key parity); two-device sync of `profile` was not run in the UI (it is a plain field of the settings blob that already syncs).
+
+### 0.25 follow-up: the app's own skin and a calmer clock bar
+
+- **`app` skin (*Application's default*)** is a third skin and the new default (`DEFAULT_SKIN`, `SPORTASK_DEFAULTS.skin`). It has no
+  CSS block: the surfaces keep the user's theme, `sportask-host` sets no `data-sport-skin` on `<html>`, and the generic surface rules
+  in `sportask-skin` skip it. Quick setup now sets it; the *Apply to the whole app* switch is hidden while it is chosen. Settings that
+  already stored `cyberpunk` or `powerYoga` keep them.
+- **Clock bar:** Focus | Break became one joined pill and Sportask and the clock settings round icon buttons on the right
+  (`clock-mode-bar`, shared by Pomodoro and Multitask). The Sportask button shows only the dumbbell until a session runs, then the rhythm.

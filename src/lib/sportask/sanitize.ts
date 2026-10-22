@@ -8,12 +8,14 @@ import type {
   EquipmentItem,
   Feedback,
   SportBlock,
+  SportProfile,
   SportTemplate,
   SportaskSettings,
   StepResult,
   TemplateSlot,
 } from '../../types/sportask';
 import { clampCadence } from './cadences';
+import { ACTIVITY_LEVELS, PROFILE_LIMITS, REACH_LEVELS } from './profile';
 
 /** Untrusted input (import files, sync pulls, localStorage): everything here returns a valid value or null. Pure. */
 
@@ -58,6 +60,25 @@ function sanitizeEquipment(raw: unknown): EquipmentInventory {
   return out;
 }
 
+/** The user's status (0.25): every field optional, numbers clamped to their limits, anything else dropped; null when nothing is left. Fixed key order. */
+export function sanitizeProfile(raw: unknown): SportProfile | null {
+  if (!isRec(raw)) return null;
+  const out: SportProfile = {};
+  const activity = ACTIVITY_LEVELS.find((a) => a === raw['activity']);
+  if (activity) out.activity = activity;
+  const days = int(raw['daysPerWeek'], PROFILE_LIMITS.daysPerWeek.min, PROFILE_LIMITS.daysPerWeek.max);
+  if (days !== undefined) out.daysPerWeek = days;
+  const pushUps = int(raw['pushUps'], PROFILE_LIMITS.pushUps.min, PROFILE_LIMITS.pushUps.max);
+  if (pushUps !== undefined) out.pushUps = pushUps;
+  const squats = int(raw['squats'], PROFILE_LIMITS.squats.min, PROFILE_LIMITS.squats.max);
+  if (squats !== undefined) out.squats = squats;
+  const plank = int(raw['plankSeconds'], PROFILE_LIMITS.plankSeconds.min, PROFILE_LIMITS.plankSeconds.max);
+  if (plank !== undefined) out.plankSeconds = plank;
+  const reach = REACH_LEVELS.find((r) => r === raw['reach']);
+  if (reach) out.reach = reach;
+  return Object.keys(out).length > 0 ? out : null;
+}
+
 export function defaultSettings(): SportaskSettings {
   return { ...SPORTASK_DEFAULTS, equipment: {}, constraints: { ...SPORTASK_DEFAULTS.constraints } };
 }
@@ -85,6 +106,8 @@ export function sanitizeSettings(raw: unknown): SportaskSettings {
   if (typeof raw['enabled'] === 'boolean') out.enabled = raw['enabled'];
   const setupDoneAt = real(raw['setupDoneAt'], 0, 8.64e15);
   if (setupDoneAt !== undefined && setupDoneAt > 0) out.setupDoneAt = setupDoneAt;
+  const profile = sanitizeProfile(raw['profile']);
+  if (profile) out.profile = profile;
   const c = raw['customCadence'];
   if (isRec(c) && isNum(c['focusSeconds']) && isNum(c['breakSeconds'])) {
     const lb = c['longBreak'];

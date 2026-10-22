@@ -166,6 +166,14 @@ export const STRENGTH_GOAL = defineGoal<StrengthParams>({
   ],
   generator,
   progression: LADDER_PROGRESSION,
+  // 0.25: the ladders carry the person's level, so only the dynamic part applies (days away, recent effort): fewer sets a day and more rest.
+  adapt: (p, a) => {
+    const f = a.dynamic;
+    if (f >= 0.95) return p;
+    const sets = Math.max(1, Math.round(p.setsPerPatternPerDay * f));
+    return { ...p, setsPerPatternPerDay: sets, capPerPatternPerDay: Math.max(sets, Math.round(p.capPerPatternPerDay * f)), restSeconds: p.restSeconds + (f < 0.85 ? 15 : 10) };
+  },
+  targets: { weeklyMinutes: (p) => 10 * p.setsPerPatternPerDay, ladders: ['push', 'squat', 'core'] },
   metricIds: ['setsPerPattern', 'ladderLevel', 'assessment:strMaxPushUps', 'assessment:strPlank', 'assessment:strSquats60', 'adherence'],
   restDayGoalId: 'mobility',
 });

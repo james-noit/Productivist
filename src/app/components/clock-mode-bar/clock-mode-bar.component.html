@@ -1,0 +1,14 @@
+<div class="cmb">
+  <div class="cmb__modes">
+    <button type="button" class="cmb__mode" [attr.aria-pressed]="clock.mode() === 'focus'" (click)="clock.setMode('focus')">
+      {{ 'clock.focus' | translate }}
+    </button>
+    <button type="button" class="cmb__mode" [attr.aria-pressed]="clock.mode() === 'break'" (click)="clock.setMode('break')">
+      {{ 'clock.break' | translate }}
+    </button>
+  </div>
+  <div class="cmb__tools">
+    <app-sportask-button [source]="source()" [compact]="true" />
+    <app-clock-settings />
+  </div>
+</div>

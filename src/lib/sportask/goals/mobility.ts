@@ -136,5 +136,13 @@ export const MOBILITY_GOAL = defineGoal<MobilityParams>({
   ],
   generator,
   progression,
+  // 0.25: holds and reps scale to the person (level, activity, reach, days away, recent effort); a weak or tired day also caps the level.
+  adapt: (p, a) => ({
+    ...p,
+    holdSeconds: Math.min(60, Math.max(15, Math.round((p.holdSeconds * a.factor) / 5) * 5)),
+    repsScale: Math.max(0.6, Math.round(p.repsScale * a.factor * 100) / 100),
+    maxLevel: (a.factor < 0.85 ? Math.min(p.maxLevel, 2) : p.maxLevel) as Level,
+  }),
+  targets: { weeklyMinutes: (p) => Math.round((p.holdSeconds * 0.8) / 5) * 5, assessments: ['mobDeepSquat', 'mobKneeToWall', 'mobToeTouch', 'mobBackScratch'] },
   metricIds: ['heatmap', 'zonesCovered', 'assessment:mobDeepSquat', 'assessment:mobKneeToWall', 'assessment:mobToeTouch', 'assessment:mobBackScratch'],
 });

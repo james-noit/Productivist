@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, output } from '@angular/core';
 import { TranslatePipe } from '@ngx-translate/core';
-import { SKINS } from '../../../lib/sportask/skins';
+import { APP_SKIN, SKINS } from '../../../lib/sportask/skins';
 import type { StyleValue } from '../../../lib/sportask/setup';
 import { localize } from '../../../lib/sportask/texts';
 import { SettingsService } from '../../../services/settings.service';
@@ -19,6 +19,7 @@ export class SportaskStyleFieldsComponent {
   readonly changed = output<StyleValue>();
 
   private readonly lang = inject(SettingsService).language;
+  protected readonly appSkin = APP_SKIN;
 
   protected readonly skinTiles = computed(() => {
     const lang = this.lang();

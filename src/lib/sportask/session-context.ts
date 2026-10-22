@@ -9,7 +9,7 @@ export interface ContextInput {
   blockSeconds: number;
   /** Every stored block (any order). */
   blocks: readonly SportBlock[];
-  settings: Pick<SportaskSettings, 'equipment' | 'constraints' | 'enrolment'>;
+  settings: Pick<SportaskSettings, 'equipment' | 'constraints' | 'enrolment' | 'profile'>;
   /** The session's equipment for today, or null to use the settings. */
   equipmentOverride: EquipmentInventory | null;
 }
@@ -29,6 +29,7 @@ export function buildContext(input: ContextInput): GenerationContext {
     history,
     todayBlocks: history.filter((b) => b.date === today),
     enrolment: input.settings.enrolment,
+    ...(input.settings.profile ? { profile: input.settings.profile } : {}),
     rng: rngFor(input.blockId),
   };
 }

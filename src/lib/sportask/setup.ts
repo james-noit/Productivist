@@ -1,7 +1,8 @@
 import { SPORTASK_DEFAULTS } from '../sportask-defaults';
-import type { Constraints, Enrolment, EquipmentInventory, EquipmentItem, SportaskSettings } from '../../types/sportask';
+import type { Constraints, Enrolment, EquipmentInventory, EquipmentItem, SportProfile, SportaskSettings } from '../../types/sportask';
 import { CADENCES, type CadenceValues } from './cadences';
 import { GOALS } from './goals';
+import { hasProfile } from './profile';
 import { SKINS } from './skins';
 
 /**
@@ -34,6 +35,8 @@ export interface StyleValue {
 /** Everything the wizard collects before *Finish*. */
 export interface SetupDraft {
   pick: GoalPick | null;
+  /** The optional "About you" answers; `{}` = none given. Quick setup leaves it empty. */
+  profile: SportProfile;
   equipment: EquipmentInventory;
   constraints: Constraints;
   rhythm: RhythmValue;
@@ -41,7 +44,7 @@ export interface SetupDraft {
 }
 
 /** The steps of the personalised path, in order (the summary is the last). */
-export const SETUP_STEPS = ['goal', 'gear', 'limits', 'rhythm', 'style', 'summary'] as const;
+export const SETUP_STEPS = ['goal', 'profile', 'gear', 'limits', 'rhythm', 'style', 'summary'] as const;
 export type SetupStep = (typeof SETUP_STEPS)[number];
 
 /** The pick for a goal: `programId` falls back to the goal's first program. */
@@ -55,6 +58,7 @@ export function quickDraft(): SetupDraft {
   const d = SPORTASK_DEFAULTS;
   return {
     pick: pickFor(GOALS.all[0]!.id),
+    profile: {},
     equipment: {},
     constraints: { ...d.constraints },
     rhythm: { cadenceId: d.cadenceId },
@@ -76,6 +80,7 @@ export function draftFromSettings(s: SportaskSettings, keepFree: boolean): Setup
   if (s.customCadence) rhythm.customCadence = { ...s.customCadence };
   return {
     pick: e ? pickFor(e.goalId, e.programId, e.level) : keepFree ? null : quickDraft().pick,
+    profile: s.profile ? { ...s.profile } : {},
     equipment,
     constraints: { ...s.constraints },
     rhythm,
@@ -90,6 +95,7 @@ export function stepValid(step: SetupStep, draft: SetupDraft, noticeAccepted: bo
       const p = draft.pick;
       return p === null || !!GOALS.get(p.goalId)?.programs.some((x) => x.id === p.programId);
     }
+    case 'profile': // Every answer is optional.
     case 'gear': // Any inventory is valid (owned equipment without weights or bands is allowed).
     case 'limits':
       return true;
@@ -138,5 +144,7 @@ export function setupPatch(draft: SetupDraft, current: SportaskSettings, now: nu
     autoStartBreak: draft.style.autoStartBreak,
   };
   if (draft.rhythm.customCadence) patch.customCadence = draft.rhythm.customCadence;
+  // Absent when empty (the wire rule); `undefined` clears an earlier profile when the stored settings are merged with this patch.
+  patch.profile = hasProfile(draft.profile) ? draft.profile : undefined;
   return patch;
 }
