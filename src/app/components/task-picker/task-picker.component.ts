@@ -8,6 +8,7 @@ import {
   computed,
   inject,
   input,
+  linkedSignal,
   output,
   signal,
   viewChild,
@@ -26,7 +27,7 @@ import { RepeatMarkComponent } from '../repeat-mark/repeat-mark.component';
 import { UiIconComponent } from '../ui-icon/ui-icon.component';
 import type { Todo } from '../../../types/todo';
 
-type QuickFilter = 'all' | 'planned' | 'dueWeek' | 'high';
+export type QuickFilter = 'all' | 'planned' | 'dueWeek' | 'high';
 
 /** Sections longer than this show a "Show N more" row, unless the search has text. */
 const SECTION_LIMIT = 8;
@@ -119,7 +120,9 @@ export class TaskPickerComponent {
   readonly selected = signal<readonly string[]>([]);
 
   readonly query = signal('');
-  readonly filter = signal<QuickFilter>('all');
+  /** The quick filter the dialog opens on (falls back to All while no planned task is left to pick). */
+  readonly initialFilter = input<QuickFilter>('all');
+  readonly filter = linkedSignal<QuickFilter>(() => this.initialFilter());
   /** The index (in keyboard order) of the highlighted row. */
   readonly active = signal(0);
   private readonly expanded = signal<ReadonlySet<string>>(new Set());

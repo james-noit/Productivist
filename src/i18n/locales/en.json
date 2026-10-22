@@ -73,6 +73,13 @@
     "es": "Spanish"
   },
   "clock": {
+    "doneUpNext": "Done ✓ · Up next",
+    "startIt": "Start it",
+    "chooseAnother": "Choose another…",
+    "planComplete": "Plan complete",
+    "pickAny": "Pick any task",
+    "objAchieved": "objective achieved ✓",
+    "objProgress": "{{text}}: {{done}}/{{total}} done",
     "focus": "Focus",
     "break": "Break",
     "start": "Start",
@@ -419,6 +426,10 @@
   },
   "planningLab": {
     "title": "Plan my day",
+    "workOnThis": "Work on this",
+    "otherPlanned": "Other planned tasks",
+    "nOfDone": "{{done}} of {{total}} done",
+    "nDone": "{{n}} done",
     "dailyBacklog": "Daily backlog",
     "freeTasks": "Free tasks without project",
     "objectivePromptTitle": "What do you want to achieve today?",

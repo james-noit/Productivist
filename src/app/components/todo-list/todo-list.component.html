@@ -4,8 +4,8 @@
     <button
       type="button"
       role="tab"
-      [attr.aria-selected]="!showDailyBacklog() && todos.viewMode() === 'all'"
-      [class.active]="!showDailyBacklog() && todos.viewMode() === 'all'"
+      [attr.aria-selected]="tab() !== 'plan' && todos.viewMode() === 'all'"
+      [class.active]="tab() !== 'plan' && todos.viewMode() === 'all'"
       (click)="selectTodoViewMode('all')"
     >
       {{ 'todo.viewAll' | translate }}
@@ -13,8 +13,8 @@
     <button
       type="button"
       role="tab"
-      [attr.aria-selected]="!showDailyBacklog() && todos.viewMode() === 'projects'"
-      [class.active]="!showDailyBacklog() && todos.viewMode() === 'projects'"
+      [attr.aria-selected]="tab() !== 'plan' && todos.viewMode() === 'projects'"
+      [class.active]="tab() !== 'plan' && todos.viewMode() === 'projects'"
       (click)="selectTodoViewMode('projects')"
     >
       {{ 'todo.viewProjects' | translate }}
@@ -22,28 +22,67 @@
     <button
       type="button"
       role="tab"
-      [attr.aria-selected]="showDailyBacklog()"
-      [class.active]="showDailyBacklog()"
-      (click)="showDailyBacklog.set(true)"
+      [attr.aria-selected]="tab() === 'plan'"
+      [class.active]="tab() === 'plan'"
+      (click)="selectPlan()"
     >
       {{ 'planningLab.dailyBacklog' | translate }}
     </button>
   </div>
 
-  @if (showDailyBacklog()) {
+  @if (tab() === 'plan') {
     @if (!dailyPlan.committedPlannedTaskIds().length) {
       <p class="todo-list__empty">{{ 'planningLab.plannedTasksEmptyTitle' | translate }}</p>
       <button type="button" class="todo-list__daily-link" (click)="openPlanning()">
         {{ 'planningLab.plannedTasksEmptyLink' | translate }}
       </button>
-    } @else if (!plannedTasks().length) {
-      <p class="todo-list__empty">{{ 'planningLab.plannedTasksEmptyTitle' | translate }}</p>
     } @else {
-      <ul class="todo-list__items">
-        @for (todo of plannedTasks(); track todo.id) {
-          <app-todo-item [todo]="todo" />
-        }
-      </ul>
+      @if (!hasOpen()) {
+        <p class="todo-list__empty">{{ (groups().length ? 'clock.planComplete' : 'planningLab.plannedTasksEmptyTitle') | translate }}</p>
+      }
+      @for (group of groups(); track group.key) {
+        <section class="plan-group">
+          <header class="plan-group__head">
+            <h3 class="plan-group__title">{{ group.title ?? ('planningLab.otherPlanned' | translate) }}</h3>
+            <span class="plan-group__count">{{ 'planningLab.nOfDone' | translate: { done: group.doneCount, total: group.total } }}</span>
+          </header>
+          <div class="plan-group__bar" aria-hidden="true"><span [style.width.%]="group.percent"></span></div>
+          <div class="todo-list__items">
+            @for (todo of group.open; track todo.id) {
+              <div class="todo-list__row">
+                <app-todo-item [todo]="todo" />
+                <button
+                  type="button"
+                  class="btn btn--ghost btn--sm btn--icon"
+                  [class.todo-list__work--on]="todos.currentTaskId() === todo.id"
+                  [attr.aria-label]="'planningLab.workOnThis' | translate"
+                  [title]="'planningLab.workOnThis' | translate"
+                  (click)="todos.setCurrentTask(todo.id)"
+                >
+                  <app-ui-icon name="play" [size]="16" />
+                </button>
+              </div>
+            }
+          </div>
+          @if (group.done.length) {
+            <button
+              type="button"
+              class="plan-group__toggle"
+              [attr.aria-expanded]="doneShown().has(group.key)"
+              (click)="toggleDone(group.key)"
+            >
+              {{ 'planningLab.nDone' | translate: { n: group.done.length } }}
+            </button>
+            @if (doneShown().has(group.key)) {
+              <div class="todo-list__items plan-group__done">
+                @for (todo of group.done; track todo.id) {
+                  <app-todo-item [todo]="todo" />
+                }
+              </div>
+            }
+          }
+        </section>
+      }
     }
   } @else if (todos.viewMode() === 'all') {
     <app-todo-form />

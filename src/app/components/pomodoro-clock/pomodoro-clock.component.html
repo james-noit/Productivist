@@ -141,6 +141,13 @@
             />
           }
           <app-task-project-tag [todo]="currentTask" />
+          @if (currentObjective(); as objective) {
+            <span class="clock__task-objective">
+              <app-ui-icon name="target" [size]="14" />
+              <span class="clock__task-objective-text">{{ objective.text }}</span>
+              <span>· {{ objective.done }}/{{ objective.total }}</span>
+            </span>
+          }
         </div>
         <div class="clock__task-actions" (click)="$event.stopPropagation()">
           <button
@@ -169,6 +176,35 @@
             </svg>
           </button>
         </div>
+      } @else if (upNext()) {
+        @let up = upNext()!;
+        <div class="clock__next">
+          @if (up.next; as next) {
+            <span class="clock__task-label">{{ 'clock.doneUpNext' | translate }}</span>
+            <span class="clock__task-title">{{ next.title }}</span>
+          } @else {
+            <span class="clock__task-label">{{ 'clock.planComplete' | translate }}</span>
+          }
+          @if (up.objective; as objective) {
+            <span class="clock__task-objective">
+              <app-ui-icon name="target" [size]="14" />
+              @if (objective.achieved) {
+                <span>{{ objective.text }} · {{ 'clock.objAchieved' | translate }}</span>
+              } @else {
+                <span>{{ 'clock.objProgress' | translate: { text: objective.text, done: objective.done, total: objective.total } }}</span>
+              }
+            </span>
+          }
+          <div class="clock__next-actions">
+            @if (up.next; as next) {
+              <button type="button" class="btn btn--primary btn--sm" (click)="startNext(next)">{{ 'clock.startIt' | translate }}</button>
+              <button type="button" class="btn btn--secondary btn--sm" (click)="openTaskModal()">{{ 'clock.chooseAnother' | translate }}</button>
+            } @else {
+              <button type="button" class="btn btn--primary btn--sm" (click)="openTaskModal()">{{ 'clock.pickAny' | translate }}</button>
+              <button type="button" class="btn btn--secondary btn--sm" (click)="openPlanning()">{{ 'planningLab.title' | translate }}</button>
+            }
+          </div>
+        </div>
       } @else {
         <button
           type="button"
@@ -182,7 +218,7 @@
   </div>
 
   @if (taskModalOpen()) {
-    <app-task-picker (pick)="selectTask($event)" (close)="taskModalOpen.set(false)" />
+    <app-task-picker initialFilter="planned" [annotate]="annotate" (pick)="selectTask($event)" (close)="taskModalOpen.set(false)" />
   }
 
   @if (clock.sessionModalOpen() && !sportask.breakOpen()) {

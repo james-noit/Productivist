@@ -431,6 +431,8 @@ export class SyncService {
         executionLots: d.executionLots(),
         activeLotIndex: d.activeLotIndex(),
         committedTaskIds: d.committedPlannedTaskIds(),
+        committedObjectives: d.committedObjectives(),
+        committedAssignments: d.committedAssignments(),
       },
       multitask: {
         cards: mt.cards(),
@@ -471,6 +473,8 @@ export class SyncService {
     plan('executionLots', d.executionLots, isArray);
     plan('activeLotIndex', d.activeLotIndex, isNumber);
     plan('committedTaskIds', d.committedPlannedTaskIds, isArray);
+    plan('committedObjectives', d.committedObjectives, isArray);
+    plan('committedAssignments', d.committedAssignments, isRecord);
 
     const mt = settingsApplier(state.multitask);
     mt('cards', this.multitask.cards, isArray);

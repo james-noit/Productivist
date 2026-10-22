@@ -8,6 +8,8 @@ export type AppView = 'pomodoro' | 'projects' | 'project' | 'admin' | 'sportask'
 /** How the project detail view shows its project. A union so later presentations extend it. */
 export type ProjectPresentation = 'overview' | 'kanban' | 'list' | 'matrix' | 'roadmap' | 'calendar' | 'flow';
 export type ProjectsTab = 'projects' | 'matrix';
+export type PomodoroListTab = 'all' | 'projects' | 'plan';
+const POMODORO_LIST_TABS: readonly PomodoroListTab[] = ['all', 'projects', 'plan'];
 export type ConfigSection = 'general' | 'integrations' | 'sportask' | 'account';
 
 const VIEWS: readonly AppView[] = ['pomodoro', 'projects', 'project', 'admin', 'sportask'];
@@ -49,6 +51,18 @@ function migrateLegacyView(): void {
         localStorage.setItem('productivist.projectPresentation', JSON.stringify('kanban'));
       }
     }
+    const tab = localStorage.getItem('productivist.pomodoroListTab');
+    if (tab !== null) {
+      let stored: unknown;
+      try {
+        stored = JSON.parse(tab);
+      } catch {
+        stored = null;
+      }
+      if (!POMODORO_LIST_TABS.includes(stored as PomodoroListTab)) {
+        localStorage.setItem('productivist.pomodoroListTab', JSON.stringify('all'));
+      }
+    }
   } catch {
     // Storage disabled — the signals fall back to their defaults.
   }
@@ -62,6 +76,13 @@ export class ViewService {
   }
 
   private readonly activity = inject(ProjectActivityService);
+
+  /** The Pomodoro task list's tab (device-local, not synced); Plan my day opens the clock on 'plan'. */
+  readonly pomodoroListTab = localStorageSignal<PomodoroListTab>('productivist.pomodoroListTab', 'all');
+
+  setPomodoroListTab(tab: PomodoroListTab): void {
+    this.pomodoroListTab.set(tab);
+  }
 
   readonly current = localStorageSignal<AppView>('productivist.activeView', 'projects');
 

@@ -7,6 +7,7 @@ import { MultitaskService } from '../../../services/multitask.service';
 import { ViewService } from '../../../services/view.service';
 import { DailyPlanService, UNASSIGNED_GROUP_ID } from '../../../services/daily-plan.service';
 import { SportaskService } from '../../../services/sportask.service';
+import { nextOpenTask } from '../../../lib/daily-plan-progress';
 import { activateArmed } from '../../../lib/sportask/session-ops';
 import { ProjectFormComponent } from '../project-form/project-form.component';
 import { PlanObjectivesStepComponent } from '../plan-objectives-step/plan-objectives-step.component';
@@ -226,6 +227,15 @@ export class DailyBacklogViewComponent {
   private goToPomodoro(): void {
     this.dailyPlan.commitPlannedTasks();
     this.multitask.setEnabled(false);
+    this.view.setPomodoroListTab('plan');
+    // Open on the plan: unless the current task is already part of it, start from its first open task.
+    const committed = this.dailyPlan.committedPlannedTaskIds();
+    const currentId = this.todos.currentTaskId();
+    if (!currentId || !committed.includes(currentId)) {
+      const done = new Map(this.todos.todos().map((t) => [t.id, t.done] as const));
+      const first = nextOpenTask(committed, done, null);
+      if (first) this.todos.setCurrentTask(first);
+    }
     this.view.setView('pomodoro');
     activateArmed(this.sportask, 'planner');
   }

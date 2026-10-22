@@ -73,6 +73,13 @@
     "es": "Español"
   },
   "clock": {
+    "doneUpNext": "Hecho ✓ · Siguiente",
+    "startIt": "Empezarla",
+    "chooseAnother": "Elegir otra…",
+    "planComplete": "Plan completado",
+    "pickAny": "Elegir cualquier tarea",
+    "objAchieved": "objetivo cumplido ✓",
+    "objProgress": "{{text}}: {{done}}/{{total}} hechas",
     "focus": "Concentración",
     "break": "Descanso",
     "start": "Iniciar",
@@ -419,6 +426,10 @@
   },
   "planningLab": {
     "title": "Planificar mi día",
+    "workOnThis": "Trabajar en esta",
+    "otherPlanned": "Otras tareas planificadas",
+    "nOfDone": "{{done}} de {{total}} hechas",
+    "nDone": "{{n}} hechas",
     "dailyBacklog": "Backlog diario",
     "freeTasks": "Tareas libres sin proyecto",
     "objectivePromptTitle": "¿Qué quieres lograr hoy?",

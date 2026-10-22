@@ -61,6 +61,10 @@ export class DailyPlanService {
   /** Tasks committed to the Pomodoro view's "Planned tasks" list — survives startOver(), since it's a downstream artifact. */
   readonly committedPlannedTaskIds = localStorageSignal<string[]>('productivist.dailyPlanCommittedTaskIds', []);
 
+  /** Snapshots of the objectives and of the task -> objective links taken when the plan was committed (they outlive startOver). */
+  readonly committedObjectives = localStorageSignal<DailyObjective[]>('productivist.dailyPlanCommittedObjectives', []);
+  readonly committedAssignments = localStorageSignal<Record<string, string>>('productivist.dailyPlanCommittedAssignments', {});
+
   /**
    * The execution order of the assigned tasks, across every objective (a card shows its own slice of it). Tasks
    * assigned but missing from it (an older client, a sync of the assignments alone) come after, in key order.
@@ -237,7 +241,11 @@ export class DailyPlanService {
   }
 
   commitPlannedTasks(): void {
-    this.committedPlannedTaskIds.set(this.plannedTaskIds());
+    const ids = this.plannedTaskIds();
+    const assignments = this.assignments();
+    this.committedPlannedTaskIds.set(ids);
+    this.committedObjectives.set(this.objectives());
+    this.committedAssignments.set(Object.fromEntries(ids.filter((id) => assignments[id]).map((id) => [id, assignments[id]])));
   }
 
   startOver(): void {
@@ -256,5 +264,7 @@ export class DailyPlanService {
   reset(): void {
     this.startOver();
     this.committedPlannedTaskIds.set([]);
+    this.committedObjectives.set([]);
+    this.committedAssignments.set({});
   }
 }
