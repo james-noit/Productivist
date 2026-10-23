@@ -8,7 +8,7 @@ let started: Promise<void> | null = null;
  * key, merged into the loaded messages, for English and for whatever language is active, and again whenever a language
  * is switched or its messages are (re)loaded (the app's own `setTranslation` replaces the whole language, which would
  * drop them). Resolves once the texts of the current language are in, so a lazy component can hold its first render
- * until then instead of flashing raw keys. Same pattern as `lib/forge-texts.ts`; only lazy components call it.
+ * until then instead of flashing raw keys. It also applies the cached catalog overlay (see `overlay/store.ts`). Same pattern as `lib/forge-texts.ts`; only lazy components call it.
  */
 export function loadSportaskTexts(translate: TranslateService): Promise<void> {
   if (started) return started;
@@ -22,7 +22,10 @@ export function loadSportaskTexts(translate: TranslateService): Promise<void> {
   };
   translate.onLangChange.subscribe((e) => void apply(e.lang));
   translate.onTranslationChange.subscribe((e) => void apply(e.lang));
-  started = Promise.all([apply('en'), apply(translate.currentLang || 'en')]).then(() => undefined);
+  // The Fitness director's published catalog (docs/sportask/DIRECTOR.md): the cached overlay is applied before any component renders
+  // its first frame; the revalidation runs in the background. A dynamic import, so lazy callers that only need the texts stay small.
+  const overlay = import('./overlay/store').then((m) => m.ensureOverlay()).catch(() => undefined);
+  started = Promise.all([apply('en'), apply(translate.currentLang || 'en'), overlay]).then(() => undefined);
   return started;
 }
 

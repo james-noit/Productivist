@@ -4,7 +4,7 @@ import { ProjectActivityService } from './project-activity.service';
 import type { EisenhowerQuadrant } from '../types/eisenhower';
 import type { ForgeKind } from '../types/forge';
 
-export type AppView = 'pomodoro' | 'projects' | 'project' | 'admin' | 'sportask';
+export type AppView = 'pomodoro' | 'projects' | 'project' | 'admin' | 'sportask' | 'fitness';
 /** How the project detail view shows its project. A union so later presentations extend it. */
 export type ProjectPresentation = 'overview' | 'kanban' | 'list' | 'matrix' | 'roadmap' | 'calendar' | 'flow';
 export type ProjectsTab = 'projects' | 'matrix';
@@ -12,7 +12,7 @@ export type PomodoroListTab = 'all' | 'projects' | 'plan';
 const POMODORO_LIST_TABS: readonly PomodoroListTab[] = ['all', 'projects', 'plan'];
 export type ConfigSection = 'general' | 'integrations' | 'sportask' | 'account';
 
-const VIEWS: readonly AppView[] = ['pomodoro', 'projects', 'project', 'admin', 'sportask'];
+const VIEWS: readonly AppView[] = ['pomodoro', 'projects', 'project', 'admin', 'sportask', 'fitness'];
 const PRESENTATIONS: readonly ProjectPresentation[] = ['overview', 'kanban', 'list', 'matrix', 'roadmap', 'calendar', 'flow'];
 
 /**

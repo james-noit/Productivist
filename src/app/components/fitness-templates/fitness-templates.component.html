@@ -1,0 +1,186 @@
+<div class="fd-split">
+  <section class="fd-pane" [attr.aria-label]="'fitness.tpl.list' | translate">
+    <div class="fd-toolbar">
+      <input class="input" type="search" autocomplete="off" [value]="query()" [placeholder]="'fitness.tpl.search' | translate" [attr.aria-label]="'fitness.tpl.search' | translate" (input)="setQuery($event)" />
+      <button type="button" class="btn btn--secondary" (click)="startCreate(null)"><app-ui-icon name="plus" [size]="16" />{{ 'fitness.tpl.new' | translate }}</button>
+    </div>
+    @if (creating(); as c) {
+      <form class="ft__creating" (submit)="$event.preventDefault(); create()" (keydown.escape)="$event.stopPropagation(); creating.set(null)">
+        <div class="field">
+          <label class="field__label" for="ft-new-en">{{ 'fitness.tpl.name' | translate }} · EN</label>
+          <input #newName id="ft-new-en" class="input" type="text" autocomplete="off" maxlength="80" [value]="c.en" (input)="setCreating('en', $event)" />
+        </div>
+        <div class="field">
+          <label class="field__label" for="ft-new-es">{{ 'fitness.tpl.name' | translate }} · ES</label>
+          <input id="ft-new-es" class="input" type="text" autocomplete="off" maxlength="80" [value]="c.es" (input)="setCreating('es', $event)" />
+        </div>
+        <div class="fd-actions">
+          <button type="button" class="btn btn--secondary btn--sm" (click)="creating.set(null)">{{ 'fitness.cancel' | translate }}</button>
+          <button type="submit" class="btn btn--primary btn--sm" [disabled]="!createValid()">{{ 'fitness.tpl.create' | translate }}</button>
+        </div>
+      </form>
+    }
+    <ul class="fd-list">
+      @for (r of rows(); track r.t.id) {
+        <li>
+          <button type="button" class="fd-item" [attr.aria-current]="id() === r.t.id" (click)="select(r.t.id)">
+            <span class="fd-item__text">
+              <span class="fd-item__name">{{ r.name }}</span>
+              <span class="fd-item__meta">{{ 'sportask.panel.tpl.fmt.' + r.t.format | translate }} · {{ 'fitness.tpl.slotsN' | translate: { n: r.t.slots.length } }}</span>
+            </span>
+            @if (!r.builtin) {
+              <span class="fd-tag fd-tag--mine">{{ 'fitness.tagNew' | translate }}</span>
+            } @else if (r.changed) {
+              <span class="fd-tag fd-tag--changed">{{ 'fitness.tagChanged' | translate }}</span>
+            }
+          </button>
+        </li>
+      }
+    </ul>
+  </section>
+
+  @if (tpl(); as t) {
+    <section class="fd-detail">
+      <div class="fd-head">
+        <div>
+          <h3>{{ state.loc(t.nameText) }}</h3>
+          <span class="fd-id">{{ t.id }}</span>
+          @if (!base()) {
+            <span class="fd-tag fd-tag--mine">{{ 'fitness.tagNew' | translate }}</span>
+          }
+        </div>
+        <div class="fd-actions">
+          <button type="button" class="btn btn--secondary btn--sm" (click)="startCreate(t)">{{ 'fitness.tpl.duplicate' | translate }}</button>
+          @if (changed()) {
+            <button type="button" class="btn btn--ghost btn--sm" (click)="resetToBuiltin()">{{ 'fitness.tpl.reset' | translate }}</button>
+          }
+          @if (!base() && !published()) {
+            <button type="button" class="btn btn--danger btn--ghost btn--sm" (click)="confirmDelete.set(true)">{{ 'fitness.delete' | translate }}</button>
+          }
+        </div>
+      </div>
+      @if (confirmDelete()) {
+        <div class="confirm-bar" role="alertdialog" aria-labelledby="ft-del">
+          <p class="confirm-bar__text" id="ft-del">{{ 'fitness.tpl.deleteQ' | translate }}</p>
+          <div class="confirm-bar__actions">
+            <button type="button" class="btn btn--secondary" (click)="confirmDelete.set(false)">{{ 'fitness.keep' | translate }}</button>
+            <button type="button" class="btn btn--danger" (click)="remove()">{{ 'fitness.delete' | translate }}</button>
+          </div>
+        </div>
+      }
+      @if (!base() && published()) {
+        <p class="fd-hint">{{ 'fitness.tpl.publishedHint' | translate }}</p>
+      }
+      @if (problems().length > 0) {
+        <ul class="fd-problems">
+          @for (p of problems(); track $index) {
+            <li [attr.data-severity]="p.severity"><span aria-hidden="true">{{ p.severity === 'error' ? '●' : '○' }}</span><span>{{ state.issueText(p) }}</span></li>
+          }
+        </ul>
+      }
+
+      <div class="fd-section">
+        <h4>{{ 'fitness.tpl.basics' | translate }}</h4>
+        <app-fitness-text-pair [label]="'fitness.tpl.name' | translate" [max]="80" [value]="t.nameText" (valueChange)="setName($event)" />
+        <div class="field">
+          <span class="field__label" id="ft-format">{{ 'sportask.panel.tpl.format' | translate }}</span>
+          <div class="segmented" role="group" aria-labelledby="ft-format">
+            @for (f of formats; track f) {
+              <button type="button" class="segmented__option" [attr.aria-pressed]="t.format === f" (click)="setFormat(f)">{{ 'sportask.panel.tpl.fmt.' + f | translate }}</button>
+            }
+          </div>
+          <p class="fd-hint">{{ 'sportask.panel.tpl.fmtHint.' + t.format | translate }}</p>
+        </div>
+        <div class="fd-row">
+          @if (t.format === 'intervals') {
+            <div class="field">
+              <label class="field__label" for="ft-work">{{ 'sportask.panel.tpl.work' | translate }}</label>
+              <input id="ft-work" class="input fd-num" type="number" min="5" max="600" [value]="t.workSeconds ?? ''" placeholder="30" (change)="setSeconds('workSeconds', $event)" />
+            </div>
+            <div class="field">
+              <label class="field__label" for="ft-rest">{{ 'sportask.panel.tpl.rest' | translate }}</label>
+              <input id="ft-rest" class="input fd-num" type="number" min="0" max="600" [value]="t.restSeconds ?? ''" placeholder="30" (change)="setSeconds('restSeconds', $event)" />
+            </div>
+          }
+          <div class="field">
+            <label class="field__label" for="ft-min">{{ 'fitness.tpl.minSeconds' | translate }}</label>
+            <input id="ft-min" class="input fd-num" type="number" min="0" max="7200" [value]="t.minSeconds ?? ''" placeholder="60" (change)="setSeconds('minSeconds', $event)" />
+          </div>
+        </div>
+        <p class="fd-hint">{{ 'fitness.tpl.minHint' | translate }}</p>
+      </div>
+
+      <div class="fd-section">
+        <h4>{{ 'sportask.panel.tpl.slots' | translate }} ({{ t.slots.length }})</h4>
+        <p class="fd-hint">{{ 'sportask.panel.tpl.reorderHint' | translate }}</p>
+        @for (s of slots(); track s.index) {
+          <div class="ft__slot">
+            <span class="ft__n" aria-hidden="true">{{ s.index + 1 }}</span>
+            <div class="ft__slot-main">
+              @if (s.kind === 'exercise') {
+                <select class="select" [attr.aria-label]="'sportask.panel.tpl.changeExercise' | translate" (change)="setSlotExercise(s.index, $event)">
+                  @for (e of exerciseOptions(); track e.id) {
+                    @if (!e.retired || e.id === s.exerciseId) {
+                      <option [value]="e.id" [selected]="e.id === s.exerciseId">{{ e.name }}</option>
+                    }
+                  }
+                </select>
+                <div class="field">
+                  <label class="field__label" [for]="'ft-dose-' + s.index">{{ 'sportask.brk.field.' + s.unit | translate }}</label>
+                  <input [id]="'ft-dose-' + s.index" class="input fd-num" type="number" min="1" [max]="s.unit === 'seconds' ? 600 : 100" [value]="s.dose ?? ''" [placeholder]="'fitness.tpl.default' | translate" (change)="setSlotDose(s.index, s.exerciseId, $event)" />
+                </div>
+              } @else {
+                <label class="field">
+                  <span class="field__label">{{ 'sportask.panel.tpl.pattern' | translate }}</span>
+                  <select class="select" (change)="setPatternField(s.index, 'pattern', s.slot, $event)">
+                    @for (p of patterns; track p) {
+                      <option [value]="p" [selected]="p === s.pattern">{{ 'sportask.panel.g.' + p | translate }}</option>
+                    }
+                  </select>
+                </label>
+                <label class="field">
+                  <span class="field__label">{{ 'sportask.panel.tpl.tag' | translate }}</span>
+                  <select class="select" (change)="setPatternField(s.index, 'tag', s.slot, $event)">
+                    <option value="" [selected]="s.tag === ''">{{ 'sportask.panel.tpl.any' | translate }}</option>
+                    @for (g of tags; track g) {
+                      <option [value]="g" [selected]="g === s.tag">{{ 'sportask.panel.tpl.tags.' + g | translate }}</option>
+                    }
+                  </select>
+                </label>
+                <label class="field">
+                  <span class="field__label">{{ 'sportask.panel.tpl.zone' | translate }}</span>
+                  <select class="select" (change)="setPatternField(s.index, 'zone', s.slot, $event)">
+                    <option value="" [selected]="s.zone === ''">{{ 'sportask.panel.tpl.any' | translate }}</option>
+                    @for (z of zones; track z) {
+                      <option [value]="z" [selected]="z === s.zone">{{ 'sportask.panel.g.' + z | translate }}</option>
+                    }
+                  </select>
+                </label>
+                <label class="field">
+                  <span class="field__label">{{ 'fitness.tpl.maxLevel' | translate }}</span>
+                  <select class="select" (change)="setPatternField(s.index, 'maxLevel', s.slot, $event)">
+                    <option value="0" [selected]="s.maxLevel === 0">{{ 'sportask.panel.tpl.any' | translate }}</option>
+                    @for (l of levels; track l) {
+                      <option [value]="l" [selected]="l === s.maxLevel">{{ l }}</option>
+                    }
+                  </select>
+                </label>
+              }
+            </div>
+            <div class="ft__slot-actions">
+              <button type="button" class="btn btn--ghost btn--icon btn--sm" [disabled]="s.index === 0" [attr.aria-label]="'sportask.panel.tpl.moveUp' | translate" (click)="moveSlot(s.index, -1)"><app-ui-icon name="chevron-down" [size]="16" class="ft__flip" /></button>
+              <button type="button" class="btn btn--ghost btn--icon btn--sm" [disabled]="s.index === slots().length - 1" [attr.aria-label]="'sportask.panel.tpl.moveDown' | translate" (click)="moveSlot(s.index, 1)"><app-ui-icon name="chevron-down" [size]="16" /></button>
+              <button type="button" class="btn btn--danger btn--ghost btn--icon btn--sm" [disabled]="slots().length <= 1" [attr.aria-label]="'sportask.panel.tpl.removeSlot' | translate" (click)="removeSlot(s.index)"><app-ui-icon name="trash" [size]="16" /></button>
+            </div>
+          </div>
+        }
+        <div class="fd-actions">
+          <button type="button" class="btn btn--secondary btn--sm" (click)="addExerciseSlot()"><app-ui-icon name="plus" [size]="16" />{{ 'sportask.panel.tpl.addExercise' | translate }}</button>
+          <button type="button" class="btn btn--secondary btn--sm" (click)="addPatternSlot()"><app-ui-icon name="plus" [size]="16" />{{ 'sportask.panel.tpl.addPattern' | translate }}</button>
+        </div>
+      </div>
+    </section>
+  } @else {
+    <section class="fd-detail"><p class="fd-empty">{{ 'fitness.tpl.pick' | translate }}</p></section>
+  }
+</div>

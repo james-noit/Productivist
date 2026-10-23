@@ -1,0 +1,30 @@
+.fp__phase-head {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.fp__phase-title {
+  font-weight: 600;
+  margin-right: auto;
+}
+
+.fp__param {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.fp__param-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.fp__param-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+}

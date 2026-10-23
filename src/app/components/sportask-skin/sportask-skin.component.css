@@ -17,7 +17,8 @@
     --sport-glow, --sport-glow-filter      neon glow as text-shadow / as filter
     --sport-bg-pattern (+ -size, -position, -repeat)   the panel's background drawing (cyberpunk's page background is separate, see its block)
     --sport-prompt-color                   cyberpunk's prompt colour (amber)
-    --sport-stroke*, --sport-ink*, --sport-soft-opacity  the pictograms
+    --sport-stroke*, --sport-ink*, --sport-soft-opacity  the pictograms (--sport-ink* is the older outline, no longer read by them)
+    --sport-halo, --sport-halo-width, --sport-prop  the pictograms' outline (default: the card colour, 1.2) and equipment colour (default: the theme's blue)
     --sport-series-1..9                   the chart series colours (sport-*-chart)
     --sport-*-anim, --sport-ring-*         motion; defined ONLY under prefers-reduced-motion: no-preference, so it is off otherwise
 
@@ -134,6 +135,9 @@
   --sport-stroke-width: 3;
   --sport-ink-width: 5.2;
   --sport-soft-opacity: 0.55;
+  /* Pictograms: a dark outline round every part of the figure (the ink), and the equipment in the amber of the horizon. */
+  --sport-halo: #0c0a18;
+  --sport-prop: #f5b94f;
   /* Chart series (sport-line-chart, sport-bar-chart): nine hues that stay apart from each other, a third of them warm (amber, orange,
      sand). Contrast of each (1..9) on the page / surface / card (= surface-alt, where the charts sit), measured; 3:1 is needed for
      graphics, the lowest is 4.58:

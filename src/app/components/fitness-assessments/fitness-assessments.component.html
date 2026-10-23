@@ -1,0 +1,82 @@
+<div class="fd-split">
+  <section class="fd-pane" [attr.aria-label]="'fitness.asm.list' | translate">
+    <p class="fd-hint">{{ 'fitness.asm.intro' | translate }}</p>
+    <ul class="fd-list">
+      @for (r of rows(); track r.a.id) {
+        <li>
+          <button type="button" class="fd-item" [attr.aria-current]="id() === r.a.id" (click)="select(r.a.id)">
+            <span class="fd-item__text">
+              <span class="fd-item__name">{{ state.loc(r.a.name) }}</span>
+              <span class="fd-item__meta">{{ 'sportask.panel.unit.' + r.a.metric | translate }} · {{ r.a.seconds }} s</span>
+            </span>
+            @if (r.changed) {
+              <span class="fd-tag fd-tag--changed">{{ 'fitness.tagChanged' | translate }}</span>
+            }
+          </button>
+        </li>
+      }
+    </ul>
+  </section>
+
+  @if (assessment(); as a) {
+    <section class="fd-detail">
+      <div class="fd-head">
+        <div>
+          <h3>{{ state.loc(a.name) }}</h3>
+          <span class="fd-id">{{ a.id }}</span>
+        </div>
+        @if (changed()) {
+          <button type="button" class="btn btn--ghost btn--sm" (click)="reset()">{{ 'fitness.asm.reset' | translate }}</button>
+        }
+      </div>
+      @if (problems().length > 0) {
+        <ul class="fd-problems">
+          @for (p of problems(); track $index) {
+            <li [attr.data-severity]="p.severity"><span aria-hidden="true">{{ p.severity === 'error' ? '●' : '○' }}</span><span>{{ state.issueText(p) }}</span></li>
+          }
+        </ul>
+      }
+      <div class="fd-section">
+        <app-fitness-text-pair [label]="'fitness.asm.name' | translate" [max]="80" [value]="a.name" (valueChange)="setText('name', $event)" />
+        <app-fitness-text-pair [label]="'fitness.asm.instructions' | translate" [multiline]="true" [max]="400" [value]="a.instructions" (valueChange)="setText('instructions', $event)" />
+        <div class="fd-row">
+          <div class="field">
+            <label class="field__label" for="fa-seconds">{{ 'fitness.asm.seconds' | translate }}</label>
+            <input id="fa-seconds" class="input fd-num" type="number" min="10" max="600" [value]="a.seconds" (change)="setNumber('seconds', $event)" />
+          </div>
+          @if (ladder(); as l) {
+            <div class="field">
+              <label class="field__label" for="fa-rung">{{ 'fitness.asm.maxRung' | translate }}</label>
+              <input id="fa-rung" class="input fd-num" type="number" min="0" [max]="l.rungs.length - 1" [value]="a.maxRung ?? l.rungs.length - 1" (change)="setNumber('maxRung', $event)" />
+            </div>
+          }
+        </div>
+        <p class="fd-hint">{{ 'fitness.asm.fixed' | translate: { unit: ('sportask.panel.unit.' + a.metric | translate), better: ('fitness.asm.' + (a.higherIsBetter ? 'higher' : 'lower') | translate) } }}</p>
+      </div>
+      @if (a.exerciseIds) {
+        <div class="fd-section">
+          <h4>{{ 'fitness.asm.exercises' | translate }}</h4>
+          <p class="fd-hint">{{ 'fitness.asm.exercisesHint' | translate }}</p>
+          <div class="fd-chips">
+            @for (c of chosen(); track c.id) {
+              <span class="fa__chip">
+                {{ c.name }}
+                <button type="button" [attr.aria-label]="('fitness.lad.remove' | translate) + ' ' + c.name" (click)="removeExercise(c.id)"><app-ui-icon name="x" [size]="14" /></button>
+              </span>
+            }
+          </div>
+          <select class="select" style="max-width: 18rem" [attr.aria-label]="'fitness.lad.add' | translate" (change)="addExercise($event)">
+            <option value="" selected>{{ 'fitness.lad.add' | translate }}</option>
+            @for (e of addable(); track e.id) {
+              <option [value]="e.id">{{ e.name }}</option>
+            }
+          </select>
+        </div>
+      } @else {
+        <p class="fd-hint">{{ 'fitness.asm.ladderBased' | translate }}</p>
+      }
+    </section>
+  } @else {
+    <section class="fd-detail"><p class="fd-empty">{{ 'fitness.asm.pick' | translate }}</p></section>
+  }
+</div>

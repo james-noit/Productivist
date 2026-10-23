@@ -7,17 +7,17 @@ const s = makeExercise('strength', 'core');
 export const STRENGTH_EXERCISES: ExerciseDef[] = [
   // push
   s('wallPushUp', 'Flexiones en la pared', 'Wall push-ups', {
-    pattern: 'push', dose: '10r', lvl: 1, hints: 'wall', met: 'lightCal', pict: 'pushup',
+    pattern: 'push', dose: '10r', lvl: 1, hints: 'wall', met: 'lightCal', pict: 'wallPushup',
     cue: 'Body in one straight line; bring the chest to the wall and push away.',
     cueEs: 'Cuerpo en línea recta; acerca el pecho a la pared y empuja para separarte.',
   }),
   s('deskPushUp', 'Flexiones inclinadas en la mesa', 'Desk incline push-ups', {
-    pattern: 'push', dose: '10r', lvl: 2, hints: 'chair', met: 'moderateCal', pict: 'pushup',
+    pattern: 'push', dose: '10r', lvl: 2, hints: 'chair', met: 'moderateCal', pict: 'deskPushup',
     cue: 'Hands on a stable desk edge, lower the chest to it, elbows at 45°.',
     cueEs: 'Manos en el borde de una mesa estable, baja el pecho hasta ella con los codos a 45°.',
   }),
   s('kneePushUp', 'Flexiones de rodillas', 'Knee push-ups', {
-    pattern: 'push', dose: '8r', lvl: 2, floor: true, met: 'moderateCal', pict: 'pushup',
+    pattern: 'push', dose: '8r', lvl: 2, floor: true, met: 'moderateCal', pict: 'kneePushup',
     cue: 'Knees down, hips in line with the shoulders; chest to fist height.',
     cueEs: 'Rodillas apoyadas y caderas alineadas con los hombros; baja el pecho hasta la altura de un puño.',
   }),
@@ -42,17 +42,17 @@ export const STRENGTH_EXERCISES: ExerciseDef[] = [
     cueEs: 'Manos sobre el balón, apriétalo para que no se mueva y baja despacio.',
   }),
   s('dumbbellFloorPress', 'Press de suelo con mancuernas', 'Dumbbell floor press', {
-    pattern: 'push', dose: '10r', needs: ['dumbbells'], lvl: 2, floor: true, hints: 'load', met: 'resistance', pict: 'press',
+    pattern: 'push', dose: '10r', needs: ['dumbbells'], lvl: 2, floor: true, hints: 'load', met: 'resistance', pict: 'floorPress',
     cue: 'Lie down, elbows touch the floor softly, press straight up.',
     cueEs: 'Túmbate, toca el suelo suavemente con los codos y empuja recto hacia arriba.',
   }),
   s('bandChestPress', 'Press de pecho con goma', 'Band chest press', {
-    pattern: 'push', dose: '12r', needs: ['band'], lvl: 2, met: 'resistance', pict: 'press',
+    pattern: 'push', dose: '12r', needs: ['band'], lvl: 2, met: 'resistance', pict: 'chestPress',
     cue: 'Band behind the back, press forward to straight arms, slow return.',
     cueEs: 'Goma por detrás de la espalda, empuja hacia delante hasta estirar los brazos y vuelve despacio.',
   }),
   s('chairDip', 'Fondos en silla', 'Chair dips', {
-    pattern: 'push', dose: '8r', lvl: 3, hints: 'chair', met: 'moderateCal', pict: 'press',
+    pattern: 'push', dose: '8r', lvl: 3, hints: 'chair', met: 'moderateCal', pict: 'dip',
     cue: 'Stable chair against a wall; lower until the elbows reach 90°, shoulders down.',
     cueEs: 'Silla estable contra una pared; baja hasta que los codos formen 90° con los hombros abajo.',
   }),
@@ -73,18 +73,18 @@ export const STRENGTH_EXERCISES: ExerciseDef[] = [
     cueEs: 'Pesa apoyada en el hombro, aprieta los glúteos y empuja hasta estirar el brazo.',
   }),
   s('pikePushUp', 'Flexiones en pica', 'Pike push-ups', {
-    pattern: 'pushVertical', dose: '6r', lvl: 4, floor: true, met: 'moderateCal', pict: 'pushup',
+    pattern: 'pushVertical', dose: '6r', lvl: 4, floor: true, met: 'moderateCal', pict: 'pike',
     cue: 'Hips high, lower the head between the hands, push back up.',
     cueEs: 'Caderas altas, baja la cabeza entre las manos y empuja para subir.',
   }),
   // pull
   s('proneYTW', 'Y-T-W boca abajo', 'Prone Y-T-W', {
-    pattern: 'pull', dose: '6r', lvl: 1, floor: true, met: 'lightCal', pict: 'row', spr: 8,
+    pattern: 'pull', dose: '6r', lvl: 1, floor: true, met: 'lightCal', pict: 'proneY', spr: 8,
     cue: 'Face down, thumbs up; lift the arms into Y, T, then W, squeezing the shoulder blades.',
     cueEs: 'Boca abajo con los pulgares hacia arriba; sube los brazos en Y, T y W apretando los omóplatos.',
   }),
   s('reverseSnowAngel', 'Ángel de nieve invertido', 'Reverse snow angels', {
-    pattern: 'pull', dose: '8r', lvl: 2, floor: true, met: 'lightCal', pict: 'row', spr: 4,
+    pattern: 'pull', dose: '8r', lvl: 2, floor: true, met: 'lightCal', pict: 'proneY', spr: 4,
     cue: 'Face down, arms just off the floor; sweep them from the hips to overhead and back.',
     cueEs: 'Boca abajo con los brazos apenas separados del suelo; llévalos de las caderas a la cabeza y vuelve.',
   }),
@@ -104,18 +104,18 @@ export const STRENGTH_EXERCISES: ExerciseDef[] = [
     cueEs: 'Impulsa con las caderas, sube los codos altos y abiertos y baja el peso con control.',
   }),
   s('renegadeRow', 'Remo renegado', 'Renegade row', {
-    pattern: 'pull', dose: '6r', side: true, needs: ['dumbbells'], lvl: 4, floor: true, hints: 'load', met: 'resistanceVig', pict: 'row',
+    pattern: 'pull', dose: '6r', side: true, needs: ['dumbbells'], lvl: 4, floor: true, hints: 'load', met: 'resistanceVig', pict: 'plank',
     cue: 'High plank on the dumbbells, feet wide; row one side without twisting the hips.',
     cueEs: 'Plancha alta sobre las mancuernas con los pies separados; rema con un lado sin girar la cadera.',
   }),
   // squat
   s('sitToStand', 'Levantarse de la silla', 'Sit-to-stand', {
-    pattern: 'squat', dose: '10r', lvl: 1, hints: 'chair', met: 'lightCal', pict: 'squat',
+    pattern: 'squat', dose: '10r', lvl: 1, hints: 'chair', met: 'lightCal', pict: 'sitStand',
     cue: 'Arms crossed, stand up without the hands, sit down slowly.',
     cueEs: 'Brazos cruzados, levántate sin usar las manos y siéntate despacio.',
   }),
   s('ballWallSquat', 'Sentadilla con fitball en la pared', 'Ball wall squat', {
-    pattern: 'squat', dose: '12r', needs: ['yogaBall'], lvl: 1, hints: 'wall', met: 'lightCal', pict: 'squat',
+    pattern: 'squat', dose: '12r', needs: ['yogaBall'], lvl: 1, hints: 'wall', met: 'lightCal', pict: 'ballWallSquat',
     cue: 'Ball between your back and the wall, roll down to a comfortable depth.',
     cueEs: 'Balón entre la espalda y la pared; baja rodando hasta una profundidad cómoda.',
   }),
@@ -130,7 +130,7 @@ export const STRENGTH_EXERCISES: ExerciseDef[] = [
     cueEs: 'De pie sobre la goma con las manos en los hombros, baja y sube empujando con los talones.',
   }),
   s('wallSit', 'Sentadilla isométrica en la pared', 'Wall sit', {
-    pattern: 'squat', dose: '30s', lvl: 2, hints: 'wall', met: 'moderateCal', pict: 'squat',
+    pattern: 'squat', dose: '30s', lvl: 2, hints: 'wall', met: 'moderateCal', pict: 'wallSquat',
     cue: 'Back flat on the wall, thighs as close to level as is comfortable.',
     cueEs: 'Espalda plana contra la pared y los muslos tan horizontales como te resulte cómodo.',
   }),
@@ -140,17 +140,17 @@ export const STRENGTH_EXERCISES: ExerciseDef[] = [
     cueEs: 'Aguanta 3 s abajo, mantén el cuerpo firme y sube.',
   }),
   s('gobletSquat', 'Sentadilla goblet', 'Goblet squat', {
-    pattern: 'squat', dose: '10r', needs: ['kettlebell', 'dumbbells'], lvl: 3, hints: 'load', met: 'resistanceVig', pict: 'squat',
+    pattern: 'squat', dose: '10r', needs: ['kettlebell', 'dumbbells'], lvl: 3, hints: 'load', met: 'resistanceVig', pict: 'gobletSquat',
     cue: 'Weight at the chest, elbows inside the knees, chest proud.',
     cueEs: 'Peso pegado al pecho, codos por dentro de las rodillas y pecho alto.',
   }),
   s('jumpSquat', 'Sentadilla con salto', 'Jump squats', {
-    pattern: 'squat', tags: ['calories'], dose: '10r', lvl: 4, imp: 'high', met: 'vigorousCal', pict: 'jump', spr: 2,
+    pattern: 'squat', tags: ['calories'], dose: '10r', lvl: 4, imp: 'high', met: 'vigorousCal', pict: 'jumpSquat', spr: 2,
     cue: 'Land softly on the whole foot and sink straight into the next squat.',
     cueEs: 'Aterriza suave con todo el pie y baja directamente a la siguiente sentadilla.',
   }),
   s('singleLegSitToStand', 'Levantarse de la silla a una pierna', 'Single-leg sit-to-stand', {
-    pattern: 'squat', dose: '5r', side: true, lvl: 5, hints: 'chair', met: 'moderateCal', pict: 'squat', spr: 4,
+    pattern: 'squat', dose: '5r', side: true, lvl: 5, hints: 'chair', met: 'moderateCal', pict: 'sitStand', spr: 4,
     cue: 'One foot forward off the floor; stand up and sit down with control.',
     cueEs: 'Un pie adelantado sin tocar el suelo; levántate y siéntate con control.',
   }),
@@ -192,7 +192,7 @@ export const STRENGTH_EXERCISES: ExerciseDef[] = [
     cueEs: 'Goma bajo los pies y tras la nuca; inclínate y vuelve a subir apretando los glúteos.',
   }),
   s('kettlebellDeadlift', 'Peso muerto con kettlebell', 'Kettlebell deadlift', {
-    pattern: 'hinge', dose: '10r', needs: ['kettlebell', 'dumbbells'], lvl: 2, hints: 'load', met: 'resistance', pict: 'hinge',
+    pattern: 'hinge', dose: '10r', needs: ['kettlebell', 'dumbbells'], lvl: 2, hints: 'load', met: 'resistance', pict: 'deadlift',
     cue: 'Weight between the feet, hips back, flat back, stand tall.',
     cueEs: 'Peso entre los pies, cadera atrás, espalda plana y sube hasta quedar erguido.',
   }),
@@ -202,7 +202,7 @@ export const STRENGTH_EXERCISES: ExerciseDef[] = [
     cueEs: 'Una pierna elevada, caderas niveladas y empuja con el talón apoyado.',
   }),
   s('dumbbellRdl', 'Peso muerto rumano con peso', 'Romanian deadlift', {
-    pattern: 'hinge', dose: '10r', needs: ['dumbbells', 'kettlebell'], lvl: 3, hints: 'load', met: 'resistanceVig', pict: 'hinge',
+    pattern: 'hinge', dose: '10r', needs: ['dumbbells', 'kettlebell'], lvl: 3, hints: 'load', met: 'resistanceVig', pict: 'deadlift',
     cue: 'Weights slide down the thighs, hips back, stop when the back would round.',
     cueEs: 'Las pesas resbalan por los muslos, cadera atrás; para antes de que la espalda se redondee.',
   }),
@@ -217,23 +217,23 @@ export const STRENGTH_EXERCISES: ExerciseDef[] = [
     cueEs: 'Inclínate sobre una pierna mientras la otra se extiende atrás con la cadera recta; toca una pared para equilibrarte.',
   }),
   s('kettlebellSwing', 'Swing con kettlebell', 'Kettlebell swing', {
-    pattern: 'hinge', tags: ['calories'], dose: '15r', needs: ['kettlebell'], lvl: 3, hints: 'space load', met: 'vigorousCal', pict: 'hinge', spr: 2,
+    pattern: 'hinge', tags: ['calories'], dose: '15r', needs: ['kettlebell'], lvl: 3, hints: 'space load', met: 'vigorousCal', pict: 'swing', spr: 2,
     cue: 'Hike the bell back, snap the hips forward; the arms are just ropes.',
     cueEs: 'Lanza la pesa hacia atrás y extiende la cadera con fuerza; los brazos solo son cuerdas.',
   }),
   // core
   s('deskPlank', 'Plancha inclinada en la mesa', 'Desk incline plank', {
-    pattern: 'core', dose: '30s', lvl: 1, hints: 'chair', met: 'lightCal', pict: 'plank',
+    pattern: 'core', dose: '30s', lvl: 1, hints: 'chair', met: 'lightCal', pict: 'deskPushup',
     cue: 'Forearms on the desk, body in one line, belly braced.',
     cueEs: 'Antebrazos sobre la mesa, cuerpo en línea recta y abdomen firme.',
   }),
   s('deadBug', 'Bicho muerto', 'Dead bug', {
-    pattern: 'core', dose: '8r', side: true, lvl: 1, floor: true, met: 'lightCal', pict: 'stretchFloor', spr: 4,
+    pattern: 'core', dose: '8r', side: true, lvl: 1, floor: true, met: 'lightCal', pict: 'deadBug', spr: 4,
     cue: 'Lower back pressed down; extend the opposite arm and leg slowly.',
     cueEs: 'Zona lumbar pegada al suelo; estira despacio el brazo y la pierna contrarios.',
   }),
   s('birdDog', 'Perro de caza', 'Bird dog', {
-    pattern: 'core', dose: '8r', side: true, lvl: 1, floor: true, met: 'lightCal', pict: 'plank', spr: 4,
+    pattern: 'core', dose: '8r', side: true, lvl: 1, floor: true, met: 'lightCal', pict: 'birdDog', spr: 4,
     cue: 'On all fours, reach the opposite arm and leg long without the hips rotating.',
     cueEs: 'A cuatro patas, estira el brazo y la pierna contrarios sin girar la cadera.',
   }),
@@ -243,7 +243,7 @@ export const STRENGTH_EXERCISES: ExerciseDef[] = [
     cueEs: 'Codos bajo los hombros, glúteos apretados y sin dejar caer la cadera.',
   }),
   s('suitcaseHold', 'Sujeción tipo maleta', 'Suitcase hold', {
-    pattern: 'core', dose: '30s', side: true, needs: ['kettlebell', 'dumbbells'], lvl: 2, hints: 'load', met: 'resistance', pict: 'stretchStand',
+    pattern: 'core', dose: '30s', side: true, needs: ['kettlebell', 'dumbbells'], lvl: 2, hints: 'load', met: 'resistance', pict: 'carry',
     cue: 'Stand tall with one weight at your side; do not lean toward it.',
     cueEs: 'Mantente erguido con una pesa a un lado; no te inclines hacia ella.',
   }),
@@ -253,17 +253,17 @@ export const STRENGTH_EXERCISES: ExerciseDef[] = [
     cueEs: 'Codo bajo el hombro, caderas altas y cuerpo en línea recta.',
   }),
   s('ballRollout', 'Rollout con fitball', 'Ball rollout', {
-    pattern: 'core', dose: '8r', needs: ['yogaBall'], lvl: 3, floor: true, met: 'moderateCal', pict: 'plank', spr: 4,
+    pattern: 'core', dose: '8r', needs: ['yogaBall'], lvl: 3, floor: true, met: 'moderateCal', pict: 'ballRollout', spr: 4,
     cue: 'Kneel, forearms on the ball; roll out only as far as the back stays flat.',
     cueEs: 'De rodillas con los antebrazos sobre el balón; rueda solo hasta donde la espalda siga plana.',
   }),
   s('hollowHold', 'Posición hueca', 'Hollow hold', {
-    pattern: 'core', dose: '20s', lvl: 4, floor: true, met: 'moderateCal', pict: 'stretchFloor',
+    pattern: 'core', dose: '20s', lvl: 4, floor: true, met: 'moderateCal', pict: 'hollow',
     cue: 'Lower back glued down, arms and legs long; bend the knees to make it easier.',
     cueEs: 'Zona lumbar pegada al suelo y brazos y piernas largos; flexiona las rodillas para facilitarlo.',
   }),
   s('ballStirThePot', 'Remover la olla en fitball', 'Ball stir-the-pot', {
-    pattern: 'core', dose: '5r', side: true, needs: ['yogaBall'], lvl: 5, floor: true, met: 'moderateCal', pict: 'plank', spr: 6,
+    pattern: 'core', dose: '5r', side: true, needs: ['yogaBall'], lvl: 5, floor: true, met: 'moderateCal', pict: 'ballRollout', spr: 6,
     cue: 'Plank on the ball; draw small circles with the forearms.',
     cueEs: 'Plancha sobre el balón; dibuja círculos pequeños con los antebrazos.',
   }),

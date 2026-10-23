@@ -1,0 +1,107 @@
+<div class="fd-split">
+  <section class="fd-pane" [attr.aria-label]="'fitness.eq.list' | translate">
+    <div class="fd-toolbar">
+      <button type="button" class="btn btn--secondary" (click)="startCreate()"><app-ui-icon name="plus" [size]="16" />{{ 'fitness.eq.new' | translate }}</button>
+    </div>
+    <p class="fd-hint">{{ 'fitness.eq.intro' | translate }}</p>
+    @if (creating(); as c) {
+      <form class="fq__creating" (submit)="$event.preventDefault(); create()" (keydown.escape)="$event.stopPropagation(); creating.set(null)">
+        <div class="field">
+          <label class="field__label" for="fq-new-en">{{ 'fitness.eq.name' | translate }} · EN</label>
+          <input #newName id="fq-new-en" class="input" type="text" autocomplete="off" maxlength="60" [value]="c.en" (input)="setCreating('en', $event)" />
+        </div>
+        <div class="field">
+          <label class="field__label" for="fq-new-es">{{ 'fitness.eq.name' | translate }} · ES</label>
+          <input id="fq-new-es" class="input" type="text" autocomplete="off" maxlength="60" [value]="c.es" (input)="setCreating('es', $event)" />
+        </div>
+        <div class="fd-actions">
+          <button type="button" class="btn btn--secondary btn--sm" (click)="creating.set(null)">{{ 'fitness.cancel' | translate }}</button>
+          <button type="submit" class="btn btn--primary btn--sm" [disabled]="!createValid()">{{ 'fitness.eq.create' | translate }}</button>
+        </div>
+      </form>
+    }
+    <ul class="fd-list">
+      @for (r of rows(); track r.e.id) {
+        <li>
+          <button type="button" class="fd-item" [attr.aria-current]="id() === r.e.id" (click)="select(r.e.id)">
+            <app-ui-icon [name]="icon(r.e.icon)" [size]="20" />
+            <span class="fd-item__text">
+              <span class="fd-item__name">{{ state.loc(r.e.name) }}</span>
+              <span class="fd-item__meta">{{ r.e.id }}</span>
+            </span>
+            @if (!r.builtin) {
+              <span class="fd-tag fd-tag--mine">{{ 'fitness.tagNew' | translate }}</span>
+            } @else if (r.changed) {
+              <span class="fd-tag fd-tag--changed">{{ 'fitness.tagChanged' | translate }}</span>
+            }
+          </button>
+        </li>
+      }
+    </ul>
+  </section>
+
+  @if (item(); as e) {
+    <section class="fd-detail">
+      <div class="fd-head">
+        <div>
+          <h3>{{ state.loc(e.name) }}</h3>
+          <span class="fd-id">{{ e.id }}</span>
+        </div>
+        <div class="fd-actions">
+          @if (changed()) {
+            <button type="button" class="btn btn--ghost btn--sm" (click)="reset()">{{ 'fitness.eq.reset' | translate }}</button>
+          }
+          @if (!base() && !published()) {
+            <button type="button" class="btn btn--danger btn--ghost btn--sm" (click)="confirmDelete.set(true)">{{ 'fitness.delete' | translate }}</button>
+          }
+        </div>
+      </div>
+      @if (confirmDelete()) {
+        <div class="confirm-bar" role="alertdialog" aria-labelledby="fq-del">
+          <p class="confirm-bar__text" id="fq-del">{{ 'fitness.eq.deleteQ' | translate }}</p>
+          <div class="confirm-bar__actions">
+            <button type="button" class="btn btn--secondary" (click)="confirmDelete.set(false)">{{ 'fitness.keep' | translate }}</button>
+            <button type="button" class="btn btn--danger" (click)="remove()">{{ 'fitness.delete' | translate }}</button>
+          </div>
+        </div>
+      }
+      @if (!base() && published()) {
+        <p class="fd-hint">{{ 'fitness.eq.publishedHint' | translate }}</p>
+      }
+      @if (problems().length > 0) {
+        <ul class="fd-problems">
+          @for (p of problems(); track $index) {
+            <li [attr.data-severity]="p.severity"><span aria-hidden="true">{{ p.severity === 'error' ? '●' : '○' }}</span><span>{{ state.issueText(p) }}</span></li>
+          }
+        </ul>
+      }
+      <div class="fd-section">
+        <app-fitness-text-pair [label]="'fitness.eq.name' | translate" [max]="60" [value]="e.name" (valueChange)="setName($event)" />
+        <div class="fd-row">
+          <div class="field">
+            <label class="field__label" for="fq-icon">{{ 'fitness.eq.icon' | translate }}</label>
+            <select id="fq-icon" class="select" (change)="setIcon($event)">
+              @for (i of icons; track i) {
+                <option [value]="i" [selected]="e.icon === i">{{ i }}</option>
+              }
+            </select>
+          </div>
+          @if (!base()) {
+            <div class="field">
+              <label class="field__label" for="fq-details">{{ 'fitness.eq.details' | translate }}</label>
+              <select id="fq-details" class="select" (change)="setDetails($event)">
+                <option value="" [selected]="!e.details">—</option>
+                @for (d of detailKinds; track d) {
+                  <option [value]="d" [selected]="e.details === d">{{ 'fitness.eq.detail.' + d | translate }}</option>
+                }
+              </select>
+            </div>
+          }
+        </div>
+        <p class="fd-hint">{{ 'fitness.eq.usedBy' | translate: { n: usedBy() } }}</p>
+      </div>
+    </section>
+  } @else {
+    <section class="fd-detail"><p class="fd-empty">{{ 'fitness.eq.pick' | translate }}</p></section>
+  }
+</div>

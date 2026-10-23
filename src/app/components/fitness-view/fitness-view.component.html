@@ -1,0 +1,123 @@
+<main class="fv" (keydown)="onKeydown($event)">
+  <header class="fv__header">
+    <div class="fv__heading">
+      <h2 class="fv__title">{{ 'fitness.title' | translate }}</h2>
+      @if (state.ready()) {
+        <p class="fv__status" role="status" [attr.data-kind]="status().kind">{{ status().text }}</p>
+      }
+    </div>
+    @if (state.ready() && !state.loadError() && state.busy() !== 'loading') {
+      <div class="fv__actions">
+        <button type="button" class="btn btn--ghost" [disabled]="!state.dirty() || !!state.busy()" (click)="openDiscard()">{{ 'fitness.discard' | translate }}</button>
+        <button type="button" class="btn btn--secondary" [disabled]="!state.dirty() || !!state.busy()" (click)="save()">{{ 'fitness.save' | translate }}</button>
+        <button type="button" class="btn btn--primary" [disabled]="!!state.busy() || confirm() === 'publish'" (click)="openPublish()">{{ 'fitness.publishAction' | translate }}</button>
+      </div>
+    }
+  </header>
+
+  @if (!state.ready()) {
+    <p class="fv__loading" aria-hidden="true"></p>
+  } @else if (state.loadError()) {
+    <div class="fd-note fd-note--error" role="alert">
+      <p>{{ 'fitness.error.' + state.loadError() | translate }}</p>
+      <button type="button" class="btn btn--secondary btn--sm" (click)="state.load()">{{ 'fitness.retry' | translate }}</button>
+    </div>
+  } @else {
+    @if (confirm() === 'discard') {
+      <div class="confirm-bar fv__confirm" role="alertdialog" aria-labelledby="fv-discard">
+        <p class="confirm-bar__text" id="fv-discard">{{ 'fitness.discardQ' | translate }}</p>
+        <div class="confirm-bar__actions">
+          <button #keepButton type="button" class="btn btn--secondary" (click)="confirm.set(null)">{{ 'fitness.keep' | translate }}</button>
+          <button type="button" class="btn btn--danger" (click)="doDiscard()">{{ 'fitness.discardDo' | translate }}</button>
+        </div>
+      </div>
+    }
+
+    @if (confirm() === 'publish') {
+      <div class="fv__publish" role="alertdialog" aria-labelledby="fv-publish">
+        <p class="confirm-bar__text" id="fv-publish">{{ (state.rollbackOf() !== null ? 'fitness.publish.rollbackQ' : 'fitness.publish.q') | translate: { n: state.nextVersion(), from: state.rollbackOf() } }}</p>
+        <p class="fd-hint">{{ 'fitness.publish.hint' | translate }}</p>
+        <div class="field">
+          <label class="field__label" for="fv-note">{{ 'fitness.publish.note' | translate }}</label>
+          <input #noteField id="fv-note" class="input" type="text" maxlength="500" autocomplete="off" [value]="note()" [placeholder]="'fitness.publish.notePlaceholder' | translate" (input)="note.set($any($event.target).value)" (keydown.enter)="doPublish()" />
+        </div>
+        @if (state.errors().length > 0) {
+          <p class="fd-note fd-note--error" role="alert">{{ 'fitness.publish.blocked' | translate: { n: state.errors().length } }}</p>
+        }
+        <div class="confirm-bar__actions">
+          <button type="button" class="btn btn--secondary" (click)="confirm.set(null)">{{ 'fitness.cancel' | translate }}</button>
+          <button type="button" class="btn btn--primary" [disabled]="!canPublish()" (click)="doPublish()">{{ 'fitness.publish.do' | translate: { n: state.nextVersion() } }}</button>
+        </div>
+      </div>
+    }
+
+    @if (state.notice(); as notice) {
+      <p class="fd-note" [class.fd-note--error]="notice.kind === 'error' || notice.kind === 'conflict' || notice.kind === 'refused' || notice.kind === 'checksFailed'" role="status">
+        {{ 'fitness.notice.' + notice.kind | translate: { n: notice.version } }}
+        @if (notice.kind === 'conflict') {
+          <button type="button" class="btn btn--secondary btn--sm" (click)="state.load()">{{ 'fitness.reload' | translate }}</button>
+        }
+      </p>
+    }
+
+    @if (state.dropped().length > 0) {
+      <p class="fd-note fd-note--warn" role="alert">{{ 'fitness.dropped' | translate: { n: state.dropped().length, where: state.dropped().slice(0, 3).join(', ') } }}</p>
+    }
+
+    <div class="tabs" role="tablist" [attr.aria-label]="'fitness.tabsLabel' | translate" (keydown)="onTabKeydown($event)">
+      @for (t of tabs; track t) {
+        <button
+          type="button"
+          role="tab"
+          class="tabs__tab"
+          [id]="'fv-tab-' + t"
+          [attr.data-tab]="t"
+          [attr.aria-selected]="state.tab() === t"
+          aria-controls="fv-panel"
+          [attr.tabindex]="state.tab() === t ? 0 : -1"
+          (click)="select(t)"
+        >
+          {{ 'fitness.tab.' + t | translate }}
+          @if (t === 'checks' && badge(); as b) {
+            <span class="fv__badge" [attr.data-kind]="b.kind">{{ b.n }}</span>
+          }
+        </button>
+      }
+    </div>
+
+    <div class="fv__panel" id="fv-panel" role="tabpanel" [attr.aria-labelledby]="'fv-tab-' + state.tab()">
+      @switch (state.tab()) {
+        @case ('exercises') {
+          <app-fitness-exercises />
+        }
+        @case ('ladders') {
+          <app-fitness-ladders />
+        }
+        @case ('programs') {
+          <app-fitness-programs />
+        }
+        @case ('templates') {
+          <app-fitness-templates />
+        }
+        @case ('timings') {
+          <app-fitness-timings />
+        }
+        @case ('assessments') {
+          <app-fitness-assessments />
+        }
+        @case ('equipment') {
+          <app-fitness-equipment />
+        }
+        @case ('preview') {
+          <app-fitness-preview />
+        }
+        @case ('checks') {
+          <app-fitness-checks />
+        }
+        @case ('versions') {
+          <app-fitness-versions />
+        }
+      }
+    </div>
+  }
+</main>

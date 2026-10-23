@@ -1,0 +1,52 @@
+<div class="fc">
+  <section class="fc__sweep" [attr.aria-label]="'fitness.chk.sweepTitle' | translate">
+    <div class="fd-head">
+      <div>
+        <h3 style="margin: 0; font-size: 1rem">{{ 'fitness.chk.sweepTitle' | translate }}</h3>
+        <p class="fd-hint">{{ 'fitness.chk.sweepHint' | translate }}</p>
+      </div>
+      <button type="button" class="btn btn--primary" [disabled]="!!state.busy()" (click)="run()">{{ (state.busy() === 'checking' ? 'fitness.chk.running' : 'fitness.chk.run') | translate }}</button>
+    </div>
+    @if (sweep(); as s) {
+      @if (s.runs === 0) {
+        <p class="fd-note fd-note--warn">{{ 'fitness.chk.skipped' | translate }}</p>
+      } @else if (s.issues.length === 0) {
+        <p class="fd-note" role="status">{{ 'fitness.chk.sweepOk' | translate: { n: s.runs } }}</p>
+      } @else {
+        <p class="fd-note fd-note--warn" role="status">{{ 'fitness.chk.sweepFound' | translate: { n: s.runs, found: s.issues.length } }}</p>
+        <ul class="fc__list">
+          @for (i of s.issues; track $index) {
+            <li class="fc__issue" [attr.data-severity]="i.severity">
+              <span class="fc__mark" aria-hidden="true">{{ i.severity === 'error' ? '●' : '○' }}</span>
+              <span class="fc__text">{{ state.issueText(i) }}</span>
+            </li>
+          }
+        </ul>
+      }
+    } @else {
+      <p class="fd-hint">{{ 'fitness.chk.notRun' | translate }}</p>
+    }
+  </section>
+
+  <section [attr.aria-label]="'fitness.chk.listTitle' | translate">
+    <h3 style="margin: 0 0 0.5rem; font-size: 1rem">{{ 'fitness.chk.listTitle' | translate }}</h3>
+    @if (issues().length === 0) {
+      <p class="fd-note" role="status">{{ 'fitness.chk.clean' | translate }}</p>
+    } @else {
+      <ul class="fc__list">
+        @for (i of issues(); track $index) {
+          <li class="fc__issue" [attr.data-severity]="i.severity">
+            <span class="fc__mark" aria-hidden="true">{{ i.severity === 'error' ? '●' : '○' }}</span>
+            <span class="fc__text">
+              {{ state.issueText(i) }}
+              <span class="fc__where">{{ where(i) }}</span>
+            </span>
+            @if (i.section !== 'general' && i.section !== 'sweep') {
+              <button type="button" class="btn btn--secondary btn--sm" (click)="go(i)">{{ 'fitness.chk.goTo' | translate }}</button>
+            }
+          </li>
+        }
+      </ul>
+    }
+  </section>
+</div>

@@ -1,0 +1,180 @@
+<div class="fd-split">
+  <section class="fd-pane" [attr.aria-label]="'fitness.prog.list' | translate">
+    <p class="fd-hint">{{ 'fitness.prog.intro' | translate }}</p>
+    <ul class="fd-list">
+      @for (r of rows(); track r.key) {
+        <li>
+          <button type="button" class="fd-item" [attr.aria-current]="key() === r.key" (click)="select(r.key)">
+            <span class="fd-item__text">
+              <span class="fd-item__name">{{ state.loc(r.program.name) }}</span>
+              <span class="fd-item__meta">{{ goalOf(r.goal) }} · {{ 'fitness.prog.length' | translate: { weeks: r.program.weeks, days: r.program.daysPerWeek } }}</span>
+            </span>
+            @if (!r.builtin) {
+              <span class="fd-tag fd-tag--mine">{{ 'fitness.tagNew' | translate }}</span>
+            } @else if (r.changed) {
+              <span class="fd-tag fd-tag--changed">{{ 'fitness.tagChanged' | translate }}</span>
+            }
+          </button>
+        </li>
+      }
+    </ul>
+  </section>
+
+  @if (current(); as c) {
+    <section class="fd-detail">
+      <div class="fd-head">
+        <div>
+          <h3>{{ state.loc(c.program.name) }}</h3>
+          <span class="fd-id">{{ c.goal.id }}/{{ c.program.id }}</span>
+          @if (!c.builtin) {
+            <span class="fd-tag fd-tag--mine">{{ 'fitness.tagNew' | translate }}</span>
+          }
+        </div>
+        <div class="fd-actions">
+          <button type="button" class="btn btn--secondary btn--sm" (click)="duplicate()">{{ 'fitness.prog.duplicate' | translate }}</button>
+          @if (c.builtin && c.changed) {
+            <button type="button" class="btn btn--ghost btn--sm" (click)="reset()">{{ 'fitness.prog.reset' | translate }}</button>
+          }
+          @if (!c.builtin && !published()) {
+            <button type="button" class="btn btn--danger btn--ghost btn--sm" (click)="confirmDelete.set(true)">{{ 'fitness.delete' | translate }}</button>
+          }
+        </div>
+      </div>
+      @if (confirmDelete()) {
+        <div class="confirm-bar" role="alertdialog" aria-labelledby="fp-del">
+          <p class="confirm-bar__text" id="fp-del">{{ 'fitness.prog.deleteQ' | translate }}</p>
+          <div class="confirm-bar__actions">
+            <button type="button" class="btn btn--secondary" (click)="confirmDelete.set(false)">{{ 'fitness.keep' | translate }}</button>
+            <button type="button" class="btn btn--danger" (click)="remove()">{{ 'fitness.delete' | translate }}</button>
+          </div>
+        </div>
+      }
+      @if (!c.builtin && published()) {
+        <p class="fd-hint">{{ 'fitness.prog.publishedHint' | translate }}</p>
+      }
+
+      @if (problems().length > 0) {
+        <ul class="fd-problems">
+          @for (p of problems(); track $index) {
+            <li [attr.data-severity]="p.severity"><span aria-hidden="true">{{ p.severity === 'error' ? '●' : '○' }}</span><span>{{ state.issueText(p) }}</span></li>
+          }
+        </ul>
+      }
+
+      <div class="fd-section">
+        <h4>{{ 'fitness.prog.program' | translate }}</h4>
+        <app-fitness-text-pair [label]="'fitness.prog.name' | translate" [max]="80" [value]="c.program.name" (valueChange)="setText('name', $event)" />
+        <app-fitness-text-pair [label]="'fitness.prog.summary' | translate" [multiline]="true" [max]="400" [value]="c.program.summary" (valueChange)="setText('summary', $event)" />
+        <div class="fd-row">
+          <div class="field">
+            <label class="field__label" for="fp-weeks">{{ 'fitness.prog.weeks' | translate }}</label>
+            <input id="fp-weeks" class="input fd-num" type="number" min="1" max="52" [value]="c.program.weeks" (change)="setInt('weeks', $event)" />
+          </div>
+          <div class="field">
+            <label class="field__label" for="fp-days">{{ 'fitness.prog.days' | translate }}</label>
+            <input id="fp-days" class="input fd-num" type="number" min="1" max="7" [value]="c.program.daysPerWeek" (change)="setInt('daysPerWeek', $event)" />
+          </div>
+          <div class="field">
+            <label class="field__label" for="fp-aw">{{ 'fitness.prog.testWeeks' | translate }}</label>
+            <input id="fp-aw" class="input fd-num" type="text" inputmode="numeric" autocomplete="off" [value]="c.program.assessmentWeeks.join(', ')" placeholder="1, 4" (change)="setAssessmentWeeks($event)" />
+          </div>
+        </div>
+        <div class="field">
+          <span class="field__label" id="fp-tests">{{ 'fitness.prog.tests' | translate }}</span>
+          <div class="fd-chips" role="group" aria-labelledby="fp-tests">
+            @for (a of assessments(); track a.id) {
+              <button type="button" class="filter-chip" [attr.aria-pressed]="has(c.program.assessmentIds, a.id)" (click)="toggleAssessment(a.id)">{{ state.loc(a.name) }}</button>
+            }
+          </div>
+        </div>
+      </div>
+
+      <div class="fd-section">
+        <h4>{{ 'fitness.prog.phases' | translate }}</h4>
+        <p class="fd-hint">{{ 'fitness.prog.phasesHint' | translate }}</p>
+        @for (ph of phases(); track ph.index) {
+          <div class="fd-card">
+            <div class="fp__phase-head">
+              <span class="fp__phase-title">{{ 'fitness.prog.phase' | translate: { n: ph.index + 1 } }}</span>
+              <div class="field">
+                <label class="field__label" [for]="'fp-from-' + ph.index">{{ 'fitness.prog.fromWeek' | translate }}</label>
+                <input [id]="'fp-from-' + ph.index" class="input fd-num" type="number" min="1" [max]="c.program.weeks" [value]="ph.from" (change)="setPhaseWeek(ph.index, 'fromWeek', $event)" />
+              </div>
+              <div class="field">
+                <label class="field__label" [for]="'fp-to-' + ph.index">{{ 'fitness.prog.toWeek' | translate }}</label>
+                <input [id]="'fp-to-' + ph.index" class="input fd-num" type="number" min="1" [max]="c.program.weeks" [value]="ph.to" (change)="setPhaseWeek(ph.index, 'toWeek', $event)" />
+              </div>
+              <button type="button" class="btn btn--danger btn--ghost btn--icon btn--sm" [disabled]="phases().length <= 1" [attr.aria-label]="'fitness.prog.removePhase' | translate" (click)="removePhase(ph.index)"><app-ui-icon name="trash" [size]="16" /></button>
+            </div>
+            <app-fitness-text-pair [label]="'fitness.prog.note' | translate" [max]="200" [value]="ph.note" (valueChange)="setPhaseNote(ph.index, $event)" />
+            <div class="fd-grid">
+              @for (f of ph.fields; track f.key) {
+                <div class="fp__param">
+                  <div class="fp__param-row">
+                    <span class="fp__param-label">{{ label(f.key) }}</span>
+                    @if (f.optional) {
+                      <button type="button" class="btn btn--ghost btn--icon btn--sm" [attr.aria-label]="('fitness.prog.removeParam' | translate) + ' ' + label(f.key)" (click)="removeParam(ph.index, f.key)"><app-ui-icon name="x" [size]="14" /></button>
+                    }
+                  </div>
+                  @switch (f.kind) {
+                    @case ('number') {
+                      <input class="input fd-num" type="number" [min]="f.min" [max]="f.max" [step]="f.step" [value]="f.value" [attr.aria-label]="label(f.key)" (change)="setNumber(ph.index, f.key, $event)" />
+                    }
+                    @case ('bool') {
+                      <button type="button" class="switch" role="switch" [attr.aria-checked]="!!f.value" [attr.aria-label]="label(f.key)" (click)="setBool(ph.index, f.key, f.value)"><span class="switch__track"></span></button>
+                    }
+                    @case ('range') {
+                      <div class="fp__param-row">
+                        <input class="input fd-num" type="number" [min]="f.min" [max]="f.max" [value]="asRange(f.value)['min']" [attr.aria-label]="label(f.key) + ' min'" (change)="setRange(ph.index, f.key, 'min', f.value, $event)" />
+                        <span aria-hidden="true">–</span>
+                        <input class="input fd-num" type="number" [min]="f.min" [max]="f.max" [value]="asRange(f.value)['max']" [attr.aria-label]="label(f.key) + ' max'" (change)="setRange(ph.index, f.key, 'max', f.value, $event)" />
+                      </div>
+                    }
+                    @case ('enum') {
+                      <select class="select" [attr.aria-label]="label(f.key)" (change)="setEnum(ph.index, f.key, $event)">
+                        @for (o of f.options; track o) {
+                          <option [value]="o" [selected]="f.value === o">{{ o }}</option>
+                        }
+                      </select>
+                    }
+                    @case ('patterns') {
+                      <div class="fd-chips" role="group" [attr.aria-label]="label(f.key)">
+                        @for (p of patterns; track p) {
+                          <button type="button" class="filter-chip" [attr.aria-pressed]="has(f.value, p)" (click)="togglePattern(ph.index, f.key, f.value, p)">{{ 'sportask.panel.g.' + p | translate }}</button>
+                        }
+                      </div>
+                    }
+                  }
+                  @if (hint(f.key)) {
+                    <span class="fd-hint">{{ hint(f.key) }}</span>
+                  }
+                </div>
+              }
+            </div>
+            @if (ph.missing.length > 0) {
+              <select class="select fd-num" style="max-width: 14rem" [attr.aria-label]="'fitness.prog.addParam' | translate" (change)="addParam(ph.index, $event)">
+                <option value="" selected>{{ 'fitness.prog.addParam' | translate }}</option>
+                @for (m of ph.missing; track m) {
+                  <option [value]="m">{{ label(m) }}</option>
+                }
+              </select>
+            }
+          </div>
+        }
+        <div><button type="button" class="btn btn--secondary btn--sm" (click)="addPhase()"><app-ui-icon name="plus" [size]="16" />{{ 'fitness.prog.splitPhase' | translate }}</button></div>
+      </div>
+
+      <div class="fd-section">
+        <h4>{{ 'fitness.prog.goal' | translate: { name: goalOf(c.goal) } }}</h4>
+        <p class="fd-hint">{{ 'fitness.prog.goalHint' | translate }}</p>
+        <app-fitness-text-pair [label]="'fitness.prog.goalName' | translate" [max]="80" [value]="c.goal.name" (valueChange)="setGoalText('name', $event)" />
+        <app-fitness-text-pair [label]="'fitness.prog.goalDescription' | translate" [multiline]="true" [max]="400" [value]="c.goal.description" (valueChange)="setGoalText('description', $event)" />
+        @if (goalChanged()) {
+          <div><button type="button" class="btn btn--ghost btn--sm" (click)="resetGoal()">{{ 'fitness.prog.resetGoal' | translate }}</button></div>
+        }
+      </div>
+    </section>
+  } @else {
+    <section class="fd-detail"><p class="fd-empty">{{ 'fitness.prog.pick' | translate }}</p></section>
+  }
+</div>

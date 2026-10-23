@@ -1,0 +1,54 @@
+.ft__slot {
+  display: grid;
+  grid-template-columns: 1.5rem minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-bg);
+}
+
+.ft__n {
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+  text-align: center;
+}
+
+.ft__slot-main {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: flex-end;
+  min-width: 0;
+}
+
+.ft__slot-main .select {
+  flex: 1 1 10rem;
+  width: auto;
+}
+
+.ft__creating {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.7rem;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: var(--color-surface);
+}
+
+.ft__unit {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
+.ft__slot-actions {
+  display: flex;
+  gap: 0.1rem;
+}
+
+.ft__flip {
+  display: inline-flex;
+  transform: rotate(180deg);
+}

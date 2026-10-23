@@ -1,0 +1,258 @@
+<div class="fd-split">
+  <section class="fd-pane" [attr.aria-label]="'fitness.ex.list' | translate">
+    <div class="fd-toolbar">
+      <input class="input" type="search" autocomplete="off" [value]="query()" [placeholder]="'fitness.ex.search' | translate" [attr.aria-label]="'fitness.ex.search' | translate" (input)="setQuery($event)" />
+      <select class="select" [attr.aria-label]="'fitness.ex.filter' | translate" (change)="setFilter($event)">
+        @for (f of filters; track f) {
+          <option [value]="f" [selected]="filter() === f">{{ 'fitness.ex.filters.' + f | translate }}</option>
+        }
+      </select>
+      <button type="button" class="btn btn--secondary" (click)="startCreate(null)"><app-ui-icon name="plus" [size]="16" />{{ 'fitness.ex.new' | translate }}</button>
+    </div>
+
+    @if (creating(); as c) {
+      <form class="fe__creating" (submit)="$event.preventDefault(); create()" (keydown.escape)="$event.stopPropagation(); creating.set(null)">
+        <p class="fd-hint">{{ (c.from ? 'fitness.ex.duplicateHint' : 'fitness.ex.newHint') | translate }}</p>
+        <div class="field">
+          <label class="field__label" for="fe-new-en">{{ 'fitness.ex.name' | translate }} · EN</label>
+          <input #newName id="fe-new-en" class="input" type="text" autocomplete="off" maxlength="80" [value]="c.en" (input)="setCreating('en', $event)" />
+        </div>
+        <div class="field">
+          <label class="field__label" for="fe-new-es">{{ 'fitness.ex.name' | translate }} · ES</label>
+          <input id="fe-new-es" class="input" type="text" autocomplete="off" maxlength="80" [value]="c.es" (input)="setCreating('es', $event)" />
+        </div>
+        <div class="fd-actions">
+          <button type="button" class="btn btn--secondary btn--sm" (click)="creating.set(null)">{{ 'fitness.cancel' | translate }}</button>
+          <button type="submit" class="btn btn--primary btn--sm" [disabled]="!createValid()">{{ 'fitness.ex.create' | translate }}</button>
+        </div>
+      </form>
+    }
+
+    <p class="fd-hint" aria-live="polite">{{ 'fitness.ex.count' | translate: { n: rows().length } }}</p>
+    <ul class="fd-list">
+      @for (r of rows(); track r.ex.id) {
+        <li>
+          <button type="button" class="fd-item" [class.fd-item--retired]="r.ex.retired" [attr.aria-current]="id() === r.ex.id" (click)="select(r.ex.id)">
+            <span class="fd-item__text">
+              <span class="fd-item__name">{{ r.name || r.ex.id }}</span>
+              <span class="fd-item__meta">{{ 'sportask.panel.g.' + r.ex.pattern | translate }} · {{ 'fitness.ex.levelN' | translate: { n: r.ex.level } }} · {{ r.ex.metric === 'reps' ? (r.ex.dose.reps + ' ' + ('sportask.panel.unit.reps' | translate)) : (r.ex.dose.seconds + ' s') }}</span>
+            </span>
+            @if (!r.builtin) {
+              <span class="fd-tag fd-tag--mine">{{ 'fitness.tagNew' | translate }}</span>
+            } @else if (r.changed) {
+              <span class="fd-tag fd-tag--changed">{{ 'fitness.tagChanged' | translate }}</span>
+            }
+            @if (r.ex.retired) {
+              <span class="fd-tag fd-tag--retired">{{ 'fitness.tagRetired' | translate }}</span>
+            }
+          </button>
+        </li>
+      } @empty {
+        <li><p class="fd-empty">{{ 'fitness.ex.none' | translate }}</p></li>
+      }
+    </ul>
+  </section>
+
+  @if (ex(); as e) {
+    <section class="fd-detail" [attr.aria-label]="state.loc(e.name)">
+      <div class="fd-head">
+        <div>
+          <h3>{{ state.loc(e.name) || e.id }}</h3>
+          <span class="fd-id">{{ e.id }}</span>
+          @if (isBuiltin()) {
+            <span class="fd-tag">{{ 'fitness.tagBuiltin' | translate }}</span>
+            @if (overrides().length > 0) {
+              <span class="fd-tag fd-tag--changed">{{ 'fitness.ex.overrides' | translate: { fields: overrides().join(', ') } }}</span>
+            }
+          } @else {
+            <span class="fd-tag fd-tag--mine">{{ 'fitness.tagNew' | translate }}</span>
+          }
+        </div>
+        <div class="fd-actions">
+          <button type="button" class="btn btn--secondary btn--sm" (click)="startCreate(e)">{{ 'fitness.ex.duplicate' | translate }}</button>
+          <button type="button" class="btn btn--secondary btn--sm" (click)="toggleRetired()">{{ (e.retired ? 'fitness.ex.unretire' : 'fitness.ex.retire') | translate }}</button>
+          @if (isBuiltin() && overrides().length > 0) {
+            <button type="button" class="btn btn--ghost btn--sm" (click)="resetToBuiltin()">{{ 'fitness.ex.reset' | translate }}</button>
+          }
+          @if (!isBuiltin() && !published()) {
+            <button type="button" class="btn btn--danger btn--ghost btn--sm" (click)="confirmDelete.set(true)">{{ 'fitness.delete' | translate }}</button>
+          }
+        </div>
+      </div>
+
+      @if (confirmDelete()) {
+        <div class="confirm-bar" role="alertdialog" aria-labelledby="fe-del">
+          <p class="confirm-bar__text" id="fe-del">{{ 'fitness.ex.deleteQ' | translate }}</p>
+          <div class="confirm-bar__actions">
+            <button type="button" class="btn btn--secondary" (click)="confirmDelete.set(false)">{{ 'fitness.keep' | translate }}</button>
+            <button type="button" class="btn btn--danger" (click)="remove()">{{ 'fitness.delete' | translate }}</button>
+          </div>
+        </div>
+      }
+      @if (!isBuiltin() && published()) {
+        <p class="fd-hint">{{ 'fitness.ex.publishedHint' | translate }}</p>
+      }
+      @if (e.retired) {
+        <p class="fd-note fd-note--warn">{{ 'fitness.ex.retiredHint' | translate }}</p>
+      }
+
+      @if (problems().length > 0) {
+        <ul class="fd-problems" [attr.aria-label]="'fitness.problems' | translate">
+          @for (p of problems(); track $index) {
+            <li [attr.data-severity]="p.severity"><span aria-hidden="true">{{ p.severity === 'error' ? '●' : '○' }}</span><span>{{ state.issueText(p) }}</span></li>
+          }
+        </ul>
+      }
+
+      <div class="fd-section">
+        <h4>{{ 'fitness.ex.texts' | translate }}</h4>
+        <app-fitness-text-pair [label]="'fitness.ex.name' | translate" [max]="80" [value]="e.name" (valueChange)="setName($event)" />
+        @for (cue of e.cues; track $index) {
+          <div class="fe__cue">
+            <app-fitness-text-pair [label]="('fitness.ex.cue' | translate) + ' ' + ($index + 1)" [multiline]="true" [max]="300" [value]="cue" (valueChange)="setCue($index, $event)" />
+            @if (e.cues.length > 1) {
+              <button type="button" class="btn btn--ghost btn--icon btn--sm" [attr.aria-label]="'fitness.ex.removeCue' | translate" (click)="removeCue($index)"><app-ui-icon name="x" [size]="16" /></button>
+            }
+          </div>
+        }
+        @if (e.cues.length < 4) {
+          <div><button type="button" class="btn btn--ghost btn--sm" (click)="addCue()"><app-ui-icon name="plus" [size]="16" />{{ 'fitness.ex.addCue' | translate }}</button></div>
+        }
+      </div>
+
+      <div class="fd-section">
+        <h4>{{ 'fitness.ex.picture' | translate }}</h4>
+        <div class="fe__pict">
+          <div class="fe__hero"><app-sportask-pictogram [id]="e.pictogram" [animate]="true" /></div>
+          <div class="fe__pict-grid" role="group" [attr.aria-label]="'fitness.ex.picture' | translate">
+            @for (p of pictograms; track p) {
+              <button type="button" class="fe__pict-option" [attr.aria-pressed]="e.pictogram === p" [attr.aria-label]="p" [title]="p" (click)="update({ pictogram: p })"><app-sportask-pictogram [id]="p" /></button>
+            }
+          </div>
+        </div>
+        <p class="fd-hint">{{ 'fitness.ex.pictureHint' | translate }}</p>
+      </div>
+
+      <div class="fd-section">
+        <h4>{{ 'fitness.ex.movement' | translate }}</h4>
+        <div class="fd-grid">
+          <div class="field">
+            <label class="field__label" for="fe-pattern">{{ 'fitness.ex.pattern' | translate }}</label>
+            <select id="fe-pattern" class="select" (change)="setPattern($event)">
+              @for (p of patterns; track p) {
+                <option [value]="p" [selected]="e.pattern === p">{{ 'sportask.panel.g.' + p | translate }}</option>
+              }
+            </select>
+          </div>
+          <div class="field">
+            <span class="field__label" id="fe-level">{{ 'fitness.ex.level' | translate }}</span>
+            <div class="segmented" role="group" aria-labelledby="fe-level">
+              @for (l of levels; track l) {
+                <button type="button" class="segmented__option" [attr.aria-pressed]="e.level === l" (click)="setLevel(l)">{{ l }}</button>
+              }
+            </div>
+          </div>
+        </div>
+        <div class="field">
+          <span class="field__label" id="fe-tags">{{ 'fitness.ex.tags' | translate }}</span>
+          <div class="fd-chips" role="group" aria-labelledby="fe-tags">
+            @for (t of tags; track t) {
+              <button type="button" class="filter-chip" [attr.aria-pressed]="has(e.tags, t)" (click)="toggle('tags', t)">{{ 'sportask.panel.tpl.tags.' + t | translate }}</button>
+            }
+          </div>
+        </div>
+        <div class="field">
+          <span class="field__label" id="fe-zones">{{ 'fitness.ex.zones' | translate }}</span>
+          <div class="fd-chips" role="group" aria-labelledby="fe-zones">
+            @for (z of zones; track z) {
+              <button type="button" class="filter-chip" [attr.aria-pressed]="has(e.zones, z)" (click)="toggle('zones', z)">{{ 'sportask.panel.g.' + z | translate }}</button>
+            }
+          </div>
+        </div>
+      </div>
+
+      <div class="fd-section">
+        <h4>{{ 'fitness.ex.dosing' | translate }}</h4>
+        <div class="fd-row">
+          <div class="field">
+            <span class="field__label" id="fe-metric">{{ 'fitness.ex.metric' | translate }}</span>
+            <div class="segmented" role="group" aria-labelledby="fe-metric">
+              <button type="button" class="segmented__option" [attr.aria-pressed]="e.metric === 'reps'" (click)="setMetric('reps')">{{ 'sportask.panel.unit.reps' | translate }}</button>
+              <button type="button" class="segmented__option" [attr.aria-pressed]="e.metric === 'seconds'" (click)="setMetric('seconds')">{{ 'fitness.ex.seconds' | translate }}</button>
+            </div>
+          </div>
+          <div class="field">
+            <label class="field__label" for="fe-dose">{{ (e.metric === 'reps' ? 'fitness.ex.doseReps' : 'fitness.ex.doseSeconds') | translate }}</label>
+            <input id="fe-dose" class="input fd-num" type="number" min="1" [max]="e.metric === 'reps' ? 100 : 300" [value]="e.metric === 'reps' ? e.dose.reps : e.dose.seconds" (change)="setDose($event)" />
+          </div>
+          <div class="field">
+            <label class="field__label" for="fe-spr">{{ 'fitness.ex.secondsPerRep' | translate }}</label>
+            <input id="fe-spr" class="input fd-num" type="number" min="1" max="30" step="0.5" [value]="e.secondsPerRep ?? ''" placeholder="3" (change)="setNumber('secondsPerRep', $event)" />
+          </div>
+          <div class="field">
+            <label class="field__label" for="fe-met">MET</label>
+            <input id="fe-met" class="input fd-num" type="number" min="1" max="16" step="0.1" [value]="e.met" (change)="setNumber('met', $event)" />
+          </div>
+          <div class="field">
+            <label class="field__label" for="fe-met-preset">{{ 'fitness.ex.metPreset' | translate }}</label>
+            <select id="fe-met-preset" class="select" (change)="setMetPreset($event)">
+              <option value="" selected>—</option>
+              @for (m of metPresets; track m.key) {
+                <option [value]="m.value">{{ m.key }} · {{ m.value }}</option>
+              }
+            </select>
+          </div>
+        </div>
+        <div class="fe__switches">
+          <button type="button" class="switch" role="switch" [attr.aria-checked]="!!e.perSide" (click)="flag('perSide')"><span class="switch__track"></span>{{ 'fitness.ex.perSide' | translate }}</button>
+          <button type="button" class="switch" role="switch" [attr.aria-checked]="!!e.loadable" (click)="flag('loadable')"><span class="switch__track"></span>{{ 'fitness.ex.loadable' | translate }}</button>
+        </div>
+      </div>
+
+      <div class="fd-section">
+        <h4>{{ 'fitness.ex.safety' | translate }}</h4>
+        <div class="field">
+          <span class="field__label" id="fe-impact">{{ 'fitness.ex.impact' | translate }}</span>
+          <div class="segmented" role="group" aria-labelledby="fe-impact">
+            @for (i of impacts; track i) {
+              <button type="button" class="segmented__option" [attr.aria-pressed]="e.impact === i" (click)="setImpact(i)">{{ 'fitness.ex.impacts.' + i | translate }}</button>
+            }
+          </div>
+        </div>
+        <div class="fe__switches">
+          <button type="button" class="switch" role="switch" [attr.aria-checked]="e.floor" (click)="flag('floor')"><span class="switch__track"></span>{{ 'fitness.ex.floor' | translate }}</button>
+          <button type="button" class="switch" role="switch" [attr.aria-checked]="!!e.space" (click)="flag('space')"><span class="switch__track"></span>{{ 'fitness.ex.space' | translate }}</button>
+          <button type="button" class="switch" role="switch" [attr.aria-checked]="!!e.wall" (click)="flag('wall')"><span class="switch__track"></span>{{ 'fitness.ex.wall' | translate }}</button>
+          <button type="button" class="switch" role="switch" [attr.aria-checked]="!!e.chair" (click)="flag('chair')"><span class="switch__track"></span>{{ 'fitness.ex.chair' | translate }}</button>
+        </div>
+        <div class="field">
+          <span class="field__label" id="fe-needs">{{ 'fitness.ex.needs' | translate }}</span>
+          <div class="fd-chips" role="group" aria-labelledby="fe-needs">
+            @for (g of state.content().catalog.equipment.all; track g.id) {
+              <button type="button" class="filter-chip" [attr.aria-pressed]="has(e.needsOneOf, g.id)" (click)="toggle('needsOneOf', g.id)">{{ state.loc(g.name) }}</button>
+            }
+          </div>
+          <p class="fd-hint">{{ 'fitness.ex.needsHint' | translate }}</p>
+        </div>
+      </div>
+
+      <div class="fd-section">
+        <h4>{{ 'fitness.ex.usedIn' | translate }}</h4>
+        @if (usedIn().length > 0) {
+          <ul class="fd-problems">
+            @for (u of usedIn(); track u) {
+              <li>{{ u }}</li>
+            }
+          </ul>
+        } @else {
+          <p class="fd-hint">{{ 'fitness.ex.usedNowhere' | translate }}</p>
+        }
+        @if (isBuiltin()) {
+          <p class="fd-hint">{{ 'fitness.ex.replayHint' | translate }}</p>
+        }
+      </div>
+    </section>
+  } @else {
+    <section class="fd-detail"><p class="fd-empty">{{ 'fitness.ex.pick' | translate }}</p></section>
+  }
+</div>

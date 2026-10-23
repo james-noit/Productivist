@@ -1,0 +1,105 @@
+.fpv__controls {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  padding: 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: var(--color-surface);
+}
+
+.fpv__switches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem 1.2rem;
+}
+
+.fpv__results {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.fpv__block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: var(--color-surface);
+  min-width: 0;
+}
+
+.fpv__block h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.fpv__steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.fpv__step {
+  --sk-pict-size: 40px;
+  display: grid;
+  grid-template-columns: 1.4rem 40px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.35rem 0;
+  border-top: 1px solid var(--color-border);
+  color: var(--color-text);
+}
+
+.fpv__step:first-child {
+  border-top: none;
+}
+
+.fpv__n {
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+  text-align: center;
+}
+
+.fpv__name {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.fpv__meta {
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+}
+
+.fpv__time {
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  color: var(--color-text-muted);
+}
+
+.fpv__bar {
+  display: flex;
+  height: 0.5rem;
+  border-radius: 999px;
+  overflow: hidden;
+  background: var(--color-surface-alt);
+}
+
+.fpv__bar span {
+  display: block;
+  min-width: 1px;
+}
+
+.fpv__bar-work {
+  background: var(--color-primary);
+}
+
+.fpv__bar-rest {
+  background: color-mix(in srgb, var(--color-primary) 30%, transparent);
+}

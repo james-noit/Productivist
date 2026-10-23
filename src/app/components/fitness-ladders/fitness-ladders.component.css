@@ -1,0 +1,63 @@
+.fl__rung {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-bg);
+}
+
+.fl__rung-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.fl__rung-title {
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.fl__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.15rem 0.2rem 0.15rem 0.6rem;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: var(--color-surface);
+  font-size: 0.82rem;
+}
+
+.fl__chip--retired {
+  text-decoration: line-through;
+  color: var(--color-text-muted);
+}
+
+.fl__chip button {
+  display: inline-flex;
+  background: none;
+  border: none;
+  padding: 0.15rem;
+  border-radius: 50%;
+  color: var(--color-text-muted);
+}
+
+.fl__chip button:hover {
+  color: var(--color-high);
+}
+
+.fl__chip button:focus-visible {
+  outline: 2px solid var(--color-primary);
+}
+
+.fl__add {
+  max-width: 16rem;
+}
+
+.fl__up {
+  display: inline-flex;
+  transform: rotate(180deg);
+}

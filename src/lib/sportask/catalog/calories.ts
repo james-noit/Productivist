@@ -21,7 +21,7 @@ export const CALORIES_EXERCISES: ExerciseDef[] = [
     cueEs: 'Rodillas a la altura de la cadera, el brazo contrario impulsa y sin rebotes.',
   }),
   c('shadowBoxing', 'Boxeo de sombra', 'Shadow boxing', {
-    dose: '30s', lvl: 1, imp: 'low', met: 'boxing', pict: 'press',
+    dose: '30s', lvl: 1, imp: 'low', met: 'boxing', pict: 'punch',
     cue: 'Light on the feet, fast straight punches, guard back up each time.',
     cueEs: 'Ligero de pies, puñetazos rectos y rápidos, y vuelve a la guardia cada vez.',
   }),
@@ -36,17 +36,17 @@ export const CALORIES_EXERCISES: ExerciseDef[] = [
     cueEs: 'Da un paso amplio hacia el lado cruzando la otra pierna por detrás y balancea los brazos como un patinador.',
   }),
   c('stepBackBurpee', 'Burpee sin salto', 'Step-back burpee', {
-    dose: '6r', lvl: 2, imp: 'low', floor: true, met: 'vigorousCal', pict: 'plank', spr: 5,
+    dose: '6r', lvl: 2, imp: 'low', floor: true, met: 'vigorousCal', pict: 'burpee', spr: 5,
     cue: 'Hands down, step back to a plank, step in and stand tall.',
     cueEs: 'Apoya las manos, retrocede a una plancha, vuelve y ponte de pie erguido.',
   }),
   c('slowMountainClimber', 'Escalador lento', 'Slow mountain climbers', {
-    dose: '30s', lvl: 2, imp: 'low', floor: true, met: 'moderateCal', pict: 'plank',
+    dose: '30s', lvl: 2, imp: 'low', floor: true, met: 'moderateCal', pict: 'mountainClimber',
     cue: 'High plank, bring one knee in at a time, hips level.',
     cueEs: 'En plancha alta, lleva una rodilla cada vez hacia el pecho con la cadera nivelada.',
   }),
   c('bandThruster', 'Thruster con goma', 'Band thruster', {
-    dose: '12r', needs: ['band'], lvl: 2, met: 'resistanceVig', pict: 'squat',
+    dose: '12r', needs: ['band'], lvl: 2, met: 'resistanceVig', pict: 'thruster',
     cue: 'Stand on the band, squat, then press overhead as you rise.',
     cueEs: 'De pie sobre la goma, baja en sentadilla y empuja por encima de la cabeza al subir.',
   }),
@@ -71,7 +71,7 @@ export const CALORIES_EXERCISES: ExerciseDef[] = [
     cueEs: 'Salta de lado sobre un pie, aterriza suave, haz una pausa y vuelve al otro lado.',
   }),
   c('mountainClimber', 'Escaladores', 'Mountain climbers', {
-    dose: '30s', lvl: 3, imp: 'low', floor: true, met: 'vigorousCal', pict: 'plank',
+    dose: '30s', lvl: 3, imp: 'low', floor: true, met: 'vigorousCal', pict: 'mountainClimber',
     cue: 'Hands under the shoulders, drive the knees in fast, hips down.',
     cueEs: 'Manos bajo los hombros, lleva las rodillas al pecho con rapidez y mantén la cadera baja.',
   }),
@@ -81,12 +81,12 @@ export const CALORIES_EXERCISES: ExerciseDef[] = [
     cueEs: 'Trota sobre la cuerda un pie cada vez y mantente sobre la parte delantera del pie.',
   }),
   c('dumbbellThruster', 'Thruster con peso', 'Weighted thruster', {
-    dose: '10r', needs: ['dumbbells', 'kettlebell'], lvl: 3, hints: 'load', met: 'resistanceVig', pict: 'squat',
+    dose: '10r', needs: ['dumbbells', 'kettlebell'], lvl: 3, hints: 'load', met: 'resistanceVig', pict: 'thruster',
     cue: 'Weight at the shoulders, squat, then drive it overhead in one motion.',
     cueEs: 'Peso en los hombros, baja en sentadilla y súbelo sobre la cabeza en un solo movimiento.',
   }),
   c('burpee', 'Burpees', 'Burpees', {
-    dose: '6r', lvl: 4, imp: 'high', floor: true, met: 'vigorousCal', pict: 'jump', spr: 5,
+    dose: '6r', lvl: 4, imp: 'high', floor: true, met: 'vigorousCal', pict: 'burpee', spr: 5,
     cue: 'Chest to the floor is optional; jump with arms up and land softly.',
     cueEs: 'Bajar el pecho al suelo es opcional; salta con los brazos arriba y aterriza suave.',
   }),

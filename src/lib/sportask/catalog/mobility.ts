@@ -6,27 +6,27 @@ const m = makeExercise('mobility', 'mobility');
 /** CONTENT.md section 2. Every exercise: pattern mobility (unless noted), tag mobility, no impact, MET class stretch (unless noted). */
 export const MOBILITY_EXERCISES: ExerciseDef[] = [
   m('neckCars', 'Rotaciones de cuello controladas', 'Neck CARs', {
-    zones: ['neck'], dose: '3r', lvl: 1, met: 'stretch', pict: 'stretchStand', spr: 10,
+    zones: ['neck'], dose: '3r', lvl: 1, met: 'stretch', pict: 'neckTilt', spr: 10,
     cue: 'Slow, full circles; keep the shoulders down and never force the end range.',
     cueEs: 'Haz círculos lentos y completos; mantén los hombros abajo y no fuerces el final del recorrido.',
   }),
   m('chinTucks', 'Retracción de barbilla', 'Chin tucks', {
-    zones: ['neck'], dose: '10r', lvl: 1, met: 'stretch', pict: 'stretchStand', spr: 4,
+    zones: ['neck'], dose: '10r', lvl: 1, met: 'stretch', pict: 'chinTuck', spr: 4,
     cue: 'Slide the head straight back, make a double chin, hold 2 s.',
     cueEs: 'Desliza la cabeza recta hacia atrás, haz doble papada y mantén 2 s.',
   }),
   m('shoulderCars', 'Rotaciones de hombro controladas', 'Shoulder CARs', {
-    zones: ['shoulders'], dose: '3r', side: true, lvl: 1, met: 'stretch', pict: 'stretchStand', spr: 10,
+    zones: ['shoulders'], dose: '3r', side: true, lvl: 1, met: 'stretch', pict: 'armSweep', spr: 10,
     cue: 'Straight arm, draw the biggest slow circle you can without twisting the trunk.',
     cueEs: 'Con el brazo recto, dibuja el círculo más grande y lento que puedas sin girar el tronco.',
   }),
   m('wallAngels', 'Ángeles en la pared', 'Wall angels', {
-    zones: ['shoulders', 'thoracic'], dose: '8r', lvl: 2, hints: 'wall', met: 'stretch', pict: 'stretchStand', spr: 4,
+    zones: ['shoulders', 'thoracic'], dose: '8r', lvl: 2, hints: 'wall', met: 'stretch', pict: 'wallAngel', spr: 4,
     cue: 'Back, head and arms on the wall; slide up only as far as contact holds.',
     cueEs: 'Espalda, cabeza y brazos contra la pared; sube solo hasta donde mantengas el contacto.',
   }),
   m('doorwayChestStretch', 'Estiramiento de pecho en el marco', 'Doorway chest stretch', {
-    zones: ['shoulders'], dose: '30s', side: true, lvl: 1, hints: 'wall', met: 'stretch', pict: 'stretchStand',
+    zones: ['shoulders'], dose: '30s', side: true, lvl: 1, hints: 'wall', met: 'stretch', pict: 'doorStretch',
     cue: 'Forearm on the frame at shoulder height, step through until a gentle stretch.',
     cueEs: 'Apoya el antebrazo en el marco a la altura del hombro y da un paso hasta notar un estiramiento suave.',
   }),
@@ -46,7 +46,7 @@ export const MOBILITY_EXERCISES: ExerciseDef[] = [
     cueEs: 'Mueve un segmento cada vez: redondea al soltar el aire y arquea al tomarlo.',
   }),
   m('standingCatCow', 'Gato-vaca de pie', 'Standing cat-cow', {
-    zones: ['spine', 'thoracic'], dose: '8r', lvl: 1, met: 'stretch', pict: 'stretchStand', spr: 4,
+    zones: ['spine', 'thoracic'], dose: '8r', lvl: 1, met: 'stretch', pict: 'standingCatCow', spr: 4,
     cue: 'Hands on thighs, knees soft; round and arch the whole back slowly.',
     cueEs: 'Manos en los muslos y rodillas flexibles; redondea y arquea toda la espalda despacio.',
   }),
@@ -56,7 +56,7 @@ export const MOBILITY_EXERCISES: ExerciseDef[] = [
     cueEs: 'Zancada larga, lleva el codo hacia el empeine delantero y gira ese brazo hacia el techo.',
   }),
   m('hip9090', 'Cambios 90/90', '90/90 hip switches', {
-    zones: ['hips'], dose: '6r', side: true, lvl: 2, floor: true, met: 'stretch', pict: 'stretchFloor', spr: 4,
+    zones: ['hips'], dose: '6r', side: true, lvl: 2, floor: true, met: 'stretch', pict: 'hip9090', spr: 4,
     cue: 'Sit tall, swing both knees side to side; hands behind you if needed.',
     cueEs: 'Siéntate erguido y balancea las dos rodillas de un lado a otro; apoya las manos detrás si lo necesitas.',
   }),
@@ -66,12 +66,12 @@ export const MOBILITY_EXERCISES: ExerciseDef[] = [
     cueEs: 'Aprieta el glúteo de atrás y mete la pelvis; notarás el estiramiento en la parte delantera de la cadera.',
   }),
   m('standingHipCars', 'Rotaciones de cadera de pie', 'Standing hip CARs', {
-    zones: ['hips'], dose: '3r', side: true, lvl: 2, hints: 'wall', met: 'stretch', pict: 'stretchStand', spr: 10,
+    zones: ['hips'], dose: '3r', side: true, lvl: 2, hints: 'wall', met: 'stretch', pict: 'march', spr: 10,
     cue: 'Hold a wall, lift the knee and draw a slow, wide circle with it.',
     cueEs: 'Apóyate en una pared, sube la rodilla y dibuja con ella un círculo lento y amplio.',
   }),
   m('deepSquatHold', 'Sentadilla profunda mantenida', 'Deep squat hold', {
-    zones: ['hips', 'ankles'], dose: '30s', lvl: 2, hints: 'chair', met: 'stretch', pict: 'squat',
+    zones: ['hips', 'ankles'], dose: '30s', lvl: 2, hints: 'chair', met: 'stretch', pict: 'deepSquat',
     cue: 'Heels down, chest up, elbows nudging the knees out; hold a desk if needed.',
     cueEs: 'Talones en el suelo, pecho alto y codos empujando las rodillas hacia fuera; agárrate a una mesa si lo necesitas.',
   }),
@@ -81,7 +81,7 @@ export const MOBILITY_EXERCISES: ExerciseDef[] = [
     cueEs: 'Talón sobre un escalón bajo o el travesaño de una silla; inclínate desde la cadera con la espalda larga.',
   }),
   m('inchworm', 'Gusano', 'Inchworm', {
-    zones: ['hamstrings', 'shoulders'], tags: ['calories'], dose: '5r', lvl: 2, floor: true, met: 'lightCal', pict: 'plank', spr: 6,
+    zones: ['hamstrings', 'shoulders'], tags: ['calories'], dose: '5r', lvl: 2, floor: true, met: 'lightCal', pict: 'inchworm', spr: 6,
     cue: 'Walk the hands out to a plank and back with legs as straight as is comfortable.',
     cueEs: 'Camina con las manos hasta una plancha y vuelve, con las piernas tan rectas como te resulte cómodo.',
   }),
@@ -91,17 +91,17 @@ export const MOBILITY_EXERCISES: ExerciseDef[] = [
     cueEs: 'El talón se queda en el suelo; lleva la rodilla hacia la pared por encima de los dedos del medio.',
   }),
   m('wristCircles', 'Círculos de muñeca', 'Wrist circles', {
-    zones: ['wrists'], dose: '10r', lvl: 1, met: 'stretch', pict: 'stretchStand', spr: 2,
+    zones: ['wrists'], dose: '10r', lvl: 1, met: 'stretch', pict: 'wristStretch', spr: 2,
     cue: 'Fingers interlaced, roll the wrists slowly both ways.',
     cueEs: 'Con los dedos entrelazados, gira las muñecas despacio en ambos sentidos.',
   }),
   m('wristFlexorStretch', 'Estiramiento de flexores de muñeca', 'Wrist flexor stretch', {
-    zones: ['wrists'], dose: '20s', side: true, lvl: 1, met: 'stretch', pict: 'stretchStand',
+    zones: ['wrists'], dose: '20s', side: true, lvl: 1, met: 'stretch', pict: 'wristStretch',
     cue: 'Arm straight, palm up; gently draw the fingers back with the other hand.',
     cueEs: 'Brazo recto con la palma hacia arriba; tira suavemente de los dedos hacia atrás con la otra mano.',
   }),
   m('childPose', 'Postura del niño', "Child's pose", {
-    zones: ['spine', 'shoulders'], dose: '30s', lvl: 1, floor: true, met: 'stretch', pict: 'stretchFloor',
+    zones: ['spine', 'shoulders'], dose: '30s', lvl: 1, floor: true, met: 'stretch', pict: 'childPose',
     cue: 'Knees wide, reach the arms forward and breathe into your back.',
     cueEs: 'Rodillas separadas, estira los brazos hacia delante y respira hacia la espalda.',
   }),
@@ -121,7 +121,7 @@ export const MOBILITY_EXERCISES: ExerciseDef[] = [
     cueEs: 'Brazos a la altura de los hombros, abre la goma hasta el pecho y junta los omóplatos.',
   }),
   m('bandLyingHamstringStretch', 'Estiramiento de isquios con goma', 'Band lying hamstring stretch', {
-    zones: ['hamstrings'], dose: '30s', side: true, needs: ['band'], lvl: 1, floor: true, met: 'stretch', pict: 'stretchFloor',
+    zones: ['hamstrings'], dose: '30s', side: true, needs: ['band'], lvl: 1, floor: true, met: 'stretch', pict: 'lyingHamstring',
     cue: 'Band around the foot, lift the straight leg until a stretch; the other leg stays long.',
     cueEs: 'Pasa la goma por el pie y sube la pierna recta hasta notar el estiramiento; la otra pierna queda estirada.',
   }),
@@ -131,7 +131,7 @@ export const MOBILITY_EXERCISES: ExerciseDef[] = [
     cueEs: 'Sujeta la pesa por las asas y rodéate la cabeza con ella pegada al cuerpo, con las costillas abajo.',
   }),
   m('gobletSquatPry', 'Sentadilla goblet con apertura', 'Goblet squat pry', {
-    zones: ['hips', 'ankles'], dose: '30s', needs: ['kettlebell', 'dumbbells'], lvl: 2, hints: 'load', met: 'stretch', pict: 'squat',
+    zones: ['hips', 'ankles'], dose: '30s', needs: ['kettlebell', 'dumbbells'], lvl: 2, hints: 'load', met: 'stretch', pict: 'gobletSquat',
     cue: 'Sit deep holding the weight at the chest; gently push the knees out with the elbows.',
     cueEs: 'Baja profundo con el peso en el pecho y empuja suavemente las rodillas hacia fuera con los codos.',
   }),
@@ -146,7 +146,7 @@ export const MOBILITY_EXERCISES: ExerciseDef[] = [
     cueEs: 'Siéntate en el balón con los pies firmes y dibuja círculos con la cadera.',
   }),
   m('ballPrayerStretch', 'Estiramiento en oración con fitball', 'Ball prayer stretch', {
-    zones: ['shoulders', 'spine'], dose: '30s', needs: ['yogaBall'], lvl: 1, floor: true, met: 'stretch', pict: 'stretchFloor',
+    zones: ['shoulders', 'spine'], dose: '30s', needs: ['yogaBall'], lvl: 1, floor: true, met: 'stretch', pict: 'childPose',
     cue: 'Kneel, hands on the ball, roll it forward and sink the chest toward the floor.',
     cueEs: 'De rodillas con las manos sobre el balón, hazlo rodar hacia delante y hunde el pecho hacia el suelo.',
   }),

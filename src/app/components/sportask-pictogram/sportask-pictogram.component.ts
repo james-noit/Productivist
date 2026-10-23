@@ -1,35 +1,86 @@
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
-import { PICTOGRAMS } from '../../../lib/sportask/pictogram-paths';
+import { ChangeDetectionStrategy, Component, DestroyRef, Directive, ElementRef, computed, effect, inject, input, signal } from '@angular/core';
+import { PICTOGRAMS, tweenOf, type Part, type Pictogram } from '../../../lib/sportask/pictogram-paths';
+
+/** What a run of parts is drawn as: the ground and furniture share one group (so overlapping strokes do not darken), the rest is drawn one by one. */
+interface Item {
+  group: boolean;
+  parts: { i: number; part: Part }[];
+}
 
 /**
- * An exercise as a stick figure on a 64px grid, two key poses (A, B) drawn with strokes. While `animate` is on the poses alternate
- * (CSS `steps(1)` at the pictogram's own tempo); otherwise, and under `prefers-reduced-motion`, only pose A shows. Each pose has a
- * `main` layer (body and equipment) and a `soft` one (far limbs, floor), drawn twice: first an ink outline (`--sport-ink`, as wide as
- * `--sport-ink-width`, nothing when that is 0), then the stroke itself (`--sport-stroke`, `--sport-stroke-width`, with the skin's
- * glow filter). Plain fallbacks apply until a skin sets the tokens. Decorative: the name next to it is the label.
+ * Sets `values` of an `<animate>` from code: a bound `[attr.values]` there goes through Angular's URL sanitizer, which would be pulled
+ * into the initial bundle (+1 kB, measured).
+ */
+@Directive({ selector: 'animate[appValues]', standalone: true })
+export class PictogramValuesDirective {
+  readonly appValues = input.required<string>();
+
+  constructor() {
+    const el = inject<ElementRef<SVGElement>>(ElementRef).nativeElement;
+    effect(() => el.setAttribute('values', this.appValues()));
+  }
+}
+
+/**
+ * An exercise as a figure on a 64px grid, two key poses (A, B) of one body (docs/sportask/PICTOGRAMS.md). While `animate` is on the figure
+ * moves between them (SMIL on the paths' `d`, eased, through `tweenOf`'s in-between frames; one cycle takes the pictogram's tempo);
+ * otherwise, and under `prefers-reduced-motion`, only pose A shows, with the other pose as a faint dashed ghost behind it (not at small
+ * sizes), so the direction is still readable. The parts are drawn back to front: ground and furniture, the far limbs (dimmer), the torso,
+ * the near limbs, the head, the equipment and a dot on each joint. Every part but the ground, the far limbs and the dots gets a halo
+ * first (`--sport-halo`, `--sport-halo-width`: the surface colour by default, cyberpunk's dark ink), so a limb in front of the body or
+ * of another limb stays separate. Colours: `--sport-stroke` (body), `--sport-prop` (equipment), `--sport-halo`; widths scale with
+ * `--sport-stroke-width`; the far limbs and the ground use `--sport-soft-opacity`; `--sport-glow-filter` glows the figure. Plain fallbacks
+ * from the theme apply until a skin sets the tokens. Decorative: the name next to it is the label.
  */
 @Component({
   selector: 'app-sportask-pictogram',
   standalone: true,
+  imports: [PictogramValuesDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <svg viewBox="0 0 64 64" aria-hidden="true" focusable="false" [class.sk-pict--live]="animate()" [style.--sk-pict-period]="tempo() + 's'">
-      @for (pose of poses(); track pose.key) {
-        <g [class]="'sk-pict__pose sk-pict__pose--' + pose.key">
-          <path class="sk-pict__ink sk-pict__soft" [attr.d]="pose.soft" />
-          <path class="sk-pict__line sk-pict__soft" [attr.d]="pose.soft" />
-          <path class="sk-pict__ink" [attr.d]="pose.main" />
-          <path class="sk-pict__line" [attr.d]="pose.main" />
-        </g>
+    <svg viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+      @if (ghost(); as g) {
+        <path class="sk-pict__ghost" [attr.d]="g" />
+      }
+      @for (item of items(); track $index) {
+        @if (item.group) {
+          <g class="sk-pict__set">
+            @for (p of item.parts; track p.i) {
+              <path class="sk-pict__line sk-pict__set-line" [style.--w]="p.part.w" [attr.d]="p.part.d" />
+            }
+          </g>
+        } @else {
+          @for (p of item.parts; track p.i) {
+            @if (p.part.r !== 'far' && p.part.r !== 'dot') {
+              <path [class]="'sk-pict__halo sk-pict__' + p.part.r" [style.--w]="p.part.w" [attr.d]="p.part.d">
+                @if (tween(); as t) {
+                  <animate attributeName="d" [appValues]="t.values[p.i]!.join(';')" [attr.keyTimes]="t.keyTimes" [attr.dur]="dur()" repeatCount="indefinite" calcMode="linear" />
+                }
+              </path>
+            }
+            <path [class]="'sk-pict__line sk-pict__' + p.part.r + (p.part.f ? ' sk-pict__fill' + p.part.f : '')" [style.--w]="p.part.w" [attr.d]="p.part.d">
+              @if (tween(); as t) {
+                <animate attributeName="d" [appValues]="t.values[p.i]!.join(';')" [attr.keyTimes]="t.keyTimes" [attr.dur]="dur()" repeatCount="indefinite" calcMode="linear" />
+              }
+            </path>
+          }
+        }
       }
     </svg>
   `,
   styles: `
     :host {
+      --sk-k: calc(var(--sport-stroke-width, 3) / 3);
+      --sk-line: var(--sport-stroke, var(--color-primary));
+      --sk-prop: var(--sport-prop, var(--color-quadrant-schedule, var(--sk-line)));
+      --sk-halo: var(--sport-halo, var(--sport-card-bg, var(--color-surface, transparent)));
+      --sk-halo-w: var(--sport-halo-width, 1.2);
+      --sk-soft: var(--sport-soft-opacity, 0.5);
       display: inline-flex;
       flex: none;
       width: var(--sk-pict-size, 64px);
       height: var(--sk-pict-size, 64px);
+      container-type: inline-size;
     }
 
     svg {
@@ -39,6 +90,8 @@ import { PICTOGRAMS } from '../../../lib/sportask/pictogram-paths';
       stroke-linecap: round;
       stroke-linejoin: round;
       overflow: visible;
+      /* The skin's glow, once for the whole figure (a filter per part would be redrawn on every frame of the animation). */
+      filter: var(--sport-glow-filter, none);
     }
 
     path {
@@ -46,69 +99,56 @@ import { PICTOGRAMS } from '../../../lib/sportask/pictogram-paths';
     }
 
     .sk-pict__line {
-      stroke: var(--sport-stroke, var(--color-primary));
-      stroke-width: var(--sport-stroke-width, 3);
-      filter: var(--sport-glow-filter, none);
+      stroke: var(--sk-line);
+      stroke-width: calc(var(--w) * var(--sk-k));
     }
 
-    .sk-pict__ink {
-      stroke: var(--sport-ink, transparent);
-      stroke-width: var(--sport-ink-width, 0);
+    .sk-pict__halo {
+      stroke: var(--sk-halo);
+      stroke-width: calc(var(--w) * var(--sk-k) + 2 * var(--sk-halo-w));
     }
 
-    .sk-pict__line.sk-pict__soft {
-      stroke-width: calc(var(--sport-stroke-width, 3) * 0.78);
-      opacity: var(--sport-soft-opacity, 0.5);
-      filter: none;
+    .sk-pict__far {
+      stroke-width: calc(var(--w) * var(--sk-k) * 0.86);
+      opacity: var(--sk-soft);
     }
 
-    .sk-pict__ink.sk-pict__soft {
-      stroke-width: calc(var(--sport-ink-width, 0) * 0.78);
-      opacity: var(--sport-soft-opacity, 0.5);
+    .sk-pict__set {
+      opacity: calc(var(--sk-soft) * 0.8);
     }
 
-    .sk-pict__pose--b {
-      visibility: hidden;
+    .sk-pict__dot {
+      stroke: var(--sk-halo);
     }
 
-    .sk-pict--live .sk-pict__pose--a {
-      animation: sk-pose-a var(--sk-pict-period, 1.2s) steps(1) infinite;
+    .sk-pict__head.sk-pict__line {
+      fill: var(--sk-line);
     }
 
-    .sk-pict--live .sk-pict__pose--b {
-      animation: sk-pose-b var(--sk-pict-period, 1.2s) steps(1) infinite;
+    .sk-pict__prop.sk-pict__line {
+      stroke: var(--sk-prop);
     }
 
-    @keyframes sk-pose-a {
-      0% {
-        visibility: visible;
-      }
-      50%,
-      100% {
-        visibility: hidden;
-      }
+    .sk-pict__prop.sk-pict__fill1 {
+      fill: var(--sk-prop);
     }
 
-    @keyframes sk-pose-b {
-      0% {
-        visibility: hidden;
-      }
-      50%,
-      100% {
-        visibility: visible;
-      }
+    .sk-pict__prop.sk-pict__fill2 {
+      fill: var(--sk-prop);
+      fill-opacity: 0.22;
     }
 
-    @media (prefers-reduced-motion: reduce) {
-      .sk-pict--live .sk-pict__pose--a,
-      .sk-pict--live .sk-pict__pose--b {
-        animation: none;
-      }
-      .sk-pict--live .sk-pict__pose--a {
-        visibility: visible;
-      }
-      .sk-pict--live .sk-pict__pose--b {
-        visibility: hidden;
+    .sk-pict__ghost {
+      stroke: var(--sk-line);
+      stroke-width: 0.9;
+      stroke-dasharray: 1.2 2;
+      opacity: 0.55;
+      display: none;
+    }
+
+    @container (min-width: 80px) {
+      .sk-pict__ghost {
+        display: inline;
       }
     }
   `,
@@ -117,14 +157,40 @@ export class SportaskPictogramComponent {
   readonly id = input.required<string>();
   readonly animate = input(false);
 
-  private readonly drawing = computed(() => (PICTOGRAMS as Record<string, (typeof PICTOGRAMS)[keyof typeof PICTOGRAMS] | undefined>)[this.id()] ?? PICTOGRAMS.march);
+  private readonly reduced = signal(false);
 
-  protected readonly tempo = computed(() => this.drawing().tempo);
-  protected readonly poses = computed(() => {
-    const p = this.drawing();
-    return [
-      { key: 'a', main: p.a.main.join(''), soft: p.a.soft.join('') },
-      { key: 'b', main: p.b.main.join(''), soft: p.b.soft.join('') },
-    ];
+  constructor() {
+    const query = typeof window !== 'undefined' ? window.matchMedia?.('(prefers-reduced-motion: reduce)') : undefined;
+    if (query) {
+      this.reduced.set(query.matches);
+      const on = (e: MediaQueryListEvent): void => this.reduced.set(e.matches);
+      query.addEventListener('change', on);
+      inject(DestroyRef).onDestroy(() => query.removeEventListener('change', on));
+    }
+  }
+
+  private readonly drawing = computed<Pictogram>(() => (PICTOGRAMS as Record<string, Pictogram | undefined>)[this.id()] ?? PICTOGRAMS.march);
+  protected readonly moving = computed(() => this.animate() && !this.reduced());
+  protected readonly tween = computed(() => (this.moving() ? tweenOf(this.drawing()) : null));
+  protected readonly dur = computed(() => this.drawing().tempo + 's');
+
+  protected readonly items = computed<Item[]>(() => {
+    const items: Item[] = [];
+    this.drawing().a.parts.forEach((part, i) => {
+      const group = part.r === 'set';
+      const last = items[items.length - 1];
+      if (group && last?.group) last.parts.push({ i, part });
+      else items.push({ group, parts: [{ i, part }] });
+    });
+    return items;
+  });
+
+  /** The other pose as one dashed path (skeleton lines and the head), for a still figure. */
+  protected readonly ghost = computed(() => {
+    if (this.moving()) return null;
+    return this.drawing()
+      .b.parts.filter((p) => p.r === 'torso' || p.r === 'limb' || p.r === 'far' || (p.r === 'head' && p.w > 0.5))
+      .map((p) => p.d)
+      .join('');
   });
 }

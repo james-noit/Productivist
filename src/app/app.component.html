@@ -28,6 +28,12 @@
   } @placeholder {
     <div class="view-loading" aria-hidden="true"></div>
   }
+} @else if (view.current() === 'fitness' && accounts.isFitnessDirector()) {
+  @defer (on immediate) {
+    <app-fitness-view />
+  } @placeholder {
+    <div class="view-loading" aria-hidden="true"></div>
+  }
 } @else if (view.current() === 'sportask' && sportaskSettings.enabled()) {
   @defer (on immediate) {
     <app-sportask-view />

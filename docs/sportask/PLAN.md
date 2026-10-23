@@ -1068,7 +1068,10 @@ and why, what was verified and how, and what is not done.
 - **Fonts**: one weight each (JetBrains Mono 700 (0.24; Orbitron before), Quicksand 700, latin woff2 copied from `@fontsource` 5.3.0, not a dependency); a request for
   600 resolves to it.
 - **Pictograms** (section 9.3): 17 figures built with forward kinematics from one body (same segment lengths everywhere) instead of
-  hand-written per-figure paths; per-exercise artwork is still a later phase.
+  hand-written per-figure paths; per-exercise artwork is still a later phase. **0.26 redraw** (review, principles, what is deferred:
+  `docs/sportask/PICTOGRAMS.md`): the same rig drawn as a mannequin (capsule torso, filled head with a nose, joint dots, halo, far limbs
+  behind, ground, mat, furniture, equipment in its own colour), 53 figures (36 added, 49 exercises remapped, `CATALOG_VERSION` 2), eased
+  SMIL motion between the poses (`tweenOf`) with a dashed ghost of the other pose when the figure is still.
 - **Results form shared** (phase 7): `sportask-results-form` (two-way models) is used by the break modal's last screen and by the
   History's *Edit marks* dialog (`sportask-marks-modal`); rows and their conversion are in `lib/sportask/results.ts`.
 - **A rest-day block** is labelled in the preview with *Train anyway* (regenerates with the main goal), as in section 8.1; a `meta`

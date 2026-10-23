@@ -12,6 +12,7 @@ import type {
   MetricKind,
   SportBlock,
   SportProfile,
+  SportTemplate,
 } from '../../../types/sportask';
 import type { Registry } from '../registry';
 import type { Adaptation } from './adapt';
@@ -42,6 +43,9 @@ export interface GenerationContext {
   now: number;
   today: string;
   catalog: Catalog;
+  /** The goals and built-in templates to plan with; absent = the live registries. The Fitness director's preview and checks inject layered ones. */
+  goals?: Registry<AnyGoal>;
+  templates?: Registry<SportTemplate>;
   equipment: EquipmentInventory;       // the effective one (override or settings)
   constraints: Constraints;
   history: readonly SportBlock[];      // every non-deleted block, oldest first

@@ -29,6 +29,8 @@ export interface AdminStats {
   recurrences?: number;
   /** Sportask training blocks; no admin UI shows it yet. */
   sportBlocks?: number;
+  /** The published Sportask catalog version (0 = nothing published); no admin UI shows it yet. */
+  catalogVersion?: number;
 }
 
 interface UserPage {

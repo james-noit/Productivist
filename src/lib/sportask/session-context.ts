@@ -1,8 +1,9 @@
 import { todayIso, toIso } from '../dates';
 import type { BlockStatus, EquipmentInventory, Feedback, PendingBlock, SportBlock, SportaskSettings, StepResult } from '../../types/sportask';
-import { CATALOG, CATALOG_VERSION } from './catalog';
+import { CATALOG } from './catalog';
 import type { GenerationContext } from './engine/context';
 import { rngFor } from './engine/rng';
+import { effectiveCatalogVersion } from './overlay/version';
 
 export interface ContextInput {
   blockId: string;
@@ -57,7 +58,7 @@ export function blockRow(pending: PendingBlock, marks: BlockMarks): SportBlock {
     steps: plan.steps,
     results: marks.results,
     status: marks.status,
-    catalogVersion: CATALOG_VERSION,
+    catalogVersion: effectiveCatalogVersion(),
     createdAt: now,
     updatedAt: now,
   };

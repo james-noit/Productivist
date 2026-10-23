@@ -4,7 +4,7 @@ import { addDays, startOfWeek } from '../src/lib/dates';
 import { hashWith, sportBlockCodec, sportTemplateCodec, type SportBlockWire, type SportTemplateWire } from '../src/lib/sync-engine';
 import { CADENCES, breakSecondsFor, resolveCadence } from '../src/lib/sportask/cadences';
 import { CATALOG, CATALOG_VERSION, MET, PICTOGRAM_IDS } from '../src/lib/sportask/catalog';
-import { PICTOGRAMS } from '../src/lib/sportask/pictogram-paths';
+import { PICTOGRAMS, tweenOf } from '../src/lib/sportask/pictogram-paths';
 import type { AnyGoal, GenerationContext } from '../src/lib/sportask/engine/context';
 import { MIN_FILL_SECONDS } from '../src/lib/sportask/engine/fit';
 import { available } from '../src/lib/sportask/engine/filter';
@@ -30,6 +30,19 @@ import { adaptation, daysAway, effortOf, returnFactor } from '../src/lib/sportas
 import { ACTIVITY_LEVELS, REACH_LEVELS, capacityFactor, desiredRung, hasProfile, trainingDays } from '../src/lib/sportask/profile';
 import { adaptedMinutes, baseWeeklyMinutes, goalTargets, nextTestTarget } from '../src/lib/sportask/targets';
 import { SPORTASK_TEXTS } from '../src/i18n/sportask-texts';
+import { FITNESS_TEXTS } from '../src/i18n/fitness-texts';
+import { applyOverlay } from '../src/lib/sportask/overlay/apply';
+import { diffOverlays, exerciseEntry, isEmptyOverlay, keepPublished, newItemId, patchEntry, putEntry, removeEntry, sameOverlay } from '../src/lib/sportask/overlay/edit';
+import { contentFor } from '../src/lib/sportask/overlay/merge';
+import { phaseEntries, programEntry, withGoalTexts, withProgram } from '../src/lib/sportask/overlay/program-edit';
+import { type PreviewOptions, previewBlock } from '../src/lib/sportask/overlay/preview';
+import { sanitizeOverlay, sanitizeOverlayReport } from '../src/lib/sportask/overlay/sanitize-overlay';
+import { smokeTest } from '../src/lib/sportask/overlay/smoke';
+import { usableOverlay } from '../src/lib/sportask/overlay/store';
+import { type CatalogOverlay, type ExerciseEntry, emptyOverlay, isNewId } from '../src/lib/sportask/overlay/types';
+import { ISSUE_CODES, type Issue, errorsOf, validateOverlay } from '../src/lib/sportask/overlay/validate';
+import { appliedOverlayVersion, effectiveCatalogVersion } from '../src/lib/sportask/overlay/version';
+import { ladderIndex } from '../src/lib/sportask/engine/progression';
 import type { BlockPlan, BlockStep, Constraints, Enrolment, EquipmentInventory, SportBlock, SportProfile, SportTemplate, StepResult } from '../src/types/sportask';
 
 const proc = (globalThis as unknown as { process: { exitCode?: number } }).process;
@@ -1479,6 +1492,378 @@ function checkAdaptive(): void {
   }
 }
 
+// ---------------------------------------------------------------- 13. pictograms (0.26 redraw, docs/sportask/PICTOGRAMS.md)
+
+function checkPictograms(): void {
+  section('13. pictograms: structure, bounds, one rigid body, in-between frames');
+  const FIRST_17 = ['squat', 'lunge', 'hinge', 'bridge', 'pushup', 'plank', 'sidePlank', 'row', 'press', 'pullApart', 'jump', 'march', 'rope', 'ballSit', 'seated', 'stretchStand', 'stretchFloor'];
+  // ids are stored: the first version's ids stay, in place, and the list only grows
+  FIRST_17.forEach((id, i) => check(PICTOGRAM_IDS[i] === id, `pictogram id #${i} is still ${id}`));
+  check(new Set(PICTOGRAM_IDS).size === PICTOGRAM_IDS.length, 'pictogram ids are unique');
+  check(Object.keys(PICTOGRAMS).length === PICTOGRAM_IDS.length, 'PICTOGRAMS has exactly the ids of PICTOGRAM_IDS');
+  const skeleton = (d: string): string => d.replace(/-?\d+(\.\d+)?/g, '#');
+  const ROLES = ['far', 'torso', 'limb', 'head', 'dot', 'prop', 'set'];
+  // the one body (pre-fit lengths): thigh, shin (near, far), upper arm, forearm (near, far), torso
+  const BODY = [12, 12, 12, 12, 8.5, 7.6, 8.5, 7.6, 15];
+  const used = new Set<string>();
+  for (const ex of CATALOG.exercises.all) used.add(ex.pictogram);
+  let unused = 0;
+  for (const id of PICTOGRAM_IDS) {
+    const p = PICTOGRAMS[id];
+    const t0 = p.a.parts;
+    check(t0.length >= 8, `pictogram ${id}: at least a torso, a head, four limbs and the dots`);
+    check(p.b.parts.length === t0.length, `pictogram ${id}: A and B have the same parts`);
+    // parts of a pose line up with the other pose and with every in-between frame, so the component can animate between them
+    const frames = [0, 0.2, 0.5, 0.8, 1].map((t) => p.at(t));
+    for (const f of [p.a, p.b, ...frames]) {
+      check(f.parts.length === t0.length, `pictogram ${id}: every frame has the same number of parts`);
+      f.parts.forEach((part, i) => {
+        const ref = t0[i]!;
+        check(ROLES.includes(part.r), `pictogram ${id}: a known role (${part.r})`);
+        check(part.r === ref.r && part.f === ref.f && Math.abs(part.w - ref.w) < 1e-9, `pictogram ${id}: part ${i} keeps its role, fill and width`);
+        check(skeleton(part.d) === skeleton(ref.d), `pictogram ${id}: part ${i} keeps its path commands (needed to animate it)`);
+        check(/^M[-\d. ]+[aLC]/.test(part.d), `pictogram ${id}: part ${i} is path data of M, L, C and a`);
+        for (const v of part.d.match(/-?\d+(\.\d+)?/g) ?? []) check(Number.isFinite(Number(v)), `pictogram ${id}: a finite number`);
+      });
+      // inside the grid with a margin for the stroke (the ground line sits at 61)
+      for (const part of f.parts) {
+        if (part.r === 'set') continue;
+        // absolute points only: a circle's arcs are relative offsets after the first `a`
+        const nums = (part.d.replace(/a.*$/, '').match(/-?\d+(\.\d+)?/g) ?? []).map(Number);
+        for (const v of nums) check(v > -14 && v < 80, `pictogram ${id}: ${v} is inside the grid (curve control points may stray a little)`);
+      }
+    }
+    check(p.a.parts.some((part, i) => part.d !== p.b.parts[i]!.d), `pictogram ${id}: A and B differ`);
+    check(p.b.parts.some((part, i) => part.d !== p.at(0.5).parts[i]!.d), `pictogram ${id}: the middle frame is neither pose`);
+    // a rigid body: every segment keeps its length through the whole movement, and it is the same body in every figure
+    const bones0 = p.bones(0);
+    check(bones0.length === BODY.length, `pictogram ${id}: bones`);
+    bones0.forEach((len, i) => check(Math.abs(len - BODY[i]!) < 1e-6, `pictogram ${id}: bone ${i} is ${len}, not ${BODY[i]}`));
+    for (let k = 1; k <= 20; k++) p.bones(k / 20).forEach((len, i) => check(Math.abs(len - BODY[i]!) < 1e-6, `pictogram ${id}: bone ${i} keeps its length at t=${k / 20} (${len})`));
+    // the legacy fields still carry the strokes
+    check(p.a.main.length > 0 && p.b.main.length > 0, `pictogram ${id}: main strokes`);
+    // the animation: times rise from 0 to 1, one list of values per part, each as long as the times
+    const tw = tweenOf(p);
+    const times = tw.keyTimes.split(';').map(Number);
+    check(times[0] === 0 && times[times.length - 1] === 1, `pictogram ${id}: keyTimes run from 0 to 1`);
+    check(times.every((t, i) => i === 0 || t > times[i - 1]!), `pictogram ${id}: keyTimes strictly rise`);
+    check(tw.values.length === t0.length && tw.values.every((v) => v.length === times.length), `pictogram ${id}: a value for every part at every time`);
+    check(tw.values.every((v) => v.every((d) => skeleton(d) === skeleton(v[0]!))), `pictogram ${id}: the frames of a part share their commands`);
+    check(tweenOf(p) === tw, `pictogram ${id}: the animation is built once`);
+    if (!used.has(id)) unused++;
+  }
+  // every exercise draws with an existing figure (also checked in section 1), and the figures are not all one: more than 25 of them are in use
+  check(used.size >= 25, `at least 25 figures are in use (${used.size})`);
+  check(unused <= 6, `few figures are unused (${unused})`);
+  // the component falls back to a figure when the id is unknown (a stored or hand-edited one)
+  check(PICTOGRAMS.march.a.parts.length > 0, 'the fallback figure exists');
+}
+
+// ---------------------------------------------------------------- 14. fitness director overlay (docs/sportask/DIRECTOR.md)
+
+function checkDirector(): void {
+  section('14. fitness director: catalog overlay, merge, validation, application');
+  const stableJson = (v: unknown): string => stable(v);
+
+  // ---- layerable registries
+  {
+    const r = createRegistry([{ id: 'a', v: 1 }, { id: 'b', v: 2 }]);
+    check(r.base.length === 2 && r.all.length === 2 && r.revision === 0, 'a registry starts on its base');
+    r.replace([{ id: 'a', v: 9 }, { id: 'c', v: 3 }]);
+    check(r.get('a')?.v === 9 && r.get('b') === undefined && r.get('c')?.v === 3 && r.all.length === 2 && r.revision === 1, 'replace swaps what all/get/byId read');
+    check(r.base.length === 2 && r.base[0]!.v === 1, 'the base is untouched by replace');
+    r.replace(r.base);
+    check(r.get('b')?.v === 2 && r.revision === 2, 'replace(base) restores the built-ins');
+    let threw = false;
+    try {
+      r.replace([{ id: 'x', v: 1 }, { id: 'x', v: 2 }]);
+    } catch {
+      threw = true;
+    }
+    check(threw && r.get('b')?.v === 2, 'a duplicate id is refused and leaves the registry as it was');
+  }
+
+  // ---- nothing layered = the built-ins, exactly
+  const none = contentFor(null);
+  check(none.catalog.exercises.all.length === CATALOG.exercises.base.length && none.catalog.exercises.all.every((e, i) => e === CATALOG.exercises.base[i]), 'no overlay: the same exercise objects, in order');
+  check(stableJson(none.catalog.ladders.all) === stableJson(CATALOG.ladders.base) && stableJson(none.catalog.assessments.all) === stableJson(CATALOG.assessments.base), 'no overlay: ladders and assessments');
+  check(none.goals.all.length === GOALS.base.length && none.templates.all.length === BUILTIN_TEMPLATES.base.length && none.cadences.all.length === CADENCES.base.length, 'no overlay: goals, templates and cadences');
+  check(contentFor({ schema: 1 }).goals.all.every((g, i) => g === GOALS.base[i]), 'an empty overlay changes nothing');
+
+  // ---- merge
+  const bear = (id: string, over: Partial<ExerciseEntry> = {}): ExerciseEntry => ({
+    id, name: { en: 'Bear crawl', es: 'Gateo del oso' }, cues: [{ en: 'Hips low, knees just off the floor.', es: 'Caderas bajas, rodillas apenas despegadas.' }],
+    pattern: 'core', tags: ['strength', 'calories'], metric: 'seconds', level: 3, impact: 'low', floor: true, met: 5, dose: { seconds: 30 }, pictogram: 'plank', needsOneOf: [], space: true, ...over,
+  });
+  const pushUp = CATALOG.exercises.base.find((e) => e.id === 'pushUp')!;
+  {
+    const c = contentFor({ schema: 1, exercises: [{ id: 'pushUp', level: 4, dose: { reps: 12 } }, bear('fd-bearCrawl'), bear('fd-aaa')] });
+    const p = c.catalog.exercises.get('pushUp')!;
+    check(p.level === 4 && p.dose.reps === 12 && same(p.name, pushUp.name) && same(p.cues, pushUp.cues) && p.pictogram === pushUp.pictogram, 'a patch changes only its fields');
+    check(pushUp.level === 3 && pushUp.dose.reps === 8 && CATALOG.exercises.get('pushUp') === pushUp, 'the built-in object is never mutated');
+    check(c.catalog.exercises.get('airSquat') === CATALOG.exercises.get('airSquat'), 'an exercise without a patch is the very same object');
+    const ids = c.catalog.exercises.all.map((e) => e.id);
+    check(ids.slice(0, CATALOG.exercises.base.length).every((id, i) => id === CATALOG.exercises.base[i]!.id) && ids.slice(-2).join() === 'fd-aaa,fd-bearCrawl', 'built-ins keep their order, new items follow sorted by id');
+    check(c.catalog.exercises.get('fd-bearCrawl')!.name.es === 'Gateo del oso', 'a new exercise is as written');
+    const undef = contentFor({ schema: 1, exercises: [{ id: 'pushUp', level: undefined, impact: undefined } as ExerciseEntry] });
+    check(undef.catalog.exercises.get('pushUp')!.level === 3 && undef.catalog.exercises.get('pushUp')!.impact === 'none', 'a key set to undefined never erases the built-in value');
+    const ghost = contentFor({ schema: 1, exercises: [{ id: 'notThere', level: 2 }], ladders: [{ id: 'fd-lad', rungs: [['pushUp']] }] });
+    check(ghost.catalog.exercises.all.length === CATALOG.exercises.base.length, 'a patch for an unknown non-fd id is ignored, never an exercise');
+    const incomplete = contentFor({ schema: 1, exercises: [{ id: 'fd-half' }] });
+    check(incomplete.catalog.exercises.get('fd-half')?.dose.reps === 8, 'a new item missing fields gets defaults instead of breaking the merge');
+  }
+
+  // ---- sanitize (untrusted input)
+  {
+    for (const junk of [null, undefined, 5, 'x', [], [1, 2], true]) check(same(sanitizeOverlay(junk), { schema: 1 }), `junk ${JSON.stringify(junk)} sanitises to the empty overlay`);
+    const messy = {
+      schema: 99, zzz: 1,
+      exercises: [{ id: 'pushUp', level: 4, dose: { reps: 12 }, bogus: 1 }, { id: 'pushUp', level: 1 }, { id: 'has space' }, 7, { id: 'fd-n', level: 'high', pattern: 'swim', impact: 'high', name: { en: ' Hi ', es: 'Hola' }, zones: ['hips', 'knee'] }],
+      ladders: { not: 'a list' },
+      cadences: [{ id: 'fd-c', focusSeconds: 'x', breakSeconds: 120, longBreak: null }],
+    };
+    const report = sanitizeOverlayReport(messy);
+    const o = report.overlay;
+    check(o.schema === 1 && !('zzz' in o) && !('ladders' in o), 'unknown top-level keys and non-list sections are dropped');
+    check(o.exercises!.length === 2 && o.exercises![0]!.id === 'fd-n' && o.exercises![1]!.id === 'pushUp', 'entries are unique, valid and sorted by id');
+    check(same(o.exercises![1], { id: 'pushUp', level: 4, dose: { reps: 12 } }), 'unknown fields are dropped from an entry');
+    check(same(o.exercises![0], { id: 'fd-n', impact: 'high', name: { en: 'Hi', es: 'Hola' }, zones: ['hips'] }), 'wrong-typed fields and unknown vocabulary are dropped, texts trimmed');
+    check(o.cadences![0]!.longBreak === null && o.cadences![0]!.breakSeconds === 120 && o.cadences![0]!.focusSeconds === undefined, 'null removes a long break; a bad number is dropped');
+    check(report.dropped.some((d) => d.startsWith('exercises[2]')) && report.dropped.includes('ladders') && report.dropped.includes('exercises[1]') && report.dropped.includes('exercises[3]'), 'what was left out is reported');
+    const clean: CatalogOverlay = { schema: 1, exercises: [bear('fd-b')], templates: [{ id: 'fd-t', nameText: { en: 'T', es: 'T' }, slots: [{ exerciseId: 'pushUp', dose: { reps: 5 } }, { pattern: 'push', tag: 'strength', maxLevel: 2 }], format: 'intervals', workSeconds: 20, restSeconds: 10, minSeconds: 60 }] };
+    check(same(sanitizeOverlay(structuredClone(clean)), clean), 'a clean overlay survives sanitising unchanged');
+    check(same(sanitizeOverlay(sanitizeOverlay(messy)), sanitizeOverlay(messy)), 'sanitising is idempotent');
+  }
+
+  // ---- a complete, realistic overlay passes every check
+  const mobility = GOALS.get('mobility')!;
+  const deskPhases = phaseEntries(mobility.programs[0]!);
+  const good: CatalogOverlay = {
+    schema: 1,
+    exercises: [{ id: 'pushUp', level: 3, dose: { reps: 10 }, cues: [{ en: 'Body rigid, chest to fist height.', es: 'Cuerpo rígido, pecho a la altura del puño.' }] }, bear('fd-bearCrawl')],
+    ladders: [{ id: 'core', rungs: CATALOG.ladders.base.find((l) => l.id === 'core')!.rungs.map((r, i) => (i === 2 ? [...r, 'fd-bearCrawl'] : [...r])) }],
+    assessments: [{ id: 'strPlank', instructions: { en: 'Hold a straight plank as long as you can.', es: 'Mantén una plancha recta todo lo que puedas.' }, seconds: 150 }],
+    equipment: [{ id: 'fd-trx', name: { en: 'Suspension trainer', es: 'Entrenador de suspensión' }, icon: 'rope' }],
+    goals: [{ id: 'mobility', name: { en: 'Better mobility', es: 'Mejor movilidad' }, programs: [{ id: 'deskReset', phases: deskPhases.map((p, i) => (i === 0 ? { ...p, params: { ...p.params, holdSeconds: 30 } } : p)) }] }],
+    templates: [{ id: 'tpl.deskReset', nameText: { en: 'Desk reset v2', es: 'Reinicio de escritorio v2' } }, { id: 'fd-core2', nameText: { en: 'Core two', es: 'Core dos' }, slots: [{ exerciseId: 'plank' }, { exerciseId: 'fd-bearCrawl' }], format: 'sequence', minSeconds: 90 }],
+    cadences: [{ id: 'fd-long', name: { en: 'Long (50/10)', es: 'Larga (50/10)' }, focusSeconds: 3000, breakSeconds: 600, exerciseEvery: 2, longBreak: { every: 3, seconds: 1200 } }, { id: 'classic', exerciseEvery: 2 }],
+  };
+  const codes = new Set<string>();
+  const run = (o: CatalogOverlay, opts?: Parameters<typeof validateOverlay>[1]): Issue[] => {
+    const issues = validateOverlay(o, opts);
+    for (const i of issues) {
+      codes.add(i.code);
+      check(ISSUE_CODES.includes(i.code), `issue code ${i.code} is declared in ISSUE_CODES`);
+    }
+    return issues;
+  };
+  {
+    check(errorsOf(run({ schema: 1 })).length === 0 && run({ schema: 1 }).length === 0, 'the empty overlay has no issue at all');
+    const issues = run(good, { deep: true });
+    check(errorsOf(issues).length === 0, `the realistic overlay has no error: ${JSON.stringify(errorsOf(issues))}`);
+    check(isNewId('fd-bearCrawl') && !isNewId('pushUp') && !isNewId('tpl.x') && !isNewId('fd-') && !isNewId(`fd-${'a'.repeat(62)}`), 'new ids start with fd- and fit the 64 character limit');
+  }
+  {
+    const sweep = smokeTest(contentFor(null));
+    check(sweep.runs > 1500 && sweep.issues.length === 0, `the generation sweep over the built-ins finds nothing (${sweep.runs} blocks)`);
+    const broken = smokeTest({ ...none, catalog: { ...none.catalog, exercises: createRegistry<(typeof CATALOG.exercises.base)[number]>([]) } });
+    check(broken.issues.some((i) => i.code === 'sweepUnknown' && i.severity === 'error'), 'a catalog that cannot make a block is caught by the sweep');
+    const noPlan = smokeTest({ ...none, goals: createRegistry(GOALS.base.map((g) => ({ ...g, generator: { id: g.id, generate: () => ({ kind: 'train' as const, prepSeconds: 0, steps: [], totalSeconds: 0 }) } }))) });
+    check(!noPlan.issues.some((i) => i.severity === 'error') && noPlan.issues.some((i) => i.code === 'sweepFallback'), 'a generator that returns nothing never yields an empty plan: generate() falls back, and the sweep says so as a warning');
+  }
+
+  // ---- every rule fires
+  {
+    const withEx = (e: ExerciseEntry): CatalogOverlay => ({ schema: 1, exercises: [e] });
+    const lad = (rungs: string[][], id = 'push'): CatalogOverlay => ({ schema: 1, ladders: [{ id, rungs }] });
+    const program = (patch: object): CatalogOverlay => ({ schema: 1, goals: [{ id: 'mobility', programs: [{ id: 'deskReset', ...patch }] }] });
+    const strengthPhases = phaseEntries(GOALS.get('strength')!.programs[0]!);
+    const sp = (i: number, params: object): CatalogOverlay => ({ schema: 1, goals: [{ id: 'strength', programs: [{ id: 'microStrength', phases: strengthPhases.map((p, j) => (j === i ? { ...p, params: { ...p.params, ...params } } : p)) }] }] });
+    const rungsPush = CATALOG.ladders.base.find((l) => l.id === 'push')!.rungs;
+    const huge = { schema: 1, exercises: Array.from({ length: 140 }, (_, i) => bear(`fd-x${i}`, { cues: [{ en: 'x'.repeat(1900), es: 'y'.repeat(1900) }] })) } as CatalogOverlay;
+    const cases: [string, CatalogOverlay, string, Issue['severity']][] = [
+      ['an id that is neither built-in nor fd-', withEx(bear('mine')), 'badId', 'error'],
+      ['a new exercise with fields missing', withEx({ id: 'fd-half' }), 'incomplete', 'error'],
+      ['a text without Spanish', withEx(bear('fd-a', { name: { en: 'Only', es: ' ' } })), 'textMissing', 'error'],
+      ['a text that is too long', withEx(bear('fd-a', { name: { en: 'x'.repeat(200), es: 'y' } })), 'textLong', 'error'],
+      ['a level out of range', withEx(bear('fd-a', { level: 9 as 5 })), 'range', 'error'],
+      ['a MET out of range', withEx(bear('fd-a', { met: 99 })), 'range', 'error'],
+      ['a dose out of range', withEx(bear('fd-a', { dose: { seconds: 900 } })), 'range', 'error'],
+      ['no cues', withEx(bear('fd-a', { cues: [] })), 'cues', 'error'],
+      ['a reps exercise with a seconds dose', withEx(bear('fd-a', { metric: 'reps', dose: { seconds: 30 } })), 'doseMismatch', 'error'],
+      ['an unknown pictogram', withEx(bear('fd-a', { pictogram: 'nope' })), 'pictogram', 'error'],
+      ['no kind of goal', withEx(bear('fd-a', { tags: [] })), 'tags', 'error'],
+      ['unknown equipment', withEx(bear('fd-a', { needsOneOf: ['spaceship'] })), 'unknownEquipment', 'error'],
+      ['a mobility exercise with impact', withEx(bear('fd-a', { pattern: 'mobility', tags: ['mobility'], zones: ['hips'], impact: 'low' })), 'mobilityImpact', 'error'],
+      ['a jumping picture without impact', withEx(bear('fd-a', { pictogram: 'jump', impact: 'none' })), 'lintJump', 'warning'],
+      ['a floor picture not marked as floor', withEx(bear('fd-a', { floor: false })), 'lintFloor', 'warning'],
+      ['a high-impact beginner exercise', withEx(bear('fd-a', { impact: 'high', level: 1 })), 'lintHighLevel1', 'warning'],
+      ['a mobility exercise without zones', withEx(bear('fd-a', { pattern: 'mobility', tags: ['mobility'], impact: 'none' })), 'noZones', 'warning'],
+      ['a mobility pattern for the calories goal', withEx(bear('fd-a', { pattern: 'mobility', tags: ['calories'], impact: 'none' })), 'caloriesMobility', 'warning'],
+      ['a strength exercise on no ladder', withEx(bear('fd-a')), 'notOnLadder', 'warning'],
+      ['a ladder that is not built-in', lad([['pushUp']], 'fd-lad'), 'ladderUnknown', 'error'],
+      ['a ladder with no rungs', lad([]), 'ladderRungs', 'error'],
+      ['an empty rung', lad([['pushUp'], []]), 'ladderRung', 'error'],
+      ['an unknown exercise on a ladder', lad([['ghost']]), 'unknownExercise', 'error'],
+      ['a squat on the push ladder', lad([['wallPushUp'], ['airSquat']]), 'ladderPattern', 'error'],
+      ['an exercise twice on a ladder', lad([['wallPushUp'], ['wallPushUp']]), 'ladderDup', 'error'],
+      ['a retired exercise on a ladder', { schema: 1, exercises: [{ id: 'wallPushUp', retired: true }], ladders: [{ id: 'push', rungs: rungsPush }] }, 'retiredUsed', 'warning'],
+      ['a ladder without a gentle exercise', lad([['pushUp'], ['feetElevatedPushUp']]), 'warmupGap', 'warning'],
+      ['a shorter ladder', lad(rungsPush.slice(0, 3)), 'ladderShorter', 'warning'],
+      ['a changed ladder', lad([...rungsPush].reverse().slice(0, rungsPush.length)), 'ladderReplay', 'warning'],
+      ['a new assessment', { schema: 1, assessments: [{ id: 'fd-test' }] }, 'assessmentNew', 'error'],
+      ['an assessment of a ladder given exercises', { schema: 1, assessments: [{ id: 'strMaxPushUps', exerciseIds: [] }] }, 'assessmentExercises', 'error'],
+      ['an assessment of exercises given a rung', { schema: 1, assessments: [{ id: 'mobDeepSquat', maxRung: 1 }] }, 'assessmentNoLadder', 'error'],
+      ['an assessment too short', { schema: 1, assessments: [{ id: 'mobDeepSquat', seconds: 3 }] }, 'range', 'error'],
+      ['a unit mismatch in an assessment', { schema: 1, assessments: [{ id: 'mobDeepSquat', exerciseIds: ['pushUp'] }] }, 'assessmentMetric', 'warning'],
+      ['equipment with an unknown icon', { schema: 1, equipment: [{ id: 'fd-x', name: { en: 'X', es: 'X' }, icon: 'nope' }] }, 'equipmentIcon', 'error'],
+      ['an unknown goal', { schema: 1, goals: [{ id: 'swimming' }] }, 'goalUnknown', 'error'],
+      ['a test week outside the program', program({ assessmentWeeks: [9] }), 'assessmentWeek', 'error'],
+      ['an unknown test in a program', program({ assessmentIds: ['ghost'] }), 'unknownAssessment', 'error'],
+      ['no phases', program({ phases: [] }), 'phaseCount', 'error'],
+      ['a phase that ends before it starts', program({ phases: [{ fromWeek: 3, toWeek: 1, params: deskPhases[0]!.params }] }), 'phaseWeeks', 'error'],
+      ['phases that leave a gap', program({ phases: [{ fromWeek: 1, toWeek: 1, params: deskPhases[0]!.params }, { fromWeek: 3, toWeek: 4, params: deskPhases[0]!.params }] }), 'phaseCoverage', 'error'],
+      ['phases that stop short', program({ phases: [{ fromWeek: 1, toWeek: 2, params: deskPhases[0]!.params }] }), 'phaseCoverage', 'error'],
+      ['a missing phase parameter', program({ phases: [{ fromWeek: 1, toWeek: 4, params: { holdSeconds: 20 } }] }), 'paramMissing', 'error'],
+      ['an unknown phase parameter', program({ phases: [{ fromWeek: 1, toWeek: 4, params: { ...deskPhases[0]!.params, speed: 3 } }] }), 'paramUnknown', 'error'],
+      ['a hold of ten minutes', sp(0, { restSeconds: 600 }), 'paramRange', 'error'],
+      ['a range of the wrong shape', sp(0, { repRange: { min: 9, max: 3 } }), 'paramOrder', 'error'],
+      ['a boolean given a number', program({ phases: [{ fromWeek: 1, toWeek: 4, params: { ...deskPhases[0]!.params, allowLoaded: 3 } }] }), 'paramShape', 'error'],
+      ['no movements to rotate', sp(0, { patterns: [] }), 'paramPatterns', 'error'],
+      ['a cap below the sets a day', sp(0, { setsPerPatternPerDay: 5, capPerPatternPerDay: 2 }), 'paramOrder', 'error'],
+      ['a movement without a ladder', sp(0, { patterns: ['push', 'cardio'] }), 'patternNoLadder', 'warning'],
+      ['a template with no slots', { schema: 1, templates: [{ id: 'tpl.deskReset', slots: [] }] }, 'slotCount', 'error'],
+      ['a template with an unknown format', { schema: 1, templates: [{ id: 'tpl.deskReset', format: 'zzz' as 'sequence' }] }, 'templateFormat', 'error'],
+      ['a template slot with the wrong unit', { schema: 1, templates: [{ id: 'tpl.deskReset', slots: [{ exerciseId: 'plank', dose: { reps: 5 } }] }] }, 'slotDose', 'error'],
+      ['a template slot with an unknown exercise', { schema: 1, templates: [{ id: 'tpl.deskReset', slots: [{ exerciseId: 'ghost' }] }] }, 'unknownExercise', 'error'],
+      ['a template slot with a retired exercise', { schema: 1, exercises: [{ id: 'plank', retired: true }], templates: [{ id: 'tpl.coreFloor' }] }, 'retiredUsed', 'warning'],
+      ['intervals without work seconds', { schema: 1, templates: [{ id: 'tpl.deskReset', format: 'intervals' }] }, 'range', 'error'],
+      ['a cadence out of range', { schema: 1, cadences: [{ id: 'classic', focusSeconds: 5 }] }, 'range', 'error'],
+      ['a cadence missing fields', { schema: 1, cadences: [{ id: 'fd-c' }] }, 'incomplete', 'error'],
+      ['both fallback exercises retired', { schema: 1, exercises: [{ id: 'marchInPlace', retired: true }, { id: 'standingCatCow', retired: true }] }, 'fallbackRetired', 'error'],
+      ['an overlay that is too large', huge, 'tooLarge', 'error'],
+    ];
+    for (const [what, overlay, code, severity] of cases) {
+      const issues = run(overlay);
+      check(issues.some((i) => i.code === code && i.severity === severity), `${what}: expected ${severity} ${code}, got ${issues.map((i) => `${i.severity}:${i.code}`).join(' ')}`);
+    }
+    // an error is never reported for the built-ins' own content
+    check(errorsOf(run({ schema: 1, exercises: [{ id: 'pushUp' }] })).length === 0, 'an entry that changes nothing is no error');
+    for (const code of ISSUE_CODES.filter((c) => !c.startsWith('sweep') && c !== 'dropped')) check(codes.has(code), `the self-check exercised the rule ${code}`);
+  }
+
+  // ---- continuity: ids that were published stay
+  {
+    const published = putEntry(putEntry(emptyOverlay(), 'exercises', bear('fd-old')), 'templates', { id: 'fd-oldt', nameText: { en: 'T', es: 'T' }, slots: [{ exerciseId: 'plank' }], format: 'sequence', minSeconds: 60 });
+    const draft = putEntry(emptyOverlay(), 'exercises', { id: 'pushUp', level: 4 });
+    const issues = run(draft, { published });
+    check(issues.filter((i) => i.code === 'dropped').map((i) => i.id).sort().join() === 'fd-old,fd-oldt', 'a published fd- id missing from the draft is an error');
+    check(errorsOf(run(emptyOverlay(), { published: putEntry(emptyOverlay(), 'exercises', { id: 'pushUp', level: 4 }) })).length === 0, 'dropping a patch of a built-in is fine (it goes back to the built-in)');
+    const fixed = keepPublished(draft, published);
+    check(fixed.exercises!.find((e) => e.id === 'fd-old')!.retired === true && fixed.templates![0]!.id === 'fd-oldt' && !!fixed.exercises!.find((e) => e.id === 'pushUp'), 'keepPublished brings them back (an exercise retired) and keeps the rest');
+    check(errorsOf(run(fixed, { published })).length === 0 && keepPublished(fixed, published) === fixed, 'after the fix nothing is missing, and fixing again changes nothing');
+    const progPub = withProgram(emptyOverlay(), 'mobility', 'fd-prog', { id: 'fd-prog', name: { en: 'P', es: 'P' } });
+    check(run(emptyOverlay(), { published: progPub }).some((i) => i.code === 'dropped'), 'a published program of the director must stay too');
+  }
+
+  // ---- editing helpers
+  {
+    const base = pushUp;
+    check(exerciseEntry(base, { ...base }) === null, 'an unchanged built-in has no entry');
+    check(same(exerciseEntry(base, { ...base, level: 4, perSide: false, retired: false }), { id: 'pushUp', level: 4 }), 'only changed fields go in the patch; a flag that is off counts as absent');
+    check(same(exerciseEntry(base, { ...base, retired: true }), { id: 'pushUp', retired: true }), 'retiring a built-in is a one-field patch');
+    const created = exerciseEntry(undefined, { ...base, id: 'fd-copy' })!;
+    check(created.id === 'fd-copy' && created.name !== undefined && created.pattern === 'push' && !('retired' in created), 'a new exercise carries all its fields');
+    check(patchEntry({ id: 'a', x: 1, y: 2 }, { id: 'a', x: 1, y: 2 }, ['x', 'y']) === null && same(patchEntry({ id: 'a', x: 1, y: 2 }, { id: 'a', x: 1, y: 3 }, ['x', 'y']), { id: 'a', y: 3 }), 'patchEntry keeps the differing keys only');
+    let o = putEntry(emptyOverlay(), 'exercises', { id: 'zeta', level: 2 });
+    o = putEntry(o, 'exercises', { id: 'alpha', level: 2 });
+    o = putEntry(o, 'exercises', { id: 'zeta', level: 3 });
+    check(o.exercises!.map((e) => e.id).join() === 'alpha,zeta' && o.exercises![1]!.level === 3, 'putEntry replaces by id and keeps the list sorted');
+    check(isEmptyOverlay(removeEntry(removeEntry(o, 'exercises', 'alpha'), 'exercises', 'zeta')) && !('exercises' in removeEntry(removeEntry(o, 'exercises', 'alpha'), 'exercises', 'zeta')), 'removing the last entry removes the section');
+    check(newItemId('Tempo Push-ups!', new Set()) === 'fd-tempoPushUps' && newItemId('Tempo Push-ups', new Set(['fd-tempoPushUps'])) === 'fd-tempoPushUps-2' && newItemId('Flexión ágil', new Set()) === 'fd-flexionAgil' && newItemId('', new Set(), 'exercise') === 'fd-exercise' && isNewId(newItemId('x'.repeat(90), new Set())), 'new ids: camel case, accents stripped, unique, short enough');
+    check(sameOverlay({ schema: 1, exercises: [{ id: 'a', level: 2, name: undefined }] as ExerciseEntry[] }, { schema: 1, exercises: [{ level: 2, id: 'a' }] }), 'overlays compare as data, whatever the key order');
+
+    // programs
+    const prog = mobility.programs[0]!;
+    check(programEntry(prog, prog) === null, 'an unchanged program has no entry');
+    const longer = { ...prog, weeks: 6, phases: prog.phases.map((p, i, all) => (i === all.length - 1 ? { ...p, toWeek: 6 } : p)) };
+    const e = programEntry(prog, longer)!;
+    check(e.weeks === 6 && e.phases!.length === 2 && !('name' in e) && !('daysPerWeek' in e), 'a program patch carries what changed (the phases whole)');
+    const withIt = withProgram(emptyOverlay(), 'mobility', 'deskReset', e);
+    check(withIt.goals![0]!.programs![0]!.weeks === 6 && contentFor(withIt).goals.get('mobility')!.programs[0]!.weeks === 6, 'the program entry sits inside its goal and merges');
+    check(isEmptyOverlay(withProgram(withIt, 'mobility', 'deskReset', null)), 'removing the only program entry removes the goal entry');
+    const texted = withGoalTexts(withIt, 'mobility', { name: { en: 'M', es: 'M' } });
+    check(texted.goals![0]!.name!.en === 'M' && texted.goals![0]!.programs!.length === 1 && isEmptyOverlay(withGoalTexts(withGoalTexts(emptyOverlay(), 'mobility', { name: { en: 'M', es: 'M' } }), 'mobility', {})), 'goal texts and programs share one goal entry');
+    check(contentFor(texted).goals.get('mobility')!.name.en === 'M' && GOALS.get('mobility')!.name.en !== 'M', 'the goal text merges and the built-in goal is untouched');
+    const merged = contentFor(withIt).goals.get('mobility')!.programs[0]!;
+    check(merged.phases.every((p) => 'holdSeconds' in (p.params as object)), 'merged phases keep every parameter of the base phase');
+
+    // diff
+    const a: CatalogOverlay = { schema: 1, exercises: [{ id: 'pushUp', level: 4 }, { id: 'fd-gone', name: { en: 'G', es: 'G' } }], cadences: [{ id: 'classic', exerciseEvery: 2 }] };
+    const b: CatalogOverlay = { schema: 1, exercises: [{ id: 'pushUp', level: 4, dose: { reps: 9 } }, { id: 'fd-new', name: { en: 'N', es: 'N' } }], goals: [{ id: 'mobility', programs: [{ id: 'deskReset', weeks: 6 }] }] };
+    const d = diffOverlays(a, b).map((c) => `${c.kind}:${c.section}/${c.id}${c.fields.length ? `(${c.fields.join('+')})` : ''}`).join(' ');
+    check(d === 'removed:exercises/fd-gone added:exercises/fd-new changed:exercises/pushUp(dose) added:goals/mobility removed:cadences/classic', `the diff lists added, removed and changed entries: ${d}`);
+    check(diffOverlays(a, a).length === 0, 'an overlay does not differ from itself');
+  }
+
+  // ---- the preview and the sweep run on a draft without touching the live registries
+  {
+    const options: PreviewOptions = { mode: 'free', goalId: 'strength', programId: 'microStrength', week: 1, level: 1, templateId: 'tpl.deskReset', blockSeconds: 120, gear: 'all', constraints: { lowImpact: false, noFloor: false }, afterBlock: false, seed: 7 };
+    const draft: CatalogOverlay = { schema: 1, templates: [{ id: 'tpl.deskReset', slots: [{ exerciseId: 'plank' }] }] };
+    const mine = previewBlock(contentFor(draft), options);
+    const theirs = previewBlock(contentFor(null), options);
+    check(mine.plan.steps[0]!.exerciseId === 'plank' && theirs.plan.steps[0]!.exerciseId !== 'plank', 'the preview runs the real generator over the draft; the built-ins are unchanged');
+    check(GOALS.get('strength') === GOALS.base.find((g) => g.id === 'strength') && BUILTIN_TEMPLATES.get('tpl.deskReset')!.slots.length === 4, 'previewing never touches the live registries');
+    check(same(previewBlock(contentFor(draft), options), mine), 'the same seed makes the same block');
+    const goalPlan = previewBlock(contentFor({ schema: 1, goals: [{ id: 'mobility', programs: [{ id: 'deskReset', phases: deskPhases.map((p) => ({ ...p, params: { ...p.params, holdSeconds: 50 } })) }] }] }), { ...options, mode: 'goal', goalId: 'mobility', programId: 'deskReset', blockSeconds: 300 });
+    const basePlan = previewBlock(contentFor(null), { ...options, mode: 'goal', goalId: 'mobility', programId: 'deskReset', blockSeconds: 300 });
+    const seconds = (b: { plan: { steps: { target?: { seconds?: number } }[] } }): number => Math.max(...b.plan.steps.map((s) => s.target?.seconds ?? 0));
+    check(seconds(goalPlan) > seconds(basePlan), 'a longer hold in a phase reaches the generated block');
+  }
+
+  // ---- strings: both languages, every issue code, the same keys
+  {
+    const en = new Set(flat(FITNESS_TEXTS.en));
+    const es = new Set(flat(FITNESS_TEXTS.es));
+    for (const k of en) check(es.has(k), `missing in Spanish: fitness.${k}`);
+    for (const k of es) check(en.has(k), `missing in English: fitness.${k}`);
+    for (const code of ISSUE_CODES) check(en.has(`issue.${code}`), `the text of issue ${code} exists`);
+    for (const k of ['title', 'save', 'publishAction', 'status.saved', 'notice.published', 'tab.exercises', 'tab.versions', 'pv.roll', 'chk.run', 'ver.rollback']) check(en.has(k), `the key ${k} exists`);
+  }
+
+  // ---- the consumer: what a fetched overlay may do (runs last: it changes, then restores, the live registries)
+  {
+    const debug = console.debug;
+    console.debug = () => undefined; // the consumer logs what it ignores
+    try {
+      check(usableOverlay('garbage') !== null && isEmptyOverlay(usableOverlay('garbage')!), 'a non-object document is an empty overlay, harmless');
+      check(usableOverlay({ schema: 1, exercises: [{ id: 'fd-bad' }] }) === null, 'an overlay with errors is ignored whole');
+      check(usableOverlay({ schema: 1, exercises: [{ id: 'pushUp', dose: { reps: 900 } }] }) === null, 'a patch out of range is ignored whole');
+      check(usableOverlay({ schema: 1, exercises: [{ id: 'pushUp', level: 99 }] }) !== null, 'a field of the wrong kind is dropped by the sanitiser, not applied');
+    } finally {
+      console.debug = debug;
+    }
+    check(usableOverlay(good) !== null, 'a valid overlay is usable');
+    try {
+      const startVersion = effectiveCatalogVersion();
+      applyOverlay(sanitizeOverlay(good), 7);
+      check(CATALOG.exercises.get('pushUp')!.dose.reps === 10 && CATALOG.exercises.get('fd-bearCrawl')?.name.en === 'Bear crawl' && CATALOG.ladders.get('core')!.rungs[2]!.includes('fd-bearCrawl'), 'applying changes what the live registries read');
+      check(ladderIndex(CATALOG).get('fd-bearCrawl')?.ladderId === 'core', 'the progression index follows the new ladders (its cache is keyed on the registry revision)');
+      check(GOALS.get('mobility')!.name.en === 'Better mobility' && BUILTIN_TEMPLATES.get('tpl.deskReset')!.nameText!.en === 'Desk reset v2' && BUILTIN_TEMPLATES.get('fd-core2')?.builtin === true, 'goals and templates follow');
+      check(resolveCadence({ cadenceId: 'fd-long', customCadence: undefined }).focusSeconds === 3000 && CADENCES.get('classic')!.exerciseEvery === 2 && EQUIPMENT.get('fd-trx') !== undefined, 'cadences and equipment follow');
+      check(appliedOverlayVersion() === 7 && effectiveCatalogVersion() === CATALOG_VERSION + 7 && startVersion === CATALOG_VERSION, 'blocks store the built-in catalog version plus the overlay version');
+      const ctx = { ...makeCtx({ blockId: 'overlay-live', blockSeconds: 300 }), enrolment: enrol('strength', 'microStrength', 1, MONDAY), equipment: EQUIPMENT_SETS['all']! };
+      const live = generate(ctx, { mode: 'goal', templateId: null }, { enrolment: ctx.enrolment });
+      check(live.plan.steps.length > 0, 'generation through the live registries works with an overlay applied');
+      check(METRICS.get('assessment:strPlank')!.name.en === CATALOG.assessments.get('strPlank')!.name.en, 'an assessment metric reads the live name');
+    } finally {
+      applyOverlay(null);
+    }
+    check(CATALOG.exercises.get('pushUp') === pushUp && CATALOG.exercises.get('fd-bearCrawl') === undefined && GOALS.get('mobility')!.name.en === 'Improve mobility', 'applyOverlay(null) restores the built-ins exactly');
+    check(effectiveCatalogVersion() === CATALOG_VERSION && ladderIndex(CATALOG).get('fd-bearCrawl') === undefined && CADENCES.get('fd-long') === undefined, 'and the version, the index and the cadences');
+  }
+}
+
 // ---------------------------------------------------------------- run
 
 try {
@@ -1495,6 +1880,8 @@ try {
   checkKcal();
   checkPanel();
   checkAdaptive();
+  checkPictograms();
+  checkDirector();
   console.log(`\ncheck:sportask OK (${assertions} assertions)`);
 } catch (e) {
   console.error(e instanceof Error ? e.message : e);

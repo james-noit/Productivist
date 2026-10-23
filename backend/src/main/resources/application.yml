@@ -31,6 +31,10 @@ app:
     # The one account allowed into /api/admin/**. Blank disables the admin API. Register this account yourself
     # before setting it: signup is open, so whoever registers the address first owns it.
     email: ${ADMIN_EMAIL:}
+  fitness:
+    # Comma-separated emails of the accounts that may author the Sportask catalog (/api/fitness/**). Blank = only the admin.
+    # Register these accounts yourself first: signup is open, so whoever registers an address first owns it.
+    director-emails: ${FITNESS_DIRECTOR_EMAILS:}
   cors:
     # moz-extension origins are random per Thunderbird profile, hence the wildcard. https://localhost is the
     # Android app's WebView and capacitor://localhost the iOS one (Capacitor, see docs/mobile/).

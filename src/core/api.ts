@@ -12,7 +12,7 @@ export class ApiError extends Error {
  * JSON request against the sync backend. Throws `ApiError` for non-2xx; network failures reject as-is.
  * A 204 resolves to `undefined`, so callers of endpoints that return nothing should ask for `api<void>`.
  */
-export async function api<T>(path: string, options: { method?: 'GET' | 'POST' | 'PATCH' | 'DELETE'; body?: unknown; token?: string } = {}): Promise<T> {
+export async function api<T>(path: string, options: { method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'; body?: unknown; token?: string } = {}): Promise<T> {
   const headers: Record<string, string> = {};
   if (options.body !== undefined) headers['Content-Type'] = 'application/json';
   if (options.token) headers['Authorization'] = `Bearer ${options.token}`;

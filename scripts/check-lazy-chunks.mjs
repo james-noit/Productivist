@@ -91,6 +91,15 @@ const NEVER_INITIAL_UI = [
   'src/app/components/sportask-view/sport-panel.state.ts',
   component('sportask-pictogram'),
   component('sportask-skin'),
+  // The Fitness director: the view, its editors and the service; the overlay library (src/lib/sportask/overlay/) is covered by the walk above.
+  ...[
+    'fitness-view', 'fitness-exercises', 'fitness-ladders', 'fitness-programs', 'fitness-templates', 'fitness-timings',
+    'fitness-assessments', 'fitness-equipment', 'fitness-preview', 'fitness-checks', 'fitness-versions', 'fitness-text-pair',
+  ].map(component),
+  'src/app/components/fitness-view/fitness-editor.state.ts',
+  'src/services/fitness.service.ts',
+  'src/i18n/fitness-texts.ts',
+  'src/lib/fitness-texts.ts',
   'src/lib/multitask-research.ts',
   'src/lib/bell-sounds.ts',
   component('lot-editor'),

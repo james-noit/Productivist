@@ -49,27 +49,22 @@
             {{ v.label | translate }}
           </button>
         }
-        @if (accounts.isAdmin()) {
+        @for (s of staffEntries(); track s.id) {
           <button
             type="button"
             role="menuitem"
             class="app-menu__view"
-            [class.app-menu__view--active]="view.current() === 'admin'"
-            [attr.aria-current]="view.current() === 'admin'"
-            (click)="goToView('admin')"
+            [class.app-menu__view--active]="view.current() === s.id"
+            [attr.aria-current]="view.current() === s.id"
+            (click)="goToView(s.id)"
           >
             <svg class="app-menu__view-icon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
-              <path
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.8"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z"
-              />
-              <path fill="currentColor" opacity="0.55" d="M12 3l7 3v5c0 4.5-3 8-7 10z" />
+              <path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" [attr.d]="s.icon" />
+              @if (s.fill) {
+                <path fill="currentColor" opacity="0.55" [attr.d]="s.fill" />
+              }
             </svg>
-            {{ 'menu.admin' | translate }}
+            {{ s.label | translate }}
           </button>
         }
       </div>

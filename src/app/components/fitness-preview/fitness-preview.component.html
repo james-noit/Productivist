@@ -1,0 +1,117 @@
+<div class="fpv__controls">
+  <p class="fd-hint">{{ 'fitness.pv.intro' | translate }}</p>
+  <div class="fd-row">
+    <div class="field">
+      <span class="field__label" id="fpv-mode">{{ 'fitness.pv.mode' | translate }}</span>
+      <div class="segmented" role="group" aria-labelledby="fpv-mode">
+        <button type="button" class="segmented__option" [attr.aria-pressed]="mode() === 'goal'" (click)="setMode('goal')">{{ 'fitness.pv.goal' | translate }}</button>
+        <button type="button" class="segmented__option" [attr.aria-pressed]="mode() === 'free'" (click)="setMode('free')">{{ 'fitness.pv.free' | translate }}</button>
+      </div>
+    </div>
+    @if (mode() === 'goal') {
+      <div class="field">
+        <label class="field__label" for="fpv-goal">{{ 'fitness.pv.goalPick' | translate }}</label>
+        <select id="fpv-goal" class="select" (change)="pick('goal', $event)">
+          @for (g of goals(); track g.id) {
+            <option [value]="g.id" [selected]="g.id === goalId()">{{ state.loc(g.name) }}</option>
+          }
+        </select>
+      </div>
+      <div class="field">
+        <label class="field__label" for="fpv-program">{{ 'fitness.pv.program' | translate }}</label>
+        <select id="fpv-program" class="select" (change)="pick('program', $event)">
+          @for (p of programs(); track p.id) {
+            <option [value]="p.id" [selected]="p.id === programId()">{{ state.loc(p.name) }}</option>
+          }
+        </select>
+      </div>
+      <div class="field">
+        <label class="field__label" for="fpv-week">{{ 'fitness.pv.week' | translate }}</label>
+        <select id="fpv-week" class="select fd-num" (change)="num('week', $event)">
+          @for (w of weekNumbers(); track w) {
+            <option [value]="w" [selected]="w === weekShown()">{{ w }}</option>
+          }
+        </select>
+      </div>
+      <div class="field">
+        <span class="field__label" id="fpv-level">{{ 'fitness.pv.level' | translate }}</span>
+        <div class="segmented" role="group" aria-labelledby="fpv-level">
+          @for (l of levels; track l) {
+            <button type="button" class="segmented__option" [attr.aria-pressed]="level() === l" (click)="level.set(l)">{{ l }}</button>
+          }
+        </div>
+      </div>
+    } @else {
+      <div class="field">
+        <label class="field__label" for="fpv-template">{{ 'fitness.pv.template' | translate }}</label>
+        <select id="fpv-template" class="select" (change)="pick('template', $event)">
+          <option value="" [selected]="templateId() === ''">{{ 'fitness.pv.anyTemplate' | translate }}</option>
+          @for (t of templates(); track t.id) {
+            <option [value]="t.id" [selected]="t.id === templateId()">{{ state.loc(t.nameText) }}</option>
+          }
+        </select>
+      </div>
+    }
+    <div class="field">
+      <label class="field__label" for="fpv-length">{{ 'fitness.pv.length' | translate }}</label>
+      <select id="fpv-length" class="select" (change)="num('length', $event)">
+        @for (l of lengths; track l) {
+          <option [value]="l" [selected]="l === length()">{{ minutes(l) }}</option>
+        }
+      </select>
+    </div>
+    <div class="field">
+      <span class="field__label" id="fpv-gear">{{ 'fitness.pv.gear' | translate }}</span>
+      <div class="segmented" role="group" aria-labelledby="fpv-gear">
+        <button type="button" class="segmented__option" [attr.aria-pressed]="gear() === 'none'" (click)="gear.set('none')">{{ 'fitness.pv.gearNone' | translate }}</button>
+        <button type="button" class="segmented__option" [attr.aria-pressed]="gear() === 'all'" (click)="gear.set('all')">{{ 'fitness.pv.gearAll' | translate }}</button>
+      </div>
+    </div>
+  </div>
+  <div class="fpv__switches">
+    <button type="button" class="switch" role="switch" [attr.aria-checked]="lowImpact()" (click)="lowImpact.set(!lowImpact())"><span class="switch__track"></span>{{ 'fitness.pv.lowImpact' | translate }}</button>
+    <button type="button" class="switch" role="switch" [attr.aria-checked]="noFloor()" (click)="noFloor.set(!noFloor())"><span class="switch__track"></span>{{ 'fitness.pv.noFloor' | translate }}</button>
+    <button type="button" class="switch" role="switch" [attr.aria-checked]="afterBlock()" (click)="afterBlock.set(!afterBlock())"><span class="switch__track"></span>{{ 'fitness.pv.afterBlock' | translate }}</button>
+    <button type="button" class="switch" role="switch" [attr.aria-checked]="compare()" (click)="compare.set(!compare())"><span class="switch__track"></span>{{ 'fitness.pv.compare' | translate }}</button>
+  </div>
+  <div class="fd-actions">
+    <button type="button" class="btn btn--primary" (click)="roll()">{{ 'fitness.pv.roll' | translate }}</button>
+  </div>
+</div>
+
+<div class="fpv__results" aria-live="polite">
+  @for (r of [{ key: 'draft', title: 'fitness.pv.draft', data: draftBlock() }, { key: 'builtin', title: 'fitness.pv.builtin', data: builtinBlock() }]; track r.key) {
+    @if (r.data; as d) {
+      <section class="fpv__block" [attr.aria-label]="r.title | translate">
+        <h3>{{ r.title | translate }}</h3>
+        @if (d.error || !d.block) {
+          <p class="fd-note fd-note--error">{{ 'fitness.pv.failed' | translate }}</p>
+        } @else {
+          <p class="fd-hint">
+            {{ 'sportask.panel.kind.' + d.block.plan.kind | translate }} · {{ d.block.plan.steps.length }} {{ 'fitness.pv.steps' | translate }} · {{ minutes(d.block.plan.totalSeconds) }} / {{ minutes(length()) }}
+            @if (d.block.meta.restDay) { · {{ 'fitness.pv.restDay' | translate }} }
+          </p>
+          @if (d.block.meta.fallback) {
+            <p class="fd-note fd-note--warn">{{ 'fitness.pv.fallback.' + d.block.meta.fallback | translate }}</p>
+          }
+          @if (d.block.meta.phaseNote) {
+            <p class="fd-hint">{{ state.loc(d.block.meta.phaseNote) }}</p>
+          }
+          <ol class="fpv__steps">
+            @for (s of d.rows; track s.index) {
+              <li class="fpv__step">
+                <span class="fpv__n" aria-hidden="true">{{ s.index + 1 }}</span>
+                <app-sportask-pictogram [id]="s.pictogram" />
+                <span>
+                  <span class="fpv__name">{{ s.name }}</span><br />
+                  <span class="fpv__meta">{{ s.target }}@if (s.side) { · {{ s.side }} }@if (s.round) { · {{ 'fitness.pv.round' | translate: { n: s.round } }} }@if (s.loadKg !== null) { · {{ s.loadKg }} kg }</span>
+                </span>
+                <span class="fpv__time">{{ s.work }} s@if (s.rest > 0) { + {{ s.rest }} s }</span>
+              </li>
+            }
+          </ol>
+        }
+      </section>
+    }
+  }
+</div>

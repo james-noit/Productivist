@@ -27,7 +27,8 @@ public class SecurityConfig {
 
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http, TokenService tokens,
-            @Value("${app.admin.email:}") String adminEmail) throws Exception {
+            @Value("${app.admin.email:}") String adminEmail,
+            @Value("${app.fitness.director-emails:}") String directorEmails) throws Exception {
         return http
                 .cors(Customizer.withDefaults())
                 .csrf(csrf -> csrf.disable()) // stateless bearer-token API, no cookies
@@ -36,9 +37,14 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/auth/login", "/api/auth/signup", "/actuator/health/**", "/error").permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                        // The Sportask catalog overlay: anyone may read the published one (it is not personal and the app is
+                        // local-first, so signed-out users and the add-on and mobile apps get the same content); only
+                        // directors (and the admin) may write.
+                        .requestMatchers(HttpMethod.GET, "/api/sport-catalog").permitAll()
+                        .requestMatchers("/api/fitness/**").hasRole("FITNESS_DIRECTOR")
                         .anyRequest().authenticated())
                 .exceptionHandling(e -> e.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
-                .addFilterBefore(new BearerTokenFilter(tokens, adminEmail), AuthorizationFilter.class)
+                .addFilterBefore(new BearerTokenFilter(tokens, adminEmail, BearerTokenFilter.parseEmails(directorEmails)), AuthorizationFilter.class)
                 .build();
     }
 
@@ -51,8 +57,9 @@ public class SecurityConfig {
     CorsConfigurationSource corsConfigurationSource(@Value("${app.cors.allowed-origins}") List<String> origins) {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowedOriginPatterns(origins);
-        config.setAllowedMethods(List.of("GET", "POST", "PATCH", "DELETE", "OPTIONS"));
-        config.setAllowedHeaders(List.of("Authorization", "Content-Type"));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+        config.setAllowedHeaders(List.of("Authorization", "Content-Type", "If-None-Match"));
+        config.setExposedHeaders(List.of("ETag"));
         config.setMaxAge(3600L);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/api/**", config);

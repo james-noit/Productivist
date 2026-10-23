@@ -1,0 +1,78 @@
+<div class="fd-split">
+  <section class="fd-pane" [attr.aria-label]="'fitness.lad.list' | translate">
+    <p class="fd-hint">{{ 'fitness.lad.intro' | translate }}</p>
+    <ul class="fd-list">
+      @for (r of rows(); track r.ladder.id) {
+        <li>
+          <button type="button" class="fd-item" [attr.aria-current]="id() === r.ladder.id" (click)="select(r.ladder.id)">
+            <span class="fd-item__text">
+              <span class="fd-item__name">{{ 'sportask.panel.g.' + r.ladder.pattern | translate }}</span>
+              <span class="fd-item__meta">{{ 'fitness.lad.rungs' | translate: { n: r.ladder.rungs.length } }}</span>
+            </span>
+            @if (r.changed) {
+              <span class="fd-tag fd-tag--changed">{{ 'fitness.tagChanged' | translate }}</span>
+            }
+          </button>
+        </li>
+      }
+    </ul>
+  </section>
+
+  @if (ladder(); as l) {
+    <section class="fd-detail">
+      <div class="fd-head">
+        <div>
+          <h3>{{ 'sportask.panel.g.' + l.pattern | translate }}</h3>
+          <span class="fd-id">{{ l.id }}</span>
+        </div>
+        @if (changed()) {
+          <button type="button" class="btn btn--ghost btn--sm" (click)="reset()">{{ 'fitness.lad.reset' | translate }}</button>
+        }
+      </div>
+      <p class="fd-note fd-note--warn">{{ 'fitness.lad.replayWarning' | translate }}</p>
+
+      @if (problems().length > 0) {
+        <ul class="fd-problems">
+          @for (p of problems(); track $index) {
+            <li [attr.data-severity]="p.severity"><span aria-hidden="true">{{ p.severity === 'error' ? '●' : '○' }}</span><span>{{ state.issueText(p) }}</span></li>
+          }
+        </ul>
+      }
+
+      @for (rung of rungs(); track $index) {
+        <div class="fl__rung">
+          <div class="fl__rung-head">
+            <span class="fl__rung-title">{{ 'fitness.lad.rung' | translate: { n: $index + 1 } }}</span>
+            <span class="fd-actions">
+              <button type="button" class="btn btn--ghost btn--icon btn--sm" [disabled]="$first" [attr.aria-label]="'fitness.lad.up' | translate" (click)="moveRung($index, -1)"><app-ui-icon name="chevron-down" [size]="16" class="fl__up" /></button>
+              <button type="button" class="btn btn--ghost btn--icon btn--sm" [disabled]="$last" [attr.aria-label]="'fitness.lad.down' | translate" (click)="moveRung($index, 1)"><app-ui-icon name="chevron-down" [size]="16" /></button>
+              <button type="button" class="btn btn--danger btn--ghost btn--icon btn--sm" [disabled]="rungs().length <= 1" [attr.aria-label]="'fitness.lad.removeRung' | translate" (click)="removeRung($index)"><app-ui-icon name="trash" [size]="16" /></button>
+            </span>
+          </div>
+          <div class="fd-chips">
+            @for (item of rung; track item.id) {
+              <span class="fl__chip" [class.fl__chip--retired]="item.ex?.retired">
+                {{ item.ex ? state.loc(item.ex.name) : item.id }}
+                @if (item.ex) {
+                  <span class="fd-tag">{{ 'fitness.ex.levelN' | translate: { n: item.ex.level } }}</span>
+                }
+                <button type="button" [attr.aria-label]="('fitness.lad.remove' | translate) + ' ' + (item.ex ? state.loc(item.ex.name) : item.id)" (click)="removeFrom($index, item.id)"><app-ui-icon name="x" [size]="14" /></button>
+              </span>
+            } @empty {
+              <span class="fd-hint">{{ 'fitness.lad.emptyRung' | translate }}</span>
+            }
+          </div>
+          <select class="select fl__add" [attr.aria-label]="'fitness.lad.add' | translate" (change)="addTo($index, $event)">
+            <option value="" selected>{{ 'fitness.lad.add' | translate }}</option>
+            @for (a of addable(); track a.id) {
+              <option [value]="a.id">{{ a.name }} · {{ 'fitness.ex.levelN' | translate: { n: a.level } }}</option>
+            }
+          </select>
+        </div>
+      }
+      <div><button type="button" class="btn btn--secondary btn--sm" [disabled]="rungs().length >= 12" (click)="addRung()"><app-ui-icon name="plus" [size]="16" />{{ 'fitness.lad.addRung' | translate }}</button></div>
+    </section>
+  } @else {
+    <section class="fd-detail"><p class="fd-empty">{{ 'fitness.lad.pick' | translate }}</p></section>
+  }
+</div>

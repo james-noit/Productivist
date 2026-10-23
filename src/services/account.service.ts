@@ -17,24 +17,28 @@ export class AccountService {
    * client's), so it is false until the answer arrives and again as soon as the account changes.
    */
   readonly isAdmin = signal(false);
+  /** Whether the signed-in account may author the Sportask catalog (a director from `FITNESS_DIRECTOR_EMAILS`, or the admin); asked of the server like `isAdmin`. */
+  readonly isFitnessDirector = signal(false);
 
   constructor() {
     effect(() => {
       const token = this.account()?.token;
       this.isAdmin.set(false);
+      this.isFitnessDirector.set(false);
       if (!this.enabled || !token) return;
-      void this.probeAdmin(token);
+      void this.probe('/api/admin/me', token, this.isAdmin);
+      void this.probe('/api/fitness/me', token, this.isFitnessDirector);
     });
   }
 
-  private async probeAdmin(token: string): Promise<void> {
+  private async probe(path: string, token: string, flag: { set(value: boolean): void }): Promise<void> {
     try {
-      await api('/api/admin/me', { token });
+      await api(path, { token });
       // The account may have changed while the request was in flight.
-      if (this.account()?.token === token) this.isAdmin.set(true);
+      if (this.account()?.token === token) flag.set(true);
     } catch (error) {
-      // 403 is the normal answer for everyone but the admin; network failures just leave the admin UI hidden.
-      if (!(error instanceof ApiError)) console.debug('Admin check failed', error);
+      // 403 is the normal answer for everyone without the role; network failures just leave that UI hidden.
+      if (!(error instanceof ApiError)) console.debug('Role check failed', path, error);
     }
   }
 

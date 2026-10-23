@@ -18,6 +18,7 @@
     "developer": "Desarrollo",
     "seedMockData": "Cargar datos de prueba",
     "admin": "Administración",
+    "fitness": "Director de fitness",
     "configuration": "Configuración"
   },
   "account": {

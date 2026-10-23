@@ -38,7 +38,7 @@ public class AdminController {
     public record Me(String email) {}
 
     public record Stats(long users, long withoutPassword, long sessions, long todos, long projects,
-            long objectives, long recurrences, long sportBlocks) {}
+            long objectives, long recurrences, long sportBlocks, int catalogVersion) {}
 
     public record UserSummary(long id, String email, OffsetDateTime createdAt, boolean hasPassword, int sessions,
             int todos, int projects, int objectives, int recurrences) {}
@@ -76,11 +76,12 @@ public class AdminController {
                                (SELECT count(*) FROM projects WHERE NOT deleted) AS projects,
                                (SELECT count(*) FROM objectives WHERE NOT deleted) AS objectives,
                                (SELECT count(*) FROM recurrences WHERE NOT deleted) AS recurrences,
-                               (SELECT count(*) FROM sport_blocks WHERE NOT deleted) AS sport_blocks
+                               (SELECT count(*) FROM sport_blocks WHERE NOT deleted) AS sport_blocks,
+                               (SELECT COALESCE(max(version), 0) FROM fitness_catalog_versions) AS catalog_version
                         """)
                 .query((rs, i) -> new Stats(rs.getLong("users"), rs.getLong("without_password"), rs.getLong("sessions"),
                         rs.getLong("todos"), rs.getLong("projects"), rs.getLong("objectives"), rs.getLong("recurrences"),
-                        rs.getLong("sport_blocks")))
+                        rs.getLong("sport_blocks"), rs.getInt("catalog_version")))
                 .single();
     }
 

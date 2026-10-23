@@ -28,14 +28,20 @@ Schema is managed by Flyway (`src/main/resources/db/migration`).
 | POST | `/api/sync` | Upserts `{projects, milestones, todos, objectives, flowLinks, flowLayouts, recurrences, sportBlocks, sportTemplates, state}` (the Flow, recurrence and Sportask lists are optional, so older clients keep working; a todo may carry `recurrenceId`; a project, milestone or todo imported from a Git forge may carry `source`, see below). Last-write-wins on each row's `updatedAt`. Returns `{cursor}`. |
 | POST | `/api/forge/relay` `{url, method?, headers?}` | Signed-in users only. Fetches one Git forge API URL on the caller's behalf, for Gitea/Forgejo servers whose CORS settings block the browser, and answers `{status, headers, body}` with the forge's own status inside (see *Forge relay* below). The relay's own refusals are plain HTTP errors: 400 (target not allowed), 413 (response over 5 MB), 429 (busy), 502/504 (upstream failed or timed out). |
 | GET | `/api/admin/me` | Admin only (403 for everyone else): `{email}`. The frontend uses it to decide whether to show the admin view. |
-| GET | `/api/admin/stats` | Admin only: account, session, task, project, objective, recurring-series and Sportask-block totals. |
+| GET | `/api/admin/stats` | Admin only: account, session, task, project, objective, recurring-series and Sportask-block totals, and `catalogVersion` (the published Sportask catalog version, 0 if none). |
 | GET | `/api/admin/users?query=&page=&size=` | Admin only: accounts newest first, filtered by email substring, with their task/project/session counts (never their content). |
 | PATCH | `/api/admin/users/{id}` `{email?, password?}` | Admin only: change the email and/or set a password (which also closes the user's sessions). 409 if the email is taken. |
 | DELETE | `/api/admin/users/{id}/sessions` | Admin only: sign the user out everywhere. |
 | DELETE | `/api/admin/users/{id}` | Admin only: delete the account and everything synced under it. |
+| GET | `/api/sport-catalog` | **Public (no token).** The published Sportask catalog overlay: `{version, publishedAt, document}` (`version` 0 and an empty document before the first publish). `ETag: "v<N>"`, `Cache-Control: no-cache`; honours `If-None-Match` with 304. See *Fitness director* below. |
+| GET | `/api/fitness/me` | Fitness directors and the admin (403 for everyone else): `{email, admin}`. The frontend uses it to decide whether to show the Fitness director view. |
+| GET / PUT | `/api/fitness/draft` | Directors only. GET: `{document, revision, baseVersion, updatedBy, updatedAt}`. PUT `{document, expectedRevision}`: validates shape and size, saves, returns `{revision, updatedAt}`; 409 if someone saved since `expectedRevision`, 400 for a bad shape, 413 over 256 KB. |
+| POST | `/api/fitness/publish` `{note, expectedRevision, rollbackOf?}` | Directors only. Snapshots the current draft as the next version (`rollbackOf` records that it republishes an older one). 409 if the draft moved since `expectedRevision`, 422 if it equals the published version. |
+| GET | `/api/fitness/versions`, `/api/fitness/versions/{n}` | Directors only. The history (version, note, kind, author, date, size; newest first, 200 at most) and one version with its document. |
+| POST | `/api/fitness/versions/{n}/restore` `{expectedRevision}` | Directors only. Copies version n **into the draft** (nothing is published). |
 | GET | `/actuator/health` | Health check. |
 
-Everything except login and health needs `Authorization: Bearer <token>`.
+Everything except login, health and `GET /api/sport-catalog` needs `Authorization: Bearer <token>`.
 
 ### Admin
 
@@ -55,7 +61,7 @@ delete their own account through these endpoints, and admin actions are logged (
 - Accounts created before passwords existed have no password: the first `signup` with that email claims it (and sets the password); until then it cannot be logged into.
 - Sequence-based cursors can, in theory, skip a row whose transaction commits after a later one; a periodic full
   pull (`since=0`) repairs it.
-- No automated tests yet.
+- Unit tests (JUnit, no database needed): `mvn verify` runs the Fitness director's shape validator, the role mapping of `BearerTokenFilter` and the ETag matching of the public catalog endpoint. The rest is exercised by hand against a local Postgres (see above).
 
 ## Railway
 
@@ -64,7 +70,7 @@ Two services plus Postgres; only the frontend has a public domain.
 - **Postgres**: Railway database plugin.
 - **backend** (root directory `/backend`, no public domain): variables `PGHOST`, `PGPORT`, `PGDATABASE`, `PGUSER`,
   `PGPASSWORD` as references to the database service (`${{Postgres.PGHOST}}` …), `PORT=8080`,
-  `CORS_ALLOWED_ORIGINS=moz-extension://*,https://localhost,capacitor://localhost`. Healthcheck path `/actuator/health`. The Dockerfile binds `::` because
+  `CORS_ALLOWED_ORIGINS=moz-extension://*,https://localhost,capacitor://localhost`, and optionally `ADMIN_EMAIL` and `FITNESS_DIRECTOR_EMAILS` (see *Admin* and *Fitness director*). Healthcheck path `/actuator/health`. The Dockerfile binds `::` because
   the private network is IPv6.
 - **frontend** (root directory `/`, root `Dockerfile`): generate a domain and set the healthcheck path `/healthz`.
   `BACKEND_ORIGIN` defaults to `http://productivist-backend.railway.internal:8080`; set it if the backend service
@@ -75,6 +81,33 @@ Two services plus Postgres; only the frontend has a public domain.
   is `https://localhost` on Android and `capacitor://localhost` on iOS, so both must be in `CORS_ALLOWED_ORIGINS`.
   The default in `application.yml` already has them, but a `CORS_ALLOWED_ORIGINS` variable set on Railway replaces
   the default: add them there too, or the apps' requests are rejected.
+
+### Fitness director (`/api/fitness/**`, `GET /api/sport-catalog`)
+
+Content authoring for Sportask (`docs/sportask/DIRECTOR.md`). The roles come from configuration, like the admin, never from a column:
+`FITNESS_DIRECTOR_EMAILS` (property `app.fitness.director-emails`) is a comma-separated list of account emails (case-insensitive; blank
+means nobody); `BearerTokenFilter` gives those accounts `ROLE_FITNESS_DIRECTOR` and `SecurityConfig` guards `/api/fitness/**` with it.
+**The admin is always a director too** (`ROLE_ADMIN` carries both authorities). As with `ADMIN_EMAIL`, **register those accounts yourself
+before setting the variable**: signup is open, so whoever registers an address first owns it. Writes are logged (not stored beyond the
+version rows below).
+
+- **What it stores** (`V9__fitness_catalog.sql`): `fitness_catalog_versions` (append-only; `version` is the key, `document` JSONB, `note`,
+  `kind` `publish|rollback`, `rollback_of`, `author_id` with `ON DELETE SET NULL` plus the denormalised `author_email`, so the audit trail
+  survives an account deletion, `published_at`) and `fitness_catalog_draft` (one row: `document`, `revision`, `base_version`,
+  `updated_by_email`, `updated_at`). The head is the highest `version`. The database only checks that a document is an object.
+- **A document is a catalog overlay** layered over the clients' built-in Sportask catalog: `{"schema": 1, "exercises": [{"id": ...}],
+  "ladders": [...], ...}`. The server checks **shape and size, never vocabulary** (`FitnessCatalogValidator`): an object, `schema` a
+  positive integer, at most 16 sections, every other key a list of at most 500 objects whose `id` matches `^[A-Za-z0-9_.-]{1,64}$` and is
+  unique in its list, depth at most 12, texts at most 2,000 characters, the whole document at most 262,144 characters. Whether an
+  exercise id or a phase parameter makes sense is the clients' business: the editor validates before publishing and every consumer
+  re-validates before applying, ignoring a document with errors whole.
+- **Concurrency.** The draft is shared by all directors; `PUT /draft` and `POST /publish` carry the `expectedRevision` they read and get
+  409 if it moved. Publishing takes an advisory lock, so two directors cannot be given the same version number.
+- **Public read.** `GET /api/sport-catalog` needs no token: the content is not personal, the app is local-first and sync is optional,
+  and the Thunderbird and mobile apps call the same `API_URL`. It sends nothing about the user and revalidates with `If-None-Match`
+  (304). It sits behind the frontend's nginx `/api/` rate limit. CORS allows `PUT` and the `If-None-Match` request header and exposes `ETag`.
+- **Rollback** is "restore into the draft, then publish": nothing switches a pointer, so every state a client has seen stays addressable
+  as a version, and publishing always goes through the same validation.
 
 ### Sportask (`sport_blocks`, `sport_templates`)
 

@@ -30,7 +30,7 @@ const hasSteps = (plan: BlockPlan): boolean => plan.steps.length > 0;
 /** Mobility at the same block length, then a single march/cat-cow step. Never empty. */
 function fallbackBlock(ctx: GenerationContext, warm: boolean, meta: BlockMeta): GeneratedBlock {
   const kind = warm ? 'warmup' : 'train';
-  const mobility = GOALS.get('mobility');
+  const mobility = (ctx.goals ?? GOALS).get('mobility');
   const program = mobility?.programs[0];
   if (mobility && program) {
     const params = { ...phaseFor(program, 1).params, warmup: warm };
@@ -84,12 +84,13 @@ function runGoal(ctx: GenerationContext, goal: AnyGoal, program: AnyGoal['progra
 
 function planGoal(ctx: GenerationContext, settings: SettingsLike, opts: GenerateOptions, warm: boolean): GeneratedBlock {
   const enrolment = ctx.enrolment ?? settings.enrolment;
-  const goal = enrolment ? GOALS.get(enrolment.goalId) : undefined;
+  const goals = ctx.goals ?? GOALS;
+  const goal = enrolment ? goals.get(enrolment.goalId) : undefined;
   if (!enrolment || !goal) return fallbackBlock(ctx, warm, { origin: 'goal' });
   const program = goal.programs.find((p) => p.id === enrolment.programId) ?? goal.programs[0]!;
   const position = programWeek(enrolment.startedOn, ctx.today, program.weeks);
 
-  const restGoal = goal.restDayGoalId ? GOALS.get(goal.restDayGoalId) : undefined;
+  const restGoal = goal.restDayGoalId ? goals.get(goal.restDayGoalId) : undefined;
   if (restGoal && !opts.forceTrain && !isTrainingDay(ctx, program, goal.id)) {
     return runGoal(ctx, restGoal, restGoal.programs[0]!, 1, warm, { origin: 'goal', restDay: true });
   }
@@ -106,7 +107,7 @@ function planGoal(ctx: GenerationContext, settings: SettingsLike, opts: Generate
 }
 
 function planFree(ctx: GenerationContext, session: SessionLike, opts: GenerateOptions, warm: boolean): GeneratedBlock {
-  const templates = [...BUILTIN_TEMPLATES.all, ...[...(opts.templates ?? [])].sort((a, b) => a.order - b.order)];
+  const templates = [...(ctx.templates ?? BUILTIN_TEMPLATES).all, ...[...(opts.templates ?? [])].sort((a, b) => a.order - b.order)];
   let chosen = session.templateId && session.templateId !== 'random' ? templates.find((t) => t.id === session.templateId) : undefined;
   if (!chosen) {
     const recent = new Set(

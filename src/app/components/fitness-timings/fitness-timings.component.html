@@ -1,0 +1,118 @@
+<div class="fd-split">
+  <section class="fd-pane" [attr.aria-label]="'fitness.tim.list' | translate">
+    <div class="fd-toolbar">
+      <button type="button" class="btn btn--secondary" (click)="startCreate(null)"><app-ui-icon name="plus" [size]="16" />{{ 'fitness.tim.new' | translate }}</button>
+    </div>
+    <p class="fd-hint">{{ 'fitness.tim.intro' | translate }}</p>
+    @if (creating(); as c) {
+      <form class="ftm__creating" (submit)="$event.preventDefault(); create()" (keydown.escape)="$event.stopPropagation(); creating.set(null)">
+        <div class="field">
+          <label class="field__label" for="ftm-new-en">{{ 'fitness.tim.name' | translate }} · EN</label>
+          <input #newName id="ftm-new-en" class="input" type="text" autocomplete="off" maxlength="60" [value]="c.en" (input)="setCreating('en', $event)" />
+        </div>
+        <div class="field">
+          <label class="field__label" for="ftm-new-es">{{ 'fitness.tim.name' | translate }} · ES</label>
+          <input id="ftm-new-es" class="input" type="text" autocomplete="off" maxlength="60" [value]="c.es" (input)="setCreating('es', $event)" />
+        </div>
+        <div class="fd-actions">
+          <button type="button" class="btn btn--secondary btn--sm" (click)="creating.set(null)">{{ 'fitness.cancel' | translate }}</button>
+          <button type="submit" class="btn btn--primary btn--sm" [disabled]="!createValid()">{{ 'fitness.tim.create' | translate }}</button>
+        </div>
+      </form>
+    }
+    <ul class="fd-list">
+      @for (r of rows(); track r.c.id) {
+        <li>
+          <button type="button" class="fd-item" [attr.aria-current]="id() === r.c.id" (click)="select(r.c.id)">
+            <span class="fd-item__text">
+              <span class="fd-item__name">{{ state.loc(r.c.name) }}</span>
+              <span class="fd-item__meta">{{ minutes(r.c.focusSeconds) }} / {{ minutes(r.c.breakSeconds) }} min</span>
+            </span>
+            @if (!r.builtin) {
+              <span class="fd-tag fd-tag--mine">{{ 'fitness.tagNew' | translate }}</span>
+            } @else if (r.changed) {
+              <span class="fd-tag fd-tag--changed">{{ 'fitness.tagChanged' | translate }}</span>
+            }
+          </button>
+        </li>
+      }
+    </ul>
+  </section>
+
+  @if (cadence(); as c) {
+    <section class="fd-detail">
+      <div class="fd-head">
+        <div>
+          <h3>{{ state.loc(c.name) }}</h3>
+          <span class="fd-id">{{ c.id }}</span>
+          @if (!base()) {
+            <span class="fd-tag fd-tag--mine">{{ 'fitness.tagNew' | translate }}</span>
+          }
+        </div>
+        <div class="fd-actions">
+          <button type="button" class="btn btn--secondary btn--sm" (click)="startCreate(c)">{{ 'fitness.tim.duplicate' | translate }}</button>
+          @if (changed()) {
+            <button type="button" class="btn btn--ghost btn--sm" (click)="resetToBuiltin()">{{ 'fitness.tim.reset' | translate }}</button>
+          }
+          @if (!base() && !published()) {
+            <button type="button" class="btn btn--danger btn--ghost btn--sm" (click)="confirmDelete.set(true)">{{ 'fitness.delete' | translate }}</button>
+          }
+        </div>
+      </div>
+      @if (confirmDelete()) {
+        <div class="confirm-bar" role="alertdialog" aria-labelledby="ftm-del">
+          <p class="confirm-bar__text" id="ftm-del">{{ 'fitness.tim.deleteQ' | translate }}</p>
+          <div class="confirm-bar__actions">
+            <button type="button" class="btn btn--secondary" (click)="confirmDelete.set(false)">{{ 'fitness.keep' | translate }}</button>
+            <button type="button" class="btn btn--danger" (click)="remove()">{{ 'fitness.delete' | translate }}</button>
+          </div>
+        </div>
+      }
+      @if (!base() && published()) {
+        <p class="fd-hint">{{ 'fitness.tim.publishedHint' | translate }}</p>
+      }
+      @if (problems().length > 0) {
+        <ul class="fd-problems">
+          @for (p of problems(); track $index) {
+            <li [attr.data-severity]="p.severity"><span aria-hidden="true">{{ p.severity === 'error' ? '●' : '○' }}</span><span>{{ state.issueText(p) }}</span></li>
+          }
+        </ul>
+      }
+      <p class="ftm__summary">{{ summary(c) }}</p>
+
+      <div class="fd-section">
+        <app-fitness-text-pair [label]="'fitness.tim.name' | translate" [max]="60" [value]="c.name" (valueChange)="setName($event)" />
+        <div class="fd-row">
+          <div class="field">
+            <label class="field__label" for="ftm-focus">{{ 'fitness.tim.focus' | translate }}</label>
+            <input id="ftm-focus" class="input fd-num" type="number" min="1" max="180" step="0.5" [value]="minutes(c.focusSeconds)" (change)="setMinutes('focusSeconds', $event)" />
+          </div>
+          <div class="field">
+            <label class="field__label" for="ftm-break">{{ 'fitness.tim.break' | translate }}</label>
+            <input id="ftm-break" class="input fd-num" type="number" min="0.5" max="60" step="0.5" [value]="minutes(c.breakSeconds)" (change)="setMinutes('breakSeconds', $event)" />
+          </div>
+          <div class="field">
+            <label class="field__label" for="ftm-every">{{ 'fitness.tim.exerciseEvery' | translate }}</label>
+            <input id="ftm-every" class="input fd-num" type="number" min="1" max="8" [value]="c.exerciseEvery" (change)="setEvery($event)" />
+          </div>
+        </div>
+        <button type="button" class="switch" role="switch" [attr.aria-checked]="!!c.longBreak" (click)="toggleLong()"><span class="switch__track"></span>{{ 'fitness.tim.longBreak' | translate }}</button>
+        @if (c.longBreak; as lb) {
+          <div class="fd-row">
+            <div class="field">
+              <label class="field__label" for="ftm-lb-every">{{ 'fitness.tim.longEvery' | translate }}</label>
+              <input id="ftm-lb-every" class="input fd-num" type="number" min="2" max="12" [value]="lb.every" (change)="setLong('every', $event)" />
+            </div>
+            <div class="field">
+              <label class="field__label" for="ftm-lb-min">{{ 'fitness.tim.longMinutes' | translate }}</label>
+              <input id="ftm-lb-min" class="input fd-num" type="number" min="0.5" max="60" step="0.5" [value]="minutes(lb.seconds)" (change)="setLong('seconds', $event)" />
+            </div>
+          </div>
+        }
+        <p class="fd-hint">{{ 'fitness.tim.hint' | translate }}</p>
+      </div>
+    </section>
+  } @else {
+    <section class="fd-detail"><p class="fd-empty">{{ 'fitness.tim.pick' | translate }}</p></section>
+  }
+</div>

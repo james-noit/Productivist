@@ -1,0 +1,86 @@
+<div class="fd-split">
+  <section class="fd-pane" [attr.aria-label]="'fitness.ver.list' | translate">
+    <p class="fd-hint">{{ 'fitness.ver.intro' | translate }}</p>
+    @if (failed()) {
+      <p class="fd-note fd-note--error" role="alert">{{ 'fitness.ver.failed' | translate }}</p>
+    }
+    <ul class="fd-list">
+      @for (v of versions(); track v.version) {
+        <li>
+          <button type="button" class="fd-item" [attr.aria-current]="selected() === v.version" (click)="select(v.version)">
+            <span class="fd-item__text">
+              <span class="fd-item__name">{{ 'fitness.ver.version' | translate: { n: v.version } }}@if (v.version === head()) { · {{ 'fitness.ver.current' | translate }} }</span>
+              <span class="fd-item__meta">{{ v.author }} · {{ state.when(v.publishedAt) }}</span>
+            </span>
+            @if (v.kind === 'rollback') {
+              <span class="fd-tag fd-tag--changed">{{ 'fitness.ver.rollbackTag' | translate }}</span>
+            }
+          </button>
+        </li>
+      } @empty {
+        <li><p class="fd-empty">{{ (loading() ? 'fitness.status.loading' : 'fitness.ver.none') | translate }}</p></li>
+      }
+    </ul>
+  </section>
+
+  @if (current(); as v) {
+    <section class="fd-detail">
+      <div class="fd-head">
+        <div>
+          <h3>{{ 'fitness.ver.version' | translate: { n: v.version } }}</h3>
+          <span class="fd-id">{{ v.author }} · {{ state.when(v.publishedAt) }}</span>
+          @if (v.kind === 'rollback') {
+            <span class="fd-tag fd-tag--changed">{{ 'fitness.ver.rollbackOf' | translate: { n: v.rollbackOf } }}</span>
+          }
+        </div>
+        <div class="fd-actions">
+          <button type="button" class="btn btn--secondary btn--sm" [disabled]="blocked()" (click)="ask(v.version, false)">{{ 'fitness.ver.load' | translate }}</button>
+          <button type="button" class="btn btn--secondary btn--sm" [disabled]="blocked() || v.version === head()" (click)="ask(v.version, true)">{{ 'fitness.ver.rollback' | translate }}</button>
+        </div>
+      </div>
+      @if (state.dirty()) {
+        <p class="fd-hint">{{ 'fitness.ver.dirtyHint' | translate }}</p>
+      }
+      @if (confirm(); as c) {
+        <div class="confirm-bar" role="alertdialog" aria-labelledby="fvr-confirm">
+          <p class="confirm-bar__text" id="fvr-confirm">{{ (c.rollback ? 'fitness.ver.rollbackQ' : 'fitness.ver.loadQ') | translate: { n: c.version } }}</p>
+          <div class="confirm-bar__actions">
+            <button type="button" class="btn btn--secondary" (click)="confirm.set(null)">{{ 'fitness.cancel' | translate }}</button>
+            <button type="button" class="btn btn--primary" (click)="doRestore()">{{ (c.rollback ? 'fitness.ver.rollbackDo' : 'fitness.ver.loadDo') | translate }}</button>
+          </div>
+        </div>
+      }
+      <div class="fd-section">
+        <h4>{{ 'fitness.ver.note' | translate }}</h4>
+        <p class="fvr__note">{{ v.note || ('fitness.ver.noNote' | translate) }}</p>
+      </div>
+      <div class="fd-section">
+        <h4>{{ 'fitness.ver.changes' | translate: { n: v.version - 1 } }}</h4>
+        @if (changes(); as list) {
+          @if (list.length === 0) {
+            <p class="fd-hint">{{ 'fitness.ver.noChanges' | translate }}</p>
+          } @else {
+            <ul class="fvr__changes">
+              @for (c of list; track c.section + c.id) {
+                <li>
+                  <span class="fvr__sign" [attr.data-kind]="c.kind" aria-hidden="true">{{ c.kind === 'added' ? '+' : c.kind === 'removed' ? '−' : '~' }}</span>
+                  <span>
+                    <span class="fd-hint">{{ 'fitness.section.' + c.section | translate }}</span> · <strong>{{ name(c) }}</strong>
+                    @if (c.fields.length > 0) {
+                      <span class="fd-hint"> ({{ c.fields.join(', ') }})</span>
+                    }
+                  </span>
+                </li>
+              }
+            </ul>
+          }
+        } @else {
+          <p class="fd-hint">{{ 'fitness.status.loading' | translate }}</p>
+        }
+        <p class="fd-hint">{{ 'fitness.ver.replayHint' | translate }}</p>
+      </div>
+    </section>
+  } @else {
+    <section class="fd-detail"><p class="fd-empty">{{ 'fitness.ver.pick' | translate }}</p></section>
+  }
+</div>

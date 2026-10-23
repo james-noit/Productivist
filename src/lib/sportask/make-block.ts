@@ -1,6 +1,7 @@
 import { createId } from '../../core/create-id';
 import type { PendingBlock, SingleBlock, SportBlock, SportTemplate, SportaskSettings } from '../../types/sportask';
 import { generate } from './engine/generate';
+import { ensureOverlay } from './overlay/store';
 import { buildContext } from './session-context';
 
 export interface MakeBlockInput {
@@ -19,6 +20,7 @@ export interface MakeBlockInput {
 
 /** A new pending block (not started): the one place that turns a request and the stored history into a plan. */
 export function makePending(input: MakeBlockInput): PendingBlock {
+  ensureOverlay();
   const blockId = createId();
   const forceTrain = input.forceTrain ?? input.previous?.forceTrain ?? false;
   const ctx = buildContext({

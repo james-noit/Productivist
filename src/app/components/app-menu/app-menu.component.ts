@@ -15,12 +15,18 @@ import { SportaskService } from '../../../services/sportask.service';
 
 const RESET_PHRASE = 'confirm reset';
 
-/** The views every user has (Admin is added by the template while the account is the admin's), then Sportask. */
+/** The views every user has (the staff ones below are added while the account holds the role), then Sportask. */
 const VIEW_ENTRIES: readonly { id: AppView; label: string }[] = [
   { id: 'projects', label: 'menu.projects' },
   { id: 'pomodoro', label: 'menu.pomodoro' },
   { id: 'sportask', label: 'config.sportask' },
 ];
+
+/** Admin and Fitness director: icon outline and, for the admin's shield, its filled half. */
+const STAFF_ENTRIES = {
+  admin: { id: 'admin', label: 'menu.admin', icon: 'M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z', fill: 'M12 3l7 3v5c0 4.5-3 8-7 10z' },
+  fitness: { id: 'fitness', label: 'menu.fitness', icon: 'M9 4h6v3H9zM7 5.5H5v15h14v-15h-2M8.5 13l2.5 2.5 4.5-5', fill: '' },
+} as const;
 
 @Component({
   selector: 'app-app-menu',
@@ -72,6 +78,9 @@ export class AppMenuComponent {
 
   /** The Sportask entry shows only while Sportask is switched on (Configuration > Sportask). */
   readonly viewEntries = computed(() => (this.sportaskSettings.enabled() ? VIEW_ENTRIES : VIEW_ENTRIES.slice(0, 2)));
+
+  /** The views of the backend roles the signed-in account holds. */
+  readonly staffEntries = computed(() => [...(this.accounts.isAdmin() ? [STAFF_ENTRIES.admin] : []), ...(this.accounts.isFitnessDirector() ? [STAFF_ENTRIES.fitness] : [])]);
 
   isActive(id: AppView): boolean {
     const current = this.view.current();

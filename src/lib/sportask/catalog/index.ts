@@ -12,7 +12,7 @@ export type { MetClass } from './met';
 export { PICTOGRAM_IDS } from './pictograms';
 
 /** Bump when an exercise, ladder or assessment is added or changed (stored on every block). */
-export const CATALOG_VERSION = 1;
+export const CATALOG_VERSION = 2;
 
 export const CATALOG: Catalog = {
   exercises: createRegistry([...MOBILITY_EXERCISES, ...STRENGTH_EXERCISES, ...CALORIES_EXERCISES]),

@@ -27,16 +27,16 @@ interface Where {
   rung: number;
 }
 
-const whereCache = new WeakMap<Catalog, Map<string, Where>>();
+// Keyed by the catalog and tagged with the ladders' revision: the live registries are replaced in place when a catalog overlay is applied.
+const whereCache = new WeakMap<Catalog, { revision: number; map: Map<string, Where> }>();
 
 /** exercise id -> the ladder rung it sits on. */
 export function ladderIndex(catalog: Catalog): Map<string, Where> {
-  let map = whereCache.get(catalog);
-  if (!map) {
-    map = new Map();
-    for (const ladder of catalog.ladders.all) ladder.rungs.forEach((alts, rung) => alts.forEach((id) => map!.set(id, { ladderId: ladder.id, rung })));
-    whereCache.set(catalog, map);
-  }
+  const hit = whereCache.get(catalog);
+  if (hit && hit.revision === catalog.ladders.revision) return hit.map;
+  const map = new Map<string, Where>();
+  for (const ladder of catalog.ladders.all) ladder.rungs.forEach((alts, rung) => alts.forEach((id) => map.set(id, { ladderId: ladder.id, rung })));
+  whereCache.set(catalog, { revision: catalog.ladders.revision, map });
   return map;
 }
 

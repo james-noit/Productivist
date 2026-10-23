@@ -3,6 +3,7 @@ import type { BodyZone, LocalizedText, MovementPattern, SportBlock } from '../..
 import type { AssessmentDef, GenerationContext } from '../engine/context';
 import { type LadderParams, ladderIndex, replayLadders } from '../engine/progression';
 import { phaseFor, programWeek } from '../engine/schedule';
+import { CATALOG } from '../catalog';
 import { GOALS } from '../goals';
 import { netKcal, workSecondsDone } from '../kcal';
 import { baseWeeklyMinutes } from '../targets';
@@ -271,7 +272,10 @@ function summarize(points: { date: string; value: number }[], higherIsBetter: bo
 export function assessmentMetric(def: AssessmentDef): MetricDef {
   return {
     id: `assessment:${def.id}`,
-    name: def.name,
+    // A getter: the Fitness director's overlay may rename the assessment after this metric was built.
+    get name() {
+      return CATALOG.assessments.get(def.id)?.name ?? def.name;
+    },
     unit: UNITS[def.metric],
     chart: 'line',
     compute(blocks, range) {

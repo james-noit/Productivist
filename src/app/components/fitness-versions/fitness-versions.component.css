@@ -1,0 +1,39 @@
+.fvr__changes {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  font-size: 0.85rem;
+}
+
+.fvr__changes li {
+  display: flex;
+  gap: 0.5rem;
+  align-items: baseline;
+}
+
+.fvr__sign {
+  flex: none;
+  width: 1rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.fvr__sign[data-kind='added'] {
+  color: var(--color-capacity-safe);
+}
+
+.fvr__sign[data-kind='removed'] {
+  color: var(--color-high);
+}
+
+.fvr__sign[data-kind='changed'] {
+  color: var(--color-capacity-high);
+}
+
+.fvr__note {
+  margin: 0.15rem 0 0;
+  font-size: 0.85rem;
+}

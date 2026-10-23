@@ -23,6 +23,7 @@ import { RecurringTasksModalComponent } from './components/recurring-tasks-modal
 import { ProjectDetailViewComponent } from './components/project-detail-view/project-detail-view.component';
 import { ProjectsViewComponent } from './components/projects-view/projects-view.component';
 import { AdminViewComponent } from './components/admin-view/admin-view.component';
+import { FitnessViewComponent } from './components/fitness-view/fitness-view.component';
 import en from '../i18n/locales/en.json';
 
 /** The bridge Capacitor injects into its WebView; reading it imports nothing. */
@@ -49,6 +50,7 @@ type CapacitorGlobal = {
     ProjectsViewComponent,
     ProjectDetailViewComponent,
     AdminViewComponent,
+    FitnessViewComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './app.component.html',

@@ -18,6 +18,7 @@
     "developer": "Developer",
     "seedMockData": "Seed mock data",
     "admin": "Admin",
+    "fitness": "Fitness director",
     "configuration": "Configuration"
   },
   "account": {
