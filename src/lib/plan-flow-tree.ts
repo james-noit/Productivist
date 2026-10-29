@@ -1,16 +1,13 @@
-import { buildFlowGraph, chainOf, objectiveKey, taskKey, milestoneKey, type FlowGraph, type Progress } from './flow-graph';
+import { buildFlowGraph, chainOf, objectiveKey, taskKey, milestoneKey, type FlowGraph } from './flow-graph';
 import { horizonRank } from './flow-rules';
 import type { Milestone, Project } from '../types/project';
 import type { Todo } from '../types/todo';
 import type { FlowLink, Objective } from '../types/flow';
 
 /**
- * The tree behind Plan my day's "Work on current objectives": per project, its active objectives from the
- * longest horizon down, each with the open work that feeds it. Pure and framework-free; lazy UI only.
+ * The drill-down behind Plan my day's "Work on current objectives": per project, the chain long -> medium -> short ->
+ * open tasks, one level at a time. Pure and framework-free; lazy UI only.
  */
-
-/** Tasks shown per node; the rest is a "+N more" count. */
-export const TASKS_PER_NODE = 5;
 
 export interface TreeInput {
   /** In display order. */
@@ -21,27 +18,21 @@ export interface TreeInput {
   todos: readonly Todo[];
 }
 
-export interface TreeMilestone {
+export interface ProjectEntry {
+  project: Project;
+  graph: FlowGraph;
+}
+
+export interface WorkGroup {
   milestone: Milestone;
   tasks: Todo[];
 }
 
-export interface ObjectiveNode {
-  objective: Objective;
-  progress: Progress;
-  /** Active objectives of a shorter horizon that feed this one. */
-  children: ObjectiveNode[];
-  /** Open work linked straight to this objective. */
-  milestones: TreeMilestone[];
-  tasks: Todo[];
-  /** Open tasks beyond the cap. */
-  more: number;
-}
-
-export interface ProjectSection {
-  project: Project;
-  roots: ObjectiveNode[];
-  graph: FlowGraph;
+/** The open work feeding a short-term objective: tasks by linked milestone, then tasks linked directly. */
+export interface Work {
+  groups: WorkGroup[];
+  direct: Todo[];
+  count: number;
 }
 
 /** targetDate ascending (none last), then order, then title. */
@@ -54,13 +45,14 @@ export function compareObjectives(a: Objective, b: Objective): number {
   return a.order - b.order || a.title.localeCompare(b.title);
 }
 
-export function buildObjectiveTree(input: TreeInput): ProjectSection[] {
+/** One entry per project that has at least one active objective; the one with the earliest short-term date first. */
+export function projectsWithObjectives(input: TreeInput): ProjectEntry[] {
   const objectivesBy = groupBy(input.objectives, (o) => o.projectId);
   const linksBy = groupBy(input.links, (l) => l.projectId);
   const milestonesBy = groupBy(input.milestones, (m) => m.projectId);
   const todosBy = groupBy(input.todos, (t) => t.projectId ?? '');
 
-  const sections: ProjectSection[] = [];
+  const entries: ProjectEntry[] = [];
   for (const project of input.projects) {
     const objectives = objectivesBy.get(project.id) ?? [];
     if (!objectives.some((o) => o.status === 'active')) continue;
@@ -72,87 +64,111 @@ export function buildObjectiveTree(input: TreeInput): ProjectSection[] {
       todos: todosBy.get(project.id) ?? [],
       showDone: true,
     });
-    sections.push({ project, graph, roots: buildRoots(graph) });
+    entries.push({ project, graph });
   }
 
-  // The project with the earliest short-term target date first; undated ones keep their order after.
-  const nearest = (s: ProjectSection): string | null =>
-    s.graph.objectives
+  const nearest = (e: ProjectEntry): string | null =>
+    e.graph.objectives
       .filter((o) => o.status === 'active' && o.horizon === 'short' && o.targetDate)
       .reduce<string | null>((min, o) => (min === null || o.targetDate! < min ? o.targetDate! : min), null);
-  const keyed = sections.map((s, index) => ({ s, index, date: nearest(s) }));
+  const keyed = entries.map((e, index) => ({ e, index, date: nearest(e) }));
   keyed.sort((a, b) => {
     if (a.date === b.date) return a.index - b.index;
     if (a.date === null) return 1;
     if (b.date === null) return -1;
     return a.date < b.date ? -1 : 1;
   });
-  return keyed.map((k) => k.s);
+  return keyed.map((k) => k.e);
 }
 
-function buildRoots(graph: FlowGraph): ObjectiveNode[] {
-  const active = graph.objectives.filter((o) => o.status === 'active');
-  const activeIds = new Set(active.map((o) => o.id));
+const activeOf = (graph: FlowGraph) => graph.objectives.filter((o) => o.status === 'active');
+
+/** Ids of active objectives that feed an active, longer one. */
+function withParent(graph: FlowGraph, active: readonly Objective[]): Set<string> {
+  const ids = new Set(active.map((o) => o.id));
+  const out = new Set<string>();
+  for (const link of graph.links) {
+    if (link.fromKind === 'objective' && ids.has(link.fromId) && ids.has(link.toObjectiveId)) out.add(link.fromId);
+  }
+  return out;
+}
+
+/** The active long-term objectives. */
+export function rootsOf(graph: FlowGraph): Objective[] {
+  return activeOf(graph)
+    .filter((o) => o.horizon === 'long')
+    .sort(compareObjectives);
+}
+
+/** Active medium/short objectives that sit under no active longer one: they enter the path at their own level. */
+export function orphansOf(graph: FlowGraph): Objective[] {
+  const active = activeOf(graph);
+  const parented = withParent(graph, active);
+  return active
+    .filter((o) => o.horizon !== 'long' && !parented.has(o.id))
+    .sort((a, b) => horizonRank(b.horizon) - horizonRank(a.horizon) || compareObjectives(a, b));
+}
+
+/** The active objectives of a shorter horizon linked straight to `parent` (a long one also lists short ones with no medium between). */
+export function childrenOf(graph: FlowGraph, parent: Objective): Objective[] {
+  const byId = new Map(graph.objectives.map((o) => [o.id, o] as const));
+  const own = (id: string): Objective[] => {
+    const seen = new Set<string>();
+    const out: Objective[] = [];
+    for (const l of graph.byTarget.get(id) ?? []) {
+      const o = l.fromKind === 'objective' ? byId.get(l.fromId) : undefined;
+      if (o && o.status === 'active' && horizonRank(o.horizon) < horizonRank(byId.get(id)!.horizon) && !seen.has(o.id)) {
+        seen.add(o.id);
+        out.push(o);
+      }
+    }
+    return out;
+  };
+  const direct = own(parent.id);
+  if (parent.horizon !== 'long') return direct.sort(compareObjectives);
+  const mediums = direct.filter((o) => o.horizon === 'medium');
+  const viaMedium = new Set(mediums.flatMap((m) => own(m.id).map((o) => o.id)));
+  return [...mediums, ...direct.filter((o) => o.horizon === 'short' && !viaMedium.has(o.id))].sort(compareObjectives);
+}
+
+/** The longest prefix of `path` that is still a valid, active walk down from the top level. */
+export function validPath(graph: FlowGraph, path: readonly string[]): string[] {
+  const byId = new Map(graph.objectives.map((o) => [o.id, o] as const));
+  const out: string[] = [];
+  let allowed: Objective[] = [...rootsOf(graph), ...orphansOf(graph)];
+  for (const id of path) {
+    const o = byId.get(id);
+    if (!o || !allowed.some((a) => a.id === id)) break;
+    out.push(id);
+    allowed = o.horizon === 'short' ? [] : childrenOf(graph, o);
+  }
+  return out;
+}
+
+/** Open tasks that feed `shortId`: through linked milestones (grouped), then linked directly. */
+export function workOf(graph: FlowGraph, shortId: string): Work {
+  const links = graph.byTarget.get(shortId) ?? [];
   const todoById = new Map<string, Todo>();
   for (const card of graph.cards) for (const todo of card.rows) todoById.set(todo.id, todo);
-
-  // Objectives that feed an active, longer one are children, not roots.
-  const hasParent = new Set<string>();
-  for (const link of graph.links) {
-    if (link.fromKind === 'objective' && activeIds.has(link.fromId) && activeIds.has(link.toObjectiveId)) hasParent.add(link.fromId);
+  const seen = new Set<string>();
+  const groups: WorkGroup[] = [];
+  for (const link of links) {
+    if (link.fromKind !== 'milestone') continue;
+    const card = graph.cards.find((c) => c.key === milestoneKey(link.fromId));
+    if (!card?.milestone) continue;
+    const tasks = card.rows.filter((t) => !t.done && !seen.has(t.id));
+    for (const t of tasks) seen.add(t.id);
+    if (tasks.length) groups.push({ milestone: card.milestone, tasks });
   }
-
-  const nodeOf = (objective: Objective): ObjectiveNode => {
-    const links = graph.byTarget.get(objective.id) ?? [];
-    const children = links
-      .filter((l) => l.fromKind === 'objective' && activeIds.has(l.fromId))
-      .map((l) => graph.objectives.find((o) => o.id === l.fromId)!)
-      .sort(compareObjectives)
-      .map(nodeOf);
-
-    const seen = new Set<string>();
-    let shown = 0;
-    let more = 0;
-    const take = (todo: Todo | undefined): Todo | null => {
-      if (!todo || todo.done || seen.has(todo.id)) return null;
+  const direct: Todo[] = [];
+  for (const link of links) {
+    const todo = link.fromKind === 'task' ? todoById.get(link.fromId) : undefined;
+    if (todo && !todo.done && !seen.has(todo.id)) {
       seen.add(todo.id);
-      if (shown >= TASKS_PER_NODE) {
-        more++;
-        return null;
-      }
-      shown++;
-      return todo;
-    };
-    const milestones: TreeMilestone[] = [];
-    for (const link of links) {
-      if (link.fromKind !== 'milestone') continue;
-      const card = graph.cards.find((c) => c.key === milestoneKey(link.fromId));
-      if (!card?.milestone) continue;
-      const tasks = card.rows.map(take).filter((t): t is Todo => t !== null);
-      if (tasks.length || card.rows.some((t) => !t.done)) milestones.push({ milestone: card.milestone, tasks });
+      direct.push(todo);
     }
-    const tasks = links
-      .filter((l) => l.fromKind === 'task')
-      .map((l) => take(todoById.get(l.fromId)))
-      .filter((t): t is Todo => t !== null);
-
-    return {
-      objective,
-      progress: graph.progress.get(objective.id) ?? { done: 0, total: 0, percent: 0 },
-      children,
-      milestones,
-      tasks,
-      more,
-    };
-  };
-
-  const byHorizon = (horizon: Objective['horizon']) => active.filter((o) => o.horizon === horizon).sort(compareObjectives);
-  const roots = [
-    ...byHorizon('long'),
-    ...byHorizon('medium').filter((o) => !hasParent.has(o.id)),
-    ...byHorizon('short').filter((o) => !hasParent.has(o.id)),
-  ];
-  return roots.map(nodeOf);
+  }
+  return { groups, direct, count: seen.size };
 }
 
 /** The active objectives above `objectiveId`, nearest first, following the first parent by precedence at each step. */

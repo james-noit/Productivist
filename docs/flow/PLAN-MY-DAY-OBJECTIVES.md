@@ -139,3 +139,90 @@ Deviations:
 - No self-check cases added; the tree was checked with a throwaway script (roots, children, 5-task cap, `chainUp`, `shortObjectiveOfTask`).
 
 Not verified: the UI in a browser (no dev server was started).
+
+## Revision: drill-down path finder (replaces the step-1 tree)
+
+Why: the tree let a long- or medium-term objective become today's objective by copying its title, which
+does not guide anyone. A daily objective must be *today's step towards a short-term objective*, reached
+by walking down the chain to real tasks.
+
+`plan-flow-objectives` keeps its `<details>` shell, "Work on current objectives" summary and the
+collapsed-by-default `open = signal(false)` (a user edit, keep it). Its body becomes a drill-down that
+shows **one level at a time**:
+
+1. **Project**: only when more than one project has active objectives (otherwise skipped, and its
+   crumb is not shown).
+2. **Long term**: the project's active long-term objectives, then a muted group "Not under a long-term
+   objective" with the active medium-term ones that feed no active long-term one and the short-term
+   ones that feed no active medium/long one (they enter the path at their own level).
+3. **Medium term**: the active medium-term objectives linked to the chosen long-term one.
+4. **Short term**: the active short-term objectives linked to the chosen medium-term one.
+5. **Work**: the open tasks feeding the chosen short-term objective, grouped by linked milestone
+   (milestone name as a group heading), then the tasks linked directly. No 5-task cap here.
+
+Rows (levels 1-4): a full-width button per item: horizon pill, title, target date, done/total, and
+a count of what sits beneath ("2 short-term" / "3 tasks"), then a `chevron-right`. Order: the existing
+`compareObjectives` precedence. Clicking a row goes down a level.
+
+Breadcrumb at the top (`nav` with an `ol`, last crumb `aria-current="step"`): every crumb above the current
+level is a button that goes back to that level. Backspace (when focus is not in a text field) and
+Alt+Left go up one level. When moving down or up, focus goes to the first row of the new level
+(or the crumb/heading), with `afterNextRender`. A heading per level says what is listed
+("Long-term objectives in Launch app", "Medium-term objectives for “1000 paying users”", ...).
+
+**Work level = where today's objective is made:**
+- Each task row is a check box (`role="checkbox"`-style button or a real checkbox with label) to tick
+  the tasks for today. Tasks already planned in another draft show "In: <draft text>" muted and stay
+  tickable (ticking moves them).
+- A field labelled "Today, towards “<short-term title>”:" (`.input`), prefilled while untouched: the
+  title of the single ticked task, else the name of the milestone of the ticked tasks when they share
+  one, else the short-term title. Once the user types, it is no longer auto-filled.
+- *Add to today* (`.btn--primary`, disabled while the text is empty) appends
+  `{ text, flowObjectiveId: shortId, taskIds: ticked }` to `DailyPlanService.objectivesList`
+  (dedupe: a ticked task is removed from any other draft's `taskIds`), clears the ticks and the field,
+  and goes back up to the short-term level (so siblings are one click away). A muted line confirms
+  "Added to today".
+- A short-term objective that already has a draft shows "In today's list" on its row; at its Work level,
+  *Add to today* becomes *Update today's objective* and edits that draft (text and taskIds) instead of
+  adding a second one.
+
+**Dead ends create the missing piece** (inline single-field forms, Enter submits, Escape cancels and is
+stopped so the modal stays open):
+- Long-term level with nothing: *Add a long-term objective*.
+- Medium level empty: *Add a medium-term objective* → `FlowService.addObjective({ projectId, title,
+  horizon: 'medium', ... })` then `FlowService.link({ kind: 'objective', id: newId }, parentId)`.
+- Short level empty: *Add a short-term objective* (same, linked to the medium parent).
+- Work level empty, or always at its end: *New task* → `TodosService.addTodo` in the objective's
+  project, then `FlowService.link({ kind: 'task', id }, shortId)`, and it is ticked.
+These add rows show at the end of non-empty levels too (as quiet `.button-ghost`), and creating one
+goes straight into it (for objectives) or ticks it (for a task). Read `FlowService.addObjective`'s
+signature and `link`'s `FlowSource` type before calling them.
+
+State: the path is local signals (`projectId`, `longId`, `mediumId`, `shortId` or one `path` array),
+not persisted. If an id on the path vanishes or stops being active (sync, edit), fall back to the deepest
+level still valid. Everything the template reads comes from computeds (no methods building arrays in the
+template).
+
+Lib: rework `lib/plan-flow-tree.ts` around the drill-down: keep `compareObjectives`, `chainUp`,
+`shortObjectiveOfTask`, `taskIdsFeeding`, `byHorizonThenPrecedence` (step 3 uses some of them; check usages),
+replace `buildObjectiveTree` with level helpers (e.g. `projectsWithObjectives`, `childrenOf(graph, objectiveId,
+horizon)`, `orphansOf(...)`, `workOf(graph, shortId)` returning milestone groups + direct tasks, open only).
+Pure, framework-free, still in `NEVER_INITIAL_UI`. Remove dead code and strings that the tree used
+(`workToday`, `added`, `planTask`, `more` if unused).
+
+Responsive: single column at any width; rows at least 44px tall on touch; the breadcrumb wraps.
+Strings: terse, en + es, under `planningLab.flow.*`; reuse `flow.horizons.*` and `planningLab.count.*`.
+
+The chips, `chooseFromProjects`, step 2 and step 3 stay as they are.
+
+### Revision status
+
+Built: the drill-down as specified. `plan-flow-objectives` (levels project / long / medium / short / work, breadcrumb, Backspace and Alt+Left, focus to the first row, "Today, towards ..." field with auto-fill until typed, *Add to today* / *Update today's objective*, inline creation of objectives and tasks), `lib/plan-flow-tree.ts` reworked (`projectsWithObjectives`, `rootsOf`, `orphansOf`, `childrenOf`, `validPath`, `workOf`; `buildObjectiveTree` and `TASKS_PER_NODE` removed; `compareObjectives`, `chainUp`, `shortObjectiveOfTask`, `taskIdsFeeding`, `byHorizonThenPrecedence` kept for step 3). Strings: removed `workToday`, `added`, `planTask`, `more`; added `projects`, `path`, `empty`, `orphans`, `head.*`, `subMedium`, `subShort`, `inList`, `inDraft`, `today`, `addToday`, `updateToday`, `addedToday`, `add.*` (en, es). Initial bundle 323.37 -> 323.95 kB (+0.58, strings only). `check:lazy` passes.
+
+Deviations:
+- A long-term objective's list also shows short-term objectives linked straight to it (when no listed medium one sits between), since the link rules allow it.
+- An extra first crumb "Projects" goes back to the project list when there is more than one project.
+- Re-entering a short-term objective that already has a draft pre-ticks its open tasks and fills the field with the draft text.
+- New tasks are created with medium importance and urgency.
+
+Not verified: the UI in a browser (no dev server started); `check:sportask` not rerun (untouched).
