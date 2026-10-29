@@ -129,6 +129,8 @@ const NEVER_INITIAL_UI = [
   'src/lib/project-cards.ts',
   'src/lib/project-icon-paths.ts',
   component('plan-objectives-step'),
+  component('plan-flow-objectives'),
+  'src/lib/plan-flow-tree.ts',
   component('context-menu'),
   component('projects-context-menu'),
   component('milestone-quick-form'),

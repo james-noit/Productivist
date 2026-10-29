@@ -21,10 +21,23 @@
       <div class="daily-backlog-prompt__form">
         @if (objectivesList().length) {
           <ul class="daily-backlog-prompt__objective-list">
-            @for (objective of objectivesList(); track $index) {
+            @for (objective of chips(); track $index) {
               <li class="daily-backlog-prompt__objective-chip">
                 <span class="daily-backlog-prompt__objective-index">{{ $index + 1 }}</span>
-                <span class="daily-backlog-prompt__objective-text">{{ objective }}</span>
+                <span class="daily-backlog-prompt__objective-text">
+                  @if (objective.horizon) {
+                    <app-ui-icon
+                      name="target"
+                      [size]="14"
+                      class="daily-backlog-prompt__flow-mark"
+                      [attr.data-horizon]="objective.horizon"
+                    />
+                  }
+                  {{ objective.text }}
+                  @if (objective.tasks) {
+                    <span class="daily-backlog-prompt__flow-tasks">· {{ 'planningLab.count.' + (objective.tasks === 1 ? 'one' : 'other') | translate: { n: objective.tasks } }}</span>
+                  }
+                </span>
                 <button
                   type="button"
                   class="daily-backlog-prompt__objective-remove"
@@ -57,6 +70,12 @@
         </div>
         <p class="daily-backlog-prompt__hint">{{ 'planningLab.objectiveInputHint' | translate }}</p>
       </div>
+
+      @if (hasActiveObjective()) {
+        @defer (on immediate) {
+          <app-plan-flow-objectives />
+        }
+      }
 
       <details class="daily-backlog-prompt__suggestions" open>
         <summary class="daily-backlog-prompt__suggestions-header">

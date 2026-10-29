@@ -1,0 +1,135 @@
+:host {
+  display: block;
+}
+
+.pfo {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+}
+
+.pfo__summary {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--color-text);
+  list-style: none;
+}
+
+.pfo__summary::-webkit-details-marker {
+  display: none;
+}
+
+.pfo__summary:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.pfo__project {
+  margin-top: 0.75rem;
+}
+
+.pfo__project-name {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0 0 0.25rem;
+  font-size: 0.9rem;
+  color: var(--color-text);
+}
+
+.pfo__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.pfo__list--nested {
+  margin-left: 1.1rem;
+  padding-left: 0.4rem;
+  border-left: 1px solid var(--color-border);
+}
+
+.pfo__row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 2.25rem;
+  padding: 0.15rem 0;
+}
+
+.pfo__row--work {
+  color: var(--color-text-muted);
+}
+
+.pfo__chevron,
+.pfo__chevron-gap {
+  flex-shrink: 0;
+  width: 1.75rem;
+}
+
+.pfo__pill {
+  flex-shrink: 0;
+  padding: 0.05rem 0.45rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--color-text);
+  background-color: var(--color-surface-alt);
+  border: 1px solid var(--color-border);
+  border-left-width: 3px;
+}
+
+.pfo__pill[data-horizon='short'] {
+  border-left-color: var(--color-horizon-short);
+}
+
+.pfo__pill[data-horizon='medium'] {
+  border-left-color: var(--color-horizon-medium);
+}
+
+.pfo__pill[data-horizon='long'] {
+  border-left-color: var(--color-horizon-long);
+}
+
+.pfo__title {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.pfo__meta {
+  display: inline-flex;
+  gap: 0.5rem;
+  flex-shrink: 0;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
+.pfo__action {
+  flex-shrink: 0;
+}
+
+.pfo__action--on {
+  color: var(--color-primary);
+}
+
+.pfo__more {
+  padding: 0.2rem 0 0.2rem 2.2rem;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
+@media (max-width: 600px) {
+  .pfo__row {
+    flex-wrap: wrap;
+  }
+
+  .pfo__title {
+    flex-basis: 60%;
+  }
+}

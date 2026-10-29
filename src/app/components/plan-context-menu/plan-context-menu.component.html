@@ -71,6 +71,11 @@
                   {{ 'planningLab.moveToObjective' | translate }}<app-ui-icon class="menu-item__hint" name="chevron-right" [size]="16" />
                 </button>
               }
+              @if (s.card.flow && s.card.rows[s.index].canLink) {
+                <button type="button" role="menuitem" class="menu-item" (click)="link(s.todo!.id, s.card.id, menu)">
+                  <span class="plctx__label">{{ 'planningLab.flow.linkTask' | translate: { title: s.card.flow.title } }}</span>
+                </button>
+              }
               <button type="button" role="menuitem" class="menu-item" (click)="markDone(s.todo!.id, s.card.id, menu)">
                 {{ 'eisenhower.markDone' | translate }}
               </button>

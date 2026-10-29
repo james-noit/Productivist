@@ -426,6 +426,17 @@
     }
   },
   "planningLab": {
+    "flow": {
+      "title": "Work on current objectives",
+      "workToday": "Work on this today",
+      "added": "Added",
+      "planTask": "Plan this task",
+      "more": "+{{n}} more",
+      "connect": "Connect to a project objective",
+      "linkTask": "Link to “{{title}}”",
+      "unlink": "Unlink",
+      "feeds": "Feeds the project objective"
+    },
     "title": "Plan my day",
     "workOnThis": "Work on this",
     "otherPlanned": "Other planned tasks",

@@ -9,6 +9,15 @@ export const UNASSIGNED_GROUP_ID = '__unassigned__';
 export interface DailyObjective {
   id: string;
   text: string;
+  /** The project objective (Flow) this one works towards; optional and synced. Look it up, never trust it. */
+  flowObjectiveId?: string;
+}
+
+/** A step-1 entry before planning starts; `taskIds` are tasks picked in the objectives tree. */
+export interface DraftObjective {
+  text: string;
+  flowObjectiveId?: string;
+  taskIds?: string[];
 }
 
 export interface ExecutionLot {
@@ -26,7 +35,7 @@ export class DailyPlanService {
    * on step 1 does not discard what was typed.
    */
   readonly objectiveDraft = signal('');
-  readonly objectivesList = signal<string[]>([]);
+  readonly objectivesList = signal<DraftObjective[]>([]);
   readonly hasAnyObjective = computed(
     () => this.objectivesList().length > 0 || this.objectiveDraft().trim().length > 0,
   );
@@ -88,16 +97,15 @@ export class DailyPlanService {
    * objectives that aren't the one being changed. Assignments pointing at a dropped or
    * reworded objective are pruned, since there's no way to tell those apart from a fresh one.
    */
-  updateObjectives(objectiveTexts: string[]): void {
+  updateObjectives(drafts: readonly DraftObjective[]): void {
     const remainingPrevious = [...this.objectives()];
-    const next = objectiveTexts
-      .map((text) => text.trim())
-      .filter(Boolean)
-      .map((text) => {
-        const matchIndex = remainingPrevious.findIndex((o) => o.text === text);
-        if (matchIndex === -1) return { id: createId(), text };
-        const [matched] = remainingPrevious.splice(matchIndex, 1);
-        return { id: matched.id, text };
+    const next = drafts
+      .map((d) => ({ text: d.text.trim(), flowObjectiveId: d.flowObjectiveId }))
+      .filter((d) => d.text)
+      .map(({ text, flowObjectiveId }): DailyObjective => {
+        const matchIndex = remainingPrevious.findIndex((o) => o.text === text && o.flowObjectiveId === flowObjectiveId);
+        const id = matchIndex === -1 ? createId() : remainingPrevious.splice(matchIndex, 1)[0].id;
+        return flowObjectiveId ? { id, text, flowObjectiveId } : { id, text };
       });
     this.objectives.set(next);
 
@@ -123,10 +131,21 @@ export class DailyPlanService {
     this.taskOrder.update((order) => order.filter((id) => kept.has(id)));
   }
 
-  startPlanning(objectiveTexts: string[]): void {
-    this.updateObjectives(objectiveTexts);
+  startPlanning(drafts: readonly DraftObjective[]): void {
+    this.updateObjectives(drafts);
     if (!this.objectives().length) return;
     this.stage.set('chooseProjects');
+  }
+
+  /** Links a daily objective to a project objective (or unlinks it with null). */
+  linkFlowObjective(dailyId: string, flowObjectiveId: string | null): void {
+    this.objectives.update((list) =>
+      list.map((o) => {
+        if (o.id !== dailyId) return o;
+        const { flowObjectiveId: _old, ...rest } = o;
+        return flowObjectiveId ? { ...rest, flowObjectiveId } : rest;
+      }),
+    );
   }
 
   backToPrompt(): void {

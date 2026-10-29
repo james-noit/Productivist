@@ -12,8 +12,11 @@ import {
 } from '@angular/core';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { formatIso } from '../../../lib/dates';
+import { buildFlowGraph, type FlowGraph } from '../../../lib/flow-graph';
+import { byHorizonThenPrecedence, chainUp, taskIdsFeeding } from '../../../lib/plan-flow-tree';
 import { compareNextUp } from '../../../lib/project-cards';
 import { DailyPlanService, UNASSIGNED_GROUP_ID } from '../../../services/daily-plan.service';
+import { FlowService } from '../../../services/flow.service';
 import { ProjectsService } from '../../../services/projects.service';
 import { RecurrenceService } from '../../../services/recurrence.service';
 import { SettingsService } from '../../../services/settings.service';
@@ -40,6 +43,23 @@ interface MetaPart {
 interface PlanRow {
   todo: Todo;
   meta: MetaPart[];
+  /** The task already feeds the card's project objective. */
+  feeds: boolean;
+  /** It does not yet, and could (same project): offers "Link to ...". */
+  canLink: boolean;
+}
+
+/** The project objective a card is linked to, with the chain above it (short <- medium <- long titles). */
+interface CardFlow {
+  id: string;
+  projectId: string;
+  title: string;
+  chain: string[];
+}
+
+interface ConnectGroup {
+  name: string;
+  items: { id: string; title: string }[];
 }
 
 interface PlanProject {
@@ -56,6 +76,9 @@ interface ObjectiveCard {
   suggestions: Todo[];
   projects: PlanProject[];
   pomodoros: number;
+  flow: CardFlow | null;
+  /** Active short-term project objectives an unlinked card may connect to, grouped by project. */
+  connect: ConnectGroup[];
 }
 
 interface PickerConfig {
@@ -116,6 +139,7 @@ export class PlanObjectivesStepComponent {
   private readonly dailyPlan = inject(DailyPlanService);
   private readonly todos = inject(TodosService);
   private readonly projects = inject(ProjectsService);
+  private readonly flow = inject(FlowService);
   private readonly recurrences = inject(RecurrenceService);
   private readonly settings = inject(SettingsService);
   private readonly translate = inject(TranslateService);
@@ -167,7 +191,39 @@ export class PlanObjectivesStepComponent {
     }
     for (const [key, list] of free) free.set(key, list.sort(byNextUp).slice(0, SUGGESTION_LIMIT));
 
+    // Project objectives: one graph per project involved, built on demand.
+    const flowObjectives = this.flow.objectives();
+    const flowById = new Map(flowObjectives.map((o) => [o.id, o] as const));
+    const flowLinks = this.flow.links();
+    const graphs = new Map<string, FlowGraph>();
+    const graphOf = (projectId: string): FlowGraph => {
+      let graph = graphs.get(projectId);
+      if (!graph) {
+        graph = buildFlowGraph({
+          projectId,
+          objectives: flowObjectives.filter((o) => o.projectId === projectId),
+          links: flowLinks.filter((l) => l.projectId === projectId),
+          milestones: this.projects.milestones().filter((m) => m.projectId === projectId),
+          todos: todos.filter((t) => t.projectId === projectId),
+          showDone: true,
+        });
+        graphs.set(projectId, graph);
+      }
+      return graph;
+    };
+    const activeShort = flowObjectives.filter((o) => o.status === 'active' && o.horizon === 'short').sort(byHorizonThenPrecedence);
+
     return objectives.map((objective) => {
+      const linkedFlow = objective.flowObjectiveId ? flowById.get(objective.flowObjectiveId) : undefined;
+      const feeding = linkedFlow ? taskIdsFeeding(graphOf(linkedFlow.projectId), linkedFlow.id) : null;
+      const flow: CardFlow | null = linkedFlow
+        ? {
+            id: linkedFlow.id,
+            projectId: linkedFlow.projectId,
+            title: linkedFlow.title,
+            chain: [linkedFlow.title, ...chainUp(graphOf(linkedFlow.projectId), linkedFlow.id).map((o) => o.title)],
+          }
+        : null;
       const linked: PlanProject[] = [];
       const suggestions: Todo[] = [];
       for (const id of links[objective.id] ?? []) {
@@ -191,15 +247,41 @@ export class PlanObjectivesStepComponent {
           const overdue = todo.dueDate < today;
           meta.push({ text: overdue ? '' : formatIso(format, todo.dueDate), overdue });
         }
-        return { todo, meta };
+        const feeds = !!feeding?.has(todo.id);
+        return { todo, meta, feeds, canLink: !!flow && !feeds && todo.projectId === flow.projectId };
       });
+      // Linked: the open tasks that feed the project objective come first.
+      let ranked = suggestions.sort(byNextUp);
+      if (feeding) {
+        const first = [...feeding]
+          .map((id) => todosById.get(id))
+          .filter((t): t is Todo => !!t && !t.done && !assignments[t.id])
+          .sort(byNextUp);
+        ranked = [...first, ...ranked.filter((t) => !feeding.has(t.id))];
+      }
+      let connect: ConnectGroup[] = [];
+      if (!flow && activeShort.length) {
+        const mine = new Set(linked.map((p) => p.id));
+        const near = activeShort.filter((o) => mine.has(o.projectId));
+        const pool = near.length ? near : activeShort;
+        const byProject = new Map<string, ConnectGroup>();
+        for (const o of pool) {
+          const group = byProject.get(o.projectId);
+          const item = { id: o.id, title: o.title };
+          if (group) group.items.push(item);
+          else byProject.set(o.projectId, { name: projectsById.get(o.projectId)?.name ?? '', items: [item] });
+        }
+        connect = [...byProject.values()];
+      }
       return {
         id: objective.id,
         text: objective.text,
         rows,
-        suggestions: suggestions.sort(byNextUp).slice(0, SUGGESTION_LIMIT),
+        suggestions: ranked.slice(0, SUGGESTION_LIMIT),
         projects: linked,
         pomodoros: tasks.reduce((sum, t) => sum + (t.pomodorosForTermination ?? 1), 0),
+        flow,
+        connect,
       };
     });
   });
@@ -312,7 +394,34 @@ export class PlanObjectivesStepComponent {
     });
     this.dailyPlan.assignProjectToObjective(project, card.id);
     this.dailyPlan.assignTask(id, card.id);
+    // A task typed under a linked card also feeds its project objective (links never cross projects; a refusal is ignored).
+    if (card.flow && project === card.flow.projectId) this.flow.link({ kind: 'task', id, projectId: project }, card.flow.id);
     this.newTitle.set('');
+  }
+
+  // --- Project objective of a card: connect, unlink, link a task ---
+
+  connectFlow(card: ObjectiveCard, flowObjectiveId: string): void {
+    const target = this.flow.objectives().find((o) => o.id === flowObjectiveId);
+    if (!target) return;
+    this.dailyPlan.linkFlowObjective(card.id, flowObjectiveId);
+    this.dailyPlan.assignProjectToObjective(target.projectId, card.id);
+  }
+
+  unlinkFlow(card: ObjectiveCard): void {
+    this.dailyPlan.linkFlowObjective(card.id, null);
+  }
+
+  /** Makes a planned task feed the card's project objective. */
+  linkTask(todo: Todo, card: ObjectiveCard): void {
+    if (card.flow && todo.projectId) this.flow.link({ kind: 'task', id: todo.id, projectId: todo.projectId }, card.flow.id);
+  }
+
+  linkTaskFromMenu(taskId: string, objectiveId: string): void {
+    const todo = this.todos.todos().find((t) => t.id === taskId);
+    const card = this.cards().find((c) => c.id === objectiveId);
+    if (todo && card) this.linkTask(todo, card);
+    this.focusAfter(taskId, objectiveId);
   }
 
   // --- A planned row: remove, move, open ---

@@ -12,8 +12,10 @@ export type PlanContextKind = 'row' | 'suggestion' | 'objective';
 export interface PlanContextCard {
   id: string;
   text: string;
-  rows: { todo: Todo }[];
+  rows: { todo: Todo; canLink?: boolean }[];
   suggestions: Todo[];
+  /** The project objective the card is linked to, if any. */
+  flow?: { title: string } | null;
 }
 
 type Page = 'main' | 'moveTo' | 'planIn' | 'clear';
@@ -83,6 +85,7 @@ export class PlanContextMenuComponent {
   readonly addAll = output<string>();
   readonly changeProjects = output<void>();
   readonly planTask = output<{ taskId: string; objectiveId: string }>();
+  readonly linkTask = output<{ taskId: string; objectiveId: string }>();
   /** Something was done to the plan: focus goes to the task's title if it is still there, else to the objective's Add tasks. */
   readonly settled = output<{ taskId: string | null; objectiveId: string }>();
 
@@ -166,6 +169,11 @@ export class PlanContextMenuComponent {
   plan(todoId: string, objectiveId: string, menu: { close(): void }): void {
     menu.close();
     this.planTask.emit({ taskId: todoId, objectiveId });
+  }
+
+  link(todoId: string, objectiveId: string, menu: { close(): void }): void {
+    menu.close();
+    this.linkTask.emit({ taskId: todoId, objectiveId });
   }
 
   clear(card: PlanContextCard, menu: { close(): void }): void {

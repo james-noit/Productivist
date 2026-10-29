@@ -1,0 +1,110 @@
+<details class="pfo" [open]="open()" (toggle)="onDetailsToggle($event)">
+  <summary class="pfo__summary">
+    <app-ui-icon name="target" [size]="16" />
+    <span class="pfo__summary-label">{{ 'planningLab.flow.title' | translate }}</span>
+  </summary>
+
+  @for (section of sections(); track section.project.id) {
+    <section class="pfo__project" [attr.aria-labelledby]="'pfo-p-' + section.project.id">
+      <h4 class="pfo__project-name" [id]="'pfo-p-' + section.project.id">
+        <app-icon [name]="section.project.icon" aria-hidden="true" /> {{ section.project.name }}
+      </h4>
+      <ul class="pfo__list">
+        @for (root of section.roots; track root.objective.id) {
+          <ng-container *ngTemplateOutlet="nodeTpl; context: { $implicit: root, graph: section.graph }" />
+        }
+      </ul>
+    </section>
+  }
+</details>
+
+<ng-template #nodeTpl let-node let-graph="graph">
+  <li class="pfo__node">
+    <div class="pfo__row">
+      @if (node.children.length || node.milestones.length || node.tasks.length) {
+        <button
+          type="button"
+          class="btn btn--ghost btn--icon btn--sm pfo__chevron"
+          [attr.aria-expanded]="isOpen(node.objective.id)"
+          [attr.aria-label]="node.objective.title"
+          (click)="toggle(node.objective.id)"
+        >
+          <app-ui-icon [name]="isOpen(node.objective.id) ? 'chevron-down' : 'chevron-right'" [size]="16" />
+        </button>
+      } @else {
+        <span class="pfo__chevron-gap" aria-hidden="true"></span>
+      }
+      <span class="pfo__pill" [attr.data-horizon]="node.objective.horizon">{{ 'flow.horizons.' + node.objective.horizon | translate }}</span>
+      <span class="pfo__title">{{ node.objective.title }}</span>
+      <span class="pfo__meta">
+        @if (dates().get(node.objective.id); as date) {
+          <span>{{ date }}</span>
+        }
+        @if (node.progress.total) {
+          <span>{{ node.progress.done }}/{{ node.progress.total }}</span>
+        }
+      </span>
+      @if (canWork(node)) {
+        <button
+          type="button"
+          class="btn btn--sm pfo__action"
+          [class.btn--secondary]="!added().has(node.objective.id)"
+          [class.btn--primary]="added().has(node.objective.id)"
+          [attr.aria-pressed]="added().has(node.objective.id)"
+          (click)="workToday(node.objective)"
+        >
+          <app-ui-icon [name]="added().has(node.objective.id) ? 'check' : 'target'" [size]="14" />
+          {{ (added().has(node.objective.id) ? 'planningLab.flow.added' : 'planningLab.flow.workToday') | translate }}
+        </button>
+      }
+    </div>
+
+    @if (isOpen(node.objective.id) && (node.children.length || node.milestones.length || node.tasks.length)) {
+      <ul class="pfo__list pfo__list--nested">
+        @for (child of node.children; track child.objective.id) {
+          <ng-container *ngTemplateOutlet="nodeTpl; context: { $implicit: child, graph: graph }" />
+        }
+        @for (item of node.milestones; track item.milestone.id) {
+          <li class="pfo__node">
+            <div class="pfo__row pfo__row--work">
+              <app-ui-icon name="flag" [size]="14" />
+              <span class="pfo__title">{{ item.milestone.name }}</span>
+            </div>
+            @if (item.tasks.length) {
+              <ul class="pfo__list pfo__list--nested">
+                @for (task of item.tasks; track task.id) {
+                  <ng-container *ngTemplateOutlet="taskTpl; context: { $implicit: task, node: node, graph: graph }" />
+                }
+              </ul>
+            }
+          </li>
+        }
+        @for (task of node.tasks; track task.id) {
+          <ng-container *ngTemplateOutlet="taskTpl; context: { $implicit: task, node: node, graph: graph }" />
+        }
+        @if (node.more) {
+          <li class="pfo__more">{{ 'planningLab.flow.more' | translate: { n: node.more } }}</li>
+        }
+      </ul>
+    }
+  </li>
+</ng-template>
+
+<ng-template #taskTpl let-task let-node="node" let-graph="graph">
+  <li class="pfo__node">
+    <div class="pfo__row pfo__row--work">
+      <span class="pfo__chevron-gap" aria-hidden="true"></span>
+      <span class="pfo__title">{{ task.title }}</span>
+      <button
+        type="button"
+        class="btn btn--ghost btn--sm pfo__action"
+        [attr.aria-pressed]="picked().has(task.id)"
+        [class.pfo__action--on]="picked().has(task.id)"
+        (click)="planTask(task, node, graph)"
+      >
+        <app-ui-icon [name]="picked().has(task.id) ? 'check' : 'plus'" [size]="14" />
+        {{ (picked().has(task.id) ? 'planningLab.flow.added' : 'planningLab.flow.planTask') | translate }}
+      </button>
+    </div>
+  </li>
+</ng-template>

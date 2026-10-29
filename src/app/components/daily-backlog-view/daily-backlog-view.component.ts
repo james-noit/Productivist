@@ -3,13 +3,15 @@ import { FormsModule } from '@angular/forms';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { ProjectsService } from '../../../services/projects.service';
 import { TodosService } from '../../../services/todos.service';
+import { FlowService } from '../../../services/flow.service';
 import { MultitaskService } from '../../../services/multitask.service';
 import { ViewService } from '../../../services/view.service';
-import { DailyPlanService, UNASSIGNED_GROUP_ID } from '../../../services/daily-plan.service';
+import { DailyPlanService, UNASSIGNED_GROUP_ID, type DraftObjective } from '../../../services/daily-plan.service';
 import { SportaskService } from '../../../services/sportask.service';
 import { nextOpenTask } from '../../../lib/daily-plan-progress';
 import { activateArmed } from '../../../lib/sportask/session-ops';
 import { ProjectFormComponent } from '../project-form/project-form.component';
+import { PlanFlowObjectivesComponent } from '../plan-flow-objectives/plan-flow-objectives.component';
 import { PlanObjectivesStepComponent } from '../plan-objectives-step/plan-objectives-step.component';
 import { TaskBadgesComponent } from '../task-badges/task-badges.component';
 import { IconComponent } from '../icon/icon.component';
@@ -46,6 +48,7 @@ const STEPS: PlanStep[] = [
     TranslatePipe,
     ProjectFormComponent,
     PlanObjectivesStepComponent,
+    PlanFlowObjectivesComponent,
     IconComponent,
     UiIconComponent,
     LotEditorComponent,
@@ -63,6 +66,7 @@ export class DailyBacklogViewComponent {
   private readonly view = inject(ViewService);
   private readonly sportask = inject(SportaskService);
   private readonly translate = inject(TranslateService);
+  private readonly flow = inject(FlowService);
 
   readonly unassignedGroupId = UNASSIGNED_GROUP_ID;
 
@@ -94,8 +98,19 @@ export class DailyBacklogViewComponent {
   });
 
   addSuggestionAsObjective(text: string): void {
-    this.objectivesList.update((list) => [...list, text]);
+    this.objectivesList.update((list) => [...list, { text }]);
   }
+
+  /** The step-1 chips: each draft with the project objective it is linked to (a dangling id counts as unlinked). */
+  readonly chips = computed(() => {
+    const byId = new Map(this.flow.objectives().map((o) => [o.id, o] as const));
+    return this.objectivesList().map((draft) => {
+      const linked = draft.flowObjectiveId ? byId.get(draft.flowObjectiveId) : undefined;
+      return { text: draft.text, horizon: linked?.horizon ?? null, tasks: draft.taskIds?.length ?? 0 };
+    });
+  });
+
+  readonly hasActiveObjective = computed(() => this.flow.objectives().some((o) => o.status === 'active'));
 
   /**
    * Escape closes the wizard's own modals, topmost first. PlanningLabModalComponent leaves Escape
@@ -130,7 +145,7 @@ export class DailyBacklogViewComponent {
   addObjective(): void {
     const trimmed = this.objectiveDraft().trim();
     if (!trimmed) return;
-    this.objectivesList.update((list) => [...list, trimmed]);
+    this.objectivesList.update((list) => [...list, { text: trimmed }]);
     this.objectiveDraft.set('');
   }
 
@@ -140,14 +155,41 @@ export class DailyBacklogViewComponent {
 
   chooseFromProjects(): void {
     const pending = this.objectiveDraft().trim();
-    const objectives = pending ? [...this.objectivesList(), pending] : this.objectivesList();
-    this.dailyPlan.startPlanning(objectives);
+    const flowIds = new Set(this.flow.objectives().map((o) => o.id));
+    const drafts: DraftObjective[] = this.objectivesList()
+      .map((d) => (d.flowObjectiveId && !flowIds.has(d.flowObjectiveId) ? { ...d, flowObjectiveId: undefined } : d))
+      .filter((d) => d.text.trim());
+    if (pending) drafts.push({ text: pending });
+    this.dailyPlan.startPlanning(drafts);
+    this.applyFlowDrafts(drafts);
     this.objectivesList.set([]);
     this.objectiveDraft.set('');
   }
 
+  /** Links the projects of the project objectives, and plans the tasks picked in the tree, under their daily objective. */
+  private applyFlowDrafts(drafts: readonly DraftObjective[]): void {
+    const objectives = this.dailyPlan.objectives();
+    if (objectives.length !== drafts.length) return;
+    const flowById = new Map(this.flow.objectives().map((o) => [o.id, o] as const));
+    const projectIds = new Set(this.projects.projects().map((p) => p.id));
+    const todosById = new Map(this.todos.todos().map((t) => [t.id, t] as const));
+    drafts.forEach((draft, i) => {
+      const daily = objectives[i];
+      const flowObjective = draft.flowObjectiveId ? flowById.get(draft.flowObjectiveId) : undefined;
+      if (flowObjective && projectIds.has(flowObjective.projectId)) this.dailyPlan.assignProjectToObjective(flowObjective.projectId, daily.id);
+      for (const taskId of draft.taskIds ?? []) {
+        const todo = todosById.get(taskId);
+        if (!todo || todo.done || this.dailyPlan.assignments()[taskId]) continue;
+        this.dailyPlan.assignProjectToObjective(todo.projectId && projectIds.has(todo.projectId) ? todo.projectId : UNASSIGNED_GROUP_ID, daily.id);
+        this.dailyPlan.assignTask(taskId, daily.id);
+      }
+    });
+  }
+
   goBackToObjectives(): void {
-    this.objectivesList.set(this.dailyPlan.objectives().map((o) => o.text));
+    this.objectivesList.set(
+      this.dailyPlan.objectives().map((o) => (o.flowObjectiveId ? { text: o.text, flowObjectiveId: o.flowObjectiveId } : { text: o.text })),
+    );
     this.objectiveDraft.set('');
     this.dailyPlan.backToPrompt();
   }

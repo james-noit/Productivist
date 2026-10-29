@@ -613,3 +613,26 @@
   padding: 0.5rem 1rem;
   flex: 1 1 auto;
 }
+
+.daily-backlog-prompt__flow-mark {
+  vertical-align: -2px;
+  margin-right: 0.2rem;
+  color: var(--color-text-muted);
+}
+
+.daily-backlog-prompt__flow-mark[data-horizon='short'] {
+  color: var(--color-horizon-short);
+}
+
+.daily-backlog-prompt__flow-mark[data-horizon='medium'] {
+  color: var(--color-horizon-medium);
+}
+
+.daily-backlog-prompt__flow-mark[data-horizon='long'] {
+  color: var(--color-horizon-long);
+}
+
+.daily-backlog-prompt__flow-tasks {
+  color: var(--color-text-muted);
+  font-size: 0.85em;
+}

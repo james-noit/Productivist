@@ -27,6 +27,33 @@
               }
             </span>
           </div>
+          @if (card.flow; as flow) {
+            <div class="pstep__flow">
+              <app-ui-icon name="target" [size]="14" />
+              <span class="pstep__flow-chain">{{ flow.chain.join(' ← ') }}</span>
+              <button type="button" class="button-ghost pstep__flow-unlink" (click)="unlinkFlow(card)">
+                {{ 'planningLab.flow.unlink' | translate }}
+              </button>
+            </div>
+          } @else if (card.connect.length) {
+            <div class="pstep__flow">
+              <app-ui-icon name="target" [size]="14" />
+              <select
+                class="select pstep__flow-select"
+                [attr.aria-label]="'planningLab.flow.connect' | translate"
+                (change)="connectFlow(card, $any($event.target).value)"
+              >
+                <option value="" selected>{{ 'planningLab.flow.connect' | translate }}</option>
+                @for (group of card.connect; track group.name) {
+                  <optgroup [label]="group.name">
+                    @for (item of group.items; track item.id) {
+                      <option [value]="item.id">{{ item.title }}</option>
+                    }
+                  </optgroup>
+                }
+              </select>
+            </div>
+          }
           <div class="pstep__head-bottom">
             <span class="pstep__projects">
               @for (project of card.projects; track project.id) {
@@ -68,6 +95,9 @@
                   <span class="pstep__line">
                     <button type="button" class="pstep__title" (click)="detailId.set(row.todo.id)">{{ row.todo.title }}</button>
                     <app-repeat-mark [todo]="row.todo" />
+                    @if (row.feeds) {
+                      <app-ui-icon name="target" [size]="12" class="pstep__feeds" [title]="'planningLab.flow.feeds' | translate" />
+                    }
                   </span>
                   @if (row.meta.length) {
                     <span class="pstep__meta">
@@ -95,6 +125,11 @@
                       @if (cards().length > 1) {
                         <button type="button" role="menuitem" class="menu-item" (click)="movingId.set(row.todo.id); menu.focusFirst()">
                           <app-ui-icon name="open" [size]="16" /> {{ 'planningLab.moveToObjective' | translate }}
+                        </button>
+                      }
+                      @if (row.canLink && card.flow) {
+                        <button type="button" role="menuitem" class="menu-item" (click)="menu.close(); linkTask(row.todo, card)">
+                          <app-ui-icon name="target" [size]="16" /> {{ 'planningLab.flow.linkTask' | translate: { title: card.flow.title } }}
                         </button>
                       }
                       <button type="button" role="menuitem" class="menu-item" (click)="menu.close(); detailId.set(row.todo.id)">
@@ -228,6 +263,7 @@
         (addAll)="addAllFromMenu($event)"
         (changeProjects)="changeProjectsFromMenu()"
         (planTask)="planFromMenu($event.taskId, $event.objectiveId)"
+        (linkTask)="linkTaskFromMenu($event.taskId, $event.objectiveId)"
         (settled)="focusAfter($event.taskId, $event.objectiveId)"
       />
     }
