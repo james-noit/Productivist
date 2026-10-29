@@ -55,6 +55,11 @@ export const PORT_RADIUS = 6;
 export const MIN_ZOOM = 0.25;
 export const MAX_ZOOM = 2;
 
+/** Screen px the diagram may be pushed past a canvas edge before the pan stops. */
+export const OVERSCROLL = 96;
+/** Screen px the lane headers may sit below the canvas's top edge at most (the diagram is top-aligned). */
+export const PAD_TOP = 16;
+
 /** Width of a collapsed horizon lane: just a strip with its name written vertically. */
 export const COLLAPSED_LANE_WIDTH = 36;
 
@@ -180,8 +185,9 @@ export function unionRects(rects: readonly Rect[]): Rect | null {
   return { x: minX, y: minY, w: maxX - minX, h: maxY - minY };
 }
 
-export function clampZoom(k: number): number {
-  return Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, k));
+/** Clamps a zoom to `[min, MAX_ZOOM]`; `min` defaults to the absolute minimum (a canvas passes `minZoomFor`). */
+export function clampZoom(k: number, min = MIN_ZOOM): number {
+  return Math.min(MAX_ZOOM, Math.max(min, k));
 }
 
 /** The part of the world a viewport of `width` x `height` pixels shows, grown by `margin` world units on each side. */
@@ -194,24 +200,67 @@ export function visibleWorldRect(viewport: Viewport, width: number, height: numb
   };
 }
 
-/** Zooms by `factor` keeping the world point under the screen position (`cx`, `cy`) where it is. */
-export function zoomAround(viewport: Viewport, factor: number, cx: number, cy: number): Viewport {
-  const k = clampZoom(viewport.k * factor);
+/**
+ * Zooms by `factor` keeping the world point under the screen position (`cx`, `cy`) where it is. `min` is the lowest
+ * zoom allowed; a viewport already below it is not pushed back up by a zoom-out.
+ */
+export function zoomAround(viewport: Viewport, factor: number, cx: number, cy: number, min = MIN_ZOOM): Viewport {
+  const k = clampZoom(viewport.k * factor, factor < 1 ? Math.min(min, viewport.k) : min);
   const ratio = k / viewport.k;
   return { x: cx - (cx - viewport.x) * ratio, y: cy - (cy - viewport.y) * ratio, k };
 }
 
-/**
- * The viewport that shows `bounds` entirely, centred, never zoomed in past 100%. `insetLeft` is screen space on the
- * left that something floats over (the controls cluster), so the content is centred in what remains.
- */
-export function fitViewport(bounds: Rect, width: number, height: number, padding = 32, insetLeft = 0): Viewport {
+/** The part of the world the lane bands and cards occupy: every lane as it is now, down to `bottom` (the lowest card). */
+export function contentBounds(lanes: readonly LaneBox[], bottom: number): Rect {
+  return { x: 0, y: 0, w: lanesWidth(lanes), h: bottom + CARD_GAP };
+}
+
+/** The zoom `fitViewport` picks for `bounds`: everything visible, never past 100%. */
+export function fitZoom(bounds: Rect, width: number, height: number, padding = 32, insetLeft = 0): number {
   const availW = Math.max(1, width - insetLeft - padding * 2);
   const availH = Math.max(1, height - padding * 2);
-  const k = clampZoom(Math.min(availW / Math.max(bounds.w, 1), availH / Math.max(bounds.h, 1), 1));
+  return clampZoom(Math.min(availW / Math.max(bounds.w, 1), availH / Math.max(bounds.h, 1), 1));
+}
+
+/**
+ * The lowest zoom a canvas of `width` x `height` allows for `bounds`: 75% of the zoom that fits everything (never
+ * above 100%), and never below `MIN_ZOOM`. Zooming out further would only add blank space.
+ */
+export function minZoomFor(bounds: Rect, width: number, height: number): number {
+  return Math.max(MIN_ZOOM, Math.min(1, fitZoom(bounds, width, height, 16)) * 0.75);
+}
+
+/**
+ * Keeps the diagram from leaving the canvas: `x` and `y` are clamped independently, `k` is never touched. Content
+ * narrower than the canvas can only slide inside it; wider content may be pushed at most `margin` px past an edge.
+ * Vertically the lane headers never sit more than `PAD_TOP` below the top, a tall diagram scrolls until its bottom
+ * is `margin` px above the canvas bottom, and a short one is pinned to the top. Idempotent; returns `v` itself when
+ * nothing changes.
+ */
+export function clampViewport(v: Viewport, bounds: Rect, width: number, height: number, margin = OVERSCROLL): Viewport {
+  const startX = bounds.x * v.k;
+  const sizeX = bounds.w * v.k;
+  const loX = sizeX <= width ? -startX : width - sizeX - startX - margin;
+  const hiX = sizeX <= width ? width - sizeX - startX : -startX + margin;
+  const startY = bounds.y * v.k;
+  const sizeY = bounds.h * v.k;
+  const hiY = PAD_TOP - startY;
+  const loY = Math.min(PAD_TOP, height - sizeY - margin) - startY;
+  const x = Math.min(Math.max(v.x, loX), hiX);
+  const y = Math.min(Math.max(v.y, loY), hiY);
+  return x === v.x && y === v.y ? v : { x, y, k: v.k };
+}
+
+/**
+ * The viewport that shows `bounds` entirely, centred horizontally, never zoomed in past 100%. `insetLeft` is screen
+ * space on the left that something floats over (the controls cluster), so the content is centred in what remains.
+ * `align` places content shorter than the canvas: `'center'` vertically centred, `'top'` against the top padding.
+ */
+export function fitViewport(bounds: Rect, width: number, height: number, padding = 32, insetLeft = 0, align: 'center' | 'top' = 'center'): Viewport {
+  const k = fitZoom(bounds, width, height, padding, insetLeft);
   return {
     x: insetLeft + (width - insetLeft - bounds.w * k) / 2 - bounds.x * k,
-    y: (height - bounds.h * k) / 2 - bounds.y * k,
+    y: align === 'top' ? padding - bounds.y * k : (height - bounds.h * k) / 2 - bounds.y * k,
     k,
   };
 }

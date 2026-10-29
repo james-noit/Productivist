@@ -21,19 +21,22 @@ import {
   HEADER_HEIGHT,
   LANES,
   LANE_TOP,
+  MIN_ZOOM,
   OBJECTIVE_HEIGHT,
   OBJECTIVE_WIDTH,
   ROW_HEIGHT,
   WORK_CARD_WIDTH,
   cardX,
+  clampViewport,
   clampZoom,
+  contentBounds,
   fitViewport,
   headerPort,
   laneAt,
   laneLayout,
-  lanesWidth,
   linkMid,
   linkPath,
+  minZoomFor,
   objectiveInPort,
   objectiveOutPort,
   objectiveRect,
@@ -132,9 +135,14 @@ const MENU_WIDTH = 272;
 const MENU_HEIGHT = 288;
 /** A press this close (screen px) to a port counts as a press on it, wherever the DOM says it landed. */
 const PORT_REACH = 14;
-/** A first fit made while the canvas is narrower than this is repeated once it grows. */
-const FIT_MIN_WIDTH = 480;
 const DEFAULT_VIEWPORT: Viewport = { x: 16, y: 8, k: 1 };
+/** Screen px between the dots of the background grid at 100%; doubled while zoom would pack them closer than `GRID_MIN`. */
+const GRID_STEP = 24;
+const GRID_MIN = 12;
+/** What `productivist.flowViewport` keeps per project; `fit` marks a view that follows the canvas (fit mode). */
+interface StoredViewport extends Viewport {
+  fit?: true;
+}
 const ORIGIN: Point = { x: 0, y: 0 };
 const NO_PROGRESS: Progress = { done: 0, total: 0, percent: 0 };
 
@@ -246,21 +254,53 @@ export class FlowCanvasComponent {
     });
   });
 
-  protected readonly worldHeight = computed(() => this.placement().bottom + 600);
+  /** The lane bands reach at least the bottom of the visible area, whatever the zoom and pan. */
+  protected readonly worldHeight = computed(() => {
+    const base = this.placement().bottom + 600;
+    const size = this.viewSize();
+    if (!size.w) return base;
+    const view = visibleWorldRect(this.viewport(), size.w, size.h);
+    return Math.max(base, view.y + view.h + CARD_GAP);
+  });
 
   // ---- viewport --------------------------------------------------------------------------------------------
 
-  readonly viewport = signal<Viewport>(DEFAULT_VIEWPORT);
+  /** What pan, zoom and fit asked for. Never read directly: `viewport` is this, clamped to the content and the canvas size. */
+  private readonly rawViewport = signal<Viewport>(DEFAULT_VIEWPORT);
+  /** The diagram's extent in world px (the lane bands down to the lowest card). */
+  private readonly bounds = computed(() => contentBounds(this.lanes(), this.placement().bottom));
+  /** The lowest zoom for this diagram in this canvas: 75% of the fit zoom, so zooming out never just adds blank space. */
+  protected readonly minZoom = computed(() => {
+    const size = this.viewSize();
+    return size.w ? minZoomFor(this.bounds(), size.w, size.h) : MIN_ZOOM;
+  });
+  /** The pan and zoom in effect: the raw one kept inside the diagram's bounds (content or size changes re-clamp it for free). */
+  readonly viewport = computed(() => {
+    const raw = this.rawViewport();
+    const size = this.viewSize();
+    return size.w ? clampViewport(raw, this.bounds(), size.w, size.h) : raw;
+  });
   readonly zoomPercent = computed(() => Math.round(this.viewport().k * 100));
   protected readonly worldTransform = computed(() => {
     const v = this.viewport();
     return `translate(${v.x}px, ${v.y}px) scale(${v.k})`;
   });
   private readonly viewSize = signal({ w: 0, h: 0 });
-  private readonly storedViewports = localStorageSignal<Record<string, Viewport>>('productivist.flowViewport', {});
+  /** The dot grid behind the lanes, moved and scaled with the world (CSS custom properties on the canvas). */
+  protected readonly grid = computed(() => {
+    const v = this.viewport();
+    let step = GRID_STEP;
+    while (step * v.k < GRID_MIN) step *= 2;
+    const size = step * v.k;
+    return { size: `${size}px`, x: `${v.x % size}px`, y: `${v.y % size}px` };
+  });
+  private readonly storedViewports = localStorageSignal<Record<string, StoredViewport>>('productivist.flowViewport', {});
   private saveTimer: ReturnType<typeof setTimeout> | undefined;
-  /** A project with no stored viewport is fitted on first render and again if the canvas grows, until the user takes over. */
-  private pendingFit = false;
+  /**
+   * Fit mode: the diagram is kept fitted (a project seen for the first time, *Fit*, *Tidy up*, a restored fit) and
+   * is fitted again on every resize and lane collapse, until the user pans or zooms.
+   */
+  private fitMode = false;
 
   // ---- interaction state -----------------------------------------------------------------------------------
 
@@ -552,6 +592,14 @@ export class FlowCanvasComponent {
       untracked(() => this.restoreViewport(id));
     });
 
+    // Fit mode follows a lane collapsing or expanding (the content width changes); manual views only get clamped.
+    effect(() => {
+      this.lanes();
+      untracked(() => {
+        if (this.fitMode) afterNextRender(() => this.fitMode && this.fit(true), { injector: this.injector });
+      });
+    });
+
     // The selection may point at something deleted here or, after a sync, on another device.
     effect(() => {
       const sel = this.selection();
@@ -588,11 +636,16 @@ export class FlowCanvasComponent {
       () => {
         const el = this.viewportEl().nativeElement;
         const observer = new ResizeObserver(() => {
-          this.viewSize.set({ w: el.clientWidth, h: el.clientHeight });
-          // The first measure can be 0 or a sliver (the lazy view is still laying out): fit again once it has its size.
-          if (this.pendingFit && el.clientWidth) {
+          const before = this.viewSize();
+          const view = this.viewport();
+          const next = { w: el.clientWidth, h: el.clientHeight };
+          this.viewSize.set(next);
+          if (this.fitMode) {
+            // The first measure can be 0 or a sliver (the lazy view is still laying out): fitting again follows every size.
             this.fit(true);
-            if (el.clientWidth >= FIT_MIN_WIDTH) this.pendingFit = false;
+          } else if (before.w && before.h && next.w && next.h) {
+            // A manual view keeps the world point at the centre of the canvas where it was (the clamp does the rest).
+            this.rawViewport.set({ ...view, x: view.x + (next.w - before.w) / 2, y: view.y + (next.h - before.h) / 2 });
           }
         });
         observer.observe(el);
@@ -612,20 +665,26 @@ export class FlowCanvasComponent {
     clearTimeout(this.saveTimer);
     this.saveTimer = undefined;
     const stored = this.storedViewports()[id];
-    this.pendingFit = false;
     if (stored && [stored.x, stored.y, stored.k].every(Number.isFinite)) {
-      this.viewport.set({ x: stored.x, y: stored.y, k: clampZoom(stored.k) });
+      // Clamped on read (the computed), so a view stored on a wide screen opens sanely on a narrow one.
+      this.rawViewport.set({ x: stored.x, y: stored.y, k: clampZoom(stored.k) });
+      this.fitMode = stored.fit === true;
     } else {
-      this.viewport.set(DEFAULT_VIEWPORT);
-      this.pendingFit = true;
-      afterNextRender(() => this.fit(true), { injector: this.injector });
+      this.rawViewport.set(DEFAULT_VIEWPORT);
+      this.fitMode = true;
     }
+    if (this.fitMode) afterNextRender(() => this.fitMode && this.fit(true), { injector: this.injector });
   }
 
-  /** A viewport the user chose (pan, zoom, fit): remembered, and the automatic first fit stops. */
+  /** A viewport the user chose (pan, zoom): kept inside the diagram, remembered, and fit mode ends. */
   private setViewport(viewport: Viewport): void {
-    this.pendingFit = false;
-    this.viewport.set(viewport);
+    this.fitMode = false;
+    const size = this.viewSize();
+    this.rawViewport.set(size.w ? clampViewport(viewport, this.bounds(), size.w, size.h) : viewport);
+    this.scheduleSave();
+  }
+
+  private scheduleSave(): void {
     clearTimeout(this.saveTimer);
     this.saveTimer = setTimeout(() => this.saveViewport(), 250);
   }
@@ -635,13 +694,14 @@ export class FlowCanvasComponent {
     this.saveTimer = undefined;
     const { x, y, k } = this.viewport();
     const id = this.projectId();
-    this.storedViewports.update((all) => ({ ...all, [id]: { x: Math.round(x), y: Math.round(y), k: Math.round(k * 1000) / 1000 } }));
+    const entry: StoredViewport = { x: Math.round(x), y: Math.round(y), k: Math.round(k * 1000) / 1000, ...(this.fitMode ? { fit: true as const } : {}) };
+    this.storedViewports.update((all) => ({ ...all, [id]: entry }));
   }
 
   /** Zooms by `factor` around the middle of the viewport. */
   zoomBy(factor: number): void {
     const el = this.viewportEl().nativeElement;
-    this.setViewport(zoomAround(this.viewport(), factor, el.clientWidth / 2, el.clientHeight / 2));
+    this.setViewport(zoomAround(this.viewport(), factor, el.clientWidth / 2, el.clientHeight / 2, this.minZoom()));
   }
 
   zoomIn(): void {
@@ -653,20 +713,21 @@ export class FlowCanvasComponent {
   }
 
   /**
-   * Shows the whole diagram: every lane as it is now (a collapsed one is a thin strip), down to the lowest visible
-   * card. `auto` is the first-open fit of a
-   * project with no stored viewport: applied but not remembered, so a fit made at a bad size never sticks.
+   * Shows the whole diagram, top-aligned: every lane as it is now (a collapsed one is a thin strip), down to the
+   * lowest visible card. It also turns fit mode on, so the canvas keeps fitting as it resizes. `auto` is the
+   * automatic fit (first open, a resize, a lane change): applied but not remembered, so a fit made at a bad size
+   * never sticks.
    */
   fit(auto = false): void {
     const el = this.viewportEl().nativeElement;
     if (!el.clientWidth || !el.clientHeight) return;
-    const bounds = { x: 0, y: 0, w: lanesWidth(this.lanes()), h: this.placement().bottom + CARD_GAP };
+    const bounds = this.bounds();
     // Keep the fitted diagram clear of the controls cluster floating over the bottom-left corner.
     const controls = el.parentElement?.querySelector<HTMLElement>('.flow-canvas__controls');
     const insetLeft = controls ? controls.getBoundingClientRect().right - el.getBoundingClientRect().left : 0;
-    const viewport = fitViewport(bounds, el.clientWidth, el.clientHeight, 16, Math.max(0, insetLeft));
-    if (auto) this.viewport.set(viewport);
-    else this.setViewport(viewport);
+    this.fitMode = true;
+    this.rawViewport.set(fitViewport(bounds, el.clientWidth, el.clientHeight, 16, Math.max(0, insetLeft), 'top'));
+    if (!auto) this.scheduleSave();
   }
 
   /** Back to 100%, around the middle of the canvas. */
@@ -930,7 +991,7 @@ export class FlowCanvasComponent {
     const [a, b] = [...this.touches.values()];
     if (!pinch || !a || !b) return;
     const mid = this.toLocal({ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 });
-    const k = clampZoom(pinch.origin.k * (Math.hypot(a.x - b.x, a.y - b.y) / pinch.dist));
+    const k = clampZoom(pinch.origin.k * (Math.hypot(a.x - b.x, a.y - b.y) / pinch.dist), this.minZoom());
     const ratio = k / pinch.origin.k;
     this.setViewport({ x: mid.x - (pinch.mid.x - pinch.origin.x) * ratio, y: mid.y - (pinch.mid.y - pinch.origin.y) * ratio, k });
   }
@@ -1059,7 +1120,7 @@ export class FlowCanvasComponent {
       const dy = event.deltaY * unit;
       const speed = Math.abs(dy) < 50 ? 0.01 : 0.0015;
       const rect = this.viewportEl().nativeElement.getBoundingClientRect();
-      this.setViewport(zoomAround(v, Math.exp(-dy * speed), event.clientX - rect.left, event.clientY - rect.top));
+      this.setViewport(zoomAround(v, Math.exp(-dy * speed), event.clientX - rect.left, event.clientY - rect.top, this.minZoom()));
       return;
     }
     let dx = event.deltaX * unit;
