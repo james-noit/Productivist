@@ -36,25 +36,62 @@
     </div>
   </section>
 
-  <fieldset class="drawer__section drawer__sort">
-    <legend class="field__label">{{ 'projects.filters.sort' | translate }}</legend>
-    @for (option of sorts; track option) {
-      <label class="drawer__radio" [class.drawer__radio--on]="state.activeSort() === option">
-        <input type="radio" name="projects-sort" [value]="option" [checked]="state.activeSort() === option" (change)="setSort(option)" />
-        <span>{{ 'projects.sort.' + option | translate }}</span>
-      </label>
-    }
-  </fieldset>
+  @if (mode() === 'tasks') {
+    <section class="drawer__section" aria-labelledby="filters-project">
+      <h4 class="field__label" id="filters-project">{{ 'projects.tasks.project' | translate }}</h4>
+      <div class="drawer__projects" role="group" aria-labelledby="filters-project">
+        @for (option of projectOptions(); track option.id) {
+          <button type="button" class="filter-chip" [attr.aria-pressed]="option.pressed" (click)="state.toggleTaskProject(option.id)">
+            {{ option.name ?? ('projects.inbox.title' | translate) }} · {{ option.count }}
+          </button>
+        }
+      </div>
+    </section>
 
-  <section class="drawer__section" aria-labelledby="filters-show">
-    <h4 class="field__label" id="filters-show">{{ 'projects.filters.show' | translate }}</h4>
-    <button type="button" role="switch" class="switch" [attr.aria-checked]="state.inboxVisible()" (click)="state.showInbox.set(!state.inboxVisible())">
-      <span class="switch__track" aria-hidden="true"></span>
-      {{ 'projects.filters.showInbox' | translate }}
-    </button>
-  </section>
+    <fieldset class="drawer__section drawer__sort">
+      <legend class="field__label">{{ 'projects.filters.sort' | translate }}</legend>
+      @for (option of taskSorts; track option) {
+        <label class="drawer__radio" [class.drawer__radio--on]="state.activeTaskSort() === option">
+          <input type="radio" name="tasks-sort" [value]="option" [checked]="state.activeTaskSort() === option" (change)="setTaskSort(option)" />
+          <span>{{ 'projects.tasks.sort.' + option | translate }}</span>
+        </label>
+      }
+    </fieldset>
 
-  <button drawerFooter type="button" class="btn btn--ghost" [disabled]="!state.activeCount()" (click)="state.clearFilters()">
+    <section class="drawer__section" aria-labelledby="filters-show">
+      <h4 class="field__label" id="filters-show">{{ 'projects.filters.show' | translate }}</h4>
+      <button type="button" role="switch" class="switch" [attr.aria-checked]="showDone()" (click)="showDone.set(!showDone())">
+        <span class="switch__track" aria-hidden="true"></span>
+        {{ 'projects.tasks.showDone' | translate }}
+      </button>
+    </section>
+  } @else {
+    <fieldset class="drawer__section drawer__sort">
+      <legend class="field__label">{{ 'projects.filters.sort' | translate }}</legend>
+      @for (option of sorts; track option) {
+        <label class="drawer__radio" [class.drawer__radio--on]="state.activeSort() === option">
+          <input type="radio" name="projects-sort" [value]="option" [checked]="state.activeSort() === option" (change)="setSort(option)" />
+          <span>{{ 'projects.sort.' + option | translate }}</span>
+        </label>
+      }
+    </fieldset>
+
+    <section class="drawer__section" aria-labelledby="filters-show">
+      <h4 class="field__label" id="filters-show">{{ 'projects.filters.show' | translate }}</h4>
+      <button type="button" role="switch" class="switch" [attr.aria-checked]="state.inboxVisible()" (click)="state.showInbox.set(!state.inboxVisible())">
+        <span class="switch__track" aria-hidden="true"></span>
+        {{ 'projects.filters.showInbox' | translate }}
+      </button>
+    </section>
+  }
+
+  <button
+    drawerFooter
+    type="button"
+    class="btn btn--ghost"
+    [disabled]="!(mode() === 'tasks' ? state.taskFilterCount() : state.activeCount())"
+    (click)="mode() === 'tasks' ? state.clearTaskFilters() : state.clearFilters()"
+  >
     {{ 'projects.filters.clearAll' | translate }}
   </button>
   <button drawerFooter type="button" class="btn btn--primary" (click)="close()">

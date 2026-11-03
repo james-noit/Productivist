@@ -1,0 +1,231 @@
+<div class="at">
+  <div class="at__toolbar">
+    <div class="at__search">
+      <app-ui-icon name="search" [size]="16" class="at__search-icon" />
+      <input
+        class="input at__search-input"
+        type="text"
+        [value]="state.query()"
+        (input)="state.query.set($any($event.target).value)"
+        (keydown)="onSearchKeydown($event)"
+        [placeholder]="'projects.search.placeholder' | translate"
+        [attr.aria-label]="'projects.search.label' | translate"
+        autocomplete="off"
+        spellcheck="false"
+      />
+      @if (state.query()) {
+        <button type="button" class="btn btn--ghost btn--icon btn--sm at__search-clear" [attr.aria-label]="'projects.search.clear' | translate" (click)="state.query.set('')">
+          <app-ui-icon name="x" [size]="16" />
+        </button>
+      }
+    </div>
+
+    <div class="at__tools">
+      <button
+        #filtersButton
+        type="button"
+        class="btn btn--secondary at__filters"
+        aria-haspopup="dialog"
+        [attr.aria-expanded]="state.filtersOpen()"
+        [attr.aria-controls]="state.filtersOpen() ? 'projects-filters' : null"
+        [attr.aria-label]="(state.taskFilterCount() ? 'projects.filters.buttonActive' : 'projects.filters.title') | translate: { n: state.taskFilterCount() }"
+        (click)="state.openFilters(filtersButton)"
+      >
+        <app-ui-icon name="filter" [size]="16" />
+        <span class="at__filters-text">{{ 'projects.filters.title' | translate }}</span>
+        @if (state.taskFilterCount()) {
+          <span class="at__badge" aria-hidden="true">{{ state.taskFilterCount() }}</span>
+        }
+      </button>
+
+      <div class="segmented at__density" role="group" [attr.aria-label]="'projects.tasks.density.label' | translate">
+        @for (density of densities; track density.id) {
+          <button
+            type="button"
+            class="segmented__option"
+            [attr.aria-pressed]="state.activeTaskDensity() === density.id"
+            [attr.aria-label]="density.labelKey | translate"
+            [title]="density.labelKey | translate"
+            (click)="state.taskDensity.set(density.id)"
+          >
+            <app-ui-icon [name]="density.icon" [size]="16" />
+          </button>
+        }
+      </div>
+    </div>
+  </div>
+
+  <div class="at__summary">
+    @if (summaryVisible()) {
+      <div class="at__chips" role="group" [attr.aria-label]="'projects.filters.active' | translate">
+        @for (chip of chips(); track chip.id) {
+          <button
+            type="button"
+            class="filter-chip at__chip"
+            [attr.aria-label]="'projects.filters.remove' | translate: { name: chip.label ?? (chip.labelKey ?? '' | translate) }"
+            (click)="removeChip(chip)"
+          >
+            {{ chip.label ?? (chip.labelKey ?? '' | translate) }}
+            <app-ui-icon name="x" [size]="12" />
+          </button>
+        }
+        @if (state.activeTaskSort() !== 'priority') {
+          <span class="at__muted">{{ 'projects.tasks.sortedBy.' + state.activeTaskSort() | translate }}</span>
+        }
+        @if (chips().length) {
+          <button type="button" class="button-ghost at__clear" (click)="state.clearTaskFilters()">{{ 'projects.filters.clearAll' | translate }}</button>
+        }
+      </div>
+    }
+    @if (total()) {
+      <span class="at__muted at__count">{{ 'projects.tasks.count.' + (total() === 1 ? 'one' : 'other') | translate: { n: total() } }}</span>
+    }
+  </div>
+
+  @if (!total()) {
+    <div class="at__empty" role="status">
+      @if (noTasks()) {
+        <p>{{ 'projects.tasks.none' | translate }}</p>
+        <button type="button" class="btn btn--primary btn--sm" (click)="state.openNewTask()">{{ 'projects.fab.task' | translate }}</button>
+      } @else {
+        <p>{{ 'projects.tasks.noMatch' | translate }}</p>
+        @if (narrowing()) {
+          <button type="button" class="btn btn--secondary btn--sm" (click)="state.clearTaskSearchAndFilters()">{{ 'projects.empty.clearFilters' | translate }}</button>
+        }
+      }
+    </div>
+  } @else {
+    <ul class="at__list" role="list" [attr.data-density]="state.activeTaskDensity()">
+      @for (entry of view().entries; track entry.kind === 'row' ? entry.todo.id : 'g:' + entry.key) {
+        @if (entry.kind === 'group') {
+          <li class="at__group">
+            @if (entry.name !== null) {
+              <span class="at__group-icon" aria-hidden="true"><app-icon [name]="entry.icon ?? ''" /></span>
+              <h3 class="at__group-name">{{ entry.name }}</h3>
+            } @else {
+              <span class="at__group-icon" aria-hidden="true"><app-ui-icon name="inbox" [size]="16" /></span>
+              <h3 class="at__group-name">{{ 'projects.inbox.title' | translate }}</h3>
+            }
+            <span class="at__muted">{{ entry.count }}</span>
+          </li>
+        } @else {
+          <li class="trow" [class.trow--done]="entry.todo.done" [class.trow--confirming]="confirmId() === entry.todo.id">
+            @if (confirmId() === entry.todo.id) {
+              <div class="confirm-bar" role="alertdialog" [attr.aria-labelledby]="'at-confirm-' + entry.todo.id">
+                <p class="confirm-bar__text" [id]="'at-confirm-' + entry.todo.id">{{ 'projects.inbox.deleteQuestion' | translate: { title: entry.todo.title } }}</p>
+                <div class="confirm-bar__actions">
+                  <button #keepButton type="button" class="btn btn--secondary btn--sm" (click)="confirmId.set(null)">{{ 'projects.card.keep' | translate }}</button>
+                  <button type="button" class="btn btn--danger btn--sm" (click)="deleteTask(entry.todo.id)">{{ 'projects.inbox.deleteTask' | translate }}</button>
+                </div>
+              </div>
+            } @else {
+              <div class="trow__line">
+                <button
+                  type="button"
+                  class="trow__check"
+                  [class.trow__check--on]="entry.todo.done"
+                  role="checkbox"
+                  [attr.aria-checked]="entry.todo.done"
+                  [attr.aria-label]="('eisenhower.markDone' | translate) + ': ' + entry.todo.title"
+                  (click)="complete(entry.todo.id)"
+                ></button>
+                <button type="button" class="trow__title" (click)="detailId.set(entry.todo.id)">{{ entry.todo.title }}</button>
+
+                @if (state.activeTaskDensity() === 'minimal') {
+                  @if (entry.projectId) {
+                    <button type="button" class="trow__project trow__project--plain" (click)="openProject(entry.projectId)">{{ entry.projectName }}</button>
+                  }
+                } @else {
+                  <span class="trow__chips">
+                    <app-task-badges [todo]="entry.todo" />
+                    @if (entry.statusKey) {
+                      <span class="trow__status">{{ entry.statusKey | translate }}</span>
+                    }
+                  </span>
+                  @if (entry.projectId) {
+                    <button type="button" class="trow__project" (click)="openProject(entry.projectId)">
+                      <app-icon [name]="entry.projectIcon ?? ''" />
+                      <span class="trow__project-name">{{ entry.projectName }}</span>
+                    </button>
+                  } @else {
+                    <span class="trow__project trow__project--inbox">
+                      <app-ui-icon name="inbox" [size]="14" />
+                      <span class="trow__project-name">{{ 'projects.inbox.title' | translate }}</span>
+                    </span>
+                  }
+                  @if (entry.due) {
+                    <span class="trow__due" [class.trow__due--overdue]="entry.overdue">{{ entry.due }}</span>
+                  }
+                  <app-kebab-menu #menu="kebabMenu" [label]="'projects.inbox.menu' | translate: { title: entry.todo.title }" (closed)="movingId.set(null)">
+                    @if (movingId() === entry.todo.id) {
+                      <button type="button" role="menuitem" class="menu-item menu-item--back" (click)="movingId.set(null); menu.focusFirst()">
+                        <app-ui-icon name="chevron-right" [size]="16" class="trow__flip" /> {{ 'projects.inbox.back' | translate }}
+                      </button>
+                      <div class="menu-heading">{{ 'projects.inbox.moveTo' | translate }}</div>
+                      @for (project of movableProjects(); track project.id) {
+                        <button type="button" role="menuitem" class="menu-item" (click)="moveTo(entry.todo.id, project.id); menu.close()">
+                          <span class="menu-item__label">{{ project.name }}</span>
+                        </button>
+                      } @empty {
+                        <p class="menu-heading">{{ 'projects.inbox.noProjects' | translate }}</p>
+                      }
+                    } @else {
+                      <button type="button" role="menuitem" class="menu-item" (click)="menu.close(); detailId.set(entry.todo.id)">
+                        <app-ui-icon name="edit" [size]="16" /> {{ 'projects.card.open' | translate }}
+                      </button>
+                      <button type="button" role="menuitem" class="menu-item" (click)="movingId.set(entry.todo.id); menu.focusFirst()">
+                        <app-ui-icon name="open" [size]="16" /> {{ 'projects.inbox.move' | translate }}
+                      </button>
+                      <button type="button" role="menuitem" class="menu-item menu-item--danger" (click)="menu.close(); askDelete(entry.todo.id)">
+                        <app-ui-icon name="trash" [size]="16" /> {{ 'projects.delete' | translate }}
+                      </button>
+                    }
+                  </app-kebab-menu>
+                }
+              </div>
+
+              @if (state.activeTaskDensity() === 'extended') {
+                <div class="trow__extra">
+                  @if (entry.firstLine) {
+                    <p class="trow__desc">{{ entry.firstLine }}</p>
+                  }
+                  <p class="trow__meta">
+                    @for (tag of entry.todo.tags; track tag) {
+                      <span class="trow__tag">#{{ tag }}</span>
+                    }
+                    @if (entry.milestone) {
+                      <span>{{ entry.milestone }}</span>
+                    }
+                    @if (entry.start && entry.due) {
+                      <span>{{ entry.start }} → {{ entry.due }}</span>
+                    } @else if (entry.start) {
+                      <span>{{ entry.start }} →</span>
+                    }
+                    @if (entry.todo.pomodorosForTermination) {
+                      <span>{{ 'planningLab.estimate.' + (entry.todo.pomodorosForTermination === 1 ? 'one' : 'other') | translate: { n: entry.todo.pomodorosForTermination } }}</span>
+                    }
+                    <app-objective-chip [titles]="entry.served" />
+                  </p>
+                </div>
+              }
+            }
+          </li>
+        }
+      }
+    </ul>
+
+    @if (view().hidden > 0) {
+      <button type="button" class="btn btn--secondary btn--sm at__more" (click)="showMore()">
+        {{ 'projects.tasks.showMore' | translate: { n: view().hidden } }}
+      </button>
+    }
+  }
+
+  @if (state.filtersOpen()) {
+    <app-projects-filter-drawer mode="tasks" [stats]="stats()" [results]="total()" />
+  }
+
+  @if (detailTodo(); as todo) {
+    <app-task-detail-modal [todo]="todo" (close)="detailId.set(null)" />
+  }
+</div>

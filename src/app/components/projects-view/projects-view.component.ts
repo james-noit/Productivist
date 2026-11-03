@@ -10,6 +10,7 @@ import { TodosService } from '../../../services/todos.service';
 import { ProjectActivityService } from '../../../services/project-activity.service';
 import { ViewService, type ProjectsTab } from '../../../services/view.service';
 import { ContextMenuHostDirective, type ContextRequest } from '../../directives/context-menu-host.directive';
+import { AllTasksViewComponent } from '../all-tasks-view/all-tasks-view.component';
 import { EisenhowerViewComponent } from '../eisenhower-view/eisenhower-view.component';
 import { FabMenuComponent, type FabItem } from '../fab-menu/fab-menu.component';
 import { ImportRepoModalComponent } from '../import-repo-modal/import-repo-modal.component';
@@ -20,7 +21,7 @@ import { ProjectsDashboardComponent } from '../projects-dashboard/projects-dashb
 import { UiIconComponent } from '../ui-icon/ui-icon.component';
 import { ProjectsPageState } from './projects-page.state';
 
-const TABS: readonly ProjectsTab[] = ['projects', 'matrix'];
+const TABS: readonly ProjectsTab[] = ['projects', 'tasks', 'matrix'];
 
 /** One open context menu. `id` is new each time, so a menu opened over another is a fresh component. */
 interface ContextMenuRequest {
@@ -42,7 +43,7 @@ const FAB_ITEMS: readonly FabItem[] = [
 ];
 
 /**
- * Tasks and projects: the page header (title, one-line summary, Recurring and Plan my day), the Projects | Eisenhower Matrix
+ * Tasks and projects: the page header (title, one-line summary, Recurring and Plan my day), the Projects | All tasks | Eisenhower Matrix
  * tabs, the tab bodies, the floating "+" and the dialogs it opens (New task, New project), so both tabs can create.
  * The summary and the dashboard share one `stats` computed (a single pass over the todos). `ProjectsPageState`
  * (search, filters, sort, layout, create requests) is provided here, for the dashboard, the filters drawer and
@@ -54,11 +55,12 @@ const FAB_ITEMS: readonly FabItem[] = [
 @Component({
   selector: 'app-projects-view',
   standalone: true,
-  // EisenhowerViewComponent is only used inside a @defer block, so it gets its own chunk.
+  // EisenhowerViewComponent and AllTasksViewComponent are only used inside @defer blocks, so each gets its own chunk.
   imports: [
     TranslatePipe,
     ProjectsDashboardComponent,
     EisenhowerViewComponent,
+    AllTasksViewComponent,
     FabMenuComponent,
     ImportRepoModalComponent,
     NewTaskModalComponent,
@@ -170,12 +172,12 @@ export class ProjectsViewComponent {
     this.view.openProjectsTab(tab);
   }
 
-  /** Left/Right move between the two tabs, wrapping, and take focus with them. */
+  /** Left/Right move between the three tabs, wrapping, and take focus with them. */
   onTabKeydown(event: KeyboardEvent): void {
     const step = event.key === 'ArrowRight' ? 1 : event.key === 'ArrowLeft' ? -1 : 0;
     if (!step) return;
     event.preventDefault();
-    const next = TABS[(TABS.indexOf(this.view.projectsTab()) + step + TABS.length) % TABS.length];
+    const next = TABS[(TABS.indexOf(this.view.activeProjectsTab()) + step + TABS.length) % TABS.length];
     this.selectTab(next);
     const tablist = event.currentTarget as HTMLElement;
     queueMicrotask(() => tablist.querySelector<HTMLElement>(`[data-tab="${next}"]`)?.focus());

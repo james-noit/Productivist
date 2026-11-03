@@ -213,6 +213,19 @@
     "noUnassigned": "No unassigned tasks.",
     "tabProjects": "Projects",
     "tabMatrix": "Eisenhower Matrix",
+    "tabTasks": "All tasks",
+    "tasks": {
+      "project": "Project",
+      "showDone": "Show done tasks",
+      "doneShown": "Done tasks shown",
+      "none": "No tasks yet.",
+      "noMatch": "No tasks match.",
+      "showMore": "Show more ({{n}})",
+      "count": { "one": "{{n}} task", "other": "{{n}} tasks" },
+      "density": { "label": "Density", "minimal": "Minimal", "compact": "Compact", "extended": "Extended" },
+      "sort": { "priority": "Priority", "due": "Due date", "project": "Project", "title": "Title", "created": "Newest", "manual": "Manual" },
+      "sortedBy": { "due": "Sorted by due date", "project": "Sorted by project", "title": "Sorted by title", "created": "Newest first", "manual": "Sorted manually" }
+    },
     "tabsLabel": "Tasks and projects sections",
     "summary": {
       "tasks": {

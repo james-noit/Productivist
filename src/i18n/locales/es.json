@@ -213,6 +213,19 @@
     "noUnassigned": "No hay tareas sin asignar.",
     "tabProjects": "Proyectos",
     "tabMatrix": "Matriz de Eisenhower",
+    "tabTasks": "Todas las tareas",
+    "tasks": {
+      "project": "Proyecto",
+      "showDone": "Mostrar tareas hechas",
+      "doneShown": "Tareas hechas visibles",
+      "none": "Aún no hay tareas.",
+      "noMatch": "Ninguna tarea coincide.",
+      "showMore": "Mostrar más ({{n}})",
+      "count": { "one": "{{n}} tarea", "other": "{{n}} tareas" },
+      "density": { "label": "Densidad", "minimal": "Mínima", "compact": "Compacta", "extended": "Extendida" },
+      "sort": { "priority": "Prioridad", "due": "Fecha límite", "project": "Proyecto", "title": "Título", "created": "Más recientes", "manual": "Manual" },
+      "sortedBy": { "due": "Ordenadas por fecha límite", "project": "Ordenadas por proyecto", "title": "Ordenadas por título", "created": "Más recientes primero", "manual": "Ordenadas manualmente" }
+    },
     "tabsLabel": "Secciones de Tareas y proyectos",
     "summary": {
       "tasks": {

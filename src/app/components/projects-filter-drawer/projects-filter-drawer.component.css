@@ -176,3 +176,9 @@
     transition: none;
   }
 }
+
+.drawer__projects {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}

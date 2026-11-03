@@ -51,8 +51,8 @@
       role="tab"
       class="tabs__tab"
       data-tab="projects"
-      [attr.aria-selected]="view.projectsTab() === 'projects'"
-      [attr.tabindex]="view.projectsTab() === 'projects' ? 0 : -1"
+      [attr.aria-selected]="view.activeProjectsTab() === 'projects'"
+      [attr.tabindex]="view.activeProjectsTab() === 'projects' ? 0 : -1"
       (click)="selectTab('projects')"
     >
       {{ 'projects.tabProjects' | translate }}
@@ -61,18 +61,35 @@
       type="button"
       role="tab"
       class="tabs__tab"
+      data-tab="tasks"
+      [attr.aria-selected]="view.activeProjectsTab() === 'tasks'"
+      [attr.tabindex]="view.activeProjectsTab() === 'tasks' ? 0 : -1"
+      (click)="selectTab('tasks')"
+    >
+      {{ 'projects.tabTasks' | translate }}
+    </button>
+    <button
+      type="button"
+      role="tab"
+      class="tabs__tab"
       data-tab="matrix"
-      [attr.aria-selected]="view.projectsTab() === 'matrix'"
-      [attr.tabindex]="view.projectsTab() === 'matrix' ? 0 : -1"
+      [attr.aria-selected]="view.activeProjectsTab() === 'matrix'"
+      [attr.tabindex]="view.activeProjectsTab() === 'matrix' ? 0 : -1"
       (click)="selectTab('matrix')"
     >
       {{ 'projects.tabMatrix' | translate }}
     </button>
   </div>
 
-  @if (view.projectsTab() === 'matrix') {
+  @if (view.activeProjectsTab() === 'matrix') {
     @defer (on immediate) {
       <app-eisenhower-view />
+    } @placeholder {
+      <div class="view-loading" aria-hidden="true"></div>
+    }
+  } @else if (view.activeProjectsTab() === 'tasks') {
+    @defer (on immediate) {
+      <app-all-tasks-view [stats]="stats()" />
     } @placeholder {
       <div class="view-loading" aria-hidden="true"></div>
     }
@@ -88,7 +105,7 @@
         [x]="menu.x"
         [y]="menu.y"
         [projectId]="menu.projectId"
-        [tab]="view.projectsTab()"
+        [tab]="view.activeProjectsTab()"
         [returnFocus]="menu.returnFocus"
         (dismissed)="closeContextMenu()"
       />

@@ -1,6 +1,7 @@
-import { Injectable, computed, signal } from '@angular/core';
+import { Injectable, computed, inject, signal } from '@angular/core';
 import { localStorageSignal } from '../../../core/local-storage-signal';
 import { PROJECTS_SORTS, normalizeQuery, type ProjectsSort, type TaskFilter } from '../../../lib/project-cards';
+import { ViewService } from '../../../services/view.service';
 import type { EisenhowerQuadrant } from '../../../types/eisenhower';
 
 export type ProjectsLayout = 'cards' | 'list';
@@ -30,6 +31,13 @@ function migrateSort(): void {
 }
 const LAYOUTS: readonly ProjectsLayout[] = ['cards', 'list'];
 
+export type TaskDensity = 'minimal' | 'compact' | 'extended';
+export const TASK_DENSITIES: readonly TaskDensity[] = ['minimal', 'compact', 'extended'];
+export type TaskSort = 'priority' | 'due' | 'project' | 'title' | 'created' | 'manual';
+export const TASK_SORTS: readonly TaskSort[] = ['priority', 'due', 'project', 'title', 'created', 'manual'];
+/** The project filter's id for tasks with no project. */
+export const INBOX_FILTER = '__inbox';
+
 /**
  * What the Tasks and projects page's pieces share: the search text, the filters of the drawer, the sort, the
  * layout, and the "create something" requests of the floating button. Provided by `ProjectsViewComponent`
@@ -42,6 +50,8 @@ export class ProjectsPageState {
   static {
     migrateSort();
   }
+
+  private readonly view = inject(ViewService);
 
   readonly query = signal('');
   /** Quadrants the page is narrowed to (empty = all). */
@@ -56,6 +66,14 @@ export class ProjectsPageState {
   readonly activeLayout = computed<ProjectsLayout>(() => (LAYOUTS.includes(this.layout()) ? this.layout() : 'cards'));
   /** Persisted; the Inbox card is shown unless switched off in the drawer. Anything but `false` reads as on. */
   readonly showInbox = localStorageSignal<boolean>('productivist.projectsShowInbox', true);
+
+  /** All tasks tab, persisted and device-local; unknown stored values read as the defaults through `activeTaskDensity`/`activeTaskSort`. */
+  readonly taskDensity = localStorageSignal<TaskDensity>('productivist.allTasksDensity', 'compact');
+  readonly activeTaskDensity = computed<TaskDensity>(() => (TASK_DENSITIES.includes(this.taskDensity()) ? this.taskDensity() : 'compact'));
+  readonly taskSort = localStorageSignal<TaskSort>('productivist.allTasksSort', 'priority');
+  readonly activeTaskSort = computed<TaskSort>(() => (TASK_SORTS.includes(this.taskSort()) ? this.taskSort() : 'priority'));
+  /** Projects the All tasks tab is narrowed to (empty = all; `INBOX_FILTER` = no project). Not persisted. */
+  readonly taskProjects = signal<readonly string[]>([]);
 
   readonly filtersOpen = signal(false);
   readonly creatingTask = signal(false);
@@ -73,6 +91,10 @@ export class ProjectsPageState {
   readonly inboxVisible = computed(() => this.showInbox() !== false);
   /** How many drawer filters are on: each chosen quadrant, the due filter and a hidden Inbox. */
   readonly activeCount = computed(() => this.quadrants().length + (this.due() ? 1 : 0) + (this.inboxVisible() ? 0 : 1));
+  /** The All tasks badge: quadrants, due, projects and shown done tasks. */
+  readonly taskFilterCount = computed(
+    () => this.quadrants().length + (this.due() ? 1 : 0) + this.taskProjects().length + (this.view.showDoneTasks() ? 1 : 0),
+  );
   /** The search or a filter that narrows tasks (a hidden Inbox only hides a card) is on. */
   readonly filtering = computed(() => !!this.normalized() || this.quadrants().length > 0 || this.due() !== null);
 
@@ -94,6 +116,23 @@ export class ProjectsPageState {
     this.quadrants.set([]);
     this.due.set(null);
     this.showInbox.set(true);
+  }
+
+  toggleTaskProject(id: string): void {
+    this.taskProjects.update((all) => (all.includes(id) ? all.filter((p) => p !== id) : [...all, id]));
+  }
+
+  /** Drops every All tasks filter (priority, due, project, done tasks); the search and the sort stay. */
+  clearTaskFilters(): void {
+    this.quadrants.set([]);
+    this.due.set(null);
+    this.taskProjects.set([]);
+    this.view.showDoneTasks.set(false);
+  }
+
+  clearTaskSearchAndFilters(): void {
+    this.query.set('');
+    this.clearTaskFilters();
   }
 
   /** Drops the search text too: what "Clear filters" means in the no-results state. */

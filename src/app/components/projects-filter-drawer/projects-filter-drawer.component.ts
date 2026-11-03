@@ -3,7 +3,8 @@ import { TranslatePipe } from '@ngx-translate/core';
 import { QUADRANTS } from '../../../lib/eisenhower';
 import { PROJECTS_SORTS, type PageStats, type ProjectsSort, type TaskFilter } from '../../../lib/project-cards';
 import { ViewService } from '../../../services/view.service';
-import { ProjectsPageState } from '../projects-view/projects-page.state';
+import { ProjectsService } from '../../../services/projects.service';
+import { INBOX_FILTER, ProjectsPageState, TASK_SORTS, type TaskSort } from '../projects-view/projects-page.state';
 import { SideDrawerComponent } from '../side-drawer/side-drawer.component';
 import { UiIconComponent } from '../ui-icon/ui-icon.component';
 
@@ -25,13 +26,19 @@ import { UiIconComponent } from '../ui-icon/ui-icon.component';
 export class ProjectsFilterDrawerComponent {
   readonly state = inject(ProjectsPageState);
   private readonly view = inject(ViewService);
+  private readonly projects = inject(ProjectsService);
 
   /** The page's numbers: the quadrant and due counts. */
   readonly stats = input.required<PageStats>();
   /** Projects plus inbox tasks matching right now, for "Show N results". */
   readonly results = input.required<number>();
 
+  /** 'projects' = the Projects tab's filters; 'tasks' = the All tasks tab's (project filter, task sorts, done switch). */
+  readonly mode = input<'projects' | 'tasks'>('projects');
+
   readonly sorts = PROJECTS_SORTS;
+  readonly taskSorts = TASK_SORTS;
+  readonly showDone = this.view.showDoneTasks;
   readonly dues: readonly { value: TaskFilter | null; labelKey: string }[] = [
     { value: null, labelKey: 'projects.filters.dueAnyShort' },
     { value: 'week', labelKey: 'projects.filters.dueWeekShort' },
@@ -49,6 +56,16 @@ export class ProjectsFilterDrawerComponent {
       count: counts[q.key],
       pressed: chosen.includes(q.key),
     }));
+  });
+
+  /** Inbox and every project as a project-filter chip, with the open tasks it holds. */
+  readonly projectOptions = computed(() => {
+    const { byProject, inbox } = this.stats();
+    const chosen = this.state.taskProjects();
+    return [
+      { id: INBOX_FILTER, name: null as string | null, count: inbox.length, pressed: chosen.includes(INBOX_FILTER) },
+      ...this.projects.sortedProjects().map((p) => ({ id: p.id, name: p.name as string | null, count: byProject.get(p.id)?.open ?? 0, pressed: chosen.includes(p.id) })),
+    ];
   });
 
   /** The count beside each due option (null = any time shows none). */
@@ -77,6 +94,10 @@ export class ProjectsFilterDrawerComponent {
 
   setSort(sort: ProjectsSort): void {
     this.state.sort.set(sort);
+  }
+
+  setTaskSort(sort: TaskSort): void {
+    this.state.taskSort.set(sort);
   }
 
   openMatrix(): void {

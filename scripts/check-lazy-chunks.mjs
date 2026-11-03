@@ -56,6 +56,7 @@ const walkSportask = (dir) =>
 const NEVER_INITIAL_UI = [
   'src/lib/forge-logos.ts',
   component('forge-sticker'),
+  component('all-tasks-view'),
   ...walkSportask('src/lib/sportask'),
   'src/i18n/sportask-texts.ts',
   'src/app/components/config-modal/config-leave-guard.ts',

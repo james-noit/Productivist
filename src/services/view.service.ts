@@ -1,4 +1,4 @@
-import { Injectable, inject, signal } from '@angular/core';
+import { Injectable, computed, inject, signal } from '@angular/core';
 import { localStorageSignal } from '../core/local-storage-signal';
 import { ProjectActivityService } from './project-activity.service';
 import type { EisenhowerQuadrant } from '../types/eisenhower';
@@ -7,7 +7,8 @@ import type { ForgeKind } from '../types/forge';
 export type AppView = 'pomodoro' | 'projects' | 'project' | 'admin' | 'sportask' | 'fitness';
 /** How the project detail view shows its project. A union so later presentations extend it. */
 export type ProjectPresentation = 'overview' | 'kanban' | 'list' | 'matrix' | 'roadmap' | 'calendar' | 'flow';
-export type ProjectsTab = 'projects' | 'matrix';
+export type ProjectsTab = 'projects' | 'tasks' | 'matrix';
+const PROJECTS_TABS: readonly ProjectsTab[] = ['projects', 'tasks', 'matrix'];
 export type PomodoroListTab = 'all' | 'projects' | 'plan';
 const POMODORO_LIST_TABS: readonly PomodoroListTab[] = ['all', 'projects', 'plan'];
 export type ConfigSection = 'general' | 'integrations' | 'sportask' | 'account';
@@ -94,6 +95,8 @@ export class ViewService {
    * if the target had already been rendered once.
    */
   readonly projectsTab = localStorageSignal<ProjectsTab>('productivist.projectsTab', 'projects');
+  /** The stored tab, validated: an unknown value (another build wrote it) reads as 'projects'. Read this, not `projectsTab`. */
+  readonly activeProjectsTab = computed<ProjectsTab>(() => (PROJECTS_TABS.includes(this.projectsTab()) ? this.projectsTab() : 'projects'));
 
   /**
    * A quadrant the Matrix tab should scroll to and flash when it mounts, set by the Projects tab's
