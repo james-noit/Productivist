@@ -29,7 +29,7 @@ interface ThemeOption {
 }
 
 const THEMES: ThemeOption[] = [
-  { id: 'light', bg: '#fff8f0', surface: '#f5e6d3', primary: '#e85d2f', text: '#3b2a20' },
+  { id: 'light', bg: '#f2f7fd', surface: '#e0ecf8', primary: '#1f6bcf', text: '#0f2238' },
   { id: 'dark', bg: '#282a36', surface: '#44475a', primary: '#bd93f9', text: '#f8f8f2' },
   { id: 'japanese', bg: '#f4efe4', surface: '#e8e0cc', primary: '#b5343a', text: '#2b2b2b' },
   { id: 'nordic', bg: '#eceff4', surface: '#e5e9f0', primary: '#5e81ac', text: '#2e3440' },

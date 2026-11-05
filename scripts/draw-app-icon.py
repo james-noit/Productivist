@@ -181,7 +181,7 @@ def main():
     tomato(1024, 3.75, 4).save(OUT / "icon-foreground.png")
     bg.save(OUT / "icon-background.png")
 
-    splash((0xFF, 0xF8, 0xF0), 4.0).save(OUT / "splash.png")
+    splash((0xF2, 0xF7, 0xFD), 4.0).save(OUT / "splash.png")
     splash((0x28, 0x2A, 0x36), 4.0).save(OUT / "splash-dark.png")
     print(f"Wrote {OUT}/icon.png, icon-foreground.png, icon-background.png, splash.png, splash-dark.png")
 

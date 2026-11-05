@@ -11,13 +11,13 @@ const config: CapacitorConfig = {
       // Kept up until the Angular app has rendered once: src/core/native hides it.
       launchAutoHide: false,
       // The light theme's --color-bg (see src/style.css).
-      backgroundColor: '#FFF8F0',
+      backgroundColor: '#F2F7FD',
       showSpinner: false,
     },
     LocalNotifications: {
       // Android's status-bar icon (res/drawable/ic_stat_tomato.xml) and its tint (the light theme's --color-primary).
       smallIcon: 'ic_stat_tomato',
-      iconColor: '#E85D2F',
+      iconColor: '#1F6BCF',
     },
   },
 };

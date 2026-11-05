@@ -8,26 +8,26 @@
 }
 
 :root {
-  /* Puesta de sol californiana - tema claro */
-  --color-bg: #fff8f0;
-  --color-surface: #fffbf7;
-  --color-surface-alt: #f5e6d3;
-  --color-text: #2c1810;
-  --color-text-muted: #7a5c4a;
-  --color-border: #e8d4c0;
-  --color-primary: #e85d2f;
+  /* Cielo azul - tema claro */
+  --color-bg: #f2f7fd;
+  --color-surface: #fafcff;
+  --color-surface-alt: #e0ecf8;
+  --color-text: #0f2238;
+  --color-text-muted: #4a6380;
+  --color-border: #cbdbeb;
+  --color-primary: #1f6bcf;
   --color-primary-contrast: #ffffff;
-  --color-low: #c17e2e;
-  --color-medium: #d97a3f;
-  --color-high: #a84e24;
+  --color-low: #1b84a8;
+  --color-medium: #2f62b8;
+  --color-high: #c03a3a;
   --color-capacity-safe: #4c8c2b;
   --color-capacity-elevated: #9caa2e;
   --color-capacity-high: #d9a441;
   --color-capacity-critical: #d9603f;
   --color-quadrant-do-first: #d1453b;
-  --color-quadrant-schedule: #3f6fb0;
+  --color-quadrant-schedule: #0e8cc4;
   --color-quadrant-delegate: #d9a441;
-  --color-quadrant-eliminate: #9c8b7a;
+  --color-quadrant-eliminate: #8796a8;
   /* Flow view: one hue per objective horizon. Derived from the tokens above, so every theme gets its own. */
   --color-horizon-short: var(--color-quadrant-schedule);
   --color-horizon-medium: var(--color-capacity-safe);
