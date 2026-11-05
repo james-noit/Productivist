@@ -1,0 +1,42 @@
+<div class="modal-overlay du__overlay" (mousedown)="onBackdropDown($event)" (click)="onBackdropClick($event)" (keydown)="onKeydown($event)">
+  <div #panel class="modal-panel du" role="dialog" aria-modal="true" tabindex="-1" [attr.aria-labelledby]="uid + '-title'">
+    <header class="du__header">
+      <h2 class="du__title" [id]="uid + '-title'">{{ 'dueUrgency.title' | translate }}</h2>
+      <button type="button" class="btn btn--ghost btn--icon" [attr.aria-label]="'todo.close' | translate" [title]="'todo.close' | translate" (click)="close()">
+        <app-ui-icon name="x" />
+      </button>
+    </header>
+    <p class="du__lead">{{ 'dueUrgency.lead.' + (days() === 1 ? 'one' : 'other') | translate: { n: days() } }}</p>
+
+    <ul class="du__list" role="list">
+      @for (row of rows(); track row.id; let first = $first) {
+        <li class="du__row">
+          <div class="du__info">
+            <span class="du__name">{{ row.title }}</span>
+            <span class="du__meta">
+              <span [class.du__overdue]="row.overdue">{{ 'dueUrgency.' + row.dueKey | translate: { n: row.days } }}</span>
+              · {{ row.dateText }} · {{ row.project ?? ('projects.inbox.title' | translate) }} ·
+              {{ 'dueUrgency.urgency' | translate: { level: 'todo.' + row.urgency | translate } }}
+            </span>
+          </div>
+          <div class="du__actions">
+            <button type="button" class="btn btn--primary btn--sm" [attr.data-first]="first ? '' : null" (click)="makeUrgent(row.id)">{{ 'dueUrgency.make' | translate }}</button>
+            <button type="button" class="btn btn--ghost btn--sm" (click)="detailId.set(row.id)">{{ 'dueUrgency.edit' | translate }}</button>
+            <button type="button" class="btn btn--ghost btn--icon btn--sm" [attr.aria-label]="'dueUrgency.skip' | translate" [title]="'dueUrgency.skip' | translate" (click)="skip(row.id)">
+              <app-ui-icon name="x" [size]="16" />
+            </button>
+          </div>
+        </li>
+      }
+    </ul>
+
+    <footer class="du__footer">
+      <button type="button" class="btn btn--secondary" (click)="close()">{{ 'dueUrgency.notNow' | translate }}</button>
+      <button type="button" class="btn btn--primary" (click)="makeAll()">{{ 'dueUrgency.makeAll' | translate }}</button>
+    </footer>
+  </div>
+</div>
+
+@if (detail(); as todo) {
+  <app-task-detail-modal class="du__detail" [todo]="todo" (close)="detailClosed(todo.id)" />
+}

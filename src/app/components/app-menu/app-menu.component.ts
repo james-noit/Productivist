@@ -8,6 +8,7 @@ import { ProjectsService } from '../../../services/projects.service';
 import { AccountService } from '../../../services/account.service';
 import { DailyPlanService } from '../../../services/daily-plan.service';
 import { FlowService } from '../../../services/flow.service';
+import { DueUrgencyService } from '../../../services/due-urgency.service';
 import { RecurrenceService } from '../../../services/recurrence.service';
 import { SportDataService } from '../../../services/sport-data.service';
 import { SportaskSettingsService } from '../../../services/sportask-settings.service';
@@ -46,6 +47,7 @@ export class AppMenuComponent {
   private readonly dailyPlan = inject(DailyPlanService);
   private readonly flow = inject(FlowService);
   private readonly recurrences = inject(RecurrenceService);
+  private readonly dueUrgency = inject(DueUrgencyService);
   private readonly sportData = inject(SportDataService);
   private readonly sportaskSettings = inject(SportaskSettingsService);
   private readonly sportask = inject(SportaskService);
@@ -176,6 +178,7 @@ export class AppMenuComponent {
     this.projects.reset();
     this.flow.reset();
     this.recurrences.reset();
+    this.dueUrgency.reset();
     this.dailyPlan.reset();
     this.sportData.reset();
     this.sportaskSettings.reset();

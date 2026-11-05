@@ -1,4 +1,5 @@
 import { Injectable, computed, effect, inject, signal, untracked, type WritableSignal } from '@angular/core';
+import { DEFAULT_URGENCY_PROMPT_DAYS, sanitizePromptDays } from '../lib/due-urgency';
 import { localStorageSignal } from '../core/local-storage-signal';
 import { API_ENABLED, ApiError, api } from '../core/api';
 import {
@@ -30,6 +31,7 @@ import {
   type TodoWire,
 } from '../lib/sync-engine';
 import { AccountService } from './account.service';
+import { DueUrgencyService } from './due-urgency.service';
 import { DailyPlanService, type DailyPlanStage } from './daily-plan.service';
 import { FlowService } from './flow.service';
 import { MultitaskService } from './multitask.service';
@@ -129,6 +131,7 @@ export class SyncService {
   private readonly recurrences = inject(RecurrenceService);
   private readonly sportData = inject(SportDataService);
   private readonly sportask = inject(SportaskSettingsService);
+  private readonly dueUrgency = inject(DueUrgencyService);
 
   readonly status = signal<SyncStatus>('idle');
   readonly errorKind = signal<SyncErrorKind | null>(null);
@@ -224,6 +227,8 @@ export class SyncService {
     this.errorKind.set(null);
     this.status.set('idle');
     this.lastSyncedAt.set(Date.now());
+    // Only after a full cycle (it pulled): a local one would pop up while the user is editing.
+    if (reason === 'full') this.dueUrgency.check();
   }
 
   // ---- local → metadata ---------------------------------------------------------------------------------------
@@ -415,6 +420,9 @@ export class SyncService {
         bellSound: s.bellSound(),
         bellSoundId: s.bellSoundId(),
         keepRinging: s.keepRinging(),
+        // Only when changed: an always-present new key would re-stamp every device's blob on upgrade and push it over
+        // settings another device has not pulled yet.
+        ...(s.urgencyPromptDays() !== DEFAULT_URGENCY_PROMPT_DAYS ? { urgencyPromptDays: s.urgencyPromptDays() } : {}),
         clockStyle: s.clockStyle(),
         boxClockOrder: s.boxClockOrder(),
         multitaskEnabled: mt.enabled(),
@@ -455,6 +463,8 @@ export class SyncService {
     set('bellSound', s.bellSound, isBoolean);
     set('bellSoundId', s.bellSoundId, isOneOf('alarmClock', 'bowl', 'marimba', 'chime', 'birds', 'gong', 'digital', 'classic', 'siren', 'buzzer'));
     set('keepRinging', s.keepRinging, isBoolean);
+    // Absent means the default (see buildState), so a change back to the default still syncs.
+    s.urgencyPromptDays.set(sanitizePromptDays(state.settings?.['urgencyPromptDays']));
     set('clockStyle', s.clockStyle, isOneOf('boxes', 'ring'));
     set('boxClockOrder', s.boxClockOrder, isOneOf('sequential', 'random'));
     set('multitaskEnabled', this.multitask.enabled, isBoolean);

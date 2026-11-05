@@ -107,6 +107,7 @@ const NEVER_INITIAL_UI = [
   component('alarm-modal'),
   component('task-picker'),
   component('recurring-tasks-modal'),
+  component('due-urgency-modal'),
   component('recurrence-editor'),
   'src/lib/recurrence-format.ts',
   'src/services/recurrence-format.service.ts',

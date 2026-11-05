@@ -77,6 +77,17 @@
               }
             </div>
           </section>
+
+          <section class="config-modal__section" aria-labelledby="config-urgency">
+            <h3 id="config-urgency">{{ 'config.urgencyPrompt' | translate }}</h3>
+            <select class="select" aria-labelledby="config-urgency" (change)="setUrgencyDays($any($event.target).value)">
+              @for (d of urgencyOptions; track d) {
+                <option [value]="d" [selected]="settings.urgencyPromptDays() === d">
+                  {{ d === 0 ? ('config.urgencyOff' | translate) : ('config.urgencyDays.' + (d === 1 ? 'one' : 'other') | translate: { n: d }) }}
+                </option>
+              }
+            </select>
+          </section>
         } @else if (section() === 'integrations') {
           <section class="config-modal__section" aria-labelledby="config-integrations">
             <h3 id="config-integrations">{{ 'config.integrations' | translate }}</h3>

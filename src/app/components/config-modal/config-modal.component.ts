@@ -9,6 +9,7 @@ import {
   viewChild,
 } from '@angular/core';
 import { TranslatePipe } from '@ngx-translate/core';
+import { URGENCY_PROMPT_DAYS } from '../../../lib/due-urgency';
 import { AccountService } from '../../../services/account.service';
 import { SettingsService, type Language, type Theme } from '../../../services/settings.service';
 import { ViewService, type ConfigSection } from '../../../services/view.service';
@@ -63,6 +64,7 @@ export class ConfigModalComponent {
   readonly section = this.view.configSection;
   readonly themes = THEMES;
   readonly languages = LANGUAGES;
+  readonly urgencyOptions = URGENCY_PROMPT_DAYS;
   readonly sections: ConfigSection[] = this.accounts.enabled ? ['general', 'integrations', 'sportask', 'account'] : ['general', 'integrations', 'sportask'];
 
   constructor() {
@@ -97,6 +99,10 @@ export class ConfigModalComponent {
 
   setTheme(theme: Theme): void {
     this.settings.setTheme(theme);
+  }
+
+  setUrgencyDays(value: string): void {
+    this.settings.setUrgencyPromptDays(Number(value));
   }
 
   setLanguage(language: Language): void {

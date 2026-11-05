@@ -583,6 +583,20 @@
       "network": "No se pudo conectar con el servidor. Inténtalo de nuevo."
     }
   },
+  "dueUrgency": {
+    "title": "Vencen pronto",
+    "lead": { "one": "Estas tareas vencen en {{n}} día pero no son urgentes.", "other": "Estas tareas vencen en {{n}} días pero no son urgentes." },
+    "overdue": "Vencida",
+    "today": "Hoy",
+    "tomorrow": "Mañana",
+    "inDays": "En {{n}} días",
+    "make": "Hacer urgente",
+    "makeAll": "Hacer todas urgentes",
+    "edit": "Editar…",
+    "skip": "Omitir",
+    "notNow": "Ahora no",
+    "urgency": "Urgencia: {{level}}"
+  },
   "config": {
     "title": "Configuración",
     "close": "Cerrar",
@@ -594,6 +608,9 @@
     "language": "Idioma",
     "languageHint": "El idioma de la interfaz.",
     "theme": "Tema",
+    "urgencyPrompt": "Pedir marcar urgente si vence en",
+    "urgencyOff": "Desactivado",
+    "urgencyDays": { "one": "{{n}} día", "other": "{{n}} días" },
     "themeHint": "Elige el aspecto de Productivist.",
     "themes": {
       "light": "Claro",

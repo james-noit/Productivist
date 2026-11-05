@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, Injector, effect, inject } from '@a
 import { TranslateService } from '@ngx-translate/core';
 import { SettingsService, type Language } from '../services/settings.service';
 import { ClockService } from '../services/clock.service';
+import { DueUrgencyService } from '../services/due-urgency.service';
 import { MultitaskService } from '../services/multitask.service';
 import { ViewService } from '../services/view.service';
 import { SyncService } from '../services/sync.service';
@@ -19,6 +20,7 @@ import { ConfigModalComponent } from './components/config-modal/config-modal.com
 import { AlarmModalComponent } from './components/alarm-modal/alarm-modal.component';
 import { SportaskHostComponent } from './components/sportask-host/sportask-host.component';
 import { SportaskViewComponent } from './components/sportask-view/sportask-view.component';
+import { DueUrgencyModalComponent } from './components/due-urgency-modal/due-urgency-modal.component';
 import { RecurringTasksModalComponent } from './components/recurring-tasks-modal/recurring-tasks-modal.component';
 import { ProjectDetailViewComponent } from './components/project-detail-view/project-detail-view.component';
 import { ProjectsViewComponent } from './components/projects-view/projects-view.component';
@@ -44,6 +46,7 @@ type CapacitorGlobal = {
     PlanningLabModalComponent,
     ConfigModalComponent,
     RecurringTasksModalComponent,
+    DueUrgencyModalComponent,
     AlarmModalComponent,
     SportaskHostComponent,
     SportaskViewComponent,
@@ -63,6 +66,7 @@ export class AppComponent {
   readonly clock = inject(ClockService);
   readonly accounts = inject(AccountService);
   readonly sportask = inject(SportaskService);
+  readonly dueUrgency = inject(DueUrgencyService);
   readonly sportaskSettings = inject(SportaskSettingsService);
   private readonly translate = inject(TranslateService);
   private readonly injector = inject(Injector);

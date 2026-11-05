@@ -1,0 +1,109 @@
+.du__overlay {
+  /* Above the other modals, under Sportask's break modal (60) and the alarm (200). */
+  --modal-z: 65;
+}
+
+/* Task Details opened from a row sits above this modal. */
+.du__detail {
+  --modal-z: 70;
+}
+
+.du {
+  --modal-max-width: 640px;
+  --modal-max-height: min(90vh, 640px);
+  --modal-radius: 12px;
+  --modal-padding: 20px;
+  --modal-gap: 12px;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.06);
+}
+
+.du:focus {
+  outline: none;
+}
+
+.du__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.du__title {
+  margin: 0;
+  font-size: 1.15rem;
+}
+
+.du__lead {
+  margin: 0;
+  color: var(--color-text-muted);
+}
+
+.du__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.du__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+}
+
+.du__info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.du__name {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.du__meta {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+.du__overdue {
+  color: var(--color-high);
+  font-weight: 600;
+}
+
+.du__actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.du__footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+@media (max-width: 600px) {
+  .du__row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .du__actions {
+    justify-content: flex-end;
+  }
+
+  .du__footer {
+    flex-direction: column-reverse;
+  }
+}

@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { localStorageSignal } from '../core/local-storage-signal';
+import { DEFAULT_URGENCY_PROMPT_DAYS, sanitizePromptDays } from '../lib/due-urgency';
 
 export type Theme = 'light' | 'dark' | 'japanese' | 'nordic';
 export type Language = 'en' | 'es';
@@ -48,7 +49,11 @@ export class SettingsService {
     DEFAULT_BOX_CLOCK_ORDER,
   );
 
+  /** Ask to mark open tasks urgent when due within this many days (0 = off). Synced. */
+  readonly urgencyPromptDays = localStorageSignal<number>('productivist.urgencyPromptDays', DEFAULT_URGENCY_PROMPT_DAYS);
+
   constructor() {
+    this.urgencyPromptDays.update(sanitizePromptDays);
     // 0.18 stored `bellLoop` (default true); the setting now lives under a new key so the new default applies.
     try {
       localStorage.removeItem('productivist.bellLoop');
@@ -89,6 +94,10 @@ export class SettingsService {
     this.clockStyle.set(style);
   }
 
+  setUrgencyPromptDays(days: number): void {
+    this.urgencyPromptDays.set(sanitizePromptDays(days));
+  }
+
   setBoxClockOrder(order: BoxClockOrder): void {
     this.boxClockOrder.set(order);
   }
@@ -103,5 +112,6 @@ export class SettingsService {
     this.keepRinging.set(false);
     this.clockStyle.set(DEFAULT_CLOCK_STYLE);
     this.boxClockOrder.set(DEFAULT_BOX_CLOCK_ORDER);
+    this.urgencyPromptDays.set(DEFAULT_URGENCY_PROMPT_DAYS);
   }
 }

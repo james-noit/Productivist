@@ -77,6 +77,13 @@
   }
 }
 
+<!-- "Due soon" prompt after a full sync (lazy; --modal-z 65, above the other modals, under Sportask's break and the alarm). -->
+@if (dueUrgency.pendingIds().length) {
+  @defer (on immediate) {
+    <app-due-urgency-modal />
+  }
+}
+
 <!-- Sportask outside the views (lazy): the skin, the break modal (--modal-z 60: over every view and modal, under the alarm) and the
      pre-generation of the next block. Rendered while a session is active, a break is open or the panel is showing. -->
 @if (sportask.active() || sportask.breakOpen() || view.current() === 'sportask') {

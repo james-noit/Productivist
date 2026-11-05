@@ -583,6 +583,20 @@
       "network": "Could not reach the server. Try again."
     }
   },
+  "dueUrgency": {
+    "title": "Due soon",
+    "lead": { "one": "These tasks are due within {{n}} day but are not urgent.", "other": "These tasks are due within {{n}} days but are not urgent." },
+    "overdue": "Overdue",
+    "today": "Today",
+    "tomorrow": "Tomorrow",
+    "inDays": "In {{n}} days",
+    "make": "Make urgent",
+    "makeAll": "Make all urgent",
+    "edit": "Edit…",
+    "skip": "Skip",
+    "notNow": "Not now",
+    "urgency": "Urgency: {{level}}"
+  },
   "config": {
     "title": "Configuration",
     "close": "Close",
@@ -594,6 +608,9 @@
     "language": "Language",
     "languageHint": "The language of the interface.",
     "theme": "Theme",
+    "urgencyPrompt": "Ask to mark urgent when due within",
+    "urgencyOff": "Off",
+    "urgencyDays": { "one": "{{n}} day", "other": "{{n}} days" },
     "themeHint": "Choose how Productivist looks.",
     "themes": {
       "light": "Light",
