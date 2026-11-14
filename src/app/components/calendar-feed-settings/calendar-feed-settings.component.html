@@ -1,0 +1,80 @@
+@if (ready() && enabled) {
+  <div class="cfs" role="group" aria-labelledby="cfs-title">
+    <h4 class="cfs__title" id="cfs-title">
+      <app-ui-icon name="calendar" [size]="16" />
+      {{ 'calSync.feed.title' | translate }}
+    </h4>
+    <p class="cfs__hint">{{ 'calSync.feed.intro' | translate }}</p>
+
+    @if (!signedIn()) {
+      <p class="cfs__hint">{{ 'calSync.feed.signIn' | translate }}</p>
+    } @else if (status()) {
+      @if (view(); as v) {
+        <div class="field">
+          <label class="field__label" for="cfs-url">{{ 'calSync.feed.url' | translate }}</label>
+          <div class="cfs__url">
+            <input #urlInput id="cfs-url" class="input" type="text" readonly [value]="v.url" (focus)="urlInput.select()" />
+            <button type="button" class="btn btn--secondary" (click)="copy()">
+              <app-ui-icon [name]="copied() ? 'check' : 'link'" [size]="16" />
+              {{ (copied() ? 'calSync.feed.copied' : 'calSync.feed.copy') | translate }}
+            </button>
+          </div>
+          <span class="visually-hidden" role="status">{{ copied() ? ('calSync.feed.copied' | translate) : '' }}</span>
+        </div>
+
+        <div class="cfs__row">
+          <span class="cfs__label">{{ 'calSync.feed.openIn' | translate }}</span>
+          <a class="btn btn--secondary btn--sm" [appExternalHref]="v.google">Google Calendar ↗</a>
+          <a class="btn btn--secondary btn--sm" [appExternalHref]="v.outlook">Outlook ↗</a>
+        </div>
+        <p class="cfs__hint">{{ 'calSync.feed.proton' | translate }}</p>
+        <p class="cfs__hint">{{ 'calSync.feed.delay' | translate }}</p>
+        <p class="cfs__hint">{{ 'calSync.feed.private' | translate }}</p>
+        <p class="cfs__hint">
+          {{ v.lastRead ? ('calSync.feed.lastRead' | translate: { date: v.lastRead }) : ('calSync.feed.neverRead' | translate) }}
+        </p>
+
+        @switch (confirm()) {
+          @case ('regenerate') {
+            <div class="confirm-bar" role="alertdialog" aria-labelledby="cfs-q" (keydown)="onQuestionKeydown($event)">
+              <p class="confirm-bar__text" id="cfs-q">{{ 'calSync.feed.regenerateQuestion' | translate }}</p>
+              <div class="confirm-bar__actions">
+                <button type="button" class="btn btn--secondary btn--sm" (click)="dismiss()">{{ 'calSync.feed.keep' | translate }}</button>
+                <button #questionFocus type="button" class="btn btn--danger btn--sm" [disabled]="busy()" (click)="create()">{{ 'calSync.feed.regenerate' | translate }}</button>
+              </div>
+            </div>
+          }
+          @case ('off') {
+            <div class="confirm-bar" role="alertdialog" aria-labelledby="cfs-q" (keydown)="onQuestionKeydown($event)">
+              <p class="confirm-bar__text" id="cfs-q">{{ 'calSync.feed.turnOffQuestion' | translate }}</p>
+              <div class="confirm-bar__actions">
+                <button type="button" class="btn btn--secondary btn--sm" (click)="dismiss()">{{ 'calSync.feed.keep' | translate }}</button>
+                <button #questionFocus type="button" class="btn btn--danger btn--sm" [disabled]="busy()" (click)="turnOff()">{{ 'calSync.feed.turnOff' | translate }}</button>
+              </div>
+            </div>
+          }
+          @default {
+            <div class="cfs__row">
+              <button type="button" class="btn btn--ghost btn--sm" (click)="ask('regenerate')">
+                <app-ui-icon name="restart" [size]="14" />
+                {{ 'calSync.feed.regenerate' | translate }}
+              </button>
+              <button type="button" class="btn btn--danger btn--ghost btn--sm" (click)="ask('off')">{{ 'calSync.feed.turnOff' | translate }}</button>
+            </div>
+          }
+        }
+      } @else {
+        <div>
+          <button type="button" class="btn btn--primary btn--sm" [disabled]="busy()" (click)="create()">
+            <app-ui-icon name="plus" [size]="14" />
+            {{ 'calSync.feed.create' | translate }}
+          </button>
+        </div>
+      }
+    }
+
+    @if (error()) {
+      <p class="cfs__error" role="alert">{{ 'calSync.feed.error' | translate }}</p>
+    }
+  </div>
+}

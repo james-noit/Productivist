@@ -41,6 +41,9 @@ public class SecurityConfig {
                         // local-first, so signed-out users and the add-on and mobile apps get the same content); only
                         // directors (and the admin) may write.
                         .requestMatchers(HttpMethod.GET, "/api/sport-catalog").permitAll()
+                        // The calendar subscription feed: calendars poll it without a token; the secret in the path is the
+                        // credential (CalendarFeedController). Managing the feed (/api/calendar/feed) needs a session.
+                        .requestMatchers(HttpMethod.GET, "/api/calendar/ics/*").permitAll()
                         .requestMatchers("/api/fitness/**").hasRole("FITNESS_DIRECTOR")
                         .anyRequest().authenticated())
                 .exceptionHandling(e -> e.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))

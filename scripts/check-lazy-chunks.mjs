@@ -143,6 +143,12 @@ const NEVER_INITIAL_UI = [
   // Git forge import: only the Configuration > Integrations section, the import dialog, the project header strip and the
   // lazy pages load these; `lib/forge-source.ts` (sync codecs, import sanitising) and `types/forge.ts` types are eager.
   component('forge-connections-settings'),
+  // Calendar links and subscription.
+  component('add-to-calendar'),
+  component('calendar-feed-settings'),
+  'src/lib/calendar-links.ts',
+  'src/lib/calendar-texts.ts',
+  'src/i18n/calendar-texts.ts',
   component('forge-error'),
   'src/lib/forge-transport.ts',
   component('import-repo-modal'),

@@ -14,6 +14,7 @@ import { AccountService } from '../../../services/account.service';
 import { SettingsService, type Language, type Theme } from '../../../services/settings.service';
 import { ViewService, type ConfigSection } from '../../../services/view.service';
 import { AccountSettingsComponent } from '../account-settings/account-settings.component';
+import { CalendarFeedSettingsComponent } from '../calendar-feed-settings/calendar-feed-settings.component';
 import { ForgeConnectionsSettingsComponent } from '../forge-connections-settings/forge-connections-settings.component';
 import { SportaskSettingsComponent } from '../sportask-settings/sportask-settings.component';
 import { ConfigLeaveGuard } from './config-leave-guard';
@@ -48,7 +49,7 @@ const LANGUAGES: { id: Language; nativeName: string }[] = [
 @Component({
   selector: 'app-config-modal',
   standalone: true,
-  imports: [TranslatePipe, AccountSettingsComponent, ForgeConnectionsSettingsComponent, SportaskSettingsComponent],
+  imports: [TranslatePipe, AccountSettingsComponent, ForgeConnectionsSettingsComponent, CalendarFeedSettingsComponent, SportaskSettingsComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './config-modal.component.html',
   styleUrl: './config-modal.component.css',

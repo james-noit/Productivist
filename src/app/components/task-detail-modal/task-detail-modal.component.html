@@ -147,6 +147,10 @@
           </div>
         </div>
 
+        @if (calendarEvent(); as event) {
+          <app-add-to-calendar [event]="event" />
+        }
+
         <div class="field td__pomodoros">
           <span class="field__label" [id]="uid + '-pomodoros'">{{ 'todo.pomodorosForTermination' | translate }}</span>
           <app-number-stepper

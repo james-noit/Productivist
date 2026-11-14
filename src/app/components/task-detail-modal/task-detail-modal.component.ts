@@ -43,6 +43,7 @@ import {
   type RuleDraft,
 } from '../recurrence-editor/recurrence-editor.component';
 import { UiIconComponent } from '../ui-icon/ui-icon.component';
+import { AddToCalendarComponent } from '../add-to-calendar/add-to-calendar.component';
 import type { Priority, TaskStatus, Todo } from '../../../types/todo';
 
 /**
@@ -127,6 +128,7 @@ let nextUid = 0;
     RecurrenceEditorComponent,
     AutoGrowDirective,
     ExternalHrefDirective,
+    AddToCalendarComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './task-detail-modal.component.html',
@@ -236,6 +238,20 @@ export class TaskDetailModalComponent {
     const rule = draft.repeat && ruleValid(draft.repeat) ? ruleFields(draft.repeat) : null;
     const repeat = series ? this.format.describe(series) : rule ? this.format.describe(rule) : null;
     return { project, milestone, doneDay, repeat, statusKey: `kanban.columns.${draft.status}` };
+  });
+
+  /** The "Add to calendar" event, from the draft (so an unsaved due date already counts); null without a due date. */
+  readonly calendarEvent = computed(() => {
+    const draft = this.draft();
+    if (!isIsoDate(draft.dueDate)) return null;
+    const { project, milestone } = this.meta();
+    return {
+      id: this.todo().id,
+      title: draft.title.trim() || this.todo().title,
+      description: draft.description,
+      date: draft.dueDate,
+      place: [project, milestone].filter(Boolean).join(' › '),
+    };
   });
 
   private readonly opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;

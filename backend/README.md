@@ -27,6 +27,8 @@ Schema is managed by Flyway (`src/main/resources/db/migration`).
 | GET | `/api/sync?since=<cursor>` | Rows changed after `cursor` (0 = all), tombstones included, plus `state` if changed. Returns the next `cursor`. |
 | POST | `/api/sync` | Upserts `{projects, milestones, todos, objectives, flowLinks, flowLayouts, recurrences, sportBlocks, sportTemplates, state}` (the Flow, recurrence and Sportask lists are optional, so older clients keep working; a todo may carry `recurrenceId`; a project, milestone or todo imported from a Git forge may carry `source`, see below). Last-write-wins on each row's `updatedAt`. Returns `{cursor}`. |
 | POST | `/api/forge/relay` `{url, method?, headers?}` | Signed-in users only. Fetches one Git forge API URL on the caller's behalf, for Gitea/Forgejo servers whose CORS settings block the browser, and answers `{status, headers, body}` with the forge's own status inside (see *Forge relay* below). The relay's own refusals are plain HTTP errors: 400 (target not allowed), 413 (response over 5 MB), 429 (busy), 502/504 (upstream failed or timed out). |
+| GET / POST / DELETE | `/api/calendar/feed` | Signed-in users. The calendar subscription: GET `{token, createdAt, lastFetchedAt}` (all null without a feed), POST creates it or replaces the token (the old URL stops working at once), DELETE turns it off (204). See *Calendar subscription* below. |
+| GET | `/api/calendar/ics/<token>.ics` | **Public (the token is the credential).** `text/calendar` with every open, non-deleted task that has a due date as an all-day event. `ETag` + 304 on `If-None-Match`; 404 for an unknown token. |
 | GET | `/api/admin/me` | Admin only (403 for everyone else): `{email}`. The frontend uses it to decide whether to show the admin view. |
 | GET | `/api/admin/stats` | Admin only: account, session, task, project, objective, recurring-series and Sportask-block totals, and `catalogVersion` (the published Sportask catalog version, 0 if none). |
 | GET | `/api/admin/users?query=&page=&size=` | Admin only: accounts newest first, filtered by email substring, with their task/project/session counts (never their content). |
@@ -41,7 +43,7 @@ Schema is managed by Flyway (`src/main/resources/db/migration`).
 | POST | `/api/fitness/versions/{n}/restore` `{expectedRevision}` | Directors only. Copies version n **into the draft** (nothing is published). |
 | GET | `/actuator/health` | Health check. |
 
-Everything except login, health and `GET /api/sport-catalog` needs `Authorization: Bearer <token>`.
+Everything except login, health, `GET /api/sport-catalog` and `GET /api/calendar/ics/*` needs `Authorization: Bearer <token>`.
 
 ### Admin
 
@@ -61,7 +63,21 @@ delete their own account through these endpoints, and admin actions are logged (
 - Accounts created before passwords existed have no password: the first `signup` with that email claims it (and sets the password); until then it cannot be logged into.
 - Sequence-based cursors can, in theory, skip a row whose transaction commits after a later one; a periodic full
   pull (`since=0`) repairs it.
-- Unit tests (JUnit, no database needed): `mvn verify` runs the Fitness director's shape validator, the role mapping of `BearerTokenFilter` and the ETag matching of the public catalog endpoint. The rest is exercised by hand against a local Postgres (see above).
+- Unit tests (JUnit, no database needed): `mvn verify` runs the Fitness director's shape validator, the role mapping of `BearerTokenFilter`, the ETag matching of the public catalog endpoint and the calendar feed's iCalendar writer (`IcsWriterTest`). The rest is exercised by hand against a local Postgres (see above).
+
+### Calendar subscription (`calendar_feeds`)
+
+`V10__calendar_feed.sql`: one row per user (`token`, 43 base64url characters from 32 random bytes, `created_at`,
+`last_fetched_at`, cascade on user deletion). The token is stored as is, not hashed like `auth_tokens`, so the user can copy
+the URL again later: it only grants reading what the `todos` table already holds, and regenerating or deleting it revokes
+it. Google Calendar, Outlook and Proton Calendar fetch the URL from their own servers on their own schedule (often every
+few hours; `REFRESH-INTERVAL`/`X-PUBLISHED-TTL` of one hour are hints only), so CORS does not apply. `IcsWriter` writes
+RFC 5545: `VALUE=DATE` all-day events on the due date (a day, not an instant, so no time zone), `UID:todo-<id>@productivist`
+(the same as the app's single-event download), project › milestone and the description in `DESCRIPTION` (2 000 characters
+at most), `TRANSP:TRANSPARENT`, lines folded at 75 octets, impossible dates skipped, at most 2 000 events. Done and deleted
+tasks are left out, so completing a task removes its event at the next poll. Each read updates `last_fetched_at`, which
+the app shows as "last read by a calendar". nginx keeps `/api/calendar/ics/` out of its access log (the token is in the
+path).
 
 ## Railway
 

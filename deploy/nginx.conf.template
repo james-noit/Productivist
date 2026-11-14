@@ -49,6 +49,14 @@ server {
         include /etc/nginx/proxy-api.conf;
     }
 
+    # Calendar subscription feeds: the secret token is in the path, so keep these requests out of the access log.
+    location ^~ /api/calendar/ics/ {
+        access_log off;
+        limit_req zone=api burst=40 nodelay;
+        set $backend "${BACKEND_ORIGIN}";
+        include /etc/nginx/proxy-api.conf;
+    }
+
     location /api/ {
         limit_req zone=api burst=40 nodelay;
         set $backend "${BACKEND_ORIGIN}";

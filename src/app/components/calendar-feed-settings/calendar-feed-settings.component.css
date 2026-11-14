@@ -1,0 +1,59 @@
+:host {
+  display: block;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--color-border);
+}
+
+.cfs {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.cfs__title {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.cfs__hint,
+.cfs__error {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
+.cfs__error {
+  color: var(--color-high);
+}
+
+.cfs__url {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.cfs__url .input {
+  flex: 1;
+  min-width: 0;
+  font-family: ui-monospace, monospace;
+  font-size: 0.75rem;
+}
+
+.cfs__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+a.btn {
+  text-decoration: none;
+}
+
+.cfs__label {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}

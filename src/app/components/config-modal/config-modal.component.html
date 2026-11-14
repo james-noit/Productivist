@@ -93,6 +93,7 @@
             <h3 id="config-integrations">{{ 'config.integrations' | translate }}</h3>
             @defer (on immediate) {
               <app-forge-connections-settings />
+              <app-calendar-feed-settings />
             }
           </section>
         } @else if (section() === 'sportask') {
